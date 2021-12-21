@@ -1,0 +1,23 @@
+INSTALLDIR = "$(HOME)/Apps";
+GENERATEMAIN = NO;
+APPICON = dino.tiff;
+FILESTABLE = {
+    C_FILES = (dino.c);
+    OTHER_LIBS = (Media_s, NeXT_s);
+    OTHER_SOURCES = (Makefile.preamble, Makefile, Makefile.postamble);
+    H_FILES = (w2c2_base.h);
+    INTERFACES = ();
+    OTHER_LINKED = ();
+    M_FILES = (Dino_main.m);
+};
+DOCICONFILES = ();
+APPCLASS = Application;
+MAINNIB = Dino.project;
+DOCEXTENSIONS = ();
+PROJECTTYPE = Application;
+PROJECTVERSION = 1.1;
+LOCALIZABLE_FILES = {
+};
+PROJECTNAME = Dino;
+SYSTEMEXTENSIONS = ();
+LANGUAGE = English;

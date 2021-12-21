@@ -1,0 +1,15 @@
+*.o
+w2c2
+w2c2_test
+tests/assert_*.c
+tests/*.wat
+tests/test_*
+*.gba
+*.nds
+*.elf
+compile_flags.txt
+examples/dino*/dino
+examples/coremark/coremark
+examples/rust-wasi/rust-wasi
+.DS_Store
+/.idea
