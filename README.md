@@ -15,3 +15,29 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 ## Performance
 
 - Coremark 1.0: ~7% slower than native
+
+## Usage
+
+```sh
+make release
+./w2c2 <module.wasm> > <module.c>
+```
+
+## Examples
+
+Coremark:
+
+```sh
+cd examples/coremark
+./coremark
+```
+
+## Testing
+
+Requires Python 3 and wabt (for wast2json).
+
+```sh
+cd tests
+make gen
+make run-tests
+```
