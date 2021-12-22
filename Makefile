@@ -15,10 +15,10 @@ TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
 	$(CC) $(CFLAGS) -c $< -o $@
 
 w2c2: $(TARGET_OBJECTS)
-	$(CC) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 w2c2_test: $(TEST_OBJECTS)
-	$(CC) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
 	-rm -f *.o
