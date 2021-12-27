@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <getopt.h>
 #include "buffer.h"
 #include "file.h"
 #include "reader.h"

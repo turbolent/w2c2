@@ -3514,7 +3514,7 @@ wasmCWriteModule(
 
     U32 functionCount = module->functions.count;
     U32 functionCountPerJob = roundUp(
-        (U32)ceilf((float)functionCount / jobCount),
+        (U32)ceil((double)functionCount / jobCount),
         functionsPerFile
     );
 
