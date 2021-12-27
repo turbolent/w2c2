@@ -446,9 +446,9 @@ wasmCWriteFileFunctionSignature(
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
     fputs(wasmCGetReturnType(functionType), file);
-    fputs(" ", file);
+    fputc(' ', file);
     wasmCWriteFileFunctionName(file, module, functionIndex, false);
-    fputs("(", file);
+    fputc('(', file);
     {
         U32 parameterIndex = 0;
         for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
@@ -464,7 +464,7 @@ wasmCWriteFileFunctionSignature(
             }
         }
     }
-    fputs(")", file);
+    fputc(')', file);
 }
 
 static
@@ -488,7 +488,7 @@ wasmCWriteFileLocalsDeclarations(
         for (; localIndex < endIndex; localIndex++) {
             fputs("    ", file);
             fputs(valueTypeNames[localsDeclaration.type], file);
-            fputs(" ", file);
+            fputc(' ', file);
             wasmCWriteFileLocalName(file, parameterCount + localIndex);
             fputs(" = 0;\n", file);
         }
@@ -2611,7 +2611,7 @@ wasmCWriteStackDeclarations(
                 }
                 fputs("    ", file);
                 fputs(valueTypeNames[testType], file);
-                fputs(" ", file);
+                fputc(' ', file);
                 wasmCWriteFileStackName(file, stackDeclarationIndex, testType);
                 fputs(";\n", file);
             }
@@ -2719,7 +2719,7 @@ wasmCWriteFileParameters(
     FILE* file,
     WasmFunctionType functionType
 ) {
-    fputs("(", file);
+    fputc('(', file);
     {
         U32 parameterIndex = 0;
         for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
@@ -2733,7 +2733,7 @@ wasmCWriteFileParameters(
             }
         }
     }
-    fputs(")", file);
+    fputc(')', file);
 }
 
 static
@@ -2841,7 +2841,7 @@ wasmCWriteGlobals(
             fputc(' ', file);
         }
         fputs(valueTypeNames[global.type.valueType], file);
-        fputs(" ", file);
+        fputc(' ', file);
         wasmCWriteFileGlobalName(file, module, module->globalImports.length + globalIndex, false);
         fputs(";\n\n", file);
     }
@@ -2944,7 +2944,7 @@ wasmCWriteFunctionExport(
     fputs(wasmCGetReturnType(functionType), file);
     fputs(" (*", file);
     wasmCWriteExportName(file, export.name);
-    fputs(")", file);
+    fputc(')', file);
     wasmCWriteFileParameters(file, functionType);
     fputs(";\n\n", file);
 }
