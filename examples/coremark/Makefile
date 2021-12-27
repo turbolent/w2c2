@@ -5,7 +5,7 @@ coremark: coremark.o main.o ../../wasi/wasi.o
 	$(CC) $^ -o coremark $(LDFLAGS)
 
 %.c: %.wasm
-	../../w2c2 $< > $@
+	../../w2c2 -o $@ $<
 
 %.o: %.c
 	$(CC) -I../.. -c $(CFLAGS) $< -o $@

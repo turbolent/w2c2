@@ -19,7 +19,7 @@ dino.elf: dino.o main.o
 dingo.gba: dino.elf
 
 %.c: %.wasm
-	../../w2c2 $< > $@
+	../../w2c2 -o $@ $<
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@

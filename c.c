@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <math.h>
 #include "c.h"
 #include "stringbuilder.h"
 #include "instruction.h"
 #include "typestack.h"
 #include "labelstack.h"
-#include <ctype.h>
-#include <stdlib.h>
 
 static const char* functionNamePrefix = "f";
 static const char* localNamePrefix = "l";
@@ -31,6 +34,9 @@ static const char* shiftMaskStrings[2] = {
 static const char* valueTypeStackNames[wasmValueType_count] = {
     "i", "j", "f", "d"
 };
+
+static const char* keywordExtern = "extern";
+static const char* keywordStatic = "static";
 
 __inline__
 static
@@ -438,7 +444,6 @@ wasmCWriteFileFunctionSignature(
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
-    fputs("static ", file);
     fputs(wasmCGetReturnType(functionType), file);
     fputs(" ", file);
     wasmCWriteFileFunctionName(file, module, functionIndex, false);
@@ -2678,10 +2683,6 @@ wasmCWriteFunctionBody(
 
     MUST (stringBuilderInitialize(&stringBuilder))
 
-    wasmTypeStackClear(typeStack);
-    wasmTypeStackClear(stackDeclarations);
-    wasmLabelStackClear(labelStack);
-
     {
         WasmCFunctionWriter writer;
         writer.builder = &stringBuilder;
@@ -2757,8 +2758,7 @@ wasmCWriteFunctionImports(
 }
 
 static
-bool
-WARN_UNUSED_RESULT
+void
 wasmCWriteFunctionDeclarations(
     FILE* file,
     const WasmModule* module
@@ -2771,8 +2771,6 @@ wasmCWriteFunctionDeclarations(
         wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex);
         fputs(";\n\n", file);
     }
-
-    return true;
 }
 
 static
@@ -2780,26 +2778,32 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionImplementations(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    U32 startIndex,
+    U32 endIndex
 ) {
     U32 functionImportCount = module->functionImports.length;
 
     WasmTypeStack typeStack = wasmEmptyTypeStack;
-    WasmTypeStack valueStack = wasmEmptyTypeStack;
+    WasmTypeStack stackDeclarations = wasmEmptyTypeStack;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
 
-    U32 functionIndex = 0;
-    for (; functionIndex < module->functions.count; functionIndex++) {
+    U32 functionIndex = startIndex;
+    for (; functionIndex < endIndex; functionIndex++) {
         const WasmFunction function = module->functions.functions[functionIndex];
+
+        wasmTypeStackClear(&typeStack);
+        wasmTypeStackClear(&stackDeclarations);
+        wasmLabelStackClear(&labelStack);
 
         wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex);
         fputs(" ", file);
-        MUST (wasmCWriteFunctionBody(file, &typeStack, &valueStack, &labelStack, module, function))
+        MUST (wasmCWriteFunctionBody(file, &typeStack, &stackDeclarations, &labelStack, module, function))
         fputs("\n", file);
     }
 
     wasmTypeStackFree(typeStack);
-    wasmTypeStackFree(valueStack);
+    wasmTypeStackFree(stackDeclarations);
     wasmLabelStackFree(labelStack);
 
     return true;
@@ -2825,12 +2829,16 @@ static
 void
 wasmCWriteGlobals(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    const char* keyword
 ) {
     U32 globalIndex = 0;
     for (; globalIndex < module->globals.count; globalIndex++) {
         WasmGlobal global = module->globals.globals[globalIndex];
-        fputs("static ", file);
+        if (keyword != NULL) {
+            fputs(keyword, file);
+            fputc(' ', file);
+        }
         fputs(valueTypeNames[global.type.valueType], file);
         fputs(" ", file);
         wasmCWriteFileGlobalName(file, module, module->globalImports.length + globalIndex, false);
@@ -3024,7 +3032,7 @@ wasmCWriteDataSegments(
     U32 dataSegmentIndex = 0;
     for (; dataSegmentIndex < module->dataSegments.count; dataSegmentIndex++) {
         WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
-        fputs("static const U8 ", file);
+        fputs("const U8 ", file);
         wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
         fputs("[] = {\n    ", file);
         {
@@ -3055,11 +3063,16 @@ static
 void
 wasmCWriteMemories(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    const char* keyword
 ) {
     U32 memoryIndex = 0;
     for (; memoryIndex < module->memories.count; memoryIndex++) {
-        fputs("static wasmMemory ", file);
+        if (keyword != NULL) {
+            fputs(keyword, file);
+            fputc(' ', file);
+        }
+        fputs("wasmMemory ", file);
         wasmCWriteFileMemoryName(file, module, module->memoryImports.length + memoryIndex, false);
         fputs(";\n\n", file);
     }
@@ -3131,11 +3144,16 @@ static
 void
 wasmCWriteTables(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    const char* keyword
 ) {
     U32 tableIndex = 0;
     for (; tableIndex < module->tables.count; tableIndex++) {
-        fputs("static wasmTable ", file);
+        if (keyword != NULL) {
+            fputs(keyword, file);
+            fputc(' ', file);
+        }
+        fputs("wasmTable ", file);
         wasmCWriteFileTableName(file, module, module->tableImports.length + tableIndex, false);
         fputs(";\n\n", file);
     }
@@ -3202,52 +3220,44 @@ wasmCWriteInitTables(
     return true;
 }
 
-bool
-WARN_UNUSED_RESULT
-wasmCWriteModule(
-    FILE* file,
-    const WasmModule* module
+static
+void
+wasmCWriteBaseInclude(
+    FILE* file
 ) {
     fputs("#include \"w2c2_base.h\"\n\n", file);
+}
 
-    /* Functions */
+static
+void
+wasmCWriteModuleDeclarations(
+    FILE* file,
+    const WasmModule* module,
+    bool parallel
+) {
+    const char* keyword = parallel ? keywordExtern : keywordStatic;
 
     wasmCWriteFunctionImports(file, module);
-
-    MUST (wasmCWriteFunctionDeclarations(file, module))
-
-    /* Memories */
-
-    wasmCWriteDataSegments(file, module);
+    wasmCWriteFunctionDeclarations(file, module);
 
     wasmCWriteMemoryImports(file, module);
-
-    wasmCWriteMemories(file, module);
-    MUST (wasmCWriteInitMemories(file, module))
-
-    /* Tables */
+    wasmCWriteMemories(file, module, keyword);
 
     wasmCWriteTableImports(file, module);
-
-    wasmCWriteTables(file, module);
-    MUST (wasmCWriteInitTables(file, module))
-
-    /* Globals */
+    wasmCWriteTables(file, module, keyword);
 
     wasmCWriteGlobalImports(file, module);
-
-    wasmCWriteGlobals(file, module);
-    MUST (wasmCWriteInitGlobals(file, module))
-
-    /* Exports */
+    wasmCWriteGlobals(file, module, keyword);
 
     wasmCWriteExports(file, module);
-    wasmCWriteInitExports(file, module);
+}
 
-    /* Code */
-
-    MUST (wasmCWriteFunctionImplementations(file, module))
-
+static
+void
+wasmCWriteInitFunction(
+    const WasmModule* module,
+    FILE* file
+) {
     fputs("void init(void) {\n", file);
     fputs("    initMemories();\n", file);
     fputs("    initTables();\n", file);
@@ -3259,6 +3269,408 @@ wasmCWriteModule(
         fputs("();\n", file);
     }
     fputs("}\n", file);
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteDeclarations(
+    const WasmModule* module,
+    FILE* singleFile
+) {
+    bool parallel = singleFile == NULL;
+    FILE* file = singleFile;
+
+    if (parallel) {
+        file = fopen("decls.h", "w");
+        if (file == NULL) {
+            return false;
+        }
+        wasmCWriteBaseInclude(file);
+    }
+
+    wasmCWriteModuleDeclarations(file, module, parallel);
+
+    if (parallel) {
+        fclose(file);
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteInits(
+    const WasmModule* module,
+    FILE* singleFile
+) {
+    bool parallel = singleFile == NULL;
+    FILE* file = singleFile;
+
+    if (parallel) {
+        file = fopen("inits.c", "w");
+        if (file == NULL) {
+            return false;
+        }
+        wasmCWriteBaseInclude(file);
+        fputs("#include \"decls.h\"\n\n", file);
+    }
+
+    wasmCWriteDataSegments(file, module);
+
+    if (parallel) {
+        wasmCWriteMemories(file, module, NULL);
+        wasmCWriteTables(file, module, NULL);
+        wasmCWriteGlobals(file, module, NULL);
+    }
+
+    MUST (wasmCWriteInitMemories(file, module))
+    MUST (wasmCWriteInitTables(file, module))
+    wasmCWriteInitExports(file, module);
+    MUST (wasmCWriteInitGlobals(file, module))
+
+    wasmCWriteInitFunction(module, file);
+
+    if (parallel) {
+        fclose(file);
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteImplementationFile(
+    const WasmModule* module,
+    U32 fileIndex,
+    U32 functionsPerFile,
+    FILE* singleFile,
+    U32 startFunctionIndex
+) {
+    U32 functionCount = module->functions.count;
+    bool parallel = singleFile == NULL;
+    FILE* file = singleFile;
+
+    if (parallel) {
+        char filename[2048];
+        sprintf(filename, "%d.c", fileIndex);
+        file = fopen(filename, "w");
+        if (file == NULL) {
+            fprintf(stderr, "w2c2: failed to open file %s for writing\n", filename);
+            return false;
+        }
+        wasmCWriteBaseInclude(file);
+        fputs("#include \"decls.h\"\n\n", file);
+    }
+
+    {
+        U32 endIndex = startFunctionIndex + functionsPerFile;
+        if (endIndex > functionCount) {
+            endIndex = functionCount;
+        }
+
+        MUST (wasmCWriteFunctionImplementations(
+            file,
+            module,
+            startFunctionIndex,
+            endIndex
+        ))
+    }
+
+    if (parallel) {
+        fclose(file);
+    }
+
+    return true;
+}
+
+typedef struct WasmCDeclarationsWriterJob {
+    pthread_t thread;
+    const WasmModule* module;
+    bool result;
+} WasmCDeclarationsWriterJob;
+
+
+static
+void*
+wasmCDeclarationsWriterThread(
+    void* arg
+) {
+    WasmCDeclarationsWriterJob* job = (WasmCDeclarationsWriterJob *) arg;
+    bool result = wasmCWriteDeclarations(job->module, NULL);
+    if (!result) {
+        fprintf(stderr, "w2c2: failed to write declarations\n");
+    }
+    job->result = result;
+
+    return NULL;
+}
+
+typedef struct WasmCImplementationWriterJob {
+    pthread_t thread;
+    U32 jobIndex;
+    U32 functionCountPerJob;
+    U32 functionsPerFile;
+    const WasmModule* module;
+    bool result;
+} WasmCImplementationWriterJob;
+
+static
+void*
+wasmCImplementationWriterThread(
+    void* arg
+) {
+    WasmCImplementationWriterJob* job = (WasmCImplementationWriterJob*) arg;
+
+    U32 jobIndex = job->jobIndex;
+    U32 functionCountPerJob = job->functionCountPerJob;
+    U32 functionsPerFile = job->functionsPerFile;
+    const WasmModule* module = job->module;
+
+    U32 startFunctionIndex = jobIndex * functionCountPerJob;
+    U32 maxFunctionIndex = startFunctionIndex + functionCountPerJob;
+    U32 fileIndex = startFunctionIndex / functionsPerFile;
+
+    for (;
+        startFunctionIndex < maxFunctionIndex;
+        startFunctionIndex += functionsPerFile, fileIndex++
+    ) {
+        bool result = wasmCWriteImplementationFile(
+            module,
+            fileIndex,
+            functionsPerFile,
+            NULL,
+            startFunctionIndex
+        );
+        if (!result) {
+            fprintf(
+                stderr,
+                "w2c2: failed to write implementation (job %d, file %d, start func %d)\n",
+                jobIndex,
+                fileIndex,
+                startFunctionIndex
+            );
+            job->result = false;
+            return NULL;
+        }
+    }
+
+    job->result = true;
+
+    return NULL;
+}
+
+typedef struct WasmCInitsWriterJob {
+    pthread_t thread;
+    const WasmModule* module;
+    bool result;
+} WasmCInitsWriterJob;
+
+
+static
+void*
+wasmCInitsWriterThread(
+    void* arg
+) {
+    WasmCInitsWriterJob* job = (WasmCInitsWriterJob *) arg;
+    bool result = wasmCWriteInits(job->module, NULL);
+    if (!result) {
+        fprintf(stderr, "w2c2: failed to write inits\n");
+    }
+    job->result = result;
+    return NULL;
+}
+
+static
+U32
+roundUp(
+    U32 n,
+    U32 multiple
+) {
+    if (multiple == 0) {
+        return n;
+    } else {
+        U32 remainder = n % multiple;
+        if (remainder == 0) {
+            return n;
+        }
+
+        return n + multiple - remainder;
+    }
+}
+
+bool
+WARN_UNUSED_RESULT
+wasmCWriteModule(
+    const char* outputPath,
+    const WasmModule* module,
+    U32 jobCount,
+    U32 functionsPerFile
+) {
+    bool parallel = jobCount > 1;
+    FILE *singleFile = NULL;
+
+    U32 functionCount = module->functions.count;
+    U32 functionCountPerJob = roundUp(
+        (U32)ceilf((float)functionCount / jobCount),
+        functionsPerFile
+    );
+
+    WasmCInitsWriterJob initsJob;
+    WasmCDeclarationsWriterJob declarationsJob;
+
+    WasmCImplementationWriterJob* implementationJobs =
+        calloc(jobCount * sizeof(WasmCImplementationWriterJob), 1);
+    if (implementationJobs == NULL) {
+        fprintf(stderr, "w2c2: failed to allocate job\n");
+        return false;
+    }
+
+    initsJob.module = module;
+    declarationsJob.module = module;
+
+    /* Change to output directory / open single file (if non-parallel) */
+
+    if (parallel) {
+        if (chdir(outputPath) < 0) {
+            fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputPath);
+            return false;
+        }
+    } else {
+        if (outputPath == NULL) {
+            singleFile = stdout;
+        } else {
+            singleFile = fopen(outputPath, "w");
+            if (singleFile == NULL) {
+                fprintf(stderr, "w2c2: failed to open output file %s\n", outputPath);
+                return false;
+            }
+        }
+        wasmCWriteBaseInclude(singleFile);
+    }
+
+    /* Write declarations */
+
+    if (parallel) {
+        int err = pthread_create(
+            &declarationsJob.thread,
+            NULL,
+            wasmCDeclarationsWriterThread,
+            &declarationsJob
+        );
+        if (err) {
+            fprintf(stderr, "w2c2: failed to create declarations thread: %s\n", strerror(err));
+            return false;
+        }
+    } else {
+        MUST (wasmCWriteDeclarations(module, singleFile))
+    }
+
+    /* Write implementations */
+
+    if (parallel) {
+        U32 jobIndex = 0;
+        for (; jobIndex < jobCount; jobIndex++) {
+            WasmCImplementationWriterJob job;
+            job.jobIndex = jobIndex;
+            job.functionCountPerJob = functionCountPerJob;
+            job.functionsPerFile = functionsPerFile;
+            job.module = module;
+            implementationJobs[jobIndex] = job;
+
+            {
+                int err = pthread_create(
+                    &implementationJobs[jobIndex].thread,
+                    NULL,
+                    wasmCImplementationWriterThread,
+                    &implementationJobs[jobIndex]
+                );
+                if (err) {
+                    fprintf(stderr, "w2c2: failed to create implementations thread: %s\n", strerror(err));
+                    return false;
+                }
+            }
+        }
+    } else {
+        MUST (wasmCWriteImplementationFile(
+            module,
+            0,
+            functionsPerFile,
+            singleFile,
+            0
+        ))
+    }
+
+    /* Write initializations code */
+
+    if (parallel) {
+        int err = pthread_create(
+            &initsJob.thread,
+            NULL,
+            wasmCInitsWriterThread,
+            &initsJob
+        );
+        if (err) {
+            fprintf(stderr, "w2c2: failed to create inits thread: %s\n", strerror(err));
+            return false;
+        }
+    } else {
+        MUST (wasmCWriteInits(module, singleFile))
+    }
+
+    /* Wait for threads */
+
+    if (parallel) {
+        /* Declarations */
+        {
+            int err = pthread_join(declarationsJob.thread, NULL);
+            if (err) {
+                fprintf(stderr, "w2c2: failed to join declarations thread: %s\n", strerror(err));
+                return false;
+            }
+
+            MUST (declarationsJob.result)
+        }
+
+        /* Implementations */
+        {
+            U32 jobIndex = 0;
+            for (; jobIndex < jobCount; jobIndex++) {
+                WasmCImplementationWriterJob* job = &implementationJobs[jobIndex];
+
+                int err = pthread_join(job->thread, NULL);
+                if (err) {
+                    fprintf(stderr, "w2c2: failed to join implementation thread: %s\n", strerror(err));
+                    return false;
+                }
+
+                MUST (job->result)
+            }
+        }
+
+        /* Inits */
+        {
+            int err = pthread_join(initsJob.thread, NULL);
+            if (err) {
+                fprintf(stderr, "w2c2: failed to join inits thread: %s\n", strerror(err));
+                return false;
+            }
+
+            MUST (initsJob.result)
+        }
+    }
+
+    /* Close single file */
+
+    if (!parallel && outputPath != NULL) {
+        fclose(singleFile);
+    }
+
+    if (implementationJobs != NULL) {
+        free(implementationJobs);
+    }
 
     return true;
 }

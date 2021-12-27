@@ -5,7 +5,7 @@ rust-wasi: rust-wasi.o main.o ../../wasi/wasi.o
 	$(CC) $^ -o rust-wasi $(LDFLAGS)
 
 %.c: %.wasm
-	../../w2c2 $< > $@
+	../../w2c2 -o $@ $<
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@
