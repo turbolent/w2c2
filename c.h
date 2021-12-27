@@ -10,7 +10,8 @@ wasmCWriteModule(
     const char* outputPath,
     const WasmModule* module,
     U32 jobCount,
-    U32 functionsPerFile
+    U32 functionsPerFile,
+    bool pretty
 );
 
 #endif /* W2C2_C_H */
