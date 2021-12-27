@@ -545,6 +545,19 @@ wasmCWrite(
 }
 
 static
+__inline__
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAssign(
+    WasmCFunctionWriter* writer
+) {
+    return wasmCWrite(
+        writer,
+        writer->pretty ? " = " : "="
+    );
+}
+
+static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionCode(
@@ -589,7 +602,7 @@ wasmCWriteCallExpr(
 
                 MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
                 MUST (wasmCWriteStringStackName(writer->builder, resultStackIndex, resultType))
-                MUST (wasmCWrite(writer, " = "))
+                MUST (wasmCWriteAssign(writer))
             }
 
             MUST (wasmCWriteStringFunctionName(writer->builder, writer->module, instruction.funcIndex, false))
@@ -684,7 +697,7 @@ wasmCWriteCallIndirectExpr(
 
             MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
             MUST (wasmCWriteStringStackName(writer->builder, resultStackIndex, resultType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
         }
 
         MUST (wasmCWrite(writer, "TF("))
@@ -778,7 +791,7 @@ wasmCWriteLocalGetExpr(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, localType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringLocalName(writer->builder, instruction.localIndex))
             MUST (wasmCWrite(writer, ";\n"))
         }
@@ -827,7 +840,7 @@ wasmCWriteLocalAssignmentExpr(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringLocalName(writer->builder, instruction.localIndex))
-            MUST (wasmCWrite(writer, "="))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, localType))
             MUST (wasmCWrite(writer, ";\n"))
         }
@@ -880,7 +893,7 @@ wasmCWriteGlobalGetExpr(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, globalType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringGlobalName(writer->builder, writer->module, instruction.globalIndex, false))
             MUST (wasmCWrite(writer, ";\n"))
         }
@@ -928,7 +941,7 @@ wasmCWriteGlobalSetExpr(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringGlobalName(writer->builder, writer->module, instruction.globalIndex, false))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, globalType))
             MUST (wasmCWrite(writer, ";\n"))
         }
@@ -1026,7 +1039,7 @@ wasmCWriteConstExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteLiteral(writer->builder, resultType, instruction.value))
             MUST (wasmCWrite(writer, ";\n"))
         }
@@ -1124,7 +1137,7 @@ wasmCWriteLoadExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWrite(writer, "("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
@@ -1285,7 +1298,7 @@ wasmCWriteMemorySize(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, false))
             MUST (wasmCWrite(writer, ".pages;\n"))
         }
@@ -1360,7 +1373,7 @@ wasmCWriteUnaryExpr(
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-    MUST (wasmCWrite(writer, " = "))
+    MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
     MUST (wasmCWrite(writer, "("))
     MUST (wasmCWriteStringStackName(
@@ -1396,11 +1409,16 @@ wasmCWriteInfixBinaryExpr(
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
 
     if (assignmentAllowed) {
-        MUST (wasmCWrite(writer, " "))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, " "))
+        }
         MUST (wasmCWrite(writer, operator))
-        MUST (wasmCWrite(writer, "= "))
+        MUST (wasmCWrite(writer, "="))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, " "))
+        }
     } else {
-        MUST (wasmCWrite(writer, " = "))
+        MUST (wasmCWriteAssign(writer))
         MUST (wasmCWriteStringStackName(
             writer->builder,
             stackIndex1,
@@ -1487,7 +1505,7 @@ wasmCWritePrefixBinaryExpr(
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
-    MUST (wasmCWrite(writer, " = "))
+    MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
     MUST (wasmCWrite(writer, "("))
     MUST (wasmCWriteStringStackName(
@@ -1889,7 +1907,7 @@ wasmCWriteGoto(
             MUST (wasmTypeStackSet(writer->stackDeclarations, destinationStackIndex, resultType))
 
             MUST (wasmCWriteStringStackName(writer->builder, destinationStackIndex, resultType))
-            MUST (wasmCWrite(writer, " = "))
+            MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex0,
@@ -1926,7 +1944,7 @@ wasmCWriteSelectExpr(
         stackIndex2,
         resultType
     ))
-    MUST (wasmCWrite(writer, " = "))
+    MUST (wasmCWriteAssign(writer))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
