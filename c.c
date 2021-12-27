@@ -558,6 +558,32 @@ wasmCWriteAssign(
 }
 
 static
+__inline__
+bool
+WARN_UNUSED_RESULT
+wasmCWriteComma(
+    WasmCFunctionWriter* writer
+) {
+    return wasmCWrite(
+        writer,
+        writer->pretty ? ", " : ","
+    );
+}
+
+static
+__inline__
+bool
+WARN_UNUSED_RESULT
+wasmCWritePlus(
+    WasmCFunctionWriter* writer
+) {
+    return wasmCWrite(
+        writer,
+        writer->pretty ? " + " : "+"
+    );
+}
+
+static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionCode(
@@ -617,7 +643,7 @@ wasmCWriteCallExpr(
                         parameterCount - parameterIndex - 1
                     );
                     if (parameterIndex > 0) {
-                        MUST (wasmCWrite(writer, ", "))
+                        MUST (wasmCWriteComma(writer))
                     }
                     MUST (wasmCWriteStringStackName(writer->builder, paramStackIndex, parameterType))
                 }
@@ -651,7 +677,7 @@ wasmCWriteParameters(
         for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
             const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
             if (parameterIndex > 0) {
-                MUST (wasmCWrite(writer, ", "))
+                MUST (wasmCWriteComma(writer))
             }
             MUST (wasmCWrite(writer, valueTypeNames[parameterType]))
         }
@@ -702,7 +728,7 @@ wasmCWriteCallIndirectExpr(
 
         MUST (wasmCWrite(writer, "TF("))
         MUST (wasmCWriteStringTableName(writer->builder, writer->module, instruction.tableIndex, false))
-        MUST (wasmCWrite(writer, ", "))
+        MUST (wasmCWriteComma(writer))
 
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
@@ -713,7 +739,7 @@ wasmCWriteCallIndirectExpr(
             ))
         }
 
-        MUST (wasmCWrite(writer, ", "))
+        MUST (wasmCWriteComma(writer))
         MUST (wasmCWrite(writer, wasmCGetReturnType(functionType)))
         MUST (wasmCWrite(writer, " (*)"))
 
@@ -730,7 +756,7 @@ wasmCWriteCallIndirectExpr(
                     parameterCount - parameterIndex
                 );
                 if (parameterIndex > 0) {
-                    MUST (wasmCWrite(writer, ", "))
+                    MUST (wasmCWriteComma(writer))
                 }
                 MUST (wasmCWriteStringStackName(writer->builder, paramStackIndex, parameterType))
             }
@@ -1141,7 +1167,8 @@ wasmCWriteLoadExpr(
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWrite(writer, "("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
-            MUST (wasmCWrite(writer, ", (U64)("))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWrite(writer, "(U64)("))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex0,
@@ -1149,7 +1176,7 @@ wasmCWriteLoadExpr(
             ))
             MUST (wasmCWrite(writer, ")"))
             if (instruction.offset != 0) {
-                MUST (wasmCWrite(writer, " + "))
+                MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
                 MUST (wasmCWrite(writer, "u"))
             }
@@ -1235,7 +1262,8 @@ wasmCWriteStoreExpr(
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWrite(writer, "("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
-            MUST (wasmCWrite(writer, ", (U64)("))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWrite(writer, "(U64)("))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex1,
@@ -1243,11 +1271,11 @@ wasmCWriteStoreExpr(
             ))
             MUST (wasmCWrite(writer, ")"))
             if (instruction.offset != 0) {
-                MUST (wasmCWrite(writer, " + "))
+                MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
                 MUST (wasmCWrite(writer, "u"))
             }
-            MUST (wasmCWrite(writer, ", "))
+            MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex0,
@@ -1342,9 +1370,10 @@ wasmCWriteMemoryGrow(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-            MUST (wasmCWrite(writer, " = wasmGrowMemory("))
+            MUST (wasmCWriteAssign(writer))
+            MUST (wasmCWrite(writer, "wasmGrowMemory("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
-            MUST (wasmCWrite(writer, ", "))
+            MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex0,
@@ -1513,7 +1542,7 @@ wasmCWritePrefixBinaryExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, ", "))
+    MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
