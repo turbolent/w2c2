@@ -439,7 +439,8 @@ wasmCWriteFileFunctionSignature(
     FILE* file,
     const WasmModule* module,
     const WasmFunction function,
-    const U32 functionIndex
+    const U32 functionIndex,
+    bool writeParameterNames
 ) {
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -455,12 +456,12 @@ wasmCWriteFileFunctionSignature(
             if (parameterIndex > 0) {
                 fputs(", ", file);
             }
-            {
-                const char* parameterTypeName = valueTypeNames[parameterType];
-                fputs(parameterTypeName, file);
+            const char* parameterTypeName = valueTypeNames[parameterType];
+            fputs(parameterTypeName, file);
+            if (writeParameterNames) {
+                fputc(' ', file);
+                wasmCWriteFileLocalName(file, parameterIndex);
             }
-            fputs(" ", file);
-            wasmCWriteFileLocalName(file, parameterIndex);
         }
     }
     fputs(")", file);
@@ -2768,7 +2769,7 @@ wasmCWriteFunctionDeclarations(
     U32 functionIndex = 0;
     for (; functionIndex < module->functions.count; functionIndex++) {
         const WasmFunction function = module->functions.functions[functionIndex];
-        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex);
+        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, false);
         fputs(";\n\n", file);
     }
 }
@@ -2796,8 +2797,8 @@ wasmCWriteFunctionImplementations(
         wasmTypeStackClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
 
-        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex);
-        fputs(" ", file);
+        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, true);
+        fputc(' ', file);
         MUST (wasmCWriteFunctionBody(file, &typeStack, &stackDeclarations, &labelStack, module, function))
         fputs("\n", file);
     }
