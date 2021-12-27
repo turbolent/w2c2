@@ -1,4 +1,5 @@
-CFLAGS = -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function -pthread
+CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function -pthread
+LDFLAGS += -lm
 
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined
@@ -28,10 +29,10 @@ TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
 	$(CC) $(CFLAGS) -c $< -o $@
 
 w2c2: $(TARGET_OBJECTS)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 w2c2_test: $(TEST_OBJECTS)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
 	-rm -f *.o
