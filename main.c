@@ -39,13 +39,14 @@ main(
     char* modulePath = NULL;
     char* outputPath = NULL;
     U32 functionsPerFile = 10;
+    bool pretty = false;
 
     int index;
     int c;
 
     opterr = 0;
 
-    while ((c = getopt(argc, argv, "j:o:f:h")) != -1) {
+    while ((c = getopt(argc, argv, "j:o:f:ph")) != -1) {
         switch (c) {
             case 'j': {
                 jobCount = strtoul(optarg, NULL, 0);
@@ -59,6 +60,10 @@ main(
                 functionsPerFile = strtoul(optarg, NULL, 0);
                 break;
             }
+            case 'p': {
+                pretty = true;
+                break;
+            }
             case 'h': {
                 fprintf(
                     stderr,
@@ -68,6 +73,7 @@ main(
                     "  -j         Number of jobCount (>1 enables parallel compilation and requires -o)\n"
                     "  -f         Number of functions per file when parallel compilation is enabled\n"
                     "  -o PATH    Path for the output file(s), by default use stdout. Required for parallel compilation\n"
+                    "  -p         Generate pretty code\n"
                 );
                 return 0;
             }
@@ -124,7 +130,7 @@ main(
             functionsPerFile = wasmModuleReader.module->functions.count;
         }
 
-        if (!wasmCWriteModule(outputPath, wasmModuleReader.module, jobCount, functionsPerFile)) {
+        if (!wasmCWriteModule(outputPath, wasmModuleReader.module, jobCount, functionsPerFile, pretty)) {
             fprintf(stderr, "w2c2: failed to compile\n");
             return 1;
         }
