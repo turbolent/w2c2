@@ -7,8 +7,10 @@
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    FILE* file,
-    const WasmModule* module
+    const char* outputPath,
+    const WasmModule* module,
+    U32 jobCount,
+    U32 functionsPerFile
 );
 
 #endif /* W2C2_C_H */

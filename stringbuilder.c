@@ -82,7 +82,7 @@ stringBuilderAppendI64(
     StringBuilder* stringBuilder,
     I64 value
 ) {
-    static char buffer[22];
+    char buffer[22];
     size_t length = sprintf(buffer, "%lld", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -92,7 +92,7 @@ stringBuilderAppendF32(
     StringBuilder* stringBuilder,
     F32 value
 ) {
-    static char buffer[32];
+    char buffer[32];
     size_t length = sprintf(buffer, "%.9g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -102,7 +102,7 @@ stringBuilderAppendF64(
     StringBuilder* stringBuilder,
     F64 value
 ) {
-    static char buffer[32];
+    char buffer[32];
     size_t length = sprintf(buffer, "%.17g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -112,7 +112,7 @@ stringBuilderAppendCharHex(
     StringBuilder* stringBuilder,
     char value
 ) {
-    static char buffer[3];
+    char buffer[3];
     size_t length = sprintf(buffer, "%02X", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -122,7 +122,7 @@ stringBuilderAppendU32Hex(
     StringBuilder* stringBuilder,
     U32 value
 ) {
-    static char buffer[9];
+    char buffer[9];
     size_t length = sprintf(buffer, "%08X", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -132,7 +132,7 @@ stringBuilderAppendU64Hex(
     StringBuilder* stringBuilder,
     U64 value
 ) {
-    static char buffer[17];
+    char buffer[17];
     size_t length = sprintf(buffer, "%016llX", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }

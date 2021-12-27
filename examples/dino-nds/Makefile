@@ -20,7 +20,7 @@ dino.elf: dino.o main.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.c: %.wasm
-	../../w2c2 $< > $@
+	../../w2c2 -o $@ $<
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@

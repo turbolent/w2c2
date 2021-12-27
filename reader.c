@@ -1544,7 +1544,7 @@ wasmModuleReadSection(
         }
     }
 
-    fprintf(stderr, "WasmModuleReader: skipping unsupported %s\n", wasmSectionIDDescription(sectionID));
+    fprintf(stderr, "w2c2: skipping unsupported %s\n", wasmSectionIDDescription(sectionID));
 
     bufferSkip(&reader->buffer, sectionSize);
 
