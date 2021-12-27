@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  create:
+    tags:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    name: linux-${{ matrix.config }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [release, debug]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential wabt python3
+      - name: Build
+        run: make ${{ matrix.config }}
+      - name: Generate tests
+        working-directory: ./tests
+        run: make gen
+      - name: Run tests
+        working-directory: ./tests
+        run: |
+          make run-tests 2>&1 | tee results
+          ! grep -q "^FAIL: " results
