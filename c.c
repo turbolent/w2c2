@@ -442,7 +442,8 @@ wasmCWriteFileFunctionSignature(
     const WasmModule* module,
     const WasmFunction function,
     const U32 functionIndex,
-    bool writeParameterNames
+    bool writeParameterNames,
+    bool pretty
 ) {
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -457,7 +458,11 @@ wasmCWriteFileFunctionSignature(
             const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
             const char* parameterTypeName = valueTypeNames[parameterType];
             if (parameterIndex > 0) {
-                fputs(", ", file);
+                if (pretty) {
+                    fputs(", ", file);
+                } else {
+                    fputc(',', file);
+                }
             }
             fputs(parameterTypeName, file);
             if (writeParameterNames) {
@@ -495,7 +500,7 @@ wasmCWriteFileLocalsDeclarations(
             fputs(valueTypeNames[localsDeclaration.type], file);
             fputc(' ', file);
             wasmCWriteFileLocalName(file, parameterCount + localIndex);
-            fputs(" = 0;\n", file);
+            fputs(pretty ? " = 0;\n" : "=0;\n", file);
         }
     }
 }
@@ -2661,23 +2666,40 @@ wasmCWriteStackDeclarations(
     const WasmTypeStack* stackDeclarations,
     bool pretty
 ) {
-    U32 stackDeclarationIndex = 0;
-    for (; stackDeclarationIndex < stackDeclarations->length; stackDeclarationIndex++) {
-        WasmValueType entry = stackDeclarations->valueTypes[stackDeclarationIndex];
-        if (entry) {
-            WasmValueType testType = 0;
-            for (; testType < wasmValueType_count; testType++) {
-                if (!wasmTypeStackIsSet(stackDeclarations, stackDeclarationIndex, testType)) {
-                    continue;
-                }
+    WasmValueType testType = 0;
+    for (; testType < wasmValueType_count; testType++) {
+        U32 written = 0;
+
+        U32 stackDeclarationIndex = 0;
+        for (; stackDeclarationIndex < stackDeclarations->length; stackDeclarationIndex++) {
+            WasmValueType entry = stackDeclarations->valueTypes[stackDeclarationIndex];
+            if (!entry) {
+                continue;
+            }
+            if (!wasmTypeStackIsSet(stackDeclarations, stackDeclarationIndex, testType)) {
+                continue;
+            }
+            if (written == 0) {
                 if (pretty) {
                     fputs(indentation, file);
                 }
                 fputs(valueTypeNames[testType], file);
                 fputc(' ', file);
-                wasmCWriteFileStackName(file, stackDeclarationIndex, testType);
-                fputs(";\n", file);
+            } else {
+                if (pretty) {
+                    fputs(", ", file);
+                } else {
+                    fputc(',', file);
+                }
             }
+
+            wasmCWriteFileStackName(file, stackDeclarationIndex, testType);
+
+            written++;
+        }
+
+        if (written > 0) {
+            fputs(";\n", file);
         }
     }
 }
@@ -2782,7 +2804,8 @@ static
 void
 wasmCWriteFileParameters(
     FILE* file,
-    WasmFunctionType functionType
+    WasmFunctionType functionType,
+    bool pretty
 ) {
     fputc('(', file);
     {
@@ -2790,7 +2813,11 @@ wasmCWriteFileParameters(
         for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
             const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
             if (parameterIndex > 0) {
-                fputs(", ", file);
+                if (pretty) {
+                    fputs(", ", file);
+                } else {
+                    fputc(',', file);
+                }
             }
             {
                 const char* parameterTypeName = valueTypeNames[parameterType];
@@ -2805,7 +2832,8 @@ static
 void
 wasmCWriteFunctionImports(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    bool pretty
 ) {
     U32 functionIndex = 0;
     U32 functionImportCount = module->functionImports.length;
@@ -2818,7 +2846,7 @@ wasmCWriteFunctionImports(
         fputs(wasmCGetReturnType(functionType), file);
         fputc(' ', file);
         wasmCWriteFileFunctionName(file, module, functionIndex, false);
-        wasmCWriteFileParameters(file, functionType);
+        wasmCWriteFileParameters(file, functionType, pretty);
         fputs(";\n\n", file);
     }
 }
@@ -2827,14 +2855,15 @@ static
 void
 wasmCWriteFunctionDeclarations(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    bool pretty
 ) {
     U32 functionImportCount = module->functionImports.length;
 
     U32 functionIndex = 0;
     for (; functionIndex < module->functions.count; functionIndex++) {
         const WasmFunction function = module->functions.functions[functionIndex];
-        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, false);
+        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, false, pretty);
         fputs(";\n\n", file);
     }
 }
@@ -2863,7 +2892,7 @@ wasmCWriteFunctionImplementations(
         wasmTypeStackClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
 
-        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, true);
+        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, true, pretty);
         fputc(' ', file);
         MUST (wasmCWriteFunctionBody(file, &typeStack, &stackDeclarations, &labelStack, module, function, pretty))
         fputs("\n", file);
@@ -3005,7 +3034,8 @@ wasmCWriteFunctionExport(
     FILE* file,
     const WasmModule* module,
     WasmExport export,
-    WasmFunction function
+    WasmFunction function,
+    bool pretty
 ) {
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -3014,7 +3044,7 @@ wasmCWriteFunctionExport(
     fputs(" (*", file);
     wasmCWriteExportName(file, export.name);
     fputc(')', file);
-    wasmCWriteFileParameters(file, functionType);
+    wasmCWriteFileParameters(file, functionType, pretty);
     fputs(";\n\n", file);
 }
 
@@ -3033,7 +3063,8 @@ static
 void
 wasmCWriteExports(
     FILE* file,
-    const WasmModule* module
+    const WasmModule* module,
+    bool pretty
 ) {
     U32 exportIndex = 0;
     for (; exportIndex < module->exports.count; exportIndex++) {
@@ -3043,7 +3074,7 @@ wasmCWriteExports(
                 U32 functionImportCount = module->functionImports.length;
                 U32 functionIndex = export.index - functionImportCount;
                 const WasmFunction function = module->functions.functions[functionIndex];
-                wasmCWriteFunctionExport(file, module, export, function);
+                wasmCWriteFunctionExport(file, module, export, function, pretty);
                 break;
             }
             case wasmExportKindMemory: {
@@ -3117,7 +3148,12 @@ wasmCWriteDataSegments(
         {
             U32 byteIndex = 0;
             for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
-                fprintf(file, "0x%x, ", dataSegment.bytes.data[byteIndex]);
+                fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
+                if (pretty) {
+                    fputs(", ", file);
+                } else {
+                    fputc(',', file);
+                }
             }
         }
         fputs("\n};\n\n", file);
@@ -3331,12 +3367,13 @@ void
 wasmCWriteModuleDeclarations(
     FILE* file,
     const WasmModule* module,
-    bool parallel
+    bool parallel,
+    bool pretty
 ) {
     const char* keyword = parallel ? keywordExtern : keywordStatic;
 
-    wasmCWriteFunctionImports(file, module);
-    wasmCWriteFunctionDeclarations(file, module);
+    wasmCWriteFunctionImports(file, module, pretty);
+    wasmCWriteFunctionDeclarations(file, module, pretty);
 
     wasmCWriteMemoryImports(file, module);
     wasmCWriteMemories(file, module, keyword);
@@ -3347,7 +3384,7 @@ wasmCWriteModuleDeclarations(
     wasmCWriteGlobalImports(file, module);
     wasmCWriteGlobals(file, module, keyword);
 
-    wasmCWriteExports(file, module);
+    wasmCWriteExports(file, module, pretty);
 }
 
 static
@@ -3394,7 +3431,8 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteDeclarations(
     const WasmModule* module,
-    FILE* singleFile
+    FILE* singleFile,
+    bool pretty
 ) {
     bool parallel = singleFile == NULL;
     FILE* file = singleFile;
@@ -3407,7 +3445,7 @@ wasmCWriteDeclarations(
         wasmCWriteBaseInclude(file);
     }
 
-    wasmCWriteModuleDeclarations(file, module, parallel);
+    wasmCWriteModuleDeclarations(file, module, parallel, pretty);
 
     if (parallel) {
         fclose(file);
@@ -3510,6 +3548,7 @@ wasmCWriteImplementationFile(
 typedef struct WasmCDeclarationsWriterJob {
     pthread_t thread;
     const WasmModule* module;
+    bool pretty;
     bool result;
 } WasmCDeclarationsWriterJob;
 
@@ -3520,7 +3559,7 @@ wasmCDeclarationsWriterThread(
     void* arg
 ) {
     WasmCDeclarationsWriterJob* job = (WasmCDeclarationsWriterJob *) arg;
-    bool result = wasmCWriteDeclarations(job->module, NULL);
+    bool result = wasmCWriteDeclarations(job->module, NULL, job->pretty);
     if (!result) {
         fprintf(stderr, "w2c2: failed to write declarations\n");
     }
@@ -3655,7 +3694,9 @@ wasmCWriteModule(
     }
 
     initsJob.module = module;
+
     declarationsJob.module = module;
+    declarationsJob.pretty = pretty;
 
     /* Change to output directory / open single file (if non-parallel) */
 
@@ -3691,7 +3732,7 @@ wasmCWriteModule(
             return false;
         }
     } else {
-        if (!wasmCWriteDeclarations(module, singleFile)) {
+        if (!wasmCWriteDeclarations(module, singleFile, pretty)) {
             fprintf(stderr, "w2c2: failed to write declarations\n");
             return false;
         }
