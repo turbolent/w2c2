@@ -422,7 +422,7 @@ wasmCGetReturnType(
         }
         default:
             /* TODO: add support for multiple result values */
-            fprintf(stderr, "ERROR: function with multiple result values\n");
+            fprintf(stderr, "w2c2: unsupported function with multiple result values\n");
             abort();
     }
 }
@@ -547,7 +547,7 @@ wasmCWriteCallExpr(
     if (!wasmCallInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -643,7 +643,7 @@ wasmCWriteCallIndirectExpr(
     if (!wasmCallIndirectInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -732,7 +732,7 @@ wasmCWriteLocalGetExpr(
     if (!wasmLocalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -749,7 +749,7 @@ wasmCWriteLocalGetExpr(
         if (!gotType) {
             fprintf(
                 stderr,
-                "ERROR: invalid %s instruction: invalid local index: %u\n",
+                "w2c2: invalid %s instruction: invalid local index: %u\n",
                 wasmOpcodeDescription(opcode),
                 instruction.localIndex
             );
@@ -782,7 +782,7 @@ wasmCWriteLocalAssignmentExpr(
     if (!wasmLocalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -799,7 +799,7 @@ wasmCWriteLocalAssignmentExpr(
         if (!gotType) {
             fprintf(
                 stderr,
-                "ERROR: invalid %s instruction: invalid local index: %u\n",
+                "w2c2: invalid %s instruction: invalid local index: %u\n",
                 wasmOpcodeDescription(opcode),
                 instruction.localIndex
             );
@@ -835,7 +835,7 @@ wasmCWriteGlobalGetExpr(
     if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -851,7 +851,7 @@ wasmCWriteGlobalGetExpr(
         if (!gotType) {
             fprintf(
                 stderr,
-                "ERROR: invalid %s instruction: invalid global index: %u\n",
+                "w2c2: invalid %s instruction: invalid global index: %u\n",
                 wasmOpcodeDescription(opcode),
                 instruction.globalIndex
             );
@@ -884,7 +884,7 @@ wasmCWriteGlobalSetExpr(
     if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -900,7 +900,7 @@ wasmCWriteGlobalSetExpr(
         if (!gotType) {
             fprintf(
                 stderr,
-                "ERROR: invalid %s instruction: invalid global index: %u\n",
+                "w2c2: invalid %s instruction: invalid global index: %u\n",
                 wasmOpcodeDescription(opcode),
                 instruction.globalIndex
             );
@@ -982,7 +982,7 @@ wasmCWriteLiteral(
             break;
         }
         default:
-            fprintf(stderr, "ERROR: unsupported const type %s\n", wasmValueTypeDescription(valueType));
+            fprintf(stderr, "w2c2: unsupported const type %s\n", wasmValueTypeDescription(valueType));
             return false;
     }
 
@@ -998,7 +998,7 @@ wasmCWriteConstExpr(
 ) {
     WasmConstInstruction instruction;
     if (!wasmConstInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "ERROR: invalid const instruction\n");
+        fprintf(stderr, "w2c2: invalid const instruction\n");
         return false;
     }
 
@@ -1028,7 +1028,7 @@ wasmCWriteLoadExpr(
 ) {
     WasmLoadStoreInstruction instruction;
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "ERROR: invalid load instruction\n");
+        fprintf(stderr, "w2c2: invalid load instruction\n");
         return false;
     }
 
@@ -1095,7 +1095,7 @@ wasmCWriteLoadExpr(
             default: {
                 fprintf(
                     stderr,
-                    "ERROR: unsupported load instruction opcode: %s\n",
+                    "w2c2: unsupported load instruction opcode: %s\n",
                     wasmOpcodeDescription(opcode)
                 );
                 return false;
@@ -1144,7 +1144,7 @@ wasmCWriteStoreExpr(
 ) {
     WasmLoadStoreInstruction instruction;
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "ERROR: invalid store instruction\n");
+        fprintf(stderr, "w2c2: invalid store instruction\n");
         return false;
     }
 
@@ -1191,7 +1191,7 @@ wasmCWriteStoreExpr(
             default: {
                 fprintf(
                     stderr,
-                    "ERROR: unsupported store instruction opcode: %s\n",
+                    "w2c2: unsupported store instruction opcode: %s\n",
                     wasmOpcodeDescription(opcode)
                 );
                 return false;
@@ -1242,7 +1242,7 @@ wasmCWriteMemorySize(
 ) {
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "ERROR: invalid memory instruction\n");
+        fprintf(stderr, "w2c2: invalid memory instruction\n");
         return false;
     }
 
@@ -1251,7 +1251,7 @@ wasmCWriteMemorySize(
         if (instruction.memoryIndex != expectedMemoryIndex) {
             fprintf(
                 stderr,
-                "ERROR: invalid memory instruction: expected memory index %u, got %u\n",
+                "w2c2: invalid memory instruction: expected memory index %u, got %u\n",
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1287,7 +1287,7 @@ wasmCWriteMemoryGrow(
 ) {
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "ERROR: invalid memory instruction\n");
+        fprintf(stderr, "w2c2: invalid memory instruction\n");
         return false;
     }
 
@@ -1296,7 +1296,7 @@ wasmCWriteMemoryGrow(
         if (instruction.memoryIndex != expectedMemoryIndex) {
             fprintf(
                 stderr,
-                "ERROR: invalid memory instruction: expected memory index %u, got %u\n",
+                "w2c2: invalid memory instruction: expected memory index %u, got %u\n",
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1649,7 +1649,7 @@ wasmCWriteIfExpr(
     WasmValueType blockValueType;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "ERROR: invalid if instruction: expected block type\n");
+        fprintf(stderr, "w2c2: invalid if instruction: expected block type\n");
         return false;
     }
 
@@ -1744,7 +1744,7 @@ wasmCWriteBlockExpr(
     WasmValueType blockValueType;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "ERROR: invalid block instruction: expected block type\n");
+        fprintf(stderr, "w2c2: invalid block instruction: expected block type\n");
         return false;
     }
 
@@ -1803,7 +1803,7 @@ wasmCWriteLoopExpr(
     WasmValueType blockValueType;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "ERROR: invalid loop instruction: expected block type\n");
+        fprintf(stderr, "w2c2: invalid loop instruction: expected block type\n");
         return false;
     }
 
@@ -1945,7 +1945,7 @@ wasmCWriteBranchExpr(
     if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -1970,7 +1970,7 @@ wasmCWriteBranchIfExpr(
     if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -2016,7 +2016,7 @@ wasmCWriteBranchTableExpr(
     if (!wasmBranchTableInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
             stderr,
-            "ERROR: invalid %s instruction encoding\n",
+            "w2c2: invalid %s instruction encoding\n",
             wasmOpcodeDescription(opcode)
         );
         return false;
@@ -2578,7 +2578,7 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     default:
-                        fprintf(stderr, "ERROR: unsupported opcode %s\n", wasmOpcodeDescription(*opcode));
+                        fprintf(stderr, "w2c2: unsupported opcode %s\n", wasmOpcodeDescription(*opcode));
                         return false;
                 }
             }
@@ -2669,7 +2669,7 @@ wasmCWriteFunctionBody(
         resultType = &functionType.resultTypes[0];
         /* TODO: add support for multiple result values */
         if (functionType.resultCount > 1) {
-            fprintf(stderr, "ERROR: function with multiple return values\n");
+            fprintf(stderr, "w2c2: function with multiple return values\n");
             return false;
         }
     } else {
@@ -2856,7 +2856,7 @@ wasmCWriteConstantExpr(
             WasmValueType resultType = wasmOpcodeResultType(opcode);
             WasmConstInstruction instruction;
             if (!wasmConstInstructionRead(&code, opcode, &instruction)) {
-                fprintf(stderr, "ERROR: invalid const instruction\n");
+                fprintf(stderr, "w2c2: invalid const instruction\n");
                 return false;
             }
             MUST (wasmCWriteLiteral(builder, resultType, instruction.value))
@@ -2869,7 +2869,7 @@ wasmCWriteConstantExpr(
             break;
         }
         default: {
-            fprintf(stderr, "ERROR: invalid init expression instruction %s\n", wasmOpcodeDescription(opcode));
+            fprintf(stderr, "w2c2: invalid init expression instruction %s\n", wasmOpcodeDescription(opcode));
             return false;
         }
     }

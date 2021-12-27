@@ -14,13 +14,13 @@ readWasmBinary(
 
     wasmModuleReaderResult->buffer = readFile(path);
     if (wasmModuleReaderResult->buffer.data == NULL) {
-        fprintf(stderr, "failed to read file %s\n", path);
+        fprintf(stderr, "w2c2: failed to read file %s\n", path);
         return false;
     }
 
     wasmModuleRead(wasmModuleReaderResult, &error);
     if (error != NULL) {
-        fprintf(stderr, "failed to read module: %s\n", wasmModuleReaderErrorMessage(error));
+        fprintf(stderr, "w2c2: failed to read module: %s\n", wasmModuleReaderErrorMessage(error));
         return false;
     }
 
