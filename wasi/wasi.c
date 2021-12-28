@@ -137,13 +137,113 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 fd, U32 ciovsPointer, U32 ciovsCount, U32 resu
         }
         if (result != length) {
             return -1;
-        }
-        total += length;
+
+static const size_t iovecSize = 8;
+
+static
+__inline__
+U32
+wasiFdRead(
+    ssize_t readFunc(int, const struct iovec*, int, off_t),
+    U32 fd,
+    U32 iovecsPointer,
+    U32 iovecsCount,
+    U32 resultPointer,
+    off_t offset
+) {
+    /* TODO: big-endian support */
+
+    struct iovec* iovecs = malloc(iovecsCount * sizeof(struct iovec));
+    if (iovecs == NULL) {
+        return wasiErrnoNomem;
     }
 
+    /* Convert WASI iovecs to native iovecs */
+    {
+        U32 iovecIndex = 0;
+        for (; iovecIndex < iovecsCount; iovecIndex++) {
+            U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
+            U32 bufferPointer = i32_load(e_memory, iovecPointer);
+            U32 length = i32_load(e_memory, iovecPointer + 4);
+
+            iovecs[iovecIndex].iov_base = e_memory->data + bufferPointer;
+            iovecs[iovecIndex].iov_len = length;
+        }
+    }
+
+    /* Perform the reads */
+    ssize_t total = readFunc(fd, iovecs, iovecsCount, offset);
+    if (total < 0) {
+        free(iovecs);
+        return wasiErrno();
+    }
+
+    /* Store the amount of read bytes at the result pointer */
     i32_store(e_memory, resultPointer, total);
 
+    free(iovecs);
+
     return wasiErrnoSuccess;
+}
+ssize_t
+readvWrapper(
+    int fd,
+    const struct iovec* iovecs,
+    int count,
+    off_t offset
+) {
+    return readv(fd, iovecs, count);
+}
+
+WASI_IMPORT(U32, fdX5Fread, (U32 fd, U32 iovecsPointer, U32 iovecsCount, U32 resultPointer), {
+    /* NOTE: offset -1 is ignored by readvWrapper */
+    return wasiFdRead(readvWrapper, fd, iovecsPointer, iovecsCount, resultPointer, -1);
+})
+
+static
+__inline__
+ssize_t
+wrapPositional(
+    ssize_t f(int, const struct iovec*, int),
+    int fd,
+    const struct iovec* iovecs,
+    int count,
+    off_t offset
+) {
+    off_t origLoc = lseek(fd, 0, SEEK_CUR);
+    if (origLoc == (off_t)-1) {
+        return -1;
+    }
+    if (lseek(fd, offset, SEEK_SET) == (off_t)-1) {
+        return -1;
+    }
+
+    ssize_t res = f(fd, iovecs, count);
+
+    int currentErrno = errno;
+    if (lseek(fd, origLoc, SEEK_SET) == (off_t)-1) {
+        if (res == -1) {
+            errno = currentErrno;
+        }
+        return -1;
+    }
+    errno = currentErrno;
+
+    return res;
+}
+
+ssize_t
+preadvFallback(
+    int fd,
+    const struct iovec* iovecs,
+    int count,
+    off_t offset
+) {
+    return wrapPositional(readv, fd, iovecs, count, offset);
+}
+
+WASI_IMPORT(U32, fdX5Fpread, (U32 fd, U32 iovecsPointer, U32 iovecsCount, U32 offset, U32 resultPointer), {
+    return wasiFdRead(preadvFallback, fd, iovecsPointer, iovecsCount, resultPointer, offset);
 })
 
 WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer), {
