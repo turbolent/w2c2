@@ -10,7 +10,8 @@ readFile(
     FILE* file = NULL;
     Buffer buffer = {NULL, 0};
     U8* data = NULL;
-    U32 size = 0;
+    long size = 0;
+    size_t read = 0;
 
     file = fopen(path, "rb");
     if (file == NULL) {
@@ -25,11 +26,14 @@ readFile(
     if (data == NULL) {
         return buffer;
     }
-    fread(data, 1, size, file);
+    read = fread(data, 1, size, file);
+    if (read == size) {
+        buffer.data = data;
+        buffer.length = size;
+    } else {
+        free(data);
+    }
     fclose(file);
-
-    buffer.data = data;
-    buffer.length = size;
 
     return buffer;
 }
