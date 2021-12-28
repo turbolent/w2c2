@@ -4,6 +4,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 #include <errno.h>
 #include <string.h>
 #include "wasi.h"
@@ -120,23 +121,43 @@ WASI_IMPORT(void, procX5Fexit, (U32 code), {
     exit(code);
 })
 
-
 static const size_t ciovecSize = 8;
 
-WASI_IMPORT(U32, fdX5Fwrite, (U32 fd, U32 ciovsPointer, U32 ciovsCount, U32 resultPointer), {
-    U32 total = 0;
-    U32 ciovIndex = 0;
-    for (; ciovIndex < ciovsCount; ciovIndex++) {
-        U64 ciovPointer = ciovsPointer + ciovIndex * ciovecSize;
-        U32 bufferPointer = i32_load(e_memory, ciovPointer);
-        U32 length = i32_load(e_memory, ciovPointer + 4);
-        /* TODO: big-endian support */
-        ssize_t result = write(fd, e_memory->data + bufferPointer, length);
-        if (result < 0) {
-            return -1;
+WASI_IMPORT(U32, fdX5Fwrite, (U32 fd, U32 ciovecsPointer, U32 ciovecsCount, U32 resultPointer), {
+    /* TODO: big-endian support */
+
+    struct iovec* iovecs = malloc(ciovecsCount * sizeof(struct iovec));
+    if (iovecs == NULL) {
+        return wasiErrnoNomem;
+    }
+
+    /* Convert WASI ciovecs to native iovecs */
+    {
+        U32 ciovecIndex = 0;
+        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+            U32 bufferPointer = i32_load(e_memory, ciovecPointer);
+            U32 length = i32_load(e_memory, ciovecPointer + 4);
+
+            iovecs[ciovecIndex].iov_base = e_memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_len = length;
         }
-        if (result != length) {
-            return -1;
+    }
+
+    /* Perform the writes */
+    ssize_t total = writev(fd, iovecs, ciovecsCount);
+    if (total < 0) {
+        free(iovecs);
+        return wasiErrno();
+    }
+
+    /* Store the amount of written bytes at the result pointer */
+    i32_store(e_memory, resultPointer, total);
+
+    free(iovecs);
+
+    return wasiErrnoSuccess;
+})
 
 static const size_t iovecSize = 8;
 
