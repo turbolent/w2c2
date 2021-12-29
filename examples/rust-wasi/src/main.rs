@@ -2,7 +2,7 @@ use std::env;
 use std::time::SystemTime;
 use getrandom::getrandom;
 use std::process::exit;
-use std::fs::{File, metadata};
+use std::fs::{File, OpenOptions, metadata, rename};
 use std::io::{stdin, Read};
 
 fn main() {
@@ -37,6 +37,9 @@ fn main() {
 
     let root_metadata2 = metadata(root_path).unwrap();
     println!("Metadata of {} (via path): {:?}", root_path, root_metadata2);
+
+    OpenOptions::new().create(true).write(true).open("/tmp/rust-wasi-a").unwrap();
+    rename("/tmp/rust-wasi-a", "/tmp/rust-wasi-b").unwrap();
 
     exit(0);
 }
