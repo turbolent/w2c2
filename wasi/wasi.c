@@ -594,6 +594,15 @@ WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
     return wasiErrnoSuccess;
 })
 
+static
+__inline__
+U64
+convertTimespec(
+    struct timespec t
+) {
+    return t.tv_sec * 1000000000 + t.tv_nsec;
+}
+
 WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
     struct timespec timespec;
 
@@ -618,7 +627,7 @@ WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPoin
     i64_store(
         e_memory,
         resultPointer,
-        timespec.tv_sec * 1000000000 + timespec.tv_nsec
+        convertTimespec(timespec)
     );
 
     return wasiErrnoSuccess;
@@ -682,6 +691,7 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
     }
 
     /* Store result */
+    memset(e_memory->data + resultPointer, 0, 24);
     i32_store8(e_memory, resultPointer, filetype);
     i32_store16(e_memory, resultPointer + 2, flags);
     i64_store(e_memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
@@ -747,9 +757,9 @@ WASI_IMPORT(U32, pathX5Fopen, (
         return wasiErrnoBadf;
     }
 
-    path = malloc(pathLength);
-
+    path = malloc(pathLength + 1);
     memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
 
     /* Convert WASI oflags to native flags */
     if (oflags & wasiOflagsCreat) {
@@ -811,6 +821,233 @@ WASI_IMPORT(U32, pathX5Fopen, (
     }
 
     free(path);
+
+    return wasiErrnoSuccess;
+})
+
+static
+__inline__
+void
+getStatTimes(
+    struct stat* stat,
+    struct timespec* access,
+    struct timespec* modification,
+    struct timespec* creation
+) {
+#if defined(__APPLE__)
+    access->tv_sec = stat->st_atimespec.tv_sec;
+    access->tv_nsec = stat->st_atimespec.tv_nsec;
+    modification->tv_sec = stat->st_mtimespec.tv_sec;
+    modification->tv_nsec = stat->st_mtimespec.tv_nsec;
+    creation->tv_sec = stat->st_ctimespec.tv_sec;
+    creation->tv_nsec = stat->st_ctimespec.tv_nsec;
+#elif defined(__ANDROID__)
+    access->tv_sec = stat->st_atime;
+    access->tv_nsec = stat->st_atimensec;
+    modification->tv_sec = stat->st_mtime;
+    modification->tv_nsec = stat->st_mtimensec;
+    creation->tv_sec = stat->st_ctime;
+    creation->tv_nsec = stat->st_ctimensec;
+#elif !defined(_AIX) &&         \
+    !defined(__MVS__) && (      \
+    defined(__DragonFly__)   || \
+    defined(__FreeBSD__)     || \
+    defined(__OpenBSD__)     || \
+    defined(__NetBSD__)      || \
+    defined(_GNU_SOURCE)     || \
+    defined(_BSD_SOURCE)     || \
+    defined(_SVID_SOURCE)    || \
+    defined(_XOPEN_SOURCE)   || \
+    defined(_DEFAULT_SOURCE))
+    access->tv_sec = stat->st_atim.tv_sec;
+    access->tv_nsec = stat->st_atim.tv_nsec;
+    modification->tv_sec = stat->st_mtim.tv_sec;
+    modification->tv_nsec = stat->st_mtim.tv_nsec;
+    creation->tv_sec = stat->st_ctim.tv_sec;
+    creation->tv_nsec = stat->st_ctim.tv_nsec;
+#else
+    access->tv_sec = stat->st_atime;
+    access->tv_nsec = 0;
+    modification->tv_sec = stat->st_mtime;
+    modification->tv_nsec = 0;
+    creation->tv_sec = stat->st_ctime;
+    creation->tv_nsec = 0;
+#endif
+}
+
+void DumpHex(const void* data, size_t size) {
+    char ascii[17];
+    size_t i, j;
+    ascii[16] = '\0';
+    for (i = 0; i < size; ++i) {
+        printf("%02X ", ((unsigned char*)data)[i]);
+        if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+            ascii[i % 16] = ((unsigned char*)data)[i];
+        } else {
+            ascii[i % 16] = '.';
+        }
+        if ((i+1) % 8 == 0 || i+1 == size) {
+            printf(" ");
+            if ((i+1) % 16 == 0) {
+                printf("|  %s \n", ascii);
+            } else if (i+1 == size) {
+                ascii[(i+1) % 16] = '\0';
+                if ((i+1) % 16 <= 8) {
+                    printf(" ");
+                }
+                for (j = (i+1) % 16; j < 16; ++j) {
+                    printf("   ");
+                }
+                printf("|  %s \n", ascii);
+            }
+        }
+    }
+}
+
+static
+__inline__
+void
+storePreview1Filestat(
+    U32 statPointer,
+    struct stat* stat
+) {
+    struct timespec access;
+    struct timespec modification;
+    struct timespec creation;
+
+    getStatTimes(stat, &access, &modification, &creation);
+
+    memset(e_memory->data + statPointer, 0, 64);
+    i64_store(e_memory, statPointer,  stat->st_dev);
+    i64_store(e_memory, statPointer + 8,  stat->st_ino);
+    i32_store8(e_memory, statPointer + 16, wasiFiletypeFromMode(stat->st_mode));
+    i64_store(e_memory, statPointer + 24, stat->st_nlink);
+    i64_store(e_memory, statPointer + 32, stat->st_size);
+    i64_store(e_memory, statPointer + 40, convertTimespec(access));
+    i64_store(e_memory, statPointer + 48, convertTimespec(modification));
+    i64_store(e_memory, statPointer + 56, convertTimespec(creation));
+}
+
+WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
+    struct stat stat;
+
+    int nativeFD;
+    if (!wasiGetFD(wasiFD, &nativeFD)) {
+        return wasiErrnoBadf;
+    }
+
+    if (fstat(nativeFD, &stat) != 0) {
+        return wasiErrno();
+    }
+
+    storePreview1Filestat(statPointer, &stat);
+
+    return wasiErrnoSuccess;
+})
+
+static
+__inline__
+void
+storeUnstableFilestat(
+    U32 statPointer,
+    struct stat* stat
+) {
+    struct timespec access;
+    struct timespec modification;
+    struct timespec creation;
+
+    getStatTimes(stat, &access, &modification, &creation);
+
+    memset(e_memory->data + statPointer, 0, 56);
+    i64_store(e_memory, statPointer,  stat->st_dev);
+    i64_store(e_memory, statPointer + 8,  stat->st_ino);
+    i32_store8(e_memory, statPointer + 16, wasiFiletypeFromMode(stat->st_mode));
+    i32_store(e_memory, statPointer + 20, stat->st_nlink);
+    i64_store(e_memory, statPointer + 24, stat->st_size);
+    i64_store(e_memory, statPointer + 32, convertTimespec(access));
+    i64_store(e_memory, statPointer + 40, convertTimespec(modification));
+    i64_store(e_memory, statPointer + 48, convertTimespec(creation));
+}
+
+WASI_UNSTABLE_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
+    struct stat stat;
+
+    int nativeFD;
+    if (!wasiGetFD(wasiFD, &nativeFD)) {
+        return wasiErrnoBadf;
+    }
+
+    if (fstat(nativeFD, &stat) != 0) {
+        return wasiErrno();
+    }
+
+    storeUnstableFilestat(statPointer, &stat);
+
+    return wasiErrnoSuccess;
+})
+
+WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
+    U32 fd,
+    U32 lookupFlags,
+    U32 pathPointer,
+    U32 pathLength,
+    U32 statPointer
+), {
+    /* TODO: big-endian support */
+
+    char *path = NULL;
+    int flags = 0;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(fd, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    /* TODO: resolve path, use flags */
+
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        return wasiErrno();
+    }
+
+    storePreview1Filestat(statPointer, &st);
+
+    return wasiErrnoSuccess;
+})
+
+WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
+    U32 fd,
+    U32 lookupFlags,
+    U32 pathPointer,
+    U32 pathLength,
+    U32 statPointer
+), {
+    /* TODO: big-endian support */
+
+    char *path = NULL;
+    int flags = 0;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(fd, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    /* TODO: resolve path, use flags */
+
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        return wasiErrno();
+    }
+
+    storeUnstableFilestat(statPointer, &st);
 
     return wasiErrnoSuccess;
 })
