@@ -3035,11 +3035,15 @@ wasmCWriteFunctionExport(
     const WasmModule* module,
     WasmExport export,
     WasmFunction function,
+    bool external,
     bool pretty
 ) {
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
+    if (external) {
+        fputs("extern ", file);
+    }
     fputs(wasmCGetReturnType(functionType), file);
     fputs(" (*", file);
     wasmCWriteExportName(file, export.name);
@@ -3052,8 +3056,12 @@ static
 void
 wasmCWriteMemoryExport(
     FILE* file,
-    WasmExport export
+    WasmExport export,
+    bool external
 ) {
+    if (external) {
+        fputs("extern ", file);
+    }
     fputs("wasmMemory (*", file);
     wasmCWriteExportName(file, export.name);
     fputs(");\n\n", file);
@@ -3064,7 +3072,8 @@ void
 wasmCWriteExports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    bool pretty,
+    bool external
 ) {
     U32 exportIndex = 0;
     for (; exportIndex < module->exports.count; exportIndex++) {
@@ -3074,11 +3083,11 @@ wasmCWriteExports(
                 U32 functionImportCount = module->functionImports.length;
                 U32 functionIndex = export.index - functionImportCount;
                 const WasmFunction function = module->functions.functions[functionIndex];
-                wasmCWriteFunctionExport(file, module, export, function, pretty);
+                wasmCWriteFunctionExport(file, module, export, function, external, pretty);
                 break;
             }
             case wasmExportKindMemory: {
-                wasmCWriteMemoryExport(file, export);
+                wasmCWriteMemoryExport(file, export, external);
                 break;
             }
 
@@ -3095,6 +3104,8 @@ wasmCWriteInitExports(
     bool pretty
 ) {
     U32 exportIndex = 0;
+
+    wasmCWriteExports(file, module, pretty, false);
 
     fputs("static void initExports(void) {\n", file);
 
@@ -3384,7 +3395,7 @@ wasmCWriteModuleDeclarations(
     wasmCWriteGlobalImports(file, module);
     wasmCWriteGlobals(file, module, keyword);
 
-    wasmCWriteExports(file, module, pretty);
+    wasmCWriteExports(file, module, pretty, true);
 }
 
 static
