@@ -2,7 +2,7 @@ use std::env;
 use std::time::SystemTime;
 use getrandom::getrandom;
 use std::process::exit;
-use std::fs::{File, OpenOptions, metadata, rename};
+use std::fs::{File, metadata, rename, read_link, remove_file, soft_link, write, create_dir, remove_dir};
 use std::io::{stdin, Read};
 
 fn main() {
@@ -38,8 +38,22 @@ fn main() {
     let root_metadata2 = metadata(root_path).unwrap();
     println!("Metadata of {} (via path): {:?}", root_path, root_metadata2);
 
-    OpenOptions::new().create(true).write(true).open("/tmp/rust-wasi-a").unwrap();
-    rename("/tmp/rust-wasi-a", "/tmp/rust-wasi-b").unwrap();
+    let path1 = "/tmp/rust-wasi-a";
+    let path2 = "/tmp/rust-wasi-b";
+    let path3 = "/tmp/rust-wasi-c";
+    write(path1, "test").unwrap();
+    rename(path1, path2).unwrap();
+
+    soft_link(path2, path3).unwrap();
+    // TODO: requires resolving relative path in path_filestat_get
+    // println!("Link: {:?}", read_link(path3).unwrap());
+
+    remove_file(path2).unwrap();
+    remove_file(path3).unwrap();
+
+    let dir_path = "/tmp/rust-wasi";
+    create_dir(dir_path).unwrap();
+    remove_dir(dir_path).unwrap();
 
     exit(0);
 }

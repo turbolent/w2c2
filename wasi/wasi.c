@@ -748,9 +748,9 @@ WASI_IMPORT(U32, pathX5Fopen, (
 ), {
     /* TODO: big-endian support */
 
-    char *path = NULL;
+    char* path = NULL;
     int flags = 0;
-    static int mode = 0644;
+    static const int mode = 0644;
 
     WasiPreopen preopen;
     if (!wasiGetPreopen(wasiDirFD, &preopen)) {
@@ -995,8 +995,10 @@ WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
 ), {
     /* TODO: big-endian support */
 
-    char *path = NULL;
+    char* path = NULL;
     int flags = 0;
+    struct stat st;
+    int res = 0;
 
     WasiPreopen preopen;
     if (!wasiGetPreopen(fd, &preopen)) {
@@ -1007,10 +1009,14 @@ WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
-    /* TODO: resolve path, use flags */
+    /* TODO: resolve path */
 
-    struct stat st;
-    if (stat(path, &st) != 0) {
+    if (flags & wasiLookupFlagSymlinkFollow) {
+        res = stat(path, &st);
+    } else {
+        res = lstat(path, &st);
+    }
+    if (res != 0) {
         return wasiErrno();
     }
 
@@ -1028,7 +1034,7 @@ WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
 ), {
     /* TODO: big-endian support */
 
-    char *path = NULL;
+    char* path = NULL;
     int flags = 0;
 
     WasiPreopen preopen;
@@ -1062,8 +1068,8 @@ WASI_IMPORT(U32, pathX5Frename, (
 ), {
     /* TODO: big-endian support */
 
-    char *oldPath = NULL;
-    char *newPath = NULL;
+    char* oldPath = NULL;
+    char* newPath = NULL;
 
     WasiPreopen oldPreopen;
     if (!wasiGetPreopen(oldDirFD, &oldPreopen)) {
@@ -1086,6 +1092,137 @@ WASI_IMPORT(U32, pathX5Frename, (
     if (renameat(oldPreopen.fd, oldPath, newPreopen.fd, newPath) != 0) {
         return wasiErrno();
     }
+
+    return wasiErrnoSuccess;
+})
+
+WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    /* TODO: big-endian support */
+
+    char* path = NULL;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(dirFD, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    if (unlinkat(preopen.fd, path, 0) != 0) {
+        return wasiErrno();
+    }
+
+    return wasiErrnoSuccess;
+})
+
+WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    /* TODO: big-endian support */
+
+    char* path = NULL;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(dirFD, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    if (unlinkat(preopen.fd, path, AT_REMOVEDIR) != 0) {
+        return wasiErrno();
+    }
+
+    return wasiErrnoSuccess;
+})
+
+WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    /* TODO: big-endian support */
+
+    char* path = NULL;
+    static const mode_t mode = 0755;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(dirFD, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    if (mkdirat(preopen.fd, path, mode) != 0) {
+        return wasiErrno();
+    }
+
+    return wasiErrnoSuccess;
+})
+
+
+WASI_IMPORT(U32, pathX5Fsymlink, (
+    U32 oldPathPointer,
+    U32 oldPathLength,
+    U32 dirFD,
+    U32 newPathPointer,
+    U32 newPathLength
+), {
+    /* TODO: big-endian support */
+
+    char* oldPath = NULL;
+    char* newPath = NULL;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(dirFD, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    oldPath = malloc(oldPathLength + 1);
+    memcpy(oldPath, e_memory->data + oldPathPointer, oldPathLength);
+    oldPath[oldPathLength] = '\0';
+
+    newPath = malloc(newPathLength + 1);
+    memcpy(newPath, e_memory->data + newPathPointer, newPathLength);
+    newPath[newPathLength] = '\0';
+
+    if (symlinkat(oldPath, preopen.fd, newPath) != 0) {
+        return wasiErrno();
+    }
+
+    return wasiErrnoSuccess;
+})
+
+WASI_IMPORT(U32, pathX5Freadlink, (
+    U32 dirFD,
+    U32 pathPointer,
+    U32 pathLength,
+    U32 bufferPointer,
+    U32 bufferLength,
+    U32 lengthPointer
+), {
+    /* TODO: big-endian support */
+
+    char* path = NULL;
+    char* buffer = NULL;
+    int length = 0;
+
+    WasiPreopen preopen;
+    if (!wasiGetPreopen(dirFD, &preopen)) {
+        return wasiErrnoBadf;
+    }
+
+    path = malloc(pathLength + 1);
+    memcpy(path, e_memory->data + pathPointer, pathLength);
+    path[pathLength] = '\0';
+
+    buffer = (char*)e_memory->data + bufferPointer;
+    length = readlinkat(preopen.fd, path, buffer, bufferLength);
+    if (length < 0) {
+        return wasiErrno();
+    }
+
+    i32_store(e_memory, lengthPointer, length);
 
     return wasiErrnoSuccess;
 })
