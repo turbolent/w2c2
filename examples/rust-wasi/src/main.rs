@@ -22,7 +22,13 @@ fn main() {
     println!("Write something:");
     let mut buffer = String::new();
     stdin().read_line(&mut buffer).unwrap();
-    println!("Read: {:?}", buffer);
+    println!("Read from stdin: {:?}", buffer);
+
+    let path = "/dev/random";
+    let mut r2: [u8; 8] = [0; 8];
+    let mut f = File::open(path).unwrap();
+    f.read(&mut r2).unwrap();
+    println!("Read from {}: {:?}", path, r2);
 
     exit(0);
 }
