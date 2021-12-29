@@ -19,7 +19,10 @@ extern char** environ;
 
 int main(int argc, char* argv[]) {
     /* Initialize WASI */
-    wasiInit(argc, argv, environ);
+    if (!wasiInit(argc, argv, environ)) {
+        fprintf(stderr, "failed to init WASI\n");
+        return 1;
+    }
 
     {
         static char* rootPath = "/";
@@ -30,7 +33,7 @@ int main(int argc, char* argv[]) {
         }
         {
             WasiPreopen preopen = {rootPath, rootFD};
-            if (!wasiAddPreopen(preopen)) {
+            if (!wasiPreopenAdd(preopen, NULL)) {
                 fprintf(stderr, "failed to add preopen\n");
                 close(rootFD);
                 return 1;
