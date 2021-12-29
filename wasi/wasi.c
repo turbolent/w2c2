@@ -1205,6 +1205,25 @@ WASI_IMPORT(U32, pathX5Freadlink, (
     return wasiErrnoSuccess;
 })
 
+WASI_IMPORT(U32, fdX5Freaddir, (U32 fd, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
+    /* TODO: */
+    fprintf(stderr, "w2c2 WASI: unimplemented function: fd_readdir\n");
+    return wasiErrnoNosys;
+});
+
+
+WASI_IMPORT(U32, fdX5FfdstatX5FsetX5Fflags, (U32 fd, U32 flags), {
+    /* TODO: */
+    fprintf(stderr, "w2c2 WASI: unimplemented function: fd_fdstat_set_flags\n");
+    return wasiErrnoNosys;
+})
+
+WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscriptionCount, U32 eventCount), {
+    /* TODO: */
+    fprintf(stderr, "w2c2 WASI: unimplemented function: poll_oneoff\n");
+    return wasiErrnoNosys;
+})
+
 WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) {
