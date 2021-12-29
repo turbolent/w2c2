@@ -158,8 +158,13 @@ bool
 WARN_UNUSED_RESULT
 wasiPreopenAdd(
     WasiPreopen preopen,
+    U32* wasiFD
 ) {
-    return wasiPreopensAdd(&wasi.preopens, preopen);
+    MUST (wasiPreopensAdd(&wasi.preopens, preopen))
+    if (preopen.fd < 0) {
+        return true;
+    }
+    return wasiFileDescriptorAdd(preopen.fd, wasiFD);
 }
 
 bool
