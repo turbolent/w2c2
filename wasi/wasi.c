@@ -10,7 +10,7 @@
 #include "wasi.h"
 
 #define WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
-  WASM_IMPORT(returnType, wasiX5FsnapshotX5Funstable_##name, parameters, body)
+  WASM_IMPORT(returnType, wasiX5Funstable_##name, parameters, body)
 
 #define WASI_PREVIEW1_IMPORT(returnType, name, parameters, body) \
   WASM_IMPORT(returnType, wasiX5FsnapshotX5Fpreview1_##name, parameters, body)
