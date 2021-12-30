@@ -148,6 +148,17 @@ wasiPreopensAdd(
     WasiPreopens* preopens,
     WasiPreopen preopen
 ) {
+    if (preopen.path != NULL) {
+        char* pathCopy = NULL;
+        size_t length = strlen(preopen.path);
+        MUST (length > 0)
+        pathCopy = malloc(length + 1);
+        MUST (pathCopy != NULL)
+        memcpy(pathCopy, preopen.path, length);
+        pathCopy[length] = '\0';
+        preopen.path = pathCopy;
+    }
+
     preopens->length++;
     MUST (wasiPreopensEnsureCapacity(preopens, preopens->length))
     preopens->preopens[preopens->length - 1] = preopen;
