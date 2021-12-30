@@ -24,20 +24,6 @@ fn main() {
     stdin().read_line(&mut buffer).unwrap();
     println!("Read from stdin: {:?}", buffer);
 
-    let random_path = "/dev/random";
-    let mut random_data2: [u8; 8] = [0; 8];
-    let mut random_file = File::open(random_path).unwrap();
-    random_file.read(&mut random_data2).unwrap();
-    println!("Read from {}: {:?}", random_path, random_data2);
-
-    let root_path = "/";
-    let root_file = File::open(root_path).unwrap();
-    let root_metadata1 = root_file.metadata().unwrap();
-    println!("Metadata of {} (via FD): {:?}", root_path, root_metadata1);
-
-    let root_metadata2 = metadata(root_path).unwrap();
-    println!("Metadata of {} (via path): {:?}", root_path, root_metadata2);
-
     let path1 = "/tmp/rust-wasi-a";
     let path2 = "/tmp/rust-wasi-b";
     let path3 = "/tmp/rust-wasi-c";
@@ -45,8 +31,18 @@ fn main() {
     rename(path1, path2).unwrap();
 
     soft_link(path2, path3).unwrap();
-    // TODO: requires resolving relative path in path_filestat_get
-    // println!("Link: {:?}", read_link(path3).unwrap());
+    println!("Link: {:?}", read_link(path3).unwrap());
+
+    let mut path2_file = File::open(path2).unwrap();
+    let path2_metadata1 = path2_file.metadata().unwrap();
+    println!("Metadata of {} (via FD): {:?}", path2, path2_metadata1);
+
+    let path2_metadata2 = metadata(path2).unwrap();
+    println!("Metadata of {} (via path): {:?}", path2, path2_metadata2);
+
+    let mut path2_data: [u8; 3] = [0; 3];
+    path2_file.read(&mut path2_data).unwrap();
+    println!("Read from {}: {:?}", path2, path2_data);
 
     remove_file(path2).unwrap();
     remove_file(path3).unwrap();

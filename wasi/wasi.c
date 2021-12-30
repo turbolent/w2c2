@@ -1029,8 +1029,11 @@ wasiPathFilestatGet(
     /* TODO: big-endian support */
 
     char* path = NULL;
-    char* resolvedPath = NULL;
     int res = 0;
+    int flags = AT_SYMLINK_NOFOLLOW;
+    if (lookupFlags & wasiLookupFlagSymlinkFollow) {
+        flags &= ~AT_SYMLINK_NOFOLLOW;
+    }
 
     WasiPreopen preopen;
     if (!wasiPreopenGet(fd, &preopen)) {
@@ -1041,13 +1044,10 @@ wasiPathFilestatGet(
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
-    fprintf(stderr, "w2c2 WASI: path_filestat_get: %d = %s\n", fd, path);
+    res = fstatat(preopen.fd, path, st, flags);
 
-    /* TODO */
-    resolvedPath = path;
+    free(path);
 
-    res = stat(resolvedPath, st);
-    free(resolvedPath);
     if (res != 0) {
         return wasiErrno();
     }
