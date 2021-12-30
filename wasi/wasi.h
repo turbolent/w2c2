@@ -131,160 +131,156 @@ typedef enum WasiOflags {
 
 typedef enum WasiLookupFlag {
     /* As long as the resolved path corresponds to a symbolic link, it is expanded */
-    wasiLookupFlagSymlinkFollow = 1ULL << 0,
+    wasiLookupFlagSymlinkFollow = 1ULL << 0
 } WasiLookupFlag;
 
-typedef enum WasiRights {
+typedef U64 WasiRights;
 
-    /*
-     * The right to invoke `fd_datasync`.
-     * If `path_open` is set, includes the right to invoke
-     * `path_open` with `fdflags::dsync`
-     */
-    wasiRightsFdDatasync = 1ULL << 0,
+/*
+ * The right to invoke `fd_datasync`.
+ * If `path_open` is set, includes the right to invoke
+ * `path_open` with fdflags dsync
+ */
+static const WasiRights wasiRightsFdDatasync = 1ULL << 0;
 
-    /*
-     * The right to invoke `fd_read` and `sock_recv`.
-     * If `rights::fd_seek` is set, includes the right to invoke `fd_pread`.
-     */
-    wasiRightsFdRead = 1ULL << 1,
+/*
+ * The right to invoke `fd_read` and `sock_recv`.
+ * If rights fd_seek is set, includes the right to invoke `fd_pread`.
+ */
+static const WasiRights wasiRightsFdRead = 1ULL << 1;
 
-    /* The right to invoke `fd_seek`. This flag implies `rights::fd_tell` */
-    wasiRightsFdSeek = 1ULL << 2,
+/* The right to invoke `fd_seek`. This flag implies rights fd_tell */
+static const WasiRights wasiRightsFdSeek = 1ULL << 2;
 
-    /* The right to invoke `fd_fdstat_set_flags` */
-    wasiRightsFdFdstatSetFlags = 1ULL << 3,
+/* The right to invoke `fd_fdstat_set_flags` */
+static const WasiRights wasiRightsFdFdstatSetFlags = 1ULL << 3;
 
-    /*
-     * The right to invoke `fd_sync`.
-     * If `path_open` is set, includes the right to invoke
-     * `path_open` with `fdflags::rsync` and `fdflags::dsync`.
-     */
-    wasiRightsFdSync = 1ULL << 4,
+/*
+ * The right to invoke `fd_sync`.
+ * If `path_open` is set, includes the right to invoke
+ * `path_open` with fdflags rsync and fdflags dsync.
+ */
+static const WasiRights wasiRightsFdSync = 1ULL << 4;
 
-    /*
-     * The right to invoke `fd_seek` in such a way that the file offset
-     * remains unaltered (i.e., `whence::cur` with offset zero), or to
-     * invoke `fd_tell`.
-     */
-    wasiRightsFdTell = 1ULL << 5,
+/*
+ * The right to invoke `fd_seek` in such a way that the file offset
+ * remains unaltered (i.e., whence cur with offset zero), or to
+ * invoke `fd_tell`.
+ */
+static const WasiRights wasiRightsFdTell = 1ULL << 5;
 
-    /*
-     * The right to invoke `fd_write` and `sock_send`.
-     * If `rights::fd_seek` is set, includes the right to invoke `fd_pwrite`.
-     */
-    wasiRightsFdWrite = 1ULL << 6,
+/*
+ * The right to invoke `fd_write` and `sock_send`.
+ * If right `FdSeek` is set, includes the right to invoke `fd_pwrite`.
+ */
+static const WasiRights wasiRightsFdWrite = 1ULL << 6;
 
-    /* The right to invoke `fd_advise` */
-    wasiRightsFdAdvise = 1ULL << 7,
+/* The right to invoke `fd_advise` */
+static const WasiRights wasiRightsFdAdvise = 1ULL << 7;
 
-    /* The right to invoke `fd_allocate` */
-    wasiRightsFdAllocate = 1ULL << 8,
+/* The right to invoke `fd_allocate` */
+static const WasiRights wasiRightsFdAllocate = 1ULL << 8;
 
-    /* The right to invoke `path_create_directory` */
-    wasiRightsPathCreateDirectory = 1ULL << 9,
+/* The right to invoke `path_create_directory` */
+static const WasiRights wasiRightsPathCreateDirectory = 1ULL << 9;
 
-    /*
-     * If `path_open` is set, the right to invoke `path_open` with
-     * `oflags::creat`.
-     */
-    wasiRightsPathCreateFile = 1ULL << 10,
+/* If `path_open` is set, the right to invoke `path_open` with oflags creat */
+static const WasiRights wasiRightsPathCreateFile = 1ULL << 10;
 
-    /*
-     * The right to invoke `path_link` with the file descriptor as the
-     * source directory.
-     */
-    wasiRightsPathLinkSource = 1ULL << 11,
+/*
+ * The right to invoke `path_link` with the file descriptor as the
+ * source directory.
+ */
+static const WasiRights wasiRightsPathLinkSource = 1ULL << 11;
 
-    /*
-     * The right to invoke `path_link` with the file descriptor as the
-     * target directory.
-     */
-    wasiRightsPathLinkTarget = 1ULL << 12,
+/*
+ * The right to invoke `path_link` with the file descriptor as the
+ * target directory.
+ */
+static const WasiRights wasiRightsPathLinkTarget = 1ULL << 12;
 
-    /* The right to invoke `path_open` */
-    wasiRightsPathOpen = 1ULL << 13,
+/* The right to invoke `path_open` */
+static const WasiRights wasiRightsPathOpen = 1ULL << 13;
 
-    /* The right to invoke `fd_readdir` */
-    wasiRightsFdReaddir = 1ULL << 14,
+/* The right to invoke `fd_readdir` */
+static const WasiRights wasiRightsFdReaddir = 1ULL << 14;
 
-    /* The right to invoke `path_readlink` */
-    wasiRightsPathReadlink = 1ULL << 15,
+/* The right to invoke `path_readlink` */
+static const WasiRights wasiRightsPathReadlink = 1ULL << 15;
 
-    /*
-     * The right to invoke `path_rename` with the file descriptor as the source
-     * directory.
-     */
-    wasiRightsPathRenameSource = 1ULL << 16,
+/*
+ * The right to invoke `path_rename` with the file descriptor as the source
+ * directory.
+ */
+static const WasiRights wasiRightsPathRenameSource = 1ULL << 16;
 
-    /*
-     * The right to invoke `path_rename` with the file descriptor as the target
-     * directory.
-     */
-    wasiRightsPathRenameTarget = 1ULL << 17,
+/*
+ * The right to invoke `path_rename` with the file descriptor as the target
+ * directory.
+ */
+static const WasiRights wasiRightsPathRenameTarget = 1ULL << 17;
 
-    /* The right to invoke `path_filestat_get` */
-    wasiRightsPathFilestatGet = 1ULL << 18,
+/* The right to invoke `path_filestat_get` */
+static const WasiRights wasiRightsPathFilestatGet = 1ULL << 18;
 
-    /*
-     * The right to change a file's size (there is no `path_filestat_set_size`).
-     * If `path_open` is set, includes the right to invoke `path_open` with
-     * `oflags::trunc`.
-     */
-    wasiRightsPathFilestatSetSize = 1ULL << 19,
+/*
+ * The right to change a file's size (there is no `path_filestat_set_size`).
+ * If `path_open` is set, includes the right to invoke `path_open` with
+ * oflags trunc.
+ */
+static const WasiRights wasiRightsPathFilestatSetSize = 1ULL << 19;
 
-    /* The right to invoke `path_filestat_set_times` */
-    wasiRightsPathFilestatSetTimes = 1ULL << 20,
+/* The right to invoke `path_filestat_set_times` */
+static const WasiRights wasiRightsPathFilestatSetTimes = 1ULL << 20;
 
-    /* The right to invoke `fd_filestat_get` */
-    wasiRightsFdFilestatGet = 1ULL << 21,
+/* The right to invoke `fd_filestat_get` */
+static const WasiRights wasiRightsFdFilestatGet = 1ULL << 21;
 
-    /* The right to invoke `fd_filestat_set_size` */
-    wasiRightsFdFilestatSetSize = 1ULL << 22,
+/* The right to invoke `fd_filestat_set_size` */
+static const WasiRights wasiRightsFdFilestatSetSize = 1ULL << 22;
 
-    /* The right to invoke `fd_filestat_set_times` */
-    wasiRightsFdFilestatSetTimes = 1ULL << 23,
+/* The right to invoke `fd_filestat_set_times` */
+static const WasiRights wasiRightsFdFilestatSetTimes = 1ULL << 23;
 
-    /* The right to invoke `path_symlink` */
-    wasiRightsPathSymlink = 1ULL << 24,
+/* The right to invoke `path_symlink` */
+static const WasiRights wasiRightsPathSymlink = 1ULL << 24;
 
-    /* The right to invoke `path_remove_directory` */
-    wasiRightsPathRemoveDirectory = 1ULL << 25,
+/* The right to invoke `path_remove_directory` */
+static const WasiRights wasiRightsPathRemoveDirectory = 1ULL << 25;
 
-    /* The right to invoke `path_unlink_file` */
-    wasiRightsPathUnlinkFile = 1ULL << 26,
+/* The right to invoke `path_unlink_file` */
+static const WasiRights wasiRightsPathUnlinkFile = 1ULL << 26;
 
-    /*
-     * If `rights::fd_read` is set, includes the right to invoke `poll_oneoff` to
-     * subscribe to `eventtype::fd_read`. If `rights::fd_write` is set, includes
-     * the right to invoke `poll_oneoff` to subscribe to `eventtype::fd_write`.
-     */
-    wasiRightsPollFdReadwrite = 1ULL << 27,
+/*
+ * If rights fd_read is set, includes the right to invoke `poll_oneoff` to
+ * subscribe to event type fd_read. If rights fd_write is set, includes
+ * the right to invoke `poll_oneoff` to subscribe to eventtype fd_write.
+ */
+static const WasiRights wasiRightsPollFdReadwrite = 1ULL << 27;
 
-    /* The right to invoke `sock_shutdown` */
-    wasiRightsSockShutdown = 1ULL << 28,
+/* The right to invoke `sock_shutdown` */
+static const WasiRights wasiRightsSockShutdown = 1ULL << 28;
 
-    /* The right to invoke `sock_open` */
-    wasiRightsSockOpen = 1ULL << 29,
+/* The right to invoke `sock_open` */
+static const WasiRights wasiRightsSockOpen = 1ULL << 29;
 
-    /* The right to invoke `sock_close` */
-    wasiRightsSockClose = 1ULL << 30,
+/* The right to invoke `sock_close` */
+static const WasiRights wasiRightsSockClose = 1ULL << 30;
 
-    /* The right to invoke `sock_bind` */
-    wasiRightsSockBind = 1ULL << 31,
+/* The right to invoke `sock_bind` */
+static const WasiRights wasiRightsSockBind = 1ULL << 31;
 
-    /* The right to invoke `sock_recv` */
-    wasiRightsSockRecv = 1ULL << 32,
+/* The right to invoke `sock_recv` */
+static const WasiRights wasiRightsSockRecv = 1ULL << 32;
 
-    /* The right to invoke `sock_recv_from` */
-    wasiRightsSockRecvFrom = 1ULL << 33,
+/* The right to invoke `sock_recv_from` */
+static const WasiRights wasiRightsSockRecvFrom = 1ULL << 33;
 
-    /* The right to invoke `sock_send` */
-    wasiRightsSockSend = 1ULL << 34,
+/* The right to invoke `sock_send` */
+static const WasiRights wasiRightsSockSend = 1ULL << 34;
 
-    /* The right to invoke `sock_send_to` */
-    wasiRightsSockSendTo = 1ULL << 35
-} WasiRights;
+/* The right to invoke `sock_send_to` */
+static const WasiRights wasiRightsSockSendTo = 1ULL << 35;
 
 typedef enum WasiErrno {
     /* No error occurred. System call completed successfully */
