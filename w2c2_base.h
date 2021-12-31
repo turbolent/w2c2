@@ -119,6 +119,12 @@ typedef double F64;
 #define WARN_UNUSED_RESULT
 #endif
 
+#ifdef __GNUC__
+#define NORETURN __attribute__((noreturn))
+#else
+#define NORETURN
+#endif
+
 #ifndef LLONG_MIN
 #define LLONG_MIN (-0x7fffffffffffffffLL-1)
 #endif
@@ -158,7 +164,27 @@ typedef enum {
     trapInvalidConversion
 } Trap;
 
-extern void trap(Trap);
+static
+__inline
+const char*
+trapDescription(
+    Trap trap
+) {
+    switch (trap) {
+        case trapUnreachable:
+            return "unreachable";
+        case trapDivByZero:
+            return "div by zero";
+        case trapIntOverflow:
+            return "int overflow";
+        case trapInvalidConversion:
+            return "invalid conversion";
+        default:
+            return "unknown";
+    }
+}
+
+extern NORETURN void trap(Trap);
 
 #define TRAP(x) (trap(x), 0)
 

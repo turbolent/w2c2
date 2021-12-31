@@ -27,7 +27,13 @@ static wasmMemory spectest_memory;
 wasmTable* t_spectest_table = &spectest_table;
 wasmMemory* m_spectest_memory = &spectest_memory;
 
-void trap(Trap trap) {}
+void
+trap(
+    Trap trap
+) {
+    fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
+    abort();
+}
 
 void assertEqualU32(
     U32 actual,

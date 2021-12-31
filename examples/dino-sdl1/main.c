@@ -21,7 +21,10 @@ F32 (*f_Math_random)(void) = &Math_random;
 void
 trap(
     Trap trap
-) {}
+) {
+    fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
+    abort();
+}
 
 
 /* Exports */

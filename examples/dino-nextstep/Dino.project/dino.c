@@ -1,4 +1,4 @@
-#include "w2c2_base.h"
+#include "../../../w2c2_base.h"
 
 extern F32 (*f_Math_random)();
 

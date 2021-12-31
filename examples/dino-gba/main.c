@@ -16,7 +16,9 @@ F32 (*f_Math_random)(void) = &Math_random;
 void
 trap(
     Trap trap
-) {}
+) {
+    abort();
+}
 
 
 /* Exports */
