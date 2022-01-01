@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+getrandom = "0.2.0"
 
 [profile.release]
 lto = true

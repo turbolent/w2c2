@@ -3062,9 +3062,9 @@ wasmCWriteMemoryExport(
     if (external) {
         fputs("extern ", file);
     }
-    fputs("wasmMemory (*", file);
+    fputs("wasmMemory *", file);
     wasmCWriteExportName(file, export.name);
-    fputs(");\n\n", file);
+    fputs(";\n\n", file);
 }
 
 static
