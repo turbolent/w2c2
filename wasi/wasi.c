@@ -19,6 +19,13 @@
   WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
   WASI_PREVIEW1_IMPORT(returnType, name, parameters, body)
 
+#ifdef WASI_TRACE_ENABLED
+#define WASI_TRACE(format, ...) \
+  fprintf(stderr, "### WASI %s:%d " format "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define WASI_TRACE(format, ...)
+#endif
+
 extern wasmMemory (*e_memory);
 
 static WASI wasi;
@@ -301,6 +308,8 @@ wasiErrno() {
 }
 
 WASI_IMPORT(void, procX5Fexit, (U32 code), {
+    WASI_TRACE("code=%d", code);
+
     exit(code);
 })
 
@@ -313,13 +322,21 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
     ssize_t total = 0;
     int nativeFD = -1;
 
+    if (wasiFD > 2) {
+        WASI_TRACE(
+            "wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
+            wasiFD, ciovecsPointer, ciovecsCount, resultPointer
+        );
+    }
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
     iovecs = malloc(ciovecsCount * sizeof(struct iovec));
     if (iovecs == NULL) {
+        WASI_TRACE("no mem");
         return wasiErrnoNomem;
     }
 
@@ -342,6 +359,7 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
     free(iovecs);
 
     if (total < 0) {
+        WASI_TRACE("writev failed");
         return wasiErrno();
     }
 
@@ -370,13 +388,19 @@ wasiFdRead(
     ssize_t total = 0;
     int nativeFD = -1;
 
+    WASI_TRACE(
+        "wasiFD=%d, iovecsPointer=%d, iovecsCount=%d, resultPointer=%d, offset=%lld",
+        wasiFD, iovecsPointer, iovecsCount, resultPointer, offset
+    );
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
     iovecs = malloc(iovecsCount * sizeof(struct iovec));
     if (iovecs == NULL) {
+        WASI_TRACE("no mem");
         return wasiErrnoNomem;
     }
 
@@ -399,6 +423,7 @@ wasiFdRead(
     free(iovecs);
 
     if (total < 0) {
+        WASI_TRACE("read failed");
         return wasiErrno();
     }
 
@@ -474,6 +499,12 @@ WASI_IMPORT(U32, fdX5Fpread, (U32 wasiFD, U32 iovecsPointer, U32 iovecsCount, U3
 WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer), {
     int envpIndex = 0;
     size_t envpBufSize = 0;
+
+    WASI_TRACE(
+        "envcPointer=%d, envpBufSizePointer=%d",
+        envcPointer, envpBufSizePointer
+    );
+
     while (wasi.envp[envpIndex] != NULL) {
         envpBufSize += strlen(wasi.envp[envpIndex]) + 1;
         envpIndex++;
@@ -488,6 +519,12 @@ WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer
 WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
     /* TODO: big-endian support */
     U32 index = 0;
+
+    WASI_TRACE(
+        "envpPointer=%d, envpBufPointer=%d",
+        envpPointer, envpBufPointer
+    );
+
     for (; wasi.envp[index] != NULL; index++) {
         char* env = wasi.envp[index];
         size_t length = strlen(env) + 1;
@@ -510,6 +547,12 @@ WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
 WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), {
     size_t argvBufSize = 0;
     U32 argvIndex = 0;
+
+    WASI_TRACE(
+        "argcPointer=%d, argvBufSizePointer=%d",
+        argcPointer, argvBufSizePointer
+    );
+
     for (; argvIndex < wasi.argc; argvIndex++) {
         argvBufSize += strlen(wasi.argv[argvIndex]) + 1;
     }
@@ -523,6 +566,12 @@ WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), 
 WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
     /* TODO: big-endian support */
     U32 index = 0;
+
+    WASI_TRACE(
+        "argvPointer=%d, argvBufPointer=%d",
+        argvPointer, argvBufPointer
+    );
+
     for (; index < wasi.argc; index++) {
         char* arg = wasi.argv[index];
         size_t length = strlen(arg) + 1;
@@ -556,6 +605,7 @@ wasiFdSeek(
     off_t result = 0;
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -593,9 +643,14 @@ convertPreview1Whence(
 WASI_PREVIEW1_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
     int nativeWhence = 0;
 
+    WASI_TRACE(
+        "wasiFD=%d, offset=%lld, whence=%d, resultPointer=%d",
+        wasiFD, (off_t)offset, whence, resultPointer
+    );
 
     nativeWhence = convertPreview1Whence(whence);
     if (nativeWhence == -1) {
+        WASI_TRACE("invalid whence");
         return wasiErrnoInval;
     }
 
@@ -629,9 +684,14 @@ convertUnstableWhence(
 WASI_UNSTABLE_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
     int nativeWhence = 0;
 
+    WASI_TRACE(
+        "wasiFD=%d, offset=%lld, whence=%d, resultPointer=%d",
+        wasiFD, (off_t)offset, whence, resultPointer
+    );
 
     nativeWhence = convertUnstableWhence(whence);
     if (nativeWhence == -1) {
+        WASI_TRACE("invalid whence");
         return wasiErrnoInval;
     }
 
@@ -644,7 +704,10 @@ WASI_UNSTABLE_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 re
 })
 
 WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
+    WASI_TRACE("wasiFD=%d", wasiFD);
+
     if (!wasiFileDescriptorClose(wasiFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
     return wasiErrnoSuccess;
@@ -662,6 +725,12 @@ convertTimespec(
 WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
     struct timespec timespec;
     clockid_t nativeClockID;
+
+    WASI_TRACE(
+        "clockID=%d, precision=%lld, resultPointer=%d",
+        clockID, precision, resultPointer
+    );
+
     switch (clockID) {
         case wasiClockRealtime: {
             nativeClockID = CLOCK_REALTIME;
@@ -671,11 +740,14 @@ WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPoin
             nativeClockID = CLOCK_MONOTONIC;
             break;
         }
-        default:
+        default: {
+            WASI_TRACE("invalid clock ID");
             return wasiErrnoInval;
+        }
     }
 
     if (clock_gettime(nativeClockID, &timespec) != 0) {
+        WASI_TRACE("clock_gettime failed");
         return wasiErrno();
     }
 
@@ -718,13 +790,19 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
     int nativeFlags = 0;
     int nativeFD = 0;
 
+    WASI_TRACE(
+        "wasiFD=%d, resultPointer=%d",
+        wasiFD, resultPointer
+    );
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
     /* Get filetype */
     if (fstat(nativeFD, &stat) != 0) {
+        WASI_TRACE("fstat failed");
         return wasiErrno();
     }
     filetype = wasiFiletypeFromMode(stat.st_mode);
@@ -763,7 +841,13 @@ WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
     WasiPreopen preopen = wasiEmptyPreopen;
     U32 length = 0;
 
+    WASI_TRACE(
+        "wasiFD=%d, prestatPointer=%d",
+        wasiFD, prestatPointer
+    );
+
     if (!wasiPreopenGet(wasiFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -780,7 +864,13 @@ WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pa
     WasiPreopen preopen = wasiEmptyPreopen;
     size_t length = 0;
 
+    WASI_TRACE(
+        "wasiFD=%d, pathPointer=%d, pathLength=%d",
+        wasiFD, pathPointer, pathLength
+    );
+
     if (!wasiPreopenGet(wasiFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -814,14 +904,37 @@ WASI_IMPORT(U32, pathX5Fopen, (
     WasiPreopen preopen = wasiEmptyPreopen;
     U32 wasiFD = 0;
 
+    WASI_TRACE(
+        "wasiDirFD=%d, "
+        "dirFlags=%d, "
+        "pathPointer=%d, "
+        "pathLength=%d, "
+        "oflags=%d, "
+        "fsRightsBase=%llu, "
+        "fsRightsInheriting=%llu, "
+        "fdFlags=%d, "
+        "fdPointer=%d",
+        wasiDirFD,
+        dirFlags,
+        pathPointer,
+        pathLength,
+        oflags,
+        fsRightsBase,
+        fsRightsInheriting,
+        fdFlags,
+        fdPointer
+    );
 
     if (!wasiPreopenGet(wasiDirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
     path = malloc(pathLength + 1);
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
+
+    WASI_TRACE("path=%s", path);
 
     /* Convert WASI oflags to native flags */
     if (oflags & wasiOflagsCreat) {
@@ -869,12 +982,14 @@ WASI_IMPORT(U32, pathX5Fopen, (
     free(path);
 
     if (nativeFD < 0) {
+        WASI_TRACE("openat failed");
         return wasiErrno();
     }
 
 
     /* Register the WASI file descriptor */
     if (!wasiFileDescriptorAdd(nativeFD, &wasiFD)) {
+        WASI_TRACE("adding FD failed");
         free(path);
         return wasiErrnoBadf;
     }
@@ -968,10 +1083,12 @@ wasiFdFilestatGet(
 ) {
     int nativeFD = -1;
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
     if (fstat(nativeFD, st) != 0) {
+        WASI_TRACE("fstat failed");
         return wasiErrno();
     }
 
@@ -982,6 +1099,10 @@ WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
     struct stat stat;
     U32 res = wasiErrnoInval;
 
+    WASI_TRACE(
+        "wasiFD=%d, statPointer=%d",
+        wasiFD, statPointer
+    );
 
     res = wasiFdFilestatGet(wasiFD, &stat);
     if (res != wasiErrnoSuccess) {
@@ -1021,6 +1142,10 @@ WASI_UNSTABLE_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
     struct stat stat;
     U32 res = wasiErrnoInval;
 
+    WASI_TRACE(
+        "wasiFD=%d, statPointer=%d",
+        wasiFD, statPointer
+    );
 
     res = wasiFdFilestatGet(wasiFD, &stat);
 
@@ -1051,6 +1176,7 @@ wasiPathFilestatGet(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     if (!wasiPreopenGet(wasiFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1058,12 +1184,14 @@ wasiPathFilestatGet(
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
+    WASI_TRACE("path=%s", path);
 
     res = fstatat(preopen.fd, path, st, nativeFlags);
 
     free(path);
 
     if (res != 0) {
+        WASI_TRACE("fstatat failed");
         return wasiErrno();
     }
 
@@ -1080,6 +1208,10 @@ WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
     struct stat stat;
     U32 res = wasiErrnoInval;
 
+    WASI_TRACE(
+        "dirFD=%d, lookupFlags=%d, pathPointer=%d, pathLength=%d, statPointer=%d",
+        dirFD, lookupFlags, pathPointer, pathLength, statPointer
+    );
 
     res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
@@ -1101,6 +1233,10 @@ WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
     struct stat stat;
     U32 res = wasiErrnoInval;
 
+    WASI_TRACE(
+        "dirFD=%d, lookupFlags=%d, pathPointer=%d, pathLength=%d, statPointer=%d",
+        dirFD, lookupFlags, pathPointer, pathLength, statPointer
+    );
 
     res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
@@ -1126,15 +1262,31 @@ WASI_IMPORT(U32, pathX5Frename, (
     char* newPath = NULL;
     int res = -1;
 
+    WASI_TRACE(
+        "oldDirFD=%d, "
+        "oldPathPointer=%d, "
+        "oldPathLength=%d, "
+        "newDirFD=%d, "
+        "newPathPointer=%d, "
+        "newPathLength=%d",
+        oldDirFD,
+        oldPathPointer,
+        oldPathLength,
+        newDirFD,
+        newPathPointer,
+        newPathLength
+    );
 
     WasiPreopen oldPreopen = wasiEmptyPreopen;
     WasiPreopen newPreopen = wasiEmptyPreopen;
 
     if (!wasiPreopenGet(oldDirFD, &oldPreopen)) {
+        WASI_TRACE("bad old fd");
         return wasiErrnoBadf;
     }
 
     if (!wasiPreopenGet(newDirFD, &newPreopen)) {
+        WASI_TRACE("bad new fd");
         return wasiErrnoBadf;
     }
 
@@ -1146,12 +1298,15 @@ WASI_IMPORT(U32, pathX5Frename, (
     memcpy(newPath, e_memory->data + newPathPointer, newPathLength);
     newPath[newPathLength] = '\0';
 
+    WASI_TRACE("oldPath=%s, newPath=%s", oldPath, newPath);
+
     res = renameat(oldPreopen.fd, oldPath, newPreopen.fd, newPath);
 
     free(oldPath);
     free(newPath);
 
     if (res != 0) {
+        WASI_TRACE("renameat failed");
         return wasiErrno();
     }
 
@@ -1165,8 +1320,13 @@ WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLeng
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
+    WASI_TRACE(
+        "dirFD=%d, pathPointer=%d, pathLength=%d",
+        dirFD, pathPointer, pathLength
+    );
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1174,11 +1334,14 @@ WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLeng
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
+    WASI_TRACE("path=%s", path);
+
     res = unlinkat(preopen.fd, path, 0);
 
     free(path);
 
     if (res != 0) {
+        WASI_TRACE("unlinkat failed");
         return wasiErrno();
     }
 
@@ -1192,8 +1355,13 @@ WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
+    WASI_TRACE(
+        "dirFD=%d, pathPointer=%d, pathLength=%d",
+        dirFD, pathPointer, pathLength
+    );
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1201,11 +1369,14 @@ WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
+    WASI_TRACE("path=%s", path);
+
     res = unlinkat(preopen.fd, path, AT_REMOVEDIR);
 
     free(path);
 
     if (res != 0) {
+        WASI_TRACE("unlinkat failed");
         return wasiErrno();
     }
 
@@ -1220,8 +1391,13 @@ WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
+    WASI_TRACE(
+        "dirFD=%d, pathPointer=%d, pathLength=%d",
+        dirFD, pathPointer, pathLength
+    );
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1229,11 +1405,14 @@ WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
+    WASI_TRACE("path=%s", path);
+
     res = mkdirat(preopen.fd, path, mode);
 
     free(path);
 
     if (res != 0) {
+        WASI_TRACE("mkdirat failed");
         return wasiErrno();
     }
 
@@ -1255,8 +1434,13 @@ WASI_IMPORT(U32, pathX5Fsymlink, (
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
+    WASI_TRACE(
+        "oldPathPointer=%d, oldPathLength=%d, dirFD=%d, newPathPointer=%d, newPathLength=%d",
+        oldPathPointer, oldPathLength, dirFD, newPathPointer, newPathLength
+    );
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1268,12 +1452,15 @@ WASI_IMPORT(U32, pathX5Fsymlink, (
     memcpy(newPath, e_memory->data + newPathPointer, newPathLength);
     newPath[newPathLength] = '\0';
 
+    WASI_TRACE("oldPath=%s, newPath=%s", oldPath, newPath);
+
     res = symlinkat(oldPath, preopen.fd, newPath);
 
     free(oldPath);
     free(newPath);
 
     if (res != 0) {
+        WASI_TRACE("symlinkat failed");
         return wasiErrno();
     }
 
@@ -1295,8 +1482,13 @@ WASI_IMPORT(U32, pathX5Freadlink, (
     int length = 0;
     WasiPreopen preopen = wasiEmptyPreopen;
 
+    WASI_TRACE(
+        "dirFD=%d, pathPointer=%d, pathLength=%d, bufferPointer=%d, bufferLength=%d, lengthPointer=%d",
+        dirFD, pathPointer, pathLength, bufferPointer, bufferLength, lengthPointer
+    );
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
+        WASI_TRACE("bad FD");
         return wasiErrnoBadf;
     }
 
@@ -1304,12 +1496,15 @@ WASI_IMPORT(U32, pathX5Freadlink, (
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
+    WASI_TRACE("path=%s", path);
+
     buffer = (char*)e_memory->data + bufferPointer;
     length = readlinkat(preopen.fd, path, buffer, bufferLength);
 
     free(path);
 
     if (length < 0) {
+        WASI_TRACE("readlinkat failed");
         return wasiErrno();
     }
 
@@ -1320,23 +1515,29 @@ WASI_IMPORT(U32, pathX5Freadlink, (
 
 WASI_IMPORT(U32, fdX5Freaddir, (U32 fd, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
     /* TODO: */
-    fprintf(stderr, "w2c2 WASI: unimplemented function: fd_readdir\n");
+    WASI_TRACE("unimplemented function");
     return wasiErrnoNosys;
 })
 
 WASI_IMPORT(U32, fdX5FfdstatX5FsetX5Fflags, (U32 fd, U32 flags), {
     /* TODO: */
-    fprintf(stderr, "w2c2 WASI: unimplemented function: fd_fdstat_set_flags\n");
+    WASI_TRACE("unimplemented function");
     return wasiErrnoNosys;
 })
 
 WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscriptionCount, U32 eventCount), {
     /* TODO: */
-    fprintf(stderr, "w2c2 WASI: unimplemented function: poll_oneoff\n");
+    WASI_TRACE("unimplemented function");
     return wasiErrnoNosys;
 })
 
 WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
+
+    WASI_TRACE(
+        "bufferPointer=%d, bufferLength=%d",
+        bufferPointer, bufferLength
+    );
+
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) {
         return wasiErrno();
