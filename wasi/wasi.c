@@ -106,7 +106,7 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorClose(
     U32 wasiFD
 ) {
-    int nativeFD;
+    int nativeFD = 0;
     MUST (wasiFileDescriptorGet(wasiFD, &nativeFD))
     MUST (close(nativeFD) == 0)
     wasi.fds.fds[wasiFD] = -1;
@@ -184,7 +184,7 @@ wasiPreopenGet(
     U32 wasiFD,
     WasiPreopen* preopen
 ) {
-    WasiPreopen result;
+    WasiPreopen result = wasiEmptyPreopen;
     MUST (wasiFD < wasi.preopens.length)
     result = wasi.preopens.preopens[wasiFD];
     MUST (result.path != NULL && result.fd >= 0)
@@ -216,7 +216,7 @@ wasiInit(
     {
         short preopenIndex = 0;
         for (; preopenIndex < 3; preopenIndex++)  {
-            WasiPreopen emptyPreopen = {NULL, -1};
+            WasiPreopen emptyPreopen = wasiEmptyPreopen;
             MUST (wasiPreopenAdd(emptyPreopen, NULL))
         }
     }
@@ -311,8 +311,9 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
 
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
+    int nativeFD = -1;
 
-    int nativeFD;
+
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         return wasiErrnoBadf;
     }
@@ -367,8 +368,9 @@ wasiFdRead(
 
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
+    int nativeFD = -1;
 
-    int nativeFD;
+
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         return wasiErrnoBadf;
     }
@@ -431,6 +433,7 @@ wrapPositional(
     off_t offset
 ) {
     ssize_t res = 0;
+    int currentErrno = 0;
 
     off_t origLoc = lseek(fd, 0, SEEK_CUR);
     if (origLoc == (off_t)-1) {
@@ -442,7 +445,7 @@ wrapPositional(
 
     res = f(fd, iovecs, count);
 
-    int currentErrno = errno;
+    currentErrno = errno;
     if (lseek(fd, origLoc, SEEK_SET) == (off_t)-1) {
         if (res == -1) {
             errno = currentErrno;
@@ -506,7 +509,6 @@ WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
 
 WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), {
     size_t argvBufSize = 0;
-
     U32 argvIndex = 0;
     for (; argvIndex < wasi.argc; argvIndex++) {
         argvBufSize += strlen(wasi.argv[argvIndex]) + 1;
@@ -550,7 +552,9 @@ wasiFdSeek(
     int nativeWhence,
     U32 resultPointer
 ) {
-    int nativeFD;
+    int nativeFD = -1;
+    off_t result = 0;
+
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         return wasiErrnoBadf;
     }
@@ -587,7 +591,10 @@ convertPreview1Whence(
 }
 
 WASI_PREVIEW1_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
-    int nativeWhence = convertPreview1Whence(whence);
+    int nativeWhence = 0;
+
+
+    nativeWhence = convertPreview1Whence(whence);
     if (nativeWhence == -1) {
         return wasiErrnoInval;
     }
@@ -620,7 +627,10 @@ convertUnstableWhence(
 }
 
 WASI_UNSTABLE_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
-    int nativeWhence = convertUnstableWhence(whence);
+    int nativeWhence = 0;
+
+
+    nativeWhence = convertUnstableWhence(whence);
     if (nativeWhence == -1) {
         return wasiErrnoInval;
     }
@@ -651,7 +661,6 @@ convertTimespec(
 
 WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
     struct timespec timespec;
-
     clockid_t nativeClockID;
     switch (clockID) {
         case wasiClockRealtime: {
@@ -704,11 +713,12 @@ wasiFiletypeFromMode(
 WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
 
     U8 filetype = wasiFiletypeUnknown;
-    U16 flags = 0;
+    U16 wasiFlags = 0;
     struct stat stat;
-    int fl = 0;
+    int nativeFlags = 0;
+    int nativeFD = 0;
 
-    int nativeFD;
+
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         return wasiErrnoBadf;
     }
@@ -720,28 +730,29 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
     filetype = wasiFiletypeFromMode(stat.st_mode);
 
     /* Get flags */
-    fl = fcntl(nativeFD, F_GETFL);
-    if (fl < 0) {
+    nativeFlags = fcntl(nativeFD, F_GETFL);
+    if (nativeFlags < 0) {
+        WASI_TRACE("fcntl failed");
         return wasiErrno();
     }
 
-    if (fl & O_APPEND) {
-        flags |= wasiFdflagsAppend;
+    if (nativeFlags & O_APPEND) {
+        wasiFlags |= wasiFdflagsAppend;
     }
-    if (fl & O_DSYNC) {
-        flags |= wasiFdflagsDsync;
+    if (nativeFlags & O_DSYNC) {
+        wasiFlags |= wasiFdflagsDsync;
     }
-    if (fl & O_NONBLOCK) {
-        flags |= wasiFdflagsNonblock;
+    if (nativeFlags & O_NONBLOCK) {
+        wasiFlags |= wasiFdflagsNonblock;
     }
-    if (fl & O_SYNC) {
-        flags |= wasiFdflagsRsync | wasiFdflagsSync;
+    if (nativeFlags & O_SYNC) {
+        wasiFlags |= wasiFdflagsRsync | wasiFdflagsSync;
     }
 
     /* Store result */
     memset(e_memory->data + resultPointer, 0, 24);
     i32_store8(e_memory, resultPointer, filetype);
-    i32_store16(e_memory, resultPointer + 2, flags);
+    i32_store16(e_memory, resultPointer + 2, wasiFlags);
     i64_store(e_memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
     i64_store(e_memory, resultPointer + 16, /* TODO: inherited rights. all for now */ (U64)-1);
 
@@ -749,16 +760,16 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
 })
 
 WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
-    WasiPreopen preopen;
+    WasiPreopen preopen = wasiEmptyPreopen;
+    U32 length = 0;
+
     if (!wasiPreopenGet(wasiFD, &preopen)) {
         return wasiErrnoBadf;
     }
 
-    {
-        U32 length = strlen(preopen.path) + 1;
-        i32_store(e_memory, prestatPointer, wasiPreopentypeDirectory);
-        i32_store(e_memory, prestatPointer + 4, length);
-    }
+    length = strlen(preopen.path) + 1;
+    i32_store(e_memory, prestatPointer, wasiPreopentypeDirectory);
+    i32_store(e_memory, prestatPointer + 4, length);
 
     return wasiErrnoSuccess;
 })
@@ -766,19 +777,19 @@ WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
 WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pathLength), {
     /* TODO: big-endian support */
 
-    WasiPreopen preopen;
+    WasiPreopen preopen = wasiEmptyPreopen;
+    size_t length = 0;
+
     if (!wasiPreopenGet(wasiFD, &preopen)) {
         return wasiErrnoBadf;
     }
 
-    {
-        size_t length = strlen(preopen.path) + 1;
-        memcpy(
-            e_memory->data + pathPointer,
-            preopen.path,
-            length < pathLength ? length : pathLength
-        );
-    }
+    length = strlen(preopen.path) + 1;
+    memcpy(
+        e_memory->data + pathPointer,
+        preopen.path,
+        length < pathLength ? length : pathLength
+    );
 
     return wasiErrnoSuccess;
 })
@@ -797,11 +808,13 @@ WASI_IMPORT(U32, pathX5Fopen, (
     /* TODO: big-endian support */
 
     char* path = NULL;
-    int flags = 0;
+    int nativeFlags = 0;
     static const int mode = 0644;
     int nativeFD = -1;
+    WasiPreopen preopen = wasiEmptyPreopen;
+    U32 wasiFD = 0;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(wasiDirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -812,30 +825,30 @@ WASI_IMPORT(U32, pathX5Fopen, (
 
     /* Convert WASI oflags to native flags */
     if (oflags & wasiOflagsCreat) {
-        flags |= O_CREAT;
+        nativeFlags |= O_CREAT;
     }
     if (oflags & wasiOflagsDirectory) {
-        flags |= O_DIRECTORY;
+        nativeFlags |= O_DIRECTORY;
     }
     if (oflags & wasiOflagsExcl) {
-        flags |= O_EXCL;
+        nativeFlags |= O_EXCL;
     }
     if (oflags & wasiOflagsTrunc) {
-        flags |= O_TRUNC;
+        nativeFlags |= O_TRUNC;
     }
 
     /* Convert WASI fdFlags to native flags */
     if (fdFlags & wasiFdflagsAppend) {
-        flags |= O_APPEND;
+        nativeFlags |= O_APPEND;
     }
     if (fdFlags & wasiFdflagsDsync) {
-        flags |= O_DSYNC;
+        nativeFlags |= O_DSYNC;
     }
     if (fdFlags & wasiFdflagsNonblock) {
-        flags |= O_NONBLOCK;
+        nativeFlags |= O_NONBLOCK;
     }
     if (fdFlags & wasiFdflagsSync) {
-        flags |= O_SYNC;
+        nativeFlags |= O_SYNC;
     }
     /* wasiFdflagsRsync is ignored, as O_RSYNC is often not implemented */
 
@@ -843,15 +856,15 @@ WASI_IMPORT(U32, pathX5Fopen, (
     if ((fsRightsBase & wasiRightsFdRead)
         && (fsRightsBase & wasiRightsFdWrite))
     {
-        flags |= O_RDWR;
-    } else if ((fsRightsBase & wasiRightsFdWrite)) {
-        flags |= O_WRONLY;
-    } else if ((fsRightsBase & wasiRightsFdRead)) {
-        flags |= O_RDONLY;
+        nativeFlags |= O_RDWR;
+    } else if (fsRightsBase & wasiRightsFdWrite) {
+        nativeFlags |= O_WRONLY;
+    } else if (fsRightsBase & wasiRightsFdRead) {
+        nativeFlags |= O_RDONLY;
     }
 
     /* Open the file */
-    nativeFD = openat(preopen.fd, path, flags, mode);
+    nativeFD = openat(preopen.fd, path, nativeFlags, mode);
 
     free(path);
 
@@ -859,17 +872,15 @@ WASI_IMPORT(U32, pathX5Fopen, (
         return wasiErrno();
     }
 
-    {
-        /* Register the WASI file descriptor */
-        U32 wasiFD;
-        if (!wasiFileDescriptorAdd(nativeFD, &wasiFD)) {
-            free(path);
-            return wasiErrnoBadf;
-        }
 
-        /* Store the file descriptor at the result pointer */
-        i32_store(e_memory, fdPointer, wasiFD);
+    /* Register the WASI file descriptor */
+    if (!wasiFileDescriptorAdd(nativeFD, &wasiFD)) {
+        free(path);
+        return wasiErrnoBadf;
     }
+
+    /* Store the file descriptor at the result pointer */
+    i32_store(e_memory, fdPointer, wasiFD);
 
     return wasiErrnoSuccess;
 })
@@ -955,7 +966,7 @@ wasiFdFilestatGet(
     U32 wasiFD,
     struct stat* st
 ) {
-    int nativeFD;
+    int nativeFD = -1;
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         return wasiErrnoBadf;
     }
@@ -969,7 +980,10 @@ wasiFdFilestatGet(
 
 WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
     struct stat stat;
-    U32 res = wasiFdFilestatGet(wasiFD, &stat);
+    U32 res = wasiErrnoInval;
+
+
+    res = wasiFdFilestatGet(wasiFD, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
@@ -1005,7 +1019,11 @@ storeUnstableFilestat(
 
 WASI_UNSTABLE_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
     struct stat stat;
-    U32 res = wasiFdFilestatGet(wasiFD, &stat);
+    U32 res = wasiErrnoInval;
+
+
+    res = wasiFdFilestatGet(wasiFD, &stat);
+
     if (res != wasiErrnoSuccess) {
         return res;
     }
@@ -1019,7 +1037,7 @@ static
 __inline__
 U32
 wasiPathFilestatGet(
-    U32 fd,
+    U32 wasiFD,
     U32 lookupFlags,
     U32 pathPointer,
     U32 pathLength,
@@ -1029,13 +1047,10 @@ wasiPathFilestatGet(
 
     char* path = NULL;
     int res = 0;
-    int flags = AT_SYMLINK_NOFOLLOW;
-    if (lookupFlags & wasiLookupFlagSymlinkFollow) {
-        flags &= ~AT_SYMLINK_NOFOLLOW;
-    }
+    int nativeFlags = lookupFlags & wasiLookupFlagSymlinkFollow ? 0 : AT_SYMLINK_NOFOLLOW;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
-    if (!wasiPreopenGet(fd, &preopen)) {
+    if (!wasiPreopenGet(wasiFD, &preopen)) {
         return wasiErrnoBadf;
     }
 
@@ -1043,7 +1058,8 @@ wasiPathFilestatGet(
     memcpy(path, e_memory->data + pathPointer, pathLength);
     path[pathLength] = '\0';
 
-    res = fstatat(preopen.fd, path, st, flags);
+
+    res = fstatat(preopen.fd, path, st, nativeFlags);
 
     free(path);
 
@@ -1061,13 +1077,17 @@ WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
     U32 pathLength,
     U32 statPointer
 ), {
-    /* TODO: use lookup flags */
     struct stat stat;
-    U32 res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
+    U32 res = wasiErrnoInval;
+
+
+    res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
+
     storePreview1Filestat(statPointer, &stat);
+
     return wasiErrnoSuccess;
 })
 
@@ -1078,13 +1098,17 @@ WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
     U32 pathLength,
     U32 statPointer
 ), {
-    /* TODO: use lookup flags */
     struct stat stat;
-    U32 res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
+    U32 res = wasiErrnoInval;
+
+
+    res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
+
     storeUnstableFilestat(statPointer, &stat);
+
     return wasiErrnoSuccess;
 })
 
@@ -1102,8 +1126,9 @@ WASI_IMPORT(U32, pathX5Frename, (
     char* newPath = NULL;
     int res = -1;
 
-    WasiPreopen oldPreopen;
-    WasiPreopen newPreopen;
+
+    WasiPreopen oldPreopen = wasiEmptyPreopen;
+    WasiPreopen newPreopen = wasiEmptyPreopen;
 
     if (!wasiPreopenGet(oldDirFD, &oldPreopen)) {
         return wasiErrnoBadf;
@@ -1138,8 +1163,9 @@ WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLeng
 
     char* path = NULL;
     int res = -1;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -1164,8 +1190,9 @@ WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
 
     char* path = NULL;
     int res = -1;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -1191,8 +1218,9 @@ WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     char* path = NULL;
     static const mode_t mode = 0755;
     int res = -1;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -1225,8 +1253,9 @@ WASI_IMPORT(U32, pathX5Fsymlink, (
     char* oldPath = NULL;
     char* newPath = NULL;
     int res = -1;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -1264,8 +1293,9 @@ WASI_IMPORT(U32, pathX5Freadlink, (
     char* path = NULL;
     char* buffer = NULL;
     int length = 0;
+    WasiPreopen preopen = wasiEmptyPreopen;
 
-    WasiPreopen preopen;
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         return wasiErrnoBadf;
     }
@@ -1293,7 +1323,6 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 fd, U32 bufferPointer, U32 bufferLength, U64
     fprintf(stderr, "w2c2 WASI: unimplemented function: fd_readdir\n");
     return wasiErrnoNosys;
 })
-
 
 WASI_IMPORT(U32, fdX5FfdstatX5FsetX5Fflags, (U32 fd, U32 flags), {
     /* TODO: */

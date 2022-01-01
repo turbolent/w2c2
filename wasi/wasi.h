@@ -14,6 +14,8 @@ typedef struct WasiPreopen {
     int fd;
 } WasiPreopen;
 
+static const WasiPreopen wasiEmptyPreopen = {NULL, -1};
+
 typedef struct WasiPreopens {
     WasiPreopen* preopens;
     size_t length;
