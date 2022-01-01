@@ -609,14 +609,13 @@ wasiFdSeek(
         return wasiErrnoBadf;
     }
 
-    {
-        off_t off = lseek(nativeFD, offset, nativeWhence);
-        if (off == (off_t)-1) {
-            return wasiErrno();
-        }
-
-        i32_store(e_memory, resultPointer, off);
+    result = lseek(nativeFD, (off_t)offset, nativeWhence);
+    if (result == (off_t)-1) {
+        WASI_TRACE("lseek failed");
+        return wasiErrno();
     }
+
+    i64_store(e_memory, resultPointer, result);
 
     return wasiErrnoSuccess;
 }
