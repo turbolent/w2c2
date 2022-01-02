@@ -2,8 +2,10 @@
 w2c2
 w2c2_test
 tests/assert_*.c
+tests/*.json
 tests/*.wat
 tests/test_*
+tests/*.[0-9]*.wasm
 *.gba
 *.nds
 *.elf
