@@ -10,6 +10,7 @@ tests/*.[0-9]*.wasm
 *.nds
 *.elf
 compile_flags.txt
+examples/clang/clang
 examples/dino*/dino
 examples/coremark/coremark
 examples/rust-wasi/rust-wasi
