@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../../w2c2_base.h"
+#include "../../wasi/wasi.h"
 
 extern void (*e_X5Fstart)();
 
@@ -13,9 +14,16 @@ trap(
 
 extern void init();
 
+extern char** environ;
+
 /* Main */
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (!wasiInit(argc, argv, environ)) {
+        fprintf(stderr, "failed to initialize WASI\n");
+        return 1;
+    }
+
     /* Initialize module */
     init();
 
