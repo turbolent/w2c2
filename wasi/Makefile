@@ -1,4 +1,4 @@
-CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function -pthread
+CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 LDFLAGS += -lm
 
 ifneq (,$(findstring base,$(SANITIZERS)))
