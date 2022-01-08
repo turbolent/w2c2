@@ -61,4 +61,6 @@ main(int argc, char* argv[]) {
     testResolvePath("/foo/bar", "", "", false);
     testResolvePath("/foo/bar", "/baz/qux", "/baz/qux", true);
     testResolvePath("/foo/bar", "baz/qux", "/foo/bar/baz/qux", true);
+
+    return 0;
 }

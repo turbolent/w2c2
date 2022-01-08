@@ -12,6 +12,9 @@
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include "wasi.h"
 
 #define WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
@@ -761,35 +764,132 @@ WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
     return wasiErrnoSuccess;
 })
 
+#define NSEC_PER_SEC 1000000000
+#define NSEC_PER_USEC 1000
+
 static
 __inline__
 U64
 convertTimespec(
     struct timespec t
 ) {
-    return t.tv_sec * 1000000000 + t.tv_nsec;
+    return t.tv_sec * NSEC_PER_SEC
+           + t.tv_nsec;
 }
 
-WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
-    struct timespec timespec;
-    clockid_t nativeClockID;
+static
+__inline__
+U64
+convertTimeval(
+    struct timeval t
+) {
+    return t.tv_sec * NSEC_PER_SEC
+           + t.tv_usec * NSEC_PER_USEC;
+}
+
+static
+__inline__
+void
+addTimevals(
+    struct timeval* tvp,
+    struct timeval* uvp,
+    struct timeval* vvp
+) {
+    (vvp)->tv_sec = (tvp)->tv_sec + (uvp)->tv_sec;
+    (vvp)->tv_usec = (tvp)->tv_usec + (uvp)->tv_usec;
+    if ((vvp)->tv_usec >= 1000000) {
+        (vvp)->tv_sec++;
+        (vvp)->tv_usec -= 1000000;
+    }
+}
+
+static
+__inline__
+U32
+wasiClockTimeGet(
+    U32 clockID,
+    U64 precision,
+    U32 resultPointer
+) {
+    U64 result = 0;
 
     WASI_TRACE((
         "clock_time_get(clockID=%d, precision=%lld, resultPointer=%d)",
         clockID, precision, resultPointer
     ));
 
+#if defined(_POSIX_TIMERS) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
+
+    {
+        struct timespec timespec;
+        clockid_t nativeClockID;
+
+
+        switch (clockID) {
+            case wasiClockRealtime: {
+                nativeClockID = CLOCK_REALTIME;
+                break;
+            }
+#ifdef _POSIX_MONOTONIC_CLOCK
+            case wasiClockMonotonic: {
+                nativeClockID = CLOCK_MONOTONIC;
+                break;
+            }
+#endif
+#ifdef _POSIX_CPUTIME
+            case wasiClockProcessCputimeId: {
+                nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
+                break;
+            }
+#endif
+#ifdef _POSIX_THREAD_CPUTIME
+            case wasiClockThreadCputimeId: {
+                nativeClockID = CLOCK_THREAD_CPUTIME_ID;
+                break;
+            }
+#endif
+            default: {
+                WASI_TRACE(("clock_time_get: invalid clock ID"));
+                return wasiErrnoInval;
+            }
+        }
+
+        if (clock_gettime(nativeClockID, &timespec) != 0) {
+            WASI_TRACE(("clock_time_get: clock_gettime failed"));
+            return wasiErrno();
+        }
+
+        result = convertTimespec(timespec);
+    }
+#else
     switch (clockID) {
         case wasiClockRealtime: {
-            nativeClockID = CLOCK_REALTIME;
+            struct timeval tv;
+            if (gettimeofday(&tv, NULL) != 0) {
+                WASI_TRACE(("clock_time_get: gettimeofday failed"));
+                return wasiErrno();
+            }
+            result = convertTimeval(tv);
             break;
         }
+#ifdef __MACH__
         case wasiClockMonotonic: {
-            nativeClockID = CLOCK_MONOTONIC;
+            static mach_timebase_info_data_t timebase = {0, 0};
+
+            if (!timebase.denom && mach_timebase_info(&timebase) != KERN_SUCCESS) {
+                WASI_TRACE(("clock_time_get: mach_timebase_info failed"));
+                return wasiErrnoInval;
+            }
+
+            result = mach_absolute_time() * timebase.numer / timebase.denom;
             break;
         }
+#endif
         case wasiClockProcessCputimeId: {
-            nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
+            struct rusage ru;
+            int ret = getrusage(RUSAGE_SELF, &ru);
+            addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
+            result = convertTimeval(ru.ru_utime);
             break;
         }
         default: {
@@ -797,19 +897,19 @@ WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPoin
             return wasiErrnoInval;
         }
     }
-
-    if (clock_gettime(nativeClockID, &timespec) != 0) {
-        WASI_TRACE(("clock_time_get: clock_gettime failed"));
-        return wasiErrno();
-    }
+#endif
 
     i64_store(
         e_memory,
         resultPointer,
-        convertTimespec(timespec)
+        result
     );
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
+    return wasiClockTimeGet(clockID, precision, resultPointer);
 })
 
 static
