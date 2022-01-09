@@ -16,4 +16,4 @@ target/wasm32-wasi/debug/rust-wasi.wasm:
 
 .PHONY: clean
 clean:
-	rm -f *.o rust-wasi
+	rm -f target/wasm32-wasi/debug/rust-wasi.o *.o rust-wasi
