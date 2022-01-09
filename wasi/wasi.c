@@ -495,8 +495,6 @@ wasiFdRead(
     U32 resultPointer,
     off_t offset
 ) {
-    /* TODO: big-endian support */
-
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
     int nativeFD = -1;
@@ -519,13 +517,20 @@ wasiFdRead(
 
     /* Convert WASI iovecs to native iovecs */
     {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+        U8* memoryStart = e_memory->data + e_memory->size - 1;
+#endif
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
             U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
             U32 bufferPointer = i32_load(e_memory, iovecPointer);
             U32 length = i32_load(e_memory, iovecPointer + 4);
 
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
             iovecs[iovecIndex].iov_base = e_memory->data + bufferPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+            iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - (length - 1);
+#endif
             iovecs[iovecIndex].iov_len = length;
         }
     }
@@ -533,12 +538,30 @@ wasiFdRead(
     /* Perform the reads */
     total = readFunc(nativeFD, iovecs, iovecsCount, offset);
 
-    free(iovecs);
-
     if (total < 0) {
+        free(iovecs);
+
         WASI_TRACE(("fd_[p]read: read failed"));
         return wasiErrno();
     }
+
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    {
+        U32 iovecIndex = 0;
+        for (; iovecIndex < iovecsCount; iovecIndex++) {
+            U8* base = iovecs[iovecIndex].iov_base;
+            U32 length = iovecs[iovecIndex].iov_len;
+            int i = 0;
+            for (; i < length / 2; i++) {
+                U8 value = base[i];
+                base[i] = base[length - i - 1];
+                base[length - i - 1] = value;
+            }
+        }
+    }
+#endif
+
+    free(iovecs);
 
     /* Store the amount of read bytes at the result pointer */
     i32_store(e_memory, resultPointer, total);
