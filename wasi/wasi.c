@@ -653,8 +653,10 @@ WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer
 })
 
 WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
-    /* TODO: big-endian support */
     U32 index = 0;
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    U8* memoryStart = e_memory->data + e_memory->size - 1;
+#endif
 
     WASI_TRACE((
         "environ_get(envpPointer=%d, envpBufPointer=%d)",
@@ -664,11 +666,18 @@ WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
     for (; wasi.envp[index] != NULL; index++) {
         char* env = wasi.envp[index];
         size_t length = strlen(env) + 1;
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
             e_memory->data + envpBufPointer,
             env,
             length
         );
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        U32 i = 0;
+        for (; i < length; i++) {
+           memoryStart[-envpBufPointer-i] = env[i];
+        }
+#endif
         i32_store(
             e_memory,
             envpPointer + index * sizeof(U32),
@@ -700,8 +709,10 @@ WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), 
 })
 
 WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
-    /* TODO: big-endian support */
     U32 index = 0;
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    U8* memoryStart = e_memory->data + e_memory->size - 1;
+#endif
 
     WASI_TRACE((
         "args_get(argvPointer=%d, argvBufPointer=%d)",
@@ -716,6 +727,18 @@ WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
             arg,
             length
         );
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+        memcpy(
+            e_memory->data + argvBufPointer,
+            arg,
+            length
+        );
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        U32 i = 0;
+        for (; i < length; i++) {
+            memoryStart[-argvBufPointer-i] = arg[i];
+        }
+#endif
         i32_store(
             e_memory,
             argvPointer + index * sizeof(U32),
@@ -1797,6 +1820,7 @@ WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscription
 })
 
 WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
+    /* TODO: big-endian support */
     ssize_t result = 0;
     int fd = -1;
 
