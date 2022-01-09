@@ -1,3 +1,5 @@
+W2C2 ?= ../w2c2
+PYTHON3 ?= python3
 
 EXE =
 
@@ -26,8 +28,6 @@ endif
 
 LDFLAGS += -lm
 
-PYTHON3 ?= python3
-
 .SILENT:
 
 .PHONY: run-tests gen clean clean-wasm-json clean-assertions clean-compiled
@@ -51,7 +51,7 @@ test_%$(EXE): test_%.o main.o
 
 test_%.c: %.wasm
 	echo "#include \"test.h\"" > $@
-	../w2c2 $< >> $@
+	$(W2C2) $< >> $@
 	cat $(patsubst test_%.c,assert_%.c,$@) >> $@
 
 %.o: %.c

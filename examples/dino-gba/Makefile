@@ -1,3 +1,5 @@
+W2C2 ?= ../../w2c2
+
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment")
 endif
@@ -19,7 +21,7 @@ dino.elf: dino.o main.o
 dingo.gba: dino.elf
 
 %.c: %.wasm
-	../../w2c2 -o $@ $<
+	$(W2C2) -o $@ $<
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@

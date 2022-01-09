@@ -1,5 +1,6 @@
 CFLAGS += -I../..
 LDFLAGS += -lm
+W2C2 ?= ../../w2c2
 
 clang: ../../wasi/wasi.o inits.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
@@ -11,7 +12,7 @@ inits.o: CFLAGS += -O0
 	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
 
 inits.c: clang.wasm
-	../../w2c2 -j 12 -o . -f 100 $^
+	$(W2C2) -j 12 -o . -f 100 $^
 
 .PHONY: clean
 clean:
