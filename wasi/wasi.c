@@ -764,12 +764,12 @@ WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
     return wasiErrnoSuccess;
 })
 
-#define NSEC_PER_SEC 1000000000
-#define NSEC_PER_USEC 1000
+#define NSEC_PER_SEC 1000000000LL
+#define NSEC_PER_USEC 1000LL
 
 static
 __inline__
-U64
+I64
 convertTimespec(
     struct timespec t
 ) {
@@ -779,7 +779,7 @@ convertTimespec(
 
 static
 __inline__
-U64
+I64
 convertTimeval(
     struct timeval t
 ) {
@@ -811,7 +811,7 @@ wasiClockTimeGet(
     U64 precision,
     U32 resultPointer
 ) {
-    U64 result = 0;
+    I64 result = 0;
 
     WASI_TRACE((
         "clock_time_get(clockID=%d, precision=%lld, resultPointer=%d)",
@@ -859,6 +859,8 @@ wasiClockTimeGet(
             return wasiErrno();
         }
 
+        WASI_TRACE(("clock_time_get: clock_gettime: %d %d", timespec.tv_sec, timespec.tv_nsec));
+
         result = convertTimespec(timespec);
     }
 #else
@@ -888,6 +890,7 @@ wasiClockTimeGet(
         case wasiClockProcessCputimeId: {
             struct rusage ru;
             int ret = getrusage(RUSAGE_SELF, &ru);
+            WASI_TRACE(("clock_time_get: getrusage: ru_utime=%d, ru_stime=%d", ru.ru_utime, ru.ru_stime));
             addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
             result = convertTimeval(ru.ru_utime);
             break;
@@ -898,6 +901,8 @@ wasiClockTimeGet(
         }
     }
 #endif
+
+    WASI_TRACE(("clock_time_get: result=%lld", result));
 
     i64_store(
         e_memory,
