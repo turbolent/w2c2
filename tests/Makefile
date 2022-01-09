@@ -20,7 +20,7 @@ LDFLAGS = $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/wii -logc
 EXE = .elf
 
 DOLPHIN ?= dolphin
-WII_EXECUTE ?= $(DOLPHIN) -b -e
+EXECUTE ?= $(DOLPHIN) -b -e
 
 %.elf:
 
@@ -39,11 +39,7 @@ run-tests-%:
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
-ifeq ($(TARGET),Wii)
-	$(WII_EXECUTE) $<
-else
-	./$<
-endif
+	$(EXECUTE) ./$<
 	echo
 
 test_%$(EXE): test_%.o main.o
