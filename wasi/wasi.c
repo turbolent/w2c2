@@ -1,6 +1,3 @@
-#define _POSIX_SOURCE
-#define _XOPEN_SOURCE 500
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -358,7 +355,6 @@ resolvePath(
     return true;
 }
 
-
 WASI_IMPORT(void, procX5Fexit, (U32 code), {
     WASI_TRACE(("proc_exit(code=%d)", code));
 
@@ -367,19 +363,27 @@ WASI_IMPORT(void, procX5Fexit, (U32 code), {
 
 static const size_t ciovecSize = 8;
 
-WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, U32 resultPointer), {
-    /* TODO: big-endian support */
-
+static
+__inline__
+U32
+wasiFdWrite(
+    U32 wasiFD,
+    U32 ciovecsPointer,
+    U32 ciovecsCount,
+    U32 resultPointer
+) {
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
     int nativeFD = -1;
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    U8* temporaryBuffer = NULL;
+#endif
 
-    if (wasiFD > 2) {
-        WASI_TRACE((
-           "fd_write(wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
-            wasiFD, ciovecsPointer, ciovecsCount, resultPointer
-        ));
-    }
+
+    WASI_TRACE((
+       "fd_write(wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
+        wasiFD, ciovecsPointer, ciovecsCount, resultPointer
+    ));
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         WASI_TRACE(("fd_write: bad FD"));
@@ -392,6 +396,7 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
         return wasiErrnoNomem;
     }
 
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     /* Convert WASI ciovecs to native iovecs */
     {
         U32 ciovecIndex = 0;
@@ -400,15 +405,64 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
             U32 bufferPointer = i32_load(e_memory, ciovecPointer);
             U32 length = i32_load(e_memory, ciovecPointer + 4);
 
+            WASI_TRACE((
+                "fd_write: length=%d, bufferPointer=%d",
+                length, bufferPointer
+            ));
+
             iovecs[ciovecIndex].iov_base = e_memory->data + bufferPointer;
             iovecs[ciovecIndex].iov_len = length;
         }
     }
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+    /* Convert WASI ciovecs to native iovecs */
+    {
+        U32 totalLength = 0;
+        U32 ciovecIndex = 0;
+        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+            U32 length = i32_load(e_memory, ciovecPointer + 4);
+            iovecs[ciovecIndex].iov_len = length;
+            totalLength += length;
+        }
+
+        temporaryBuffer = malloc(totalLength);
+        if (temporaryBuffer == NULL) {
+            return wasiErrnoNomem;
+        }
+
+        totalLength = 0;
+        ciovecIndex = 0;
+        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+            U32 bufferPointer = i32_load(e_memory, ciovecPointer);
+            U32 length = iovecs[ciovecIndex].iov_len;
+            U8* bufferStart = e_memory->data + e_memory->size - bufferPointer;
+            U32 i = 0;
+            for (; i < length; i++) {
+                temporaryBuffer[totalLength + i] = bufferStart[-i];
+            }
+
+            iovecs[ciovecIndex].iov_base = temporaryBuffer + totalLength;
+
+            totalLength += length;
+            WASI_TRACE((
+                "fd_write: length=%d, bufferPointer=%d",
+                length, bufferPointer
+            ));
+        }
+    }
+#endif
 
     /* Perform the writes */
     total = writev(nativeFD, iovecs, ciovecsCount);
 
     free(iovecs);
+
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    free(temporaryBuffer);
+#endif
 
     if (total < 0) {
         WASI_TRACE(("fd_write: writev failed"));
@@ -419,7 +473,12 @@ WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, 
     i32_store(e_memory, resultPointer, total);
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, U32 resultPointer), {
+    return wasiFdWrite(wasiFD, ciovecsPointer, ciovecsCount, resultPointer);
 })
+
 
 static const size_t iovecSize = 8;
 
