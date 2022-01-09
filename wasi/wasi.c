@@ -1041,6 +1041,8 @@ wasiFiletypeFromMode(
   }
 }
 
+static const size_t wasiFdstatSize = 24;
+
 WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
 
     U8 filetype = wasiFiletypeUnknown;
@@ -1087,7 +1089,15 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
     }
 
     /* Store result */
-    memset(e_memory->data + resultPointer, 0, 24);
+    memset(
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+        e_memory->data + resultPointer,
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        e_memory->data + e_memory->size - resultPointer - wasiFdstatSize,
+#endif
+        0,
+        wasiFdstatSize
+    );
     i32_store8(e_memory, resultPointer, filetype);
     i32_store16(e_memory, resultPointer + 2, wasiFlags);
     i64_store(e_memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
@@ -1118,8 +1128,6 @@ WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
 })
 
 WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pathLength), {
-    /* TODO: big-endian support */
-
     WasiPreopen preopen = wasiEmptyPreopen;
     size_t length = 0;
 
@@ -1134,11 +1142,26 @@ WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pa
     }
 
     length = strlen(preopen.path) + 1;
+    if (length >= pathLength) {
+        length = pathLength;
+    }
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memcpy(
         e_memory->data + pathPointer,
         preopen.path,
-        length < pathLength ? length : pathLength
+        length
     );
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    {
+        U8* base = e_memory->data + e_memory->size - 1 - pathPointer;
+
+        U32 i = 0;
+        for (; i < length; i++) {
+            base[-i] = preopen.path[i];
+        }
+    }
+#endif
 
     return wasiErrnoSuccess;
 })
@@ -1336,6 +1359,8 @@ getStatTimes(
 #endif
 }
 
+static const size_t wasiPreview1FilestatSize = 64;
+
 static
 __inline__
 void
@@ -1349,7 +1374,15 @@ storePreview1Filestat(
 
     getStatTimes(stat, &access, &modification, &creation);
 
-    memset(e_memory->data + statPointer, 0, 64);
+    memset(
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+        e_memory->data + statPointer,
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        e_memory->data + e_memory->size - statPointer - wasiPreview1FilestatSize,
+#endif
+        0,
+        wasiPreview1FilestatSize
+    );
     i64_store(e_memory, statPointer,  stat->st_dev);
     i64_store(e_memory, statPointer + 8,  stat->st_ino);
     i32_store8(e_memory, statPointer + 16, wasiFiletypeFromMode(stat->st_mode));
@@ -1400,6 +1433,8 @@ WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
     return wasiErrnoSuccess;
 })
 
+static const size_t wasiUnstableFilestatSize = 64;
+
 static
 __inline__
 void
@@ -1413,7 +1448,15 @@ storeUnstableFilestat(
 
     getStatTimes(stat, &access, &modification, &creation);
 
-    memset(e_memory->data + statPointer, 0, 56);
+    memset(
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+        e_memory->data + statPointer,
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        e_memory->data + e_memory->size - statPointer - wasiUnstableFilestatSize,
+#endif
+        0,
+        wasiUnstableFilestatSize
+    );
     i64_store(e_memory, statPointer,  stat->st_dev);
     i64_store(e_memory, statPointer + 8,  stat->st_ino);
     i32_store8(e_memory, statPointer + 16, wasiFiletypeFromMode(stat->st_mode));
@@ -1815,7 +1858,6 @@ WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscription
 })
 
 WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
-    /* TODO: big-endian support */
     ssize_t result = 0;
     int fd = -1;
 
@@ -1829,7 +1871,15 @@ WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
         WASI_TRACE(("random_get: open failed"));
         return wasiErrno();
     }
-    result = read(fd, e_memory->data + bufferPointer, bufferLength);
+    result = read(
+        fd,
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    e_memory->data + bufferPointer,
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        e_memory->data + e_memory->size - bufferPointer - bufferLength,
+#endif
+        bufferLength
+    );
     if (result < 0) {
         WASI_TRACE(("random_get: read failed"));
         return wasiErrno();
