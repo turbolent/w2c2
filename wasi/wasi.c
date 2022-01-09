@@ -518,7 +518,7 @@ wasiFdRead(
     /* Convert WASI iovecs to native iovecs */
     {
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-        U8* memoryStart = e_memory->data + e_memory->size - 1;
+        U8* memoryStart = e_memory->data + e_memory->size;
 #endif
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
@@ -529,7 +529,7 @@ wasiFdRead(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
             iovecs[iovecIndex].iov_base = e_memory->data + bufferPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-            iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - (length - 1);
+            iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - length;
 #endif
             iovecs[iovecIndex].iov_len = length;
         }
@@ -722,11 +722,6 @@ WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
     for (; index < wasi.argc; index++) {
         char* arg = wasi.argv[index];
         size_t length = strlen(arg) + 1;
-        memcpy(
-            e_memory->data + argvBufPointer,
-            arg,
-            length
-        );
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
             e_memory->data + argvBufPointer,
