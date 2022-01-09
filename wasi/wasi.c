@@ -418,6 +418,8 @@ wasiFdWrite(
 
     /* Convert WASI ciovecs to native iovecs */
     {
+        U8* memoryStart = e_memory->data + e_memory->size - 1;
+
         U32 totalLength = 0;
         U32 ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
@@ -438,7 +440,7 @@ wasiFdWrite(
             U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
             U32 bufferPointer = i32_load(e_memory, ciovecPointer);
             U32 length = iovecs[ciovecIndex].iov_len;
-            U8* bufferStart = e_memory->data + e_memory->size - bufferPointer;
+            U8* bufferStart = memoryStart - bufferPointer;
             U32 i = 0;
             for (; i < length; i++) {
                 temporaryBuffer[totalLength + i] = bufferStart[-i];
