@@ -379,11 +379,12 @@ wasiFdWrite(
     U8* temporaryBuffer = NULL;
 #endif
 
-
-    WASI_TRACE((
-       "fd_write(wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
-        wasiFD, ciovecsPointer, ciovecsCount, resultPointer
-    ));
+    if (wasiFD > 2) {
+        WASI_TRACE((
+           "fd_write(wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
+           wasiFD, ciovecsPointer, ciovecsCount, resultPointer
+       ));
+    }
 
     if (!wasiFileDescriptorGet(wasiFD, &nativeFD)) {
         WASI_TRACE(("fd_write: bad FD"));
@@ -405,10 +406,12 @@ wasiFdWrite(
             U32 bufferPointer = i32_load(e_memory, ciovecPointer);
             U32 length = i32_load(e_memory, ciovecPointer + 4);
 
-            WASI_TRACE((
-                "fd_write: length=%d, bufferPointer=%d",
-                length, bufferPointer
-            ));
+            if (wasiFD > 2) {
+                WASI_TRACE((
+                    "fd_write: length=%d, bufferPointer=%d",
+                    length, bufferPointer
+                ));
+            }
 
             iovecs[ciovecIndex].iov_base = e_memory->data + bufferPointer;
             iovecs[ciovecIndex].iov_len = length;
@@ -449,10 +452,12 @@ wasiFdWrite(
             iovecs[ciovecIndex].iov_base = temporaryBuffer + totalLength;
 
             totalLength += length;
-            WASI_TRACE((
-                "fd_write: length=%d, bufferPointer=%d",
-                length, bufferPointer
-            ));
+            if (wasiFD > 2) {
+                WASI_TRACE((
+                    "fd_write: length=%d, bufferPointer=%d",
+                    length, bufferPointer
+                ));
+            }
         }
     }
 #endif
