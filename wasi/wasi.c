@@ -665,7 +665,13 @@ WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer
     return wasiErrnoSuccess;
 })
 
-WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
+static
+__inline__
+U32
+wasiEnvironGet(
+    U32 envpPointer,
+    U32 envpBufPointer
+) {
     U32 index = 0;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
     U8* memoryStart = e_memory->data + e_memory->size - 1;
@@ -700,6 +706,10 @@ WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
+    return wasiEnvironGet(envpPointer, envpBufPointer);
 })
 
 WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), {
@@ -721,7 +731,13 @@ WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), 
     return wasiErrnoSuccess;
 })
 
-WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
+static
+__inline__
+U32
+wasiArgsGet(
+    U32 argvPointer,
+    U32 argvBufPointer
+) {
     U32 index = 0;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
     U8* memoryStart = e_memory->data + e_memory->size - 1;
@@ -756,8 +772,11 @@ WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
     }
 
     return wasiErrnoSuccess;
-})
+}
 
+WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
+    return wasiArgsGet(argvPointer, argvBufPointer);
+})
 
 static
 __inline__
@@ -1057,8 +1076,13 @@ wasiFiletypeFromMode(
 
 static const size_t wasiFdstatSize = 24;
 
-WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
-
+static
+__inline__
+U32
+wasiFdFdstatGet(
+    U32 wasiFD,
+    U32 resultPointer
+) {
     U8 filetype = wasiFiletypeUnknown;
     U16 wasiFlags = 0;
     struct stat stat;
@@ -1118,6 +1142,10 @@ WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
     i64_store(e_memory, resultPointer + 16, /* TODO: inherited rights. all for now */ (U64)-1);
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
+    return wasiFdFdstatGet(wasiFD, resultPointer);
 })
 
 WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
@@ -1141,7 +1169,14 @@ WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
     return wasiErrnoSuccess;
 })
 
-WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pathLength), {
+static
+__inline__
+U32
+wasiFdPrestatDirName(
+    U32 wasiFD,
+    U32 pathPointer,
+    U32 pathLength
+) {
     WasiPreopen preopen = wasiEmptyPreopen;
     size_t length = 0;
 
@@ -1178,6 +1213,10 @@ WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pa
 #endif
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pathLength), {
+    return wasiFdPrestatDirName(wasiFD, pathPointer, pathLength);
 })
 
 static
@@ -1871,7 +1910,13 @@ WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscription
     return wasiErrnoNosys;
 })
 
-WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
+static
+__inline__
+U32
+wasiRandomGet(
+    U32 bufferPointer,
+    U32 bufferLength
+) {
     ssize_t result = 0;
     int fd = -1;
 
@@ -1904,4 +1949,8 @@ WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
+    return wasiRandomGet(bufferPointer, bufferLength);
 })
