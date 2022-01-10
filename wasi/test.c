@@ -15,7 +15,7 @@ resolvePath(
     char* directory,
     char* path,
     U32 pathLength,
-    char (*result)[PATH_MAX]
+    char result[PATH_MAX]
 );
 
 void
@@ -26,7 +26,7 @@ testResolvePath(
     bool valid
 ) {
     char result[PATH_MAX];
-    if (resolvePath(directory, path, strlen(path), &result) != valid) {
+    if (resolvePath(directory, path, strlen(path), result) != valid) {
         fprintf(stderr, "FAIL: resolvePath(%s, %s): should succeed\n", directory, path);
         return;
     }

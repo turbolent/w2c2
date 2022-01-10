@@ -335,29 +335,29 @@ resolvePath(
     char* directory,
     char* path,
     U32 pathLength,
-    char (*result)[PATH_MAX]
+    char result[PATH_MAX]
 ) {
     MUST (pathLength > 0)
 
     if (path[0] == '/') {
         /* If the path is absolute, return it as-is */
         MUST (pathLength < PATH_MAX)
-        memcpy(*result, path, pathLength);
-        (*result)[pathLength] = '\0';
+        memcpy(result, path, pathLength);
+        result[pathLength] = '\0';
     } else {
         /* If the path is relative, concatenate the directory and the path */
         size_t totalLength = strlen(directory);
         MUST (totalLength + pathLength + 1 < PATH_MAX)
-        memcpy(*result, directory, totalLength);
+        memcpy(result, directory, totalLength);
 
         if (directory[totalLength - 1] != '/') {
-            (*result)[totalLength++] = '/';
+            result[totalLength++] = '/';
         }
 
-        memcpy(*result + totalLength, path, pathLength);
+        memcpy(result + totalLength, path, pathLength);
         totalLength += pathLength;
 
-        (*result)[totalLength] = '\0';
+        result[totalLength] = '\0';
     }
 
     return true;
@@ -1239,7 +1239,7 @@ wasiPathOpen(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     int nativeFlags = 0;
     static const int mode = 0644;
     int nativeFD = -1;
@@ -1273,12 +1273,12 @@ wasiPathOpen(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_open: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_open: path=%s", path));
+    WASI_TRACE(("path_open: resolvedPath=%s", resolvedPath));
 
     /* Convert WASI oflags to native flags */
     if (oflags & wasiOflagsCreat) {
@@ -1323,7 +1323,7 @@ wasiPathOpen(
     }
 
     /* Open the file */
-    nativeFD = open(path, nativeFlags, mode);
+    nativeFD = open(resolvedPath, nativeFlags, mode);
 
     if (nativeFD < 0) {
         WASI_TRACE(("path_open: open failed"));
@@ -1534,7 +1534,7 @@ wasiPathFilestatGet(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     int res = 0;
     WasiPreopen preopen = wasiEmptyPreopen;
 
@@ -1543,16 +1543,16 @@ wasiPathFilestatGet(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_filestat_get: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_filestat_get: path=%s", path));
+    WASI_TRACE(("path_filestat_get: resolvedPath=%s", resolvedPath));
 
     /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
 
-    res = stat(path, st);
+    res = stat(resolvedPath, st);
 
     if (res != 0) {
         WASI_TRACE(("path_filestat_get: stat failed"));
@@ -1625,8 +1625,8 @@ wasiPathRename(
 ) {
     /* TODO: big-endian support */
 
-    char oldPath[PATH_MAX];
-    char newPath[PATH_MAX];
+    char oldResolvedPath[PATH_MAX];
+    char newResolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen oldPreopen = wasiEmptyPreopen;
     WasiPreopen newPreopen = wasiEmptyPreopen;
@@ -1657,19 +1657,19 @@ wasiPathRename(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(oldPreopen.path, (char*) e_memory->data + oldPathPointer, oldPathLength, &oldPath)) {
+    if (!resolvePath(oldPreopen.path, (char*) e_memory->data + oldPathPointer, oldPathLength, oldResolvedPath)) {
         WASI_TRACE(("path_rename: old path resolution failed"));
         return wasiErrnoInval;
     }
 
-    if (!resolvePath(newPreopen.path, (char*) e_memory->data + newPathPointer, newPathLength, &newPath)) {
+    if (!resolvePath(newPreopen.path, (char*) e_memory->data + newPathPointer, newPathLength, newResolvedPath)) {
         WASI_TRACE(("path_rename: new path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_rename: oldPath=%s, newPath=%s", oldPath, newPath));
+    WASI_TRACE(("path_rename: oldResolvedPath=%s, newResolvedPath=%s", oldResolvedPath, newResolvedPath));
 
-    res = rename(oldPath, newPath);
+    res = rename(oldResolvedPath, newResolvedPath);
 
     if (res != 0) {
         WASI_TRACE(("path_rename: rename failed"));
@@ -1707,7 +1707,7 @@ wasiPathUnlinkFile(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
@@ -1721,14 +1721,14 @@ wasiPathUnlinkFile(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_unlink_file: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_unlink_file: path=%s", path));
+    WASI_TRACE(("path_unlink_file: resolvedPath=%s", resolvedPath));
 
-    res = unlink(path);
+    res = unlink(resolvedPath);
 
     if (res != 0) {
         WASI_TRACE(("path_unlink_file: unlink failed"));
@@ -1752,7 +1752,7 @@ pathRemoveDirectory(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
@@ -1766,14 +1766,14 @@ pathRemoveDirectory(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_remove_directory: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_remove_directory: path=%s", path));
+    WASI_TRACE(("path_remove_directory: resolvedPath=%s", resolvedPath));
 
-    res = rmdir(path);
+    res = rmdir(resolvedPath);
 
     if (res != 0) {
         WASI_TRACE(("path_remove_directory: rmdir failed"));
@@ -1798,7 +1798,7 @@ wasiPathCreateDirectory(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     static const mode_t mode = 0755;
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
@@ -1813,14 +1813,14 @@ wasiPathCreateDirectory(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_create_directory: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_create_directory: path=%s", path));
+    WASI_TRACE(("path_create_directory: resolvedPath=%s", resolvedPath));
 
-    res = mkdir(path, mode);
+    res = mkdir(resolvedPath, mode);
 
     if (res != 0) {
         WASI_TRACE(("path_create_directory: mkdir failed"));
@@ -1846,8 +1846,8 @@ wasiPathSymlink(
 ) {
     /* TODO: big-endian support */
 
-    char oldPath[PATH_MAX];
-    char newPath[PATH_MAX];
+    char oldResolvedPath[PATH_MAX];
+    char newResolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
@@ -1866,17 +1866,17 @@ wasiPathSymlink(
         return wasiErrnoInval;
     }
 
-    memcpy(oldPath, e_memory->data + oldPathPointer, oldPathLength);
-    oldPath[oldPathLength] = '\0';
+    memcpy(oldResolvedPath, e_memory->data + oldPathPointer, oldPathLength);
+    oldResolvedPath[oldPathLength] = '\0';
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + newPathPointer, newPathLength, &newPath)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + newPathPointer, newPathLength, newResolvedPath)) {
         WASI_TRACE(("path_symlink: new path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_symlink: oldPath=%s, newPath=%s", oldPath, newPath));
+    WASI_TRACE(("path_symlink: oldPath=%s, newPath=%s", oldResolvedPath, newResolvedPath));
 
-    res = symlink(oldPath, newPath);
+    res = symlink(oldResolvedPath, newResolvedPath);
 
     if (res != 0) {
         WASI_TRACE(("path_symlink: symlink failed"));
@@ -1915,7 +1915,7 @@ wasiPathReadlink(
 ) {
     /* TODO: big-endian support */
 
-    char path[PATH_MAX];
+    char resolvedPath[PATH_MAX];
     char* buffer = NULL;
     int length = 0;
     WasiPreopen preopen = wasiEmptyPreopen;
@@ -1930,15 +1930,15 @@ wasiPathReadlink(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, &path)) {
+    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
         WASI_TRACE(("path_readlink: path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_readlink: path=%s", path));
+    WASI_TRACE(("path_readlink: resolvedPath=%s", resolvedPath));
 
     buffer = (char*)e_memory->data + bufferPointer;
-    length = readlink(path, buffer, bufferLength);
+    length = readlink(resolvedPath, buffer, bufferLength);
 
     if (length < 0) {
         WASI_TRACE(("path_readlink: readlink failed"));
