@@ -1612,14 +1612,17 @@ WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
     return wasiErrnoSuccess;
 })
 
-WASI_IMPORT(U32, pathX5Frename, (
+static
+__inline__
+U32
+wasiPathRename(
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 newDirFD,
     U32 newPathPointer,
     U32 newPathLength
-), {
+) {
     /* TODO: big-endian support */
 
     char oldPath[PATH_MAX];
@@ -1674,9 +1677,34 @@ WASI_IMPORT(U32, pathX5Frename, (
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5Frename, (
+    U32 oldDirFD,
+    U32 oldPathPointer,
+    U32 oldPathLength,
+    U32 newDirFD,
+    U32 newPathPointer,
+    U32 newPathLength
+), {
+    return wasiPathRename(
+        oldDirFD,
+        oldPathPointer,
+        oldPathLength,
+        newDirFD,
+        newPathPointer,
+        newPathLength
+    );
 })
 
-WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+static
+__inline__
+U32
+wasiPathUnlinkFile(
+    U32 dirFD,
+    U32 pathPointer,
+    U32 pathLength
+) {
     /* TODO: big-endian support */
 
     char path[PATH_MAX];
@@ -1708,9 +1736,20 @@ WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLeng
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    return wasiPathUnlinkFile(dirFD, pathPointer, pathLength);
 })
 
-WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+static
+__inline__
+U32
+pathRemoveDirectory(
+    U32 dirFD,
+    U32 pathPointer,
+    U32 pathLength
+) {
     /* TODO: big-endian support */
 
     char path[PATH_MAX];
@@ -1742,9 +1781,21 @@ WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    return pathRemoveDirectory(dirFD, pathPointer, pathLength);
 })
 
-WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+static
+__inline__
+
+U32
+wasiPathCreateDirectory(
+    U32 dirFD,
+    U32 pathPointer,
+    U32 pathLength
+) {
     /* TODO: big-endian support */
 
     char path[PATH_MAX];
@@ -1777,16 +1828,22 @@ WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pat
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
+    return wasiPathCreateDirectory(dirFD, pathPointer, pathLength);
 })
 
-
-WASI_IMPORT(U32, pathX5Fsymlink, (
+static
+__inline__
+U32
+wasiPathSymlink(
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
     U32 newPathPointer,
     U32 newPathLength
-), {
+) {
     /* TODO: big-endian support */
 
     char oldPath[PATH_MAX];
@@ -1827,16 +1884,35 @@ WASI_IMPORT(U32, pathX5Fsymlink, (
     }
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5Fsymlink, (
+    U32 oldPathPointer,
+    U32 oldPathLength,
+    U32 dirFD,
+    U32 newPathPointer,
+    U32 newPathLength
+), {
+    return wasiPathSymlink(
+        oldPathPointer,
+        oldPathLength,
+        dirFD,
+        newPathPointer,
+        newPathLength
+    );
 })
 
-WASI_IMPORT(U32, pathX5Freadlink, (
+static
+__inline__
+U32
+wasiPathReadlink(
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
     U32 bufferPointer,
     U32 bufferLength,
     U32 lengthPointer
-), {
+) {
     /* TODO: big-endian support */
 
     char path[PATH_MAX];
@@ -1872,6 +1948,24 @@ WASI_IMPORT(U32, pathX5Freadlink, (
     i32_store(e_memory, lengthPointer, length);
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, pathX5Freadlink, (
+    U32 dirFD,
+    U32 pathPointer,
+    U32 pathLength,
+    U32 bufferPointer,
+    U32 bufferLength,
+    U32 lengthPointer
+), {
+    return wasiPathReadlink(
+        dirFD,
+        pathPointer,
+        pathLength,
+        bufferPointer,
+        bufferLength,
+        lengthPointer
+    );
 })
 
 WASI_IMPORT(U32, fdX5Freaddir, (U32 fd, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
