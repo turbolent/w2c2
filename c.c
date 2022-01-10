@@ -3760,6 +3760,8 @@ wasmCWriteModule(
             job.functionsPerFile = functionsPerFile;
             job.module = module;
             job.pretty = pretty;
+            job.result = false;
+            job.thread = NULL;
             implementationJobs[jobIndex] = job;
 
             {
