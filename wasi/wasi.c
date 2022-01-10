@@ -1062,20 +1062,20 @@ WasiFiletype
 wasiFiletypeFromMode(
     mode_t mode
 ) {
-  switch (mode & S_IFMT) {
-      case S_IFBLK:
-          return wasiFiletypeBlockDevice;
-      case S_IFCHR:
-          return wasiFiletypeCharacterDevice;
-      case S_IFDIR:
-          return wasiFiletypeDirectory;
-      case S_IFREG:
-          return wasiFiletypeRegularFile;
-      case S_IFLNK:
-          return wasiFiletypeSymbolicLink;
-      default:
-          return wasiFiletypeUnknown;
-  }
+    switch (mode & S_IFMT) {
+        case S_IFBLK:
+            return wasiFiletypeBlockDevice;
+        case S_IFCHR:
+            return wasiFiletypeCharacterDevice;
+        case S_IFDIR:
+            return wasiFiletypeDirectory;
+        case S_IFREG:
+            return wasiFiletypeRegularFile;
+        case S_IFLNK:
+            return wasiFiletypeSymbolicLink;
+        default:
+            return wasiFiletypeUnknown;
+    }
 }
 
 static const size_t wasiFdstatSize = 24;
@@ -1375,31 +1375,9 @@ getStatTimes(
     struct timespec* modification,
     struct timespec* creation
 ) {
-#if defined(__APPLE__)
-    access->tv_sec = stat->st_atimespec.tv_sec;
-    access->tv_nsec = stat->st_atimespec.tv_nsec;
-    modification->tv_sec = stat->st_mtimespec.tv_sec;
-    modification->tv_nsec = stat->st_mtimespec.tv_nsec;
-    creation->tv_sec = stat->st_ctimespec.tv_sec;
-    creation->tv_nsec = stat->st_ctimespec.tv_nsec;
-#elif defined(__ANDROID__)
-    access->tv_sec = stat->st_atime;
-    access->tv_nsec = stat->st_atimensec;
-    modification->tv_sec = stat->st_mtime;
-    modification->tv_nsec = stat->st_mtimensec;
-    creation->tv_sec = stat->st_ctime;
-    creation->tv_nsec = stat->st_ctimensec;
-#elif !defined(_AIX) &&         \
-    !defined(__MVS__) && (      \
-    defined(__DragonFly__)   || \
-    defined(__FreeBSD__)     || \
-    defined(__OpenBSD__)     || \
-    defined(__NetBSD__)      || \
-    defined(_GNU_SOURCE)     || \
-    defined(_BSD_SOURCE)     || \
-    defined(_SVID_SOURCE)    || \
-    defined(_XOPEN_SOURCE)   || \
-    defined(_DEFAULT_SOURCE))
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 700))
+
     access->tv_sec = stat->st_atim.tv_sec;
     access->tv_nsec = stat->st_atim.tv_nsec;
     modification->tv_sec = stat->st_mtim.tv_sec;
