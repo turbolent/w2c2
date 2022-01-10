@@ -991,6 +991,7 @@ wasiClockTimeGet(
         }
 #ifdef __MACH__
         case wasiClockMonotonic: {
+#include <mach/mach_time.h>
             static mach_timebase_info_data_t timebase = {0, 0};
 
             if (!timebase.denom && mach_timebase_info(&timebase) != KERN_SUCCESS) {
