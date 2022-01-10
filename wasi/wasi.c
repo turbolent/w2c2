@@ -1875,7 +1875,7 @@ WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
     int fd = -1;
 
     WASI_TRACE((
-        "random_get(bufferPointer=%d, bufferLength=%d",
+        "random_get(bufferPointer=%d, bufferLength=%d)",
         bufferPointer, bufferLength
     ));
 
