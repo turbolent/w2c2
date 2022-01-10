@@ -1025,6 +1025,10 @@ wasiClockTimeGet(
         case wasiClockProcessCputimeId: {
             struct rusage ru;
             int ret = getrusage(RUSAGE_SELF, &ru);
+            if (ret != 0) {
+                WASI_TRACE(("clock_time_get: getrusage failed"));
+                return wasiErrno();
+            }
             WASI_TRACE(("clock_time_get: getrusage: ru_utime=%d, ru_stime=%d", ru.ru_utime, ru.ru_stime));
             addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
             result = convertTimeval(ru.ru_utime);
