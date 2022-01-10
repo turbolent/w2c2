@@ -45,6 +45,14 @@ extern wasmMemory (*e_memory);
 
 static WASI wasi;
 
+#ifndef O_DSYNC
+#ifdef O_SYNC
+#define O_DSYNC O_SYNC /* POSIX */
+#else
+#define O_DSYNC O_FSYNC /* BSD */
+#endif
+#endif
+
 static
 __inline__
 bool
