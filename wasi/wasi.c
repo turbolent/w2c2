@@ -933,7 +933,7 @@ wasiClockTimeGet(
         clockID, precision, resultPointer
     ));
 
-#if defined(_POSIX_TIMERS) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
 
     {
         struct timespec timespec;
