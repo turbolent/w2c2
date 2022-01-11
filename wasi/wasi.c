@@ -480,7 +480,7 @@ wasiFdWrite(
 #endif
 
     if (total < 0) {
-        WASI_TRACE(("fd_write: writev failed"));
+        WASI_TRACE(("fd_write: writev failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -554,7 +554,7 @@ wasiFdRead(
     if (total < 0) {
         free(iovecs);
 
-        WASI_TRACE(("fd_[p]read: read failed"));
+        WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -797,7 +797,7 @@ wasiFdSeek(
 
     result = lseek(nativeFD, (off_t)offset, nativeWhence);
     if (result == (off_t)-1) {
-        WASI_TRACE(("fd_seek: lseek failed"));
+        WASI_TRACE(("fd_seek: lseek failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -989,7 +989,7 @@ wasiClockTimeGet(
         }
 
         if (clock_gettime(nativeClockID, &timespec) != 0) {
-            WASI_TRACE(("clock_time_get: clock_gettime failed"));
+            WASI_TRACE(("clock_time_get: clock_gettime failed: %s", strerror(errno)));
             return wasiErrno();
         }
 
@@ -1002,7 +1002,7 @@ wasiClockTimeGet(
         case wasiClockRealtime: {
             struct timeval tv;
             if (gettimeofday(&tv, NULL) != 0) {
-                WASI_TRACE(("clock_time_get: gettimeofday failed"));
+                WASI_TRACE(("clock_time_get: gettimeofday failed: %s", strerror(errno)));
                 return wasiErrno();
             }
             result = convertTimeval(tv);
@@ -1026,7 +1026,7 @@ wasiClockTimeGet(
             struct rusage ru;
             int ret = getrusage(RUSAGE_SELF, &ru);
             if (ret != 0) {
-                WASI_TRACE(("clock_time_get: getrusage failed"));
+                WASI_TRACE(("clock_time_get: getrusage failed: %s", strerror(errno)));
                 return wasiErrno();
             }
             WASI_TRACE(("clock_time_get: getrusage: ru_utime=%d, ru_stime=%d", ru.ru_utime, ru.ru_stime));
@@ -1105,7 +1105,7 @@ wasiFdFdstatGet(
 
     /* Get filetype */
     if (fstat(nativeFD, &stat) != 0) {
-        WASI_TRACE(("fd_fdstat_get: fstat failed"));
+        WASI_TRACE(("fd_fdstat_get: fstat failed: %s", strerror(errno)));
         return wasiErrno();
     }
     filetype = wasiFiletypeFromMode(stat.st_mode);
@@ -1113,7 +1113,7 @@ wasiFdFdstatGet(
     /* Get flags */
     nativeFlags = fcntl(nativeFD, F_GETFL);
     if (nativeFlags < 0) {
-        WASI_TRACE(("fd_fdstat_get: fcntl failed"));
+        WASI_TRACE(("fd_fdstat_get: fcntl failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1360,7 +1360,7 @@ wasiPathOpen(
     nativeFD = open(resolvedPath, nativeFlags, mode);
 
     if (nativeFD < 0) {
-        WASI_TRACE(("path_open: open failed"));
+        WASI_TRACE(("path_open: open failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1476,7 +1476,7 @@ wasiFdFilestatGet(
     }
 
     if (fstat(nativeFD, st) != 0) {
-        WASI_TRACE(("fd_filestat_get: fstat failed"));
+        WASI_TRACE(("fd_filestat_get: fstat failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1601,7 +1601,7 @@ wasiPathFilestatGet(
     res = stat(resolvedPath, st);
 
     if (res != 0) {
-        WASI_TRACE(("path_filestat_get: stat failed"));
+        WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1737,7 +1737,7 @@ wasiPathRename(
     res = rename(oldResolvedPath, newResolvedPath);
 
     if (res != 0) {
-        WASI_TRACE(("path_rename: rename failed"));
+        WASI_TRACE(("path_rename: rename failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1808,7 +1808,7 @@ wasiPathUnlinkFile(
     res = unlink(resolvedPath);
 
     if (res != 0) {
-        WASI_TRACE(("path_unlink_file: unlink failed"));
+        WASI_TRACE(("path_unlink_file: unlink failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1865,7 +1865,7 @@ pathRemoveDirectory(
     res = rmdir(resolvedPath);
 
     if (res != 0) {
-        WASI_TRACE(("path_remove_directory: rmdir failed"));
+        WASI_TRACE(("path_remove_directory: rmdir failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1924,7 +1924,7 @@ wasiPathCreateDirectory(
     res = mkdir(resolvedPath, mode);
 
     if (res != 0) {
-        WASI_TRACE(("path_create_directory: mkdir failed"));
+        WASI_TRACE(("path_create_directory: mkdir failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -1998,7 +1998,7 @@ wasiPathSymlink(
     res = symlink(oldResolvedPath, newResolvedPath);
 
     if (res != 0) {
-        WASI_TRACE(("path_symlink: symlink failed"));
+        WASI_TRACE(("path_symlink: symlink failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -2078,7 +2078,7 @@ wasiPathReadlink(
     length = readlink(resolvedPath, buffer, bufferLength);
 
     if (length < 0) {
-        WASI_TRACE(("path_readlink: readlink failed"));
+        WASI_TRACE(("path_readlink: readlink failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
@@ -2151,7 +2151,7 @@ wasiRandomGet(
 
     fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) {
-        WASI_TRACE(("random_get: open failed"));
+        WASI_TRACE(("random_get: open failed: %s", strerror(errno)));
         return wasiErrno();
     }
     result = read(
@@ -2164,11 +2164,11 @@ wasiRandomGet(
         bufferLength
     );
     if (result < 0) {
-        WASI_TRACE(("random_get: read failed"));
+        WASI_TRACE(("random_get: read failed: %s", strerror(errno)));
         return wasiErrno();
     }
     if (close(fd) != 0) {
-        WASI_TRACE(("random_get: close failed"));
+        WASI_TRACE(("random_get: close failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
