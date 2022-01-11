@@ -1225,6 +1225,28 @@ WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pa
 
 static
 __inline__
+bool
+getBigEndianPath(
+    U32 pathPointer,
+    U32 pathLength,
+    char path[PATH_MAX]
+) {
+    U8* base = e_memory->data + e_memory->size - 1 - pathPointer;
+    U32 i = 0;
+
+    MUST (pathLength <= PATH_MAX)
+
+    for (; i < pathLength; i++) {
+        path[i] = base[-i];
+    }
+
+    path[pathLength] = '\0';
+
+    return true;
+}
+
+static
+__inline__
 U32
 wasiPathOpen(
     U32 wasiDirFD,
@@ -1237,8 +1259,11 @@ wasiPathOpen(
     U32 fdFlags,
     U32 fdPointer
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     int nativeFlags = 0;
     static const int mode = 0644;
@@ -1273,7 +1298,16 @@ wasiPathOpen(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_open: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_open: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_open: path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1532,8 +1566,11 @@ wasiPathFilestatGet(
     U32 pathLength,
     struct stat* st
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     int res = 0;
     WasiPreopen preopen = wasiEmptyPreopen;
@@ -1543,7 +1580,16 @@ wasiPathFilestatGet(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_filestat_get: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_filestat_get: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_filestat_get: path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1623,8 +1669,13 @@ wasiPathRename(
     U32 newPathPointer,
     U32 newPathLength
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* oldPath = (char*) e_memory->data + oldPathPointer;
+    char* newPath = (char*) e_memory->data + newPathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char oldPath[PATH_MAX];
+    char newPath[PATH_MAX];
+#endif
     char oldResolvedPath[PATH_MAX];
     char newResolvedPath[PATH_MAX];
     int res = -1;
@@ -1657,12 +1708,26 @@ wasiPathRename(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(oldPreopen.path, (char*) e_memory->data + oldPathPointer, oldPathLength, oldResolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(oldPathPointer, oldPathLength, oldPath)) {
+        WASI_TRACE(("path_rename: bad old path"));
+        return wasiErrnoInval;
+    }
+
+    if (!getBigEndianPath(newPathPointer, newPathLength, newPath)) {
+        WASI_TRACE(("path_rename: bad new path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_filestat_get: oldPath=%s, newPath=%s", oldPath, newPath));
+
+    if (!resolvePath(oldPreopen.path, oldPath, oldPathLength, oldResolvedPath)) {
         WASI_TRACE(("path_rename: old path resolution failed"));
         return wasiErrnoInval;
     }
 
-    if (!resolvePath(newPreopen.path, (char*) e_memory->data + newPathPointer, newPathLength, newResolvedPath)) {
+    if (!resolvePath(newPreopen.path, newPath, newPathLength, newResolvedPath)) {
         WASI_TRACE(("path_rename: new path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1705,8 +1770,11 @@ wasiPathUnlinkFile(
     U32 pathPointer,
     U32 pathLength
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
@@ -1721,7 +1789,16 @@ wasiPathUnlinkFile(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_unlink_file: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_unlink_file: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_unlink_file: path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1750,8 +1827,11 @@ pathRemoveDirectory(
     U32 pathPointer,
     U32 pathLength
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
@@ -1766,7 +1846,16 @@ pathRemoveDirectory(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_remove_directory: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_remove_directory: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_remove_directory: path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1796,8 +1885,11 @@ wasiPathCreateDirectory(
     U32 pathPointer,
     U32 pathLength
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     static const mode_t mode = 0755;
     int res = -1;
@@ -1813,7 +1905,16 @@ wasiPathCreateDirectory(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_create_directory: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_create_directory: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_create_directory: path resolution failed"));
         return wasiErrnoInval;
     }
@@ -1844,8 +1945,11 @@ wasiPathSymlink(
     U32 newPathPointer,
     U32 newPathLength
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* newPath = (char*) e_memory->data + newPathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char newPath[PATH_MAX];
+#endif
     char oldResolvedPath[PATH_MAX];
     char newResolvedPath[PATH_MAX];
     int res = -1;
@@ -1866,15 +1970,30 @@ wasiPathSymlink(
         return wasiErrnoInval;
     }
 
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memcpy(oldResolvedPath, e_memory->data + oldPathPointer, oldPathLength);
     oldResolvedPath[oldPathLength] = '\0';
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + newPathPointer, newPathLength, newResolvedPath)) {
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(oldPathPointer, oldPathLength, oldResolvedPath)) {
+        WASI_TRACE(("path_symlink: bad old path"));
+        return wasiErrnoInval;
+    }
+
+    if (!getBigEndianPath(newPathPointer, newPathLength, newPath)) {
+        WASI_TRACE(("path_symlink: bad new path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_symlink: oldResolvedPath=%s, newPath=%s", oldResolvedPath, newPath));
+
+    if (!resolvePath(preopen.path, newPath, newPathLength, newResolvedPath)) {
         WASI_TRACE(("path_symlink: new path resolution failed"));
         return wasiErrnoInval;
     }
 
-    WASI_TRACE(("path_symlink: oldPath=%s, newPath=%s", oldResolvedPath, newResolvedPath));
+    WASI_TRACE(("path_symlink: newResolvedPath=%s", newResolvedPath));
 
     res = symlink(oldResolvedPath, newResolvedPath);
 
@@ -1913,8 +2032,11 @@ wasiPathReadlink(
     U32 bufferLength,
     U32 lengthPointer
 ) {
-    /* TODO: big-endian support */
-
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+    char* path = (char*) e_memory->data + pathPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    char path[PATH_MAX];
+#endif
     char resolvedPath[PATH_MAX];
     char* buffer = NULL;
     int length = 0;
@@ -1930,20 +2052,46 @@ wasiPathReadlink(
         return wasiErrnoBadf;
     }
 
-    if (!resolvePath(preopen.path, (char*) e_memory->data + pathPointer, pathLength, resolvedPath)) {
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+        WASI_TRACE(("path_readlink: bad path"));
+        return wasiErrnoInval;
+    }
+#endif
+
+    WASI_TRACE(("path_readlink: path=%s", path));
+
+    if (!resolvePath(preopen.path, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_readlink: path resolution failed"));
         return wasiErrnoInval;
     }
 
     WASI_TRACE(("path_readlink: resolvedPath=%s", resolvedPath));
 
+    /* TODO: big-endian support */
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     buffer = (char*)e_memory->data + bufferPointer;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    buffer = (char*)e_memory->data + e_memory->size - bufferPointer - bufferLength;
+#endif
+
     length = readlink(resolvedPath, buffer, bufferLength);
 
     if (length < 0) {
         WASI_TRACE(("path_readlink: readlink failed"));
         return wasiErrno();
     }
+
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+    {
+        U32 i = 0;
+        for (; i < length / 2; i++) {
+            U8 value = buffer[i];
+            buffer[i] = buffer[length - i - 1];
+            buffer[length - i - 1] = value;
+        }
+    }
+#endif
 
     i32_store(e_memory, lengthPointer, length);
 
