@@ -58,7 +58,7 @@ make run-tests
 
 - [x] args_get
 - [x] args_sizes_get
-- [ ] clock_res_get
+- [x] clock_res_get
 - [x] clock_time_get
 - [x] environ_get
 - [x] environ_sizes_get
@@ -95,7 +95,6 @@ make run-tests
 - [x] path_unlink_file
 - [ ] poll_oneoff
 - [x] proc_exit
-- [ ] proc_raise
 - [x] random_get
 - [ ] sched_yield
 - [ ] sock_recv
