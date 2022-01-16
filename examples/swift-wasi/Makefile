@@ -12,11 +12,11 @@ swift-wasi: .build/wasm32-unknown-wasi/release/swift-wasi.opt.o main.o ../../was
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@
 
 .build/wasm32-unknown-wasi/release/swift-wasi.wasm:
-	swift build -c release --triple wasm32-unknown-wasi
+	swift build -Xswiftc -Osize -c release --triple wasm32-unknown-wasi
 
 %.opt.wasm: %.wasm
 	wasm-opt --strip-dwarf -O4 -o $@ $<
 
 .PHONY: clean
 clean:
-	rm -f *.o swift-wasi
+	rm -f .build/wasm32-unknown-wasi/release/swift-wasi.opt.c .build/wasm32-unknown-wasi/release/swift-wasi.opt.o *.o swift-wasi
