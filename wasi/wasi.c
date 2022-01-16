@@ -1058,6 +1058,100 @@ WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPoin
 
 static
 __inline__
+U32
+wasiClockResGet(
+    U32 clockID,
+    U32 resultPointer
+) {
+    I64 result = 0;
+
+    WASI_TRACE((
+        "clock_res_get(clockID=%d, resultPointer=%d)",
+        clockID, resultPointer
+    ));
+
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
+
+    {
+        struct timespec timespec;
+        clockid_t nativeClockID;
+
+
+        switch (clockID) {
+            case wasiClockRealtime: {
+                nativeClockID = CLOCK_REALTIME;
+                break;
+            }
+#ifdef _POSIX_MONOTONIC_CLOCK
+            case wasiClockMonotonic: {
+                nativeClockID = CLOCK_MONOTONIC;
+                break;
+            }
+#endif
+#ifdef _POSIX_CPUTIME
+            case wasiClockProcessCputimeId: {
+                nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
+                break;
+            }
+#endif
+#ifdef _POSIX_THREAD_CPUTIME
+            case wasiClockThreadCputimeId: {
+                nativeClockID = CLOCK_THREAD_CPUTIME_ID;
+                break;
+            }
+#endif
+            default: {
+                WASI_TRACE(("clock_res_get: invalid clock ID"));
+                return wasiErrnoInval;
+            }
+        }
+
+        if (clock_getres(nativeClockID, &timespec) != 0) {
+            WASI_TRACE(("clock_res_get: clock_gettime failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+        WASI_TRACE(("clock_res_get: clock_getres: %d %d", timespec.tv_sec, timespec.tv_nsec));
+
+        result = convertTimespec(timespec);
+    }
+#else
+    switch (clockID) {
+        case wasiClockRealtime: {
+            result = 1e6;
+            break;
+        }
+        case wasiClockMonotonic:
+        case wasiClockProcessCputimeId:
+        case wasiClockThreadCputimeId: {
+            result = 1e3;
+            break;
+        }
+        default: {
+            WASI_TRACE(("clock_res_get: invalid clock ID"));
+            return wasiErrnoInval;
+        }
+    }
+#endif
+
+    WASI_TRACE(("clock_res_get: result=%lld", result));
+
+    i64_store(
+        e_memory,
+        resultPointer,
+        result
+    );
+
+    return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, clockX5FresX5Fget, (U32 clockID, U32 resultPointer), {
+    return wasiClockResGet(clockID, resultPointer);
+})
+
+
+static
+__inline__
 WasiFiletype
 wasiFiletypeFromMode(
     mode_t mode
