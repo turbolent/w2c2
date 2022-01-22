@@ -2,8 +2,8 @@ use std::env;
 use std::time::SystemTime;
 use getrandom::getrandom;
 use std::process::exit;
-use std::fs::{File, metadata, rename, read_link, remove_file, soft_link, write, create_dir, remove_dir};
-use std::io::{stdin, Read};
+use std::fs::*;
+use std::io::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -50,6 +50,8 @@ fn main() {
     let dir_path = "/tmp/rust-wasi";
     create_dir(dir_path).unwrap();
     remove_dir(dir_path).unwrap();
+
+    println!("{:?}", read_dir("/tmp").unwrap().collect::<Vec<Result<DirEntry>>>());
 
     exit(0);
 }

@@ -2,9 +2,15 @@
 #define W2C2_WASI_H
 
 #include "../w2c2_base.h"
+#include <dirent.h>
+
+typedef struct WasiFileDescriptor {
+    int fd;
+    DIR* dir;
+} WasiFileDescriptor;
 
 typedef struct WasiFileDescriptors {
-    int* fds;
+    WasiFileDescriptor* fds;
     size_t length;
     size_t capacity;
 } WasiFileDescriptors;
@@ -57,7 +63,8 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorGet(
     U32 wasiFD,
-    int* nativeFD
+    int* nativeFD,
+    DIR** nativeDir
 );
 
 bool
@@ -84,14 +91,14 @@ typedef enum WasiPreopentype {
     wasiPreopentypeDirectory = 0
 } WasiPreopentype;
 
-typedef enum WasiFiletype {
-    wasiFiletypeUnknown = 0,
-    wasiFiletypeBlockDevice = 1,
-    wasiFiletypeCharacterDevice = 2,
-    wasiFiletypeDirectory = 3,
-    wasiFiletypeRegularFile = 4,
-    wasiFiletypeSymbolicLink = 7
-} WasiFiletype;
+typedef enum WasiFileType {
+    wasiFileTypeUnknown = 0,
+    wasiFileTypeBlockDevice = 1,
+    wasiFileTypeCharacterDevice = 2,
+    wasiFileTypeDirectory = 3,
+    wasiFileTypeRegularFile = 4,
+    wasiFileTypeSymbolicLink = 7
+} WasiFileType;
 
 typedef enum WasiFdflags {
     /* Append mode: Data written to the file is always appended to the file's end */
