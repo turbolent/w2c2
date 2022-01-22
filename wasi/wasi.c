@@ -990,9 +990,10 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
 
         nativeDir = fdopendir(nativeFD);
         if (nativeDir == NULL) {
-            WASI_TRACE(("fd_readdir: fdopendir failed"));
+            WASI_TRACE(("fd_readdir: fdopendir failed: %s", strerror(errno)));
             return wasiErrno();
         }
+
         if (!wasiDirectorySet(wasiDirFD, nativeDir)) {
             WASI_TRACE(("fd_readdir: setting DIR failed"));
             return wasiErrnoBadf;
@@ -1000,7 +1001,7 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
     } else {
         long current = telldir(nativeDir);
         if (current < 0) {
-            WASI_TRACE(("fd_readdir: telldir failed"));
+            WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
         }
 
@@ -1013,8 +1014,16 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
         size_t bufferRemaining = bufferLength - bufferUsed;
         size_t nextSize = 0;
 
+        WASI_TRACE(("fd_readdir: bufferRemaining=%d", bufferRemaining));
+
+        errno = 0;
         entry = readdir(nativeDir);
         if (entry == NULL) {
+            if (errno != 0) {
+                WASI_TRACE(("fd_readdir: readdir failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
+
             break;
         }
 
@@ -1026,6 +1035,7 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
 
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memset(entryData, 0, wasiDirentSize);
         memcpy(entryData, &next, sizeof(U64));
         memcpy(entryData + 8, &inode, sizeof(U64));
@@ -1054,6 +1064,9 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
             nextSize
         );
         bufferUsed += nextSize;
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#endif
     }
 
     i64_store(
