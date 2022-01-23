@@ -6,6 +6,8 @@ use std::fs::*;
 use std::io::*;
 
 fn main() {
+    println!("Hello from Rust!");
+
     let args: Vec<String> = env::args().collect();
     println!("Arguments: {:?}", args);
 
@@ -51,7 +53,13 @@ fn main() {
     create_dir(dir_path).unwrap();
     remove_dir(dir_path).unwrap();
 
-    println!("{:?}", read_dir("/tmp").unwrap().collect::<Vec<Result<DirEntry>>>());
+    if let Ok(entries) = read_dir("/tmp") {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                println!("- {:?}: {:?}", entry.path(), entry.file_type());
+            }
+        }
+    }
 
     exit(0);
 }
