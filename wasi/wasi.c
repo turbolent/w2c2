@@ -997,7 +997,20 @@ wasiFdReaddir(
             return wasiErrnoBadf;
         }
 
+#if defined(F_GETPATH)
+#include <sys/syslimits.h>
+#include <fcntl.h>
+
+        char dirPath[PATH_MAX];
+        if (fcntl(nativeFD, F_GETPATH, dirPath) == -1) {
+            WASI_TRACE(("fd_readdir: fcntl failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+        nativeDir = opendir(dirPath);
+#else
         nativeDir = fdopendir(nativeFD);
+#endif
         if (nativeDir == NULL) {
             WASI_TRACE(("fd_readdir: fdopendir failed: %s", strerror(errno)));
             return wasiErrno();
