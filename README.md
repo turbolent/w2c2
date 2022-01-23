@@ -77,11 +77,11 @@ make run-tests
 - [x] fd_prestat_dir_name
 - [ ] fd_pwrite
 - [x] fd_read
-- [ ] fd_readdir
+- [x] fd_readdir
 - [ ] fd_renumber
 - [x] fd_seek
 - [ ] fd_sync
-- [ ] fd_tell
+- [x] fd_tell
 - [x] fd_write
 - [x] path_create_directory
 - [x] path_filestat_get
