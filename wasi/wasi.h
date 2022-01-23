@@ -87,62 +87,85 @@ wasiPreopenGet(
     WasiPreopen* preopen
 );
 
-typedef enum WasiPreopentype {
-    wasiPreopentypeDirectory = 0
-} WasiPreopentype;
 
-typedef enum WasiFileType {
-    wasiFileTypeUnknown = 0,
-    wasiFileTypeBlockDevice = 1,
-    wasiFileTypeCharacterDevice = 2,
-    wasiFileTypeDirectory = 3,
-    wasiFileTypeRegularFile = 4,
-    wasiFileTypeSymbolicLink = 7
-} WasiFileType;
+/* Identifiers for preopened capabilities */
+typedef U8 WasiPreopentype;
 
-typedef enum WasiFdflags {
-    /* Append mode: Data written to the file is always appended to the file's end */
-    wasiFdflagsAppend = 1ULL << 0,
+/* A pre-opened directory */
+static const WasiPreopentype wasiPreopentypeDirectory = 0;
 
-    /*
-     * Write according to synchronized I/O data integrity completion.
-     * Only the data stored in the file is synchronized
-     */
-    wasiFdflagsDsync = 1ULL << 1,
 
-    /* Non-blocking mode */
-    wasiFdflagsNonblock = 1ULL << 2,
+/* The type of a file descriptor or file */
+typedef U8 WasiFileType;
 
-    /* Synchronized read I/O operations */
-    wasiFdflagsRsync = 1ULL << 3,
+/*  The type of the file descriptor or file is unknown or is different from any of the other types specified */
+static const WasiFileType wasiFileTypeUnknown = 0;
 
-    /*
-     * Write according to synchronized I/O file integrity completion.
-     * In addition to synchronizing the data stored in the file,
-     * the implementation may also synchronously update the file's metadata
-     */
-    wasiFdflagsSync = 1ULL << 4
-} WasiFdflags;
+/* The file descriptor or file refers to a block device inode */
+static const WasiFileType wasiFileTypeBlockDevice = 1;
 
-typedef enum WasiOflags {
-    /* Create file if it does not exist */
-    wasiOflagsCreat = 1ULL << 0,
+/* The file descriptor or file refers to a character device inode. */
+static const WasiFileType wasiFileTypeCharacterDevice = 2;
 
-    /* Fail if not a directory */
-    wasiOflagsDirectory = 1ULL << 1,
+/* The file descriptor or file refers to a directory inode */
+static const WasiFileType wasiFileTypeDirectory = 3;
 
-    /* Fail if file already exists */
-    wasiOflagsExcl = 1ULL << 2,
+/* The file descriptor or file refers to a regular file inode */
+static const WasiFileType wasiFileTypeRegularFile = 4;
 
-    /* Truncate file to size 0 */
-    wasiOflagsTrunc = 1ULL << 3
-} WasiOflags;
+/* The file refers to a symbolic link inode */
+static const WasiFileType wasiFileTypeSymbolicLink = 7;
 
-typedef enum WasiLookupFlag {
-    /* As long as the resolved path corresponds to a symbolic link, it is expanded */
-    wasiLookupFlagSymlinkFollow = 1ULL << 0
-} WasiLookupFlag;
 
+/* File descriptor flags */
+typedef U16 WasiFdflags;
+
+/* Append mode: Data written to the file is always appended to the file's end */
+static const WasiFdflags wasiFdflagsAppend = 1ULL << 0;
+
+/*
+ * Write according to synchronized I/O data integrity completion.
+ * Only the data stored in the file is synchronized
+ */
+static const WasiFdflags wasiFdflagsDsync = 1ULL << 1;
+
+/* Non-blocking mode */
+static const WasiFdflags wasiFdflagsNonblock = 1ULL << 2;
+
+/* Synchronized read I/O operations */
+static const WasiFdflags wasiFdflagsRsync = 1ULL << 3;
+
+/*
+ * Write according to synchronized I/O file integrity completion.
+ * In addition to synchronizing the data stored in the file,
+ * the implementation may also synchronously update the file's metadata
+ */
+static const WasiFdflags wasiFdflagsSync = 1ULL << 4;
+
+
+/* Open flags used by path_open */
+typedef U16 WasiOflags;
+
+/* Create file if it does not exist */
+static const WasiOflags wasiOflagsCreat = 1ULL << 0;
+
+/* Fail if not a directory */
+static const WasiOflags wasiOflagsDirectory = 1ULL << 1;
+
+/* Fail if file already exists */
+static const WasiOflags wasiOflagsExcl = 1ULL << 2;
+
+/* Truncate file to size 0 */
+static const WasiOflags wasiOflagsTrunc = 1ULL << 3;
+
+
+typedef U32 WasiLookupFlag;
+
+/* As long as the resolved path corresponds to a symbolic link, it is expanded */
+static const WasiLookupFlag wasiLookupFlagSymlinkFollow = 1ULL << 0;
+
+
+/* File descriptor rights, determining which actions may be performed */
 typedef U64 WasiRights;
 
 /*
@@ -291,256 +314,269 @@ static const WasiRights wasiRightsSockSend = 1ULL << 34;
 /* The right to invoke `sock_send_to` */
 static const WasiRights wasiRightsSockSendTo = 1ULL << 35;
 
-typedef enum WasiErrno {
-    /* No error occurred. System call completed successfully */
-    wasiErrnoSuccess = 0,
 
-    /* Argument list too long */
-    wasiErrno2big = 1,
+/* Error codes returned by functions.
+ * Not all of these error codes are returned by the functions provided by this API;
+ * some are used in higher-level library layers,
+ * and others are provided merely for alignment with POSIX.
+ */
+typedef U32 WasiErrno;
 
-    /* Permission denied */
-    wasiErrnoAcces = 2,
+/* No error occurred. System call completed successfully */
+static const WasiErrno wasiErrnoSuccess = 0;
 
-    /* Address in use */
-    wasiErrnoAddrinuse = 3,
+/* Argument list too long */
+static const WasiErrno wasiErrno2big = 1;
 
-    /* Address not available */
-    wasiErrnoAddrnotavail = 4,
+/* Permission denied */
+static const WasiErrno wasiErrnoAcces = 2;
 
-    /* Address family not supported */
-    wasiErrnoAfnosupport = 5,
+/* Address in use */
+static const WasiErrno wasiErrnoAddrinuse = 3;
 
-    /* Resource unavailable, or operation would block */
-    wasiErrnoAgain = 6,
+/* Address not available */
+static const WasiErrno wasiErrnoAddrnotavail = 4;
 
-    /* Connection already in progress */
-    wasiErrnoAlready = 7,
+/* Address family not supported */
+static const WasiErrno wasiErrnoAfnosupport = 5;
 
-    /* Bad file descriptor */
-    wasiErrnoBadf = 8,
+/* Resource unavailable, or operation would block */
+static const WasiErrno wasiErrnoAgain = 6;
 
-    /* Bad message */
-    wasiErrnoBadmsg = 9,
+/* Connection already in progress */
+static const WasiErrno wasiErrnoAlready = 7;
 
-    /* Device or resource busy */
-    wasiErrnoBusy = 10,
+/* Bad file descriptor */
+static const WasiErrno wasiErrnoBadf = 8;
 
-    /* Operation canceled */
-    wasiErrnoCanceled = 11,
+/* Bad message */
+static const WasiErrno wasiErrnoBadmsg = 9;
 
-    /* No child processes */
-    wasiErrnoChild = 12,
+/* Device or resource busy */
+static const WasiErrno wasiErrnoBusy = 10;
 
-    /* Connection aborted */
-    wasiErrnoConnaborted = 13,
+/* Operation canceled */
+static const WasiErrno wasiErrnoCanceled = 11;
 
-    /* Connection refused */
-    wasiErrnoConnrefused = 14,
+/* No child processes */
+static const WasiErrno wasiErrnoChild = 12;
 
-    /* Connection reset */
-    wasiErrnoConnreset = 15,
+/* Connection aborted */
+static const WasiErrno wasiErrnoConnaborted = 13;
 
-    /* Resource deadlock would occur */
-    wasiErrnoDeadlk = 16,
+/* Connection refused */
+static const WasiErrno wasiErrnoConnrefused = 14;
 
-    /* Destination address required */
-    wasiErrnoDestaddrreq = 17,
+/* Connection reset */
+static const WasiErrno wasiErrnoConnreset = 15;
 
-    /* Mathematics argument out of domain of function */
-    wasiErrnoDom = 18,
+/* Resource deadlock would occur */
+static const WasiErrno wasiErrnoDeadlk = 16;
 
-    /* Reserved */
-    wasiErrnoDquot = 19,
+/* Destination address required */
+static const WasiErrno wasiErrnoDestaddrreq = 17;
 
-    /* File exists */
-    wasiErrnoExist = 20,
+/* Mathematics argument out of domain of function */
+static const WasiErrno wasiErrnoDom = 18;
 
-    /* Bad address */
-    wasiErrnoFault = 21,
+/* Reserved */
+static const WasiErrno wasiErrnoDquot = 19;
 
-    /* File too large */
-    wasiErrnoFbig = 22,
+/* File exists */
+static const WasiErrno wasiErrnoExist = 20;
 
-    /* Host is unreachable */
-    wasiErrnoHostunreach = 23,
+/* Bad address */
+static const WasiErrno wasiErrnoFault = 21;
 
-    /* Identifier removed */
-    wasiErrnoIdrm = 24,
+/* File too large */
+static const WasiErrno wasiErrnoFbig = 22;
 
-    /* Illegal byte sequence */
-    wasiErrnoIlseq = 25,
+/* Host is unreachable */
+static const WasiErrno wasiErrnoHostunreach = 23;
 
-    /* Operation in progress */
-    wasiErrnoInprogress = 26,
+/* Identifier removed */
+static const WasiErrno wasiErrnoIdrm = 24;
 
-    /* Interrupted function */
-    wasiErrnoIntr = 27,
+/* Illegal byte sequence */
+static const WasiErrno wasiErrnoIlseq = 25;
 
-    /* Invalid argument */
-    wasiErrnoInval = 28,
+/* Operation in progress */
+static const WasiErrno wasiErrnoInprogress = 26;
 
-    /* I/O error */
-    wasiErrnoIo = 29,
+/* Interrupted function */
+static const WasiErrno wasiErrnoIntr = 27;
 
-    /* Socket is connected */
-    wasiErrnoIsconn = 30,
+/* Invalid argument */
+static const WasiErrno wasiErrnoInval = 28;
 
-    /* Is a directory */
-    wasiErrnoIsdir = 31,
+/* I/O error */
+static const WasiErrno wasiErrnoIo = 29;
 
-    /* Too many levels of symbolic links */
-    wasiErrnoLoop = 32,
+/* Socket is connected */
+static const WasiErrno wasiErrnoIsconn = 30;
 
-    /* File descriptor value too large */
-    wasiErrnoMfile = 33,
+/* Is a directory */
+static const WasiErrno wasiErrnoIsdir = 31;
 
-    /* Too many links */
-    wasiErrnoMlink = 34,
+/* Too many levels of symbolic links */
+static const WasiErrno wasiErrnoLoop = 32;
 
-    /* Message too large */
-    wasiErrnoMsgsize = 35,
+/* File descriptor value too large */
+static const WasiErrno wasiErrnoMfile = 33;
 
-    /* Reserved */
-    wasiErrnoMultihop = 36,
+/* Too many links */
+static const WasiErrno wasiErrnoMlink = 34;
 
-    /* Filename too long */
-    wasiErrnoNametoolong = 37,
+/* Message too large */
+static const WasiErrno wasiErrnoMsgsize = 35;
 
-    /* Network is down */
-    wasiErrnoNetdown = 38,
+/* Reserved */
+static const WasiErrno wasiErrnoMultihop = 36;
 
-    /* Connection aborted by network */
-    wasiErrnoNetreset = 39,
+/* Filename too long */
+static const WasiErrno wasiErrnoNametoolong = 37;
 
-    /* Network unreachable */
-    wasiErrnoNetunreach = 40,
+/* Network is down */
+static const WasiErrno wasiErrnoNetdown = 38;
 
-    /* Too many files open in system */
-    wasiErrnoNfile = 41,
+/* Connection aborted by network */
+static const WasiErrno wasiErrnoNetreset = 39;
 
-    /* No buffer space available */
-    wasiErrnoNobufs = 42,
+/* Network unreachable */
+static const WasiErrno wasiErrnoNetunreach = 40;
 
-    /* No such device */
-    wasiErrnoNodev = 43,
+/* Too many files open in system */
+static const WasiErrno wasiErrnoNfile = 41;
 
-    /* No such file or directory */
-    wasiErrnoNoent = 44,
+/* No buffer space available */
+static const WasiErrno wasiErrnoNobufs = 42;
 
-    /* Executable file format error */
-    wasiErrnoNoexec = 45,
+/* No such device */
+static const WasiErrno wasiErrnoNodev = 43;
 
-    /* No locks available */
-    wasiErrnoNolck = 46,
+/* No such file or directory */
+static const WasiErrno wasiErrnoNoent = 44;
 
-    /* Reserved */
-    wasiErrnoNolink = 47,
+/* Executable file format error */
+static const WasiErrno wasiErrnoNoexec = 45;
 
-    /* Not enough space */
-    wasiErrnoNomem = 48,
+/* No locks available */
+static const WasiErrno wasiErrnoNolck = 46;
 
-    /* No message of the desired type */
-    wasiErrnoNomsg = 49,
+/* Reserved */
+static const WasiErrno wasiErrnoNolink = 47;
 
-    /* Protocol not available */
-    wasiErrnoNoprotoopt = 50,
+/* Not enough space */
+static const WasiErrno wasiErrnoNomem = 48;
 
-    /* No space left on device */
-    wasiErrnoNospc = 51,
+/* No message of the desired type */
+static const WasiErrno wasiErrnoNomsg = 49;
 
-    /* Function not supported */
-    wasiErrnoNosys = 52,
+/* Protocol not available */
+static const WasiErrno wasiErrnoNoprotoopt = 50;
 
-    /* The socket is not connected */
-    wasiErrnoNotconn = 53,
+/* No space left on device */
+static const WasiErrno wasiErrnoNospc = 51;
 
-    /* Not a directory or a symbolic link to a directory */
-    wasiErrnoNotdir = 54,
+/* Function not supported */
+static const WasiErrno wasiErrnoNosys = 52;
 
-    /* Directory not empty */
-    wasiErrnoNotempty = 55,
+/* The socket is not connected */
+static const WasiErrno wasiErrnoNotconn = 53;
 
-    /* State not recoverable */
-    wasiErrnoNotrecoverable = 56,
+/* Not a directory or a symbolic link to a directory */
+static const WasiErrno wasiErrnoNotdir = 54;
 
-    /* Not a socket */
-    wasiErrnoNotsock = 57,
+/* Directory not empty */
+static const WasiErrno wasiErrnoNotempty = 55;
 
-    /* Not supported, or operation not supported on socket */
-    wasiErrnoNotsup = 58,
+/* State not recoverable */
+static const WasiErrno wasiErrnoNotrecoverable = 56;
 
-    /* Inappropriate I/O control operation */
-    wasiErrnoNotty = 59,
+/* Not a socket */
+static const WasiErrno wasiErrnoNotsock = 57;
 
-    /* No such device or address */
-    wasiErrnoNxio = 60,
+/* Not supported, or operation not supported on socket */
+static const WasiErrno wasiErrnoNotsup = 58;
 
-    /* Value too large to be stored in data type */
-    wasiErrnoOverflow = 61,
+/* Inappropriate I/O control operation */
+static const WasiErrno wasiErrnoNotty = 59;
 
-    /* Previous owner died */
-    wasiErrnoOwnerdead = 62,
+/* No such device or address */
+static const WasiErrno wasiErrnoNxio = 60;
 
-    /* Operation not permitted */
-    wasiErrnoPerm = 63,
+/* Value too large to be stored in data type */
+static const WasiErrno wasiErrnoOverflow = 61;
 
-    /* Broken pipe */
-    wasiErrnoPipe = 64,
+/* Previous owner died */
+static const WasiErrno wasiErrnoOwnerdead = 62;
 
-    /* Protocol error */
-    wasiErrnoProto = 65,
+/* Operation not permitted */
+static const WasiErrno wasiErrnoPerm = 63;
 
-    /* Protocol not supported */
-    wasiErrnoProtonosupport = 66,
+/* Broken pipe */
+static const WasiErrno wasiErrnoPipe = 64;
 
-    /* Protocol wrong type for socket */
-    wasiErrnoPrototype = 67,
+/* Protocol error */
+static const WasiErrno wasiErrnoProto = 65;
 
-    /* Result too large */
-    wasiErrnoRange = 68,
+/* Protocol not supported */
+static const WasiErrno wasiErrnoProtonosupport = 66;
 
-    /* Read-only file system */
-    wasiErrnoRofs = 69,
+/* Protocol wrong type for socket */
+static const WasiErrno wasiErrnoPrototype = 67;
 
-    /* Invalid seek */
-    wasiErrnoSpipe = 70,
+/* Result too large */
+static const WasiErrno wasiErrnoRange = 68;
 
-    /* No such process */
-    wasiErrnoSrch = 71,
+/* Read-only file system */
+static const WasiErrno wasiErrnoRofs = 69;
 
-    /* Reserved */
-    wasiErrnoStale = 72,
+/* Invalid seek */
+static const WasiErrno wasiErrnoSpipe = 70;
 
-    /* Connection timed out */
-    wasiErrnoTimedout = 73,
+/* No such process */
+static const WasiErrno wasiErrnoSrch = 71;
 
-    /* Text file busy */
-    wasiErrnoTxtbsy = 74,
+/* Reserved */
+static const WasiErrno wasiErrnoStale = 72;
 
-    /* Cross-device link */
-    wasiErrnoXdev = 75,
+/* Connection timed out */
+static const WasiErrno wasiErrnoTimedout = 73;
 
-    /* Extension: Capabilities insufficient */
-    wasiErrnoNotcapable = 76
-} WasiErrno;
+/* Text file busy */
+static const WasiErrno wasiErrnoTxtbsy = 74;
 
-typedef enum WasiClock {
-    /* The clock measuring real time. Time value zero corresponds with 1970-01-01T00:00:00Z */
-    wasiClockRealtime = 0,
+/* Cross-device link */
+static const WasiErrno wasiErrnoXdev = 75;
 
-    /*
-     * The store-wide monotonic clock, which is defined as a clock measuring real time,
-     * whose value cannot be adjusted and which cannot have negative clock jumps.
-     * The epoch of this clock is undefined.
-     * The absolute time value of this clock therefore has no meaning
-     */
-    wasiClockMonotonic = 1,
+/* Extension: Capabilities insufficient */
+static const WasiErrno wasiErrnoNotcapable = 76;
 
-    /* The CPU-time clock associated with the current process */
-    wasiClockProcessCputimeId = 2,
 
-    /* The CPU-time clock associated with the current thread */
-    wasiClockThreadCputimeId = 3
-} WasiClock;
+/* Identifiers for clocks */
+typedef U32 WasiClock;
+
+/* The clock measuring real time. Time value zero corresponds with 1970-01-01T00:00:00Z */
+static const WasiClock wasiClockRealtime = 0;
+#define WASI_CLOCK_REALTIME 0
+
+/*
+ * The store-wide monotonic clock, which is defined as a clock measuring real time,
+ * whose value cannot be adjusted and which cannot have negative clock jumps.
+ * The epoch of this clock is undefined.
+ * The absolute time value of this clock therefore has no meaning
+ */
+static const WasiClock wasiClockMonotonic = 1;
+#define WASI_CLOCK_MONOTONIC 1
+
+/* The CPU-time clock associated with the current process */
+static const WasiClock wasiClockProcessCputimeId = 2;
+#define WASI_CLOCK_PROCESS_CPUTIME_ID 2
+
+/* The CPU-time clock associated with the current thread */
+static const WasiClock wasiClockThreadCputimeId = 3;
+#define WASI_CLOCK_THREAD_CPUTIME_ID 3
+
 
 #endif /* W2C2_WASI_H */

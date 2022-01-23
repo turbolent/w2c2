@@ -1044,8 +1044,9 @@ wasiFdReaddir(
 
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memset(entryData, 0, WASI_DIRENT_SIZE);
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(entryData, &next, sizeof(U64));
         memcpy(entryData + 8, &inode, sizeof(U64));
         memcpy(entryData + 16, &nameLength, sizeof(U32));
@@ -1063,6 +1064,7 @@ wasiFdReaddir(
         bufferUsed += nextSize;
 
         bufferRemaining = bufferLength - bufferUsed;
+
         nextSize = nameLength;
         if (bufferRemaining < nextSize) {
             nextSize = bufferRemaining;
@@ -1074,7 +1076,43 @@ wasiFdReaddir(
         );
         bufferUsed += nextSize;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
+        memcpy(entryData + WASI_DIRENT_SIZE - sizeof(U64), &next, sizeof(U64));
+        memcpy(entryData + WASI_DIRENT_SIZE - 8 - sizeof(U64), &inode, sizeof(U64));
+        memcpy(entryData + WASI_DIRENT_SIZE - 16 - sizeof(U32), &nameLength, sizeof(U32));
+        memcpy(entryData + WASI_DIRENT_SIZE - 20 - sizeof(U8), &fileType, sizeof(U8));
 
+        if (bufferRemaining < WASI_DIRENT_SIZE) {
+            U32 index = 0;
+            U8 *base = e_memory->data + e_memory->size - bufferPointer - bufferUsed - 1;
+            for (; index < bufferRemaining; index++) {
+                base[-index] = entryData[-index];
+            }
+            bufferUsed += bufferRemaining;
+        } else {
+            memcpy(
+                e_memory->data + e_memory->size - bufferPointer - bufferUsed - WASI_DIRENT_SIZE,
+                entryData,
+                WASI_DIRENT_SIZE
+            );
+            bufferUsed += WASI_DIRENT_SIZE;
+        }
+
+        bufferRemaining = bufferLength - bufferUsed;
+
+        {
+            U32 index = 0;
+            U8 *base = e_memory->data + e_memory->size - bufferPointer - bufferUsed - 1;
+
+            nextSize = nameLength;
+            if (bufferRemaining < nextSize) {
+                nextSize = bufferRemaining;
+            }
+
+            for (; index < nextSize; index++) {
+                base[-index] = name[index];
+            }
+            bufferUsed += nextSize;
+        }
 #endif
     }
 
@@ -1163,24 +1201,24 @@ wasiClockTimeGet(
 
 
         switch (clockID) {
-            case wasiClockRealtime: {
+            case WASI_CLOCK_REALTIME: {
                 nativeClockID = CLOCK_REALTIME;
                 break;
             }
 #ifdef _POSIX_MONOTONIC_CLOCK
-            case wasiClockMonotonic: {
+            case WASI_CLOCK_MONOTONIC: {
                 nativeClockID = CLOCK_MONOTONIC;
                 break;
             }
 #endif
 #ifdef _POSIX_CPUTIME
-            case wasiClockProcessCputimeId: {
+            case WASI_CLOCK_PROCESS_CPUTIME_ID: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
 #ifdef _POSIX_THREAD_CPUTIME
-            case wasiClockThreadCputimeId: {
+            case WASI_CLOCK_THREAD_CPUTIME_ID: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
             }
@@ -1202,7 +1240,7 @@ wasiClockTimeGet(
     }
 #else
     switch (clockID) {
-        case wasiClockRealtime: {
+        case WASI_CLOCK_REALTIME: {
             struct timeval tv;
             if (gettimeofday(&tv, NULL) != 0) {
                 WASI_TRACE(("clock_time_get: gettimeofday failed: %s", strerror(errno)));
@@ -1212,7 +1250,7 @@ wasiClockTimeGet(
             break;
         }
 #ifdef __MACH__
-        case wasiClockMonotonic: {
+        case WASI_CLOCK_MONOTONIC: {
 #include <mach/mach_time.h>
             static mach_timebase_info_data_t timebase = {0, 0};
 
@@ -1225,7 +1263,7 @@ wasiClockTimeGet(
             break;
         }
 #endif
-        case wasiClockProcessCputimeId: {
+        case WASI_CLOCK_PROCESS_CPUTIME_ID: {
             struct rusage ru;
             int ret = getrusage(RUSAGE_SELF, &ru);
             if (ret != 0) {
@@ -1281,24 +1319,24 @@ wasiClockResGet(
 
 
         switch (clockID) {
-            case wasiClockRealtime: {
+            case WASI_CLOCK_REALTIME: {
                 nativeClockID = CLOCK_REALTIME;
                 break;
             }
 #ifdef _POSIX_MONOTONIC_CLOCK
-            case wasiClockMonotonic: {
+            case WASI_CLOCK_MONOTONIC: {
                 nativeClockID = CLOCK_MONOTONIC;
                 break;
             }
 #endif
 #ifdef _POSIX_CPUTIME
-            case wasiClockProcessCputimeId: {
+            case WASI_CLOCK_PROCESS_CPUTIME_ID: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
 #ifdef _POSIX_THREAD_CPUTIME
-            case wasiClockThreadCputimeId: {
+            case WASI_CLOCK_THREAD_CPUTIME_ID: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
             }
@@ -1320,13 +1358,13 @@ wasiClockResGet(
     }
 #else
     switch (clockID) {
-        case wasiClockRealtime: {
+        case WASI_CLOCK_REALTIME: {
             result = 1e6;
             break;
         }
-        case wasiClockMonotonic:
-        case wasiClockProcessCputimeId:
-        case wasiClockThreadCputimeId: {
+        case WASI_CLOCK_MONOTONIC:
+        case WASI_CLOCK_PROCESS_CPUTIME_ID:
+        case WASI_CLOCK_THREAD_CPUTIME_ID: {
             result = 1e3;
             break;
         }
