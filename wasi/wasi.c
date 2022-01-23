@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE 1
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,7 +89,8 @@ wasiFileDescriptorsAdd(
     WasiFileDescriptors* descriptors,
     int fd
 ) {
-    WasiFileDescriptor fileDescriptor = {fd, NULL};
+    WasiFileDescriptor fileDescriptor = {-1, NULL};
+    fileDescriptor.fd = fd;
     descriptors->length++;
     MUST (wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length))
     descriptors->fds[descriptors->length - 1] = fileDescriptor;
@@ -932,8 +935,6 @@ WASI_IMPORT(U32, fdX5Ftell, (U32 wasiFD, U32 resultPointer), {
     );
 })
 
-
-
 static
 __inline__
 WasiFileType
@@ -956,10 +957,18 @@ wasiFileTypeFromDirentFileType(
     }
 }
 
-static const size_t wasiDirentSize = 24;
+#define WASI_DIRENT_SIZE 24
 
-WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
-
+static
+__inline__
+U32
+wasiFdReaddir(
+    U32 wasiDirFD,
+    U32 bufferPointer,
+    U32 bufferLength,
+    U64 cookie,
+    U32 bufferUsedPointer
+) {
     int nativeFD = -1;
     DIR* nativeDir = NULL;
     char* name = NULL;
@@ -969,7 +978,7 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
     U32 bufferUsed = 0;
     U64 next = 0;
     U64 inode = 0;
-    U8 entryData[wasiDirentSize];
+    U8 entryData[WASI_DIRENT_SIZE];
 
     WASI_TRACE((
         "fd_readdir(wasiDirFD=%d, bufferPointer=%d, bufferLength=%d, cookie=%lld, bufferUsedPointer=%d)",
@@ -1036,13 +1045,13 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-        memset(entryData, 0, wasiDirentSize);
+        memset(entryData, 0, WASI_DIRENT_SIZE);
         memcpy(entryData, &next, sizeof(U64));
         memcpy(entryData + 8, &inode, sizeof(U64));
         memcpy(entryData + 16, &nameLength, sizeof(U32));
         memcpy(entryData + 20, &fileType, sizeof(U8));
 
-        nextSize = wasiDirentSize;
+        nextSize = WASI_DIRENT_SIZE;
         if (bufferRemaining < nextSize) {
             nextSize = bufferRemaining;
         }
@@ -1076,6 +1085,10 @@ WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLeng
     );
 
     return wasiErrnoSuccess;
+}
+
+WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
+    return wasiFdReaddir(wasiDirFD, bufferPointer, bufferLength, cookie, bufferUsedPointer);
 })
 
 WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
@@ -1515,7 +1528,7 @@ getBigEndianPath(
     U32 pathLength,
     char path[PATH_MAX]
 ) {
-    U8* base = e_memory->data + e_memory->size - 1 - pathPointer;
+    char* base = (char*) e_memory->data + e_memory->size - 1 - pathPointer;
     U32 i = 0;
 
     MUST (pathLength <= PATH_MAX)
@@ -1814,8 +1827,8 @@ storeUnstableFilestat(
         0,
         wasiUnstableFilestatSize
     );
-    i64_store(e_memory, statPointer,  stat->st_dev);
-    i64_store(e_memory, statPointer + 8,  stat->st_ino);
+    i64_store(e_memory, statPointer, stat->st_dev);
+    i64_store(e_memory, statPointer + 8, stat->st_ino);
     i32_store8(e_memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
     i32_store(e_memory, statPointer + 20, stat->st_nlink);
     i64_store(e_memory, statPointer + 24, stat->st_size);
@@ -2327,7 +2340,7 @@ wasiPathReadlink(
 #endif
     char resolvedPath[PATH_MAX];
     char* buffer = NULL;
-    int length = 0;
+    long length = 0;
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
