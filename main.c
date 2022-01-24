@@ -1,7 +1,12 @@
 #include <stdio.h>
-#include <unistd.h>
+#include <stdint.h>
 #include <ctype.h>
-#include <getopt.h>
+#ifdef _WIN32
+  #include "getopt_impl.h"
+#else 
+  #include <getopt.h>
+#endif
+
 #include "buffer.h"
 #include "file.h"
 #include "reader.h"
