@@ -1,30 +1,35 @@
 BUILD := release
 
 ifeq ($(OS),Windows_NT)
-    UNAME := Windows
-else
-    UNAME := $(shell uname -s)
+	UNAME := Windows
+endif
+ifdef WASI_CC
+	UNAME := WASI
+	CC    := $(WASI_CC)
+endif
+ifndef UNAME
+	UNAME := $(shell uname -s)
 endif
 
 ifeq ($(BUILD),release)
-    CFLAGS += -O3
+	CFLAGS += -O3
 else
-    CFLAGS += -g -O0
+	CFLAGS += -g -O0
 endif
 
 CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 ifeq ($(UNAME),Windows)
-    OUTPUT  := w2c2.exe
-	CC 		:= clang
+	OUTPUT  := w2c2.exe
+	CC      := clang
 	CFLAGS  += -D_CRT_SECURE_NO_WARNINGS
 endif
 ifeq ($(UNAME),WASI)
-    OUTPUT  := w2c2.wasm
+	OUTPUT  := w2c2.wasm
 endif
 
 ifndef OUTPUT
-    OUTPUT  := w2c2
+	OUTPUT  := w2c2
 	CFLAGS  += -pthread -DHAS_PTHREAD
 	LDFLAGS += -lm
 endif
