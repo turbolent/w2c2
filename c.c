@@ -6,6 +6,9 @@
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif
+#ifndef _WIN32
+  #include <unistd.h>
+#endif
 
 #include "c.h"
 #include "stringbuilder.h"
@@ -3253,7 +3256,7 @@ wasmCWriteInitMemories(
             }
             fputs(", ", file);
             wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-            fprintf(file, ", %llu);\n", dataSegment.bytes.length);
+            fprintf(file, ", %lu);\n", (unsigned long)dataSegment.bytes.length);
         }
     }
 
@@ -3716,14 +3719,15 @@ wasmCWriteModuleParallel(
     declarationsJob.pretty = pretty;
 
     /* Change to output directory */
-
+    {
         if (chdir(outputPath) < 0) {
             fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputPath);
             return false;
         }
+    }
 
     /* Write declarations */
-
+    {
         int err = pthread_create(
             &declarationsJob.thread,
             NULL,
@@ -3734,9 +3738,10 @@ wasmCWriteModuleParallel(
             fprintf(stderr, "w2c2: failed to create declarations thread: %s\n", strerror(err));
             return false;
         }
+    }
 
     /* Write implementations */
-
+    {
         U32 jobIndex = 0;
         for (; jobIndex < jobCount; jobIndex++) {
             WasmCImplementationWriterJob job;
@@ -3761,9 +3766,10 @@ wasmCWriteModuleParallel(
                 }
             }
         }
+    }
 
     /* Write initializations code */
-
+    {
         int err = pthread_create(
             &initsJob.thread,
             NULL,
@@ -3774,7 +3780,7 @@ wasmCWriteModuleParallel(
             fprintf(stderr, "w2c2: failed to create inits thread: %s\n", strerror(err));
             return false;
         }
-
+    }
 
     /* Wait for threads */
 
@@ -3837,13 +3843,13 @@ wasmCWriteModule(
     U32 functionsPerFile,
     bool pretty
 ) {
+    FILE *singleFile = NULL;
+
 #if HAS_PTHREAD
     if (jobCount > 1) {
-        return wasmCWriteModuleParallel(outputPath, module, jobCount, functionsPerFile, pretty)
+        return wasmCWriteModuleParallel(outputPath, module, jobCount, functionsPerFile, pretty);
     }
 #endif
-
-    FILE *singleFile = NULL;
 
     if (outputPath == NULL) {
         singleFile = stdout;
