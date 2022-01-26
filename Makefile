@@ -1,5 +1,38 @@
-CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function -pthread
-LDFLAGS += -lm
+BUILD := release
+
+ifeq ($(OS),Windows_NT)
+	UNAME := Windows
+endif
+ifdef WASI_CC
+	UNAME := WASI
+	CC    := $(WASI_CC)
+endif
+ifndef UNAME
+	UNAME := $(shell uname -s)
+endif
+
+ifeq ($(BUILD),release)
+	CFLAGS += -O3
+else
+	CFLAGS += -g -O0
+endif
+
+CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+
+ifeq ($(UNAME),Windows)
+	OUTPUT  := w2c2.exe
+	CC      := clang
+	CFLAGS  += -D_CRT_SECURE_NO_WARNINGS
+endif
+ifeq ($(UNAME),WASI)
+	OUTPUT  := w2c2.wasm
+endif
+
+ifndef OUTPUT
+	OUTPUT  := w2c2
+	CFLAGS  += -pthread -DHAS_PTHREAD
+	LDFLAGS += -lm
+endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined
@@ -14,13 +47,9 @@ ifneq (,$(findstring thread,$(SANITIZERS)))
 CFLAGS += -fsanitize=thread
 endif
 
-.PHONY: release debug clean
+.PHONY: all clean
 
-release: CFLAGS += -O3
-release: w2c2
-
-debug: CFLAGS += -g -O0
-debug: w2c2
+all: $(OUTPUT)
 
 TARGET_OBJECTS = $(patsubst %.c,%.o,$(filter-out %_test.c test.c,$(wildcard *.c)))
 TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
@@ -28,7 +57,7 @@ TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-w2c2: $(TARGET_OBJECTS)
+$(OUTPUT): $(TARGET_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 w2c2_test: $(TEST_OBJECTS)
@@ -36,4 +65,4 @@ w2c2_test: $(TEST_OBJECTS)
 
 clean:
 	-rm -f *.o
-	-rm -f w2c2 w2c2_test
+	-rm -f $(OUTPUT) w2c2_test
