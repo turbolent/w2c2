@@ -9,9 +9,12 @@ typedef struct WasmCWriteModuleOptions {
     U32 jobCount;
     U32 functionsPerFile;
     bool pretty;
+    WasmDataSegmentMode dataSegmentMode;
 } WasmCWriteModuleOptions;
 
-static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions = {NULL, 1, 1, false};
+static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
+    NULL, 0, 0, false, wasmDataSegmentModeArrays
+};
 
 bool
 WARN_UNUSED_RESULT

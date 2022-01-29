@@ -9,6 +9,8 @@
 #endif
 #ifndef _WIN32
   #include <unistd.h>
+#include <errno.h>
+
 #endif
 
 #include "c.h"
@@ -3152,7 +3154,7 @@ wasmCWriteInitExports(
 
 static
 void
-wasmCWriteDataSegments(
+wasmCWriteDataSegmentsAsArrays(
     FILE* file,
     const WasmModule* module,
     bool pretty
@@ -3178,6 +3180,66 @@ wasmCWriteDataSegments(
             }
         }
         fputs("\n};\n\n", file);
+    }
+}
+
+static
+void
+wasmCWriteDataSegmentsAsSection(
+    FILE* file,
+    const WasmModule* module,
+    WasmDataSegmentMode mode,
+    bool pretty
+) {
+    U32 dataSegmentIndex = 0;
+    FILE* segmentsFile = NULL;
+
+    fputs("extern char _binary_datasegments_start[];\n\n", file);
+
+    segmentsFile = fopen("datasegments", "wb");
+    if (segmentsFile == NULL) {
+        fprintf(stderr, "w2c2: failed to open data segments file: %s", strerror(errno));
+        abort();
+    }
+
+    for (; dataSegmentIndex < module->dataSegments.count; dataSegmentIndex++) {
+        WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+        size_t length = dataSegment.bytes.length;
+        size_t written = fwrite(dataSegment.bytes.data, 1, length, segmentsFile);
+        if (written != length) {
+            fprintf(stderr, "w2c2: failed to write data segment %d: %s", dataSegmentIndex, strerror(errno));
+            abort();
+        }
+    }
+
+    if (fclose(segmentsFile) != 0) {
+        fprintf(stderr, "w2c2: failed to close data segments file: %s", strerror(errno));
+        abort();
+    }
+}
+
+
+static
+void
+wasmCWriteDataSegments(
+    FILE* file,
+    const WasmModule* module,
+    WasmDataSegmentMode mode,
+    bool pretty
+) {
+    switch (mode) {
+        case wasmDataSegmentModeArrays: {
+            wasmCWriteDataSegmentsAsArrays(file, module, pretty);
+            break;
+        }
+        case wasmDataSegmentModeGNULD: {
+            wasmCWriteDataSegmentsAsSection(file, module, mode, pretty);
+            break;
+        }
+        default: {
+            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
+            abort();
+        }
     }
 }
 
@@ -3220,12 +3282,22 @@ WARN_UNUSED_RESULT
 wasmCWriteInitMemories(
     FILE* file,
     const WasmModule* module,
+    WasmDataSegmentMode dataSegmentMode,
     bool pretty
 ) {
     StringBuilder stringBuilder = emptyStringBuilder;
     MUST (stringBuilderInitialize(&stringBuilder))
 
     fputs("static void initMemories(void) {\n", file);
+
+    switch (dataSegmentMode) {
+        case wasmDataSegmentModeGNULD: {
+            fputs("static char* ds = _binary_datasegments_start;\n", file);
+            break;
+        }
+        default:
+            break;
+    }
 
     {
         U32 memoryIndex = 0;
@@ -3242,6 +3314,7 @@ wasmCWriteInitMemories(
     }
 
     {
+        size_t dataSegmentOffset = 0;
         U32 dataSegmentIndex = 0;
         for (; dataSegmentIndex < module->dataSegments.count; dataSegmentIndex++) {
             WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
@@ -3260,8 +3333,25 @@ wasmCWriteInitMemories(
                 fputs(stringBuilder.string, file);
             }
             fputs(", ", file);
-            wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+
+            switch (dataSegmentMode) {
+                case wasmDataSegmentModeArrays: {
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    break;
+                }
+                case wasmDataSegmentModeGNULD: {
+                    fprintf(file, "ds + %lu", (unsigned long)dataSegmentOffset);
+                    break;
+                }
+                default: {
+                    fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", dataSegmentMode);
+                }
+
+            }
+
             fprintf(file, ", %lu);\n", (unsigned long)dataSegment.bytes.length);
+
+            dataSegmentOffset += dataSegment.bytes.length;
         }
     }
 
@@ -3486,6 +3576,7 @@ WARN_UNUSED_RESULT
 wasmCWriteInits(
     const WasmModule* module,
     FILE* singleFile,
+    WasmDataSegmentMode dataSegmentMode,
     bool pretty
 ) {
     bool parallel = singleFile == NULL;
@@ -3500,7 +3591,7 @@ wasmCWriteInits(
         fputs("#include \"decls.h\"\n\n", file);
     }
 
-    wasmCWriteDataSegments(file, module, pretty);
+    wasmCWriteDataSegments(file, module, dataSegmentMode, pretty);
 
     if (parallel) {
         wasmCWriteMemories(file, module, NULL);
@@ -3508,7 +3599,7 @@ wasmCWriteInits(
         wasmCWriteGlobals(file, module, NULL);
     }
 
-    MUST (wasmCWriteInitMemories(file, module, pretty))
+    MUST (wasmCWriteInitMemories(file, module, dataSegmentMode, pretty))
     MUST (wasmCWriteInitTables(file, module, pretty))
     wasmCWriteInitExports(file, module, pretty);
     MUST (wasmCWriteInitGlobals(file, module, pretty))
@@ -3660,6 +3751,7 @@ wasmCImplementationWriterThread(
 typedef struct WasmCInitsWriterJob {
     pthread_t thread;
     const WasmModule* module;
+    WasmDataSegmentMode dataSegmentMode;
     bool pretty;
     bool result;
 } WasmCInitsWriterJob;
@@ -3671,7 +3763,7 @@ wasmCInitsWriterThread(
     void* arg
 ) {
     WasmCInitsWriterJob* job = (WasmCInitsWriterJob *) arg;
-    bool result = wasmCWriteInits(job->module, NULL, job->pretty);
+    bool result = wasmCWriteInits(job->module, NULL, job->dataSegmentMode, job->pretty);
     if (!result) {
         fprintf(stderr, "w2c2: failed to write inits\n");
     }
@@ -3885,7 +3977,7 @@ wasmCWriteModule(
 
     /* Write initializations code */
 
-    if (!wasmCWriteInits(module, singleFile, options.pretty)) {
+    if (!wasmCWriteInits(module, singleFile, options.dataSegmentMode, options.pretty)) {
         fprintf(stderr, "w2c2: failed to write inits\n");
         return false;
     }
