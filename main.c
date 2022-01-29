@@ -126,16 +126,23 @@ main(
     modulePath = argv[index];
 
     {
-        WasmModuleReader wasmModuleReader;
-        if (!readWasmBinary(modulePath, &wasmModuleReader)) {
+        WasmModuleReader reader = emptyWasmModuleReader;
+        WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
+
+        if (!readWasmBinary(modulePath, &reader)) {
             return 1;
         }
 
         if (jobCount == 1) {
-            functionsPerFile = wasmModuleReader.module->functions.count;
+            functionsPerFile = reader.module->functions.count;
         }
 
-        if (!wasmCWriteModule(outputPath, wasmModuleReader.module, jobCount, functionsPerFile, pretty)) {
+        writeOptions.outputPath = outputPath;
+        writeOptions.jobCount = jobCount;
+        writeOptions.functionsPerFile = functionsPerFile;
+        writeOptions.pretty = pretty;
+
+        if (!wasmCWriteModule(reader.module, writeOptions)) {
             fprintf(stderr, "w2c2: failed to compile\n");
             return 1;
         }

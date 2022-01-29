@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#define HAS_PTHREAD 1
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif
@@ -3691,23 +3692,20 @@ roundUp(
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModuleParallel(
-    const char* outputPath,
     const WasmModule* module,
-    U32 jobCount,
-    U32 functionsPerFile,
-    bool pretty
+    WasmCWriteModuleOptions options
 ) {
     U32 functionCount = module->functions.count;
     U32 functionCountPerJob = roundUp(
-        (U32)ceil((double)functionCount / jobCount),
-        functionsPerFile
+        (U32)ceil((double)functionCount / options.jobCount),
+        options.functionsPerFile
     );
 
     WasmCInitsWriterJob initsJob;
     WasmCDeclarationsWriterJob declarationsJob;
 
     WasmCImplementationWriterJob* implementationJobs =
-        calloc(jobCount * sizeof(WasmCImplementationWriterJob), 1);
+        calloc(options.jobCount * sizeof(WasmCImplementationWriterJob), 1);
     if (implementationJobs == NULL) {
         fprintf(stderr, "w2c2: failed to allocate job\n");
         return false;
@@ -3716,12 +3714,12 @@ wasmCWriteModuleParallel(
     initsJob.module = module;
 
     declarationsJob.module = module;
-    declarationsJob.pretty = pretty;
+    declarationsJob.pretty = options.pretty;
 
     /* Change to output directory */
     {
-        if (chdir(outputPath) < 0) {
-            fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputPath);
+        if (chdir(options.outputPath) < 0) {
+            fprintf(stderr, "w2c2: failed to change to output directory %s\n", options.outputPath);
             return false;
         }
     }
@@ -3743,13 +3741,13 @@ wasmCWriteModuleParallel(
     /* Write implementations */
     {
         U32 jobIndex = 0;
-        for (; jobIndex < jobCount; jobIndex++) {
+        for (; jobIndex < options.jobCount; jobIndex++) {
             WasmCImplementationWriterJob job;
             job.jobIndex = jobIndex;
             job.functionCountPerJob = functionCountPerJob;
-            job.functionsPerFile = functionsPerFile;
+            job.functionsPerFile = options.functionsPerFile;
             job.module = module;
-            job.pretty = pretty;
+            job.pretty = options.pretty;
             job.result = false;
             implementationJobs[jobIndex] = job;
 
@@ -3798,7 +3796,7 @@ wasmCWriteModuleParallel(
         /* Implementations */
         {
             U32 jobIndex = 0;
-            for (; jobIndex < jobCount; jobIndex++) {
+            for (; jobIndex < options.jobCount; jobIndex++) {
                 WasmCImplementationWriterJob* job = &implementationJobs[jobIndex];
 
                 int err = pthread_join(job->thread, NULL);
@@ -3837,26 +3835,23 @@ wasmCWriteModuleParallel(
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    const char* outputPath,
     const WasmModule* module,
-    U32 jobCount,
-    U32 functionsPerFile,
-    bool pretty
+    WasmCWriteModuleOptions options
 ) {
     FILE *singleFile = NULL;
 
 #if HAS_PTHREAD
-    if (jobCount > 1) {
-        return wasmCWriteModuleParallel(outputPath, module, jobCount, functionsPerFile, pretty);
+    if (options.jobCount > 1) {
+        return wasmCWriteModuleParallel(module, options);
     }
 #endif
 
-    if (outputPath == NULL) {
+    if (options.outputPath == NULL) {
         singleFile = stdout;
     } else {
-        singleFile = fopen(outputPath, "w");
+        singleFile = fopen(options.outputPath, "w");
         if (singleFile == NULL) {
-            fprintf(stderr, "w2c2: failed to open output file %s\n", outputPath);
+            fprintf(stderr, "w2c2: failed to open output file %s\n", options.outputPath);
             return false;
         }
     }
@@ -3864,7 +3859,7 @@ wasmCWriteModule(
 
     /* Write declarations */
 
-    if (!wasmCWriteDeclarations(module, singleFile, pretty)) {
+    if (!wasmCWriteDeclarations(module, singleFile, options.pretty)) {
         fprintf(stderr, "w2c2: failed to write declarations\n");
         return false;
     }
@@ -3874,22 +3869,22 @@ wasmCWriteModule(
     MUST (wasmCWriteImplementationFile(
         module,
         0,
-        functionsPerFile,
+        options.functionsPerFile,
         singleFile,
         0,
-        pretty
+        options.pretty
     ))
 
     /* Write initializations code */
 
-    if (!wasmCWriteInits(module, singleFile, pretty)) {
+    if (!wasmCWriteInits(module, singleFile, options.pretty)) {
         fprintf(stderr, "w2c2: failed to write inits\n");
         return false;
     }
 
     /* Close single file */
 
-    if (outputPath != NULL) {
+    if (options.outputPath != NULL) {
         fclose(singleFile);
     }
 
