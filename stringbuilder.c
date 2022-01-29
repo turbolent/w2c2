@@ -26,7 +26,7 @@ WARN_UNUSED_RESULT
 stringBuilderInitialize(
     StringBuilder* stringBuilder
 ) {
-    static const size_t initialCapacity = sizeof(char);
+    static const size_t initialCapacity = sizeof(char) * 8;
     void* newString = NULL;
     MUST (stringBuilder->string == NULL)
     newString = malloc(initialCapacity);
@@ -35,6 +35,21 @@ stringBuilderInitialize(
     stringBuilder->length = 0;
     stringBuilder->capacity = initialCapacity;
     stringBuilder->string = (char*) newString;
+    stringBuilder->string[0] = '\0';
+
+    return true;
+}
+
+bool
+WARN_UNUSED_RESULT
+stringBuilderReset(
+    StringBuilder* stringBuilder
+) {
+    if (stringBuilder->capacity < 1) {
+        MUST (stringBuilderInitialize(stringBuilder))
+    }
+
+    stringBuilder->length = 0;
     stringBuilder->string[0] = '\0';
 
     return true;

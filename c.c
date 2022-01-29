@@ -2998,6 +2998,9 @@ wasmCWriteInitGlobals(
 ) {
     U32 globalIndex = 0;
 
+    StringBuilder stringBuilder = emptyStringBuilder;
+    MUST (stringBuilderInitialize(&stringBuilder))
+
     fputs("static void initGlobals(void) {\n", file);
 
     for (; globalIndex < module->globals.count; globalIndex++) {
@@ -3010,17 +3013,17 @@ wasmCWriteInitGlobals(
         fputs(" = ", file);
         {
             Buffer code = global.init;
-            StringBuilder stringBuilder = emptyStringBuilder;
+            MUST (stringBuilderReset(&stringBuilder))
 
-            MUST (stringBuilderInitialize(&stringBuilder))
             MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
             fputs(stringBuilder.string, file);
-            stringBuilderFree(&stringBuilder);
         }
         fputs(";\n", file);
     }
 
     fputs("}\n\n", file);
+
+    stringBuilderFree(&stringBuilder);
 
     return true;
 }
@@ -3219,6 +3222,9 @@ wasmCWriteInitMemories(
     const WasmModule* module,
     bool pretty
 ) {
+    StringBuilder stringBuilder = emptyStringBuilder;
+    MUST (stringBuilderInitialize(&stringBuilder))
+
     fputs("static void initMemories(void) {\n", file);
 
     {
@@ -3248,12 +3254,10 @@ wasmCWriteInitMemories(
             fputs(", ", file);
             {
                 Buffer code = dataSegment.offset;
-                StringBuilder stringBuilder = emptyStringBuilder;
+                MUST (stringBuilderReset(&stringBuilder))
 
-                MUST (stringBuilderInitialize(&stringBuilder))
                 MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
                 fputs(stringBuilder.string, file);
-                stringBuilderFree(&stringBuilder);
             }
             fputs(", ", file);
             wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
@@ -3262,6 +3266,8 @@ wasmCWriteInitMemories(
     }
 
     fputs("}\n\n", file);
+
+    stringBuilderFree(&stringBuilder);
 
     return true;
 }
@@ -3307,6 +3313,9 @@ wasmCWriteInitTables(
     const WasmModule* module,
     bool pretty
 ) {
+    StringBuilder stringBuilder = emptyStringBuilder;
+    MUST (stringBuilderInitialize(&stringBuilder))
+
     fputs("static void initTables(void) {\n", file);
 
     if (module->elementSegments.count > 0) {
@@ -3342,12 +3351,9 @@ wasmCWriteInitTables(
             fputs("offset = ", file);
             {
                 Buffer code = elementSegment.offset;
-                StringBuilder stringBuilder = emptyStringBuilder;
-
-                MUST (stringBuilderInitialize(&stringBuilder))
+                MUST (stringBuilderReset(&stringBuilder))
                 MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
                 fputs(stringBuilder.string, file);
-                stringBuilderFree(&stringBuilder);
             }
             fputs(";\n", file);
 
@@ -3368,6 +3374,8 @@ wasmCWriteInitTables(
     }
 
     fputs("}\n\n", file);
+
+    stringBuilderFree(&stringBuilder);
 
     return true;
 }
