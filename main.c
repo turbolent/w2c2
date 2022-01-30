@@ -75,12 +75,16 @@ main(
                     dataSegmentMode = wasmDataSegmentModeArrays;
                 } else if (strcmp(optarg, "gnu-ld") == 0) {
                     dataSegmentMode = wasmDataSegmentModeGNULD;
+                } else if (strcmp(optarg, "ns-ld") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeNSLD;
                 } else if (strcmp(optarg, "help") == 0) {
                     fprintf(
                         stderr,
                         "Supported data segment modes are:\n"
                         "arrays    Writes each data segment as a C array\n"
-                        "gnu-ld    All data segments are embedded into a section using GNU LD\n"
+                        "gnu-ld    All data segments are embedded into a data section using GNU LD\n"
+                        "ns-ld     All data segments are embedded into a data section using NS LD "
+                        "(NeXTSTEP, OPENSTEP, Darwin/macOS)\n"
                     );
                     return EXIT_SUCCESS;
                 } else {

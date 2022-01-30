@@ -3194,7 +3194,20 @@ wasmCWriteDataSegmentsAsSection(
     U32 dataSegmentIndex = 0;
     FILE* segmentsFile = NULL;
 
-    fputs("extern char _binary_datasegments_start[];\n\n", file);
+    switch (mode) {
+        case wasmDataSegmentModeGNULD: {
+            fputs("extern char _binary_datasegments_start[];\n\n", file);
+            break;
+        }
+        case wasmDataSegmentModeNSLD: {
+            fputs("extern char datasegments __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            break;
+        }
+        default: {
+            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
+            abort();
+        }
+    }
 
     segmentsFile = fopen("datasegments", "wb");
     if (segmentsFile == NULL) {
@@ -3232,7 +3245,8 @@ wasmCWriteDataSegments(
             wasmCWriteDataSegmentsAsArrays(file, module, pretty);
             break;
         }
-        case wasmDataSegmentModeGNULD: {
+        case wasmDataSegmentModeGNULD:
+        case wasmDataSegmentModeNSLD: {
             wasmCWriteDataSegmentsAsSection(file, module, mode, pretty);
             break;
         }
@@ -3295,6 +3309,10 @@ wasmCWriteInitMemories(
             fputs("static char* ds = _binary_datasegments_start;\n", file);
             break;
         }
+        case wasmDataSegmentModeNSLD: {
+            fputs("static char* ds = &datasegments;\n", file);
+            break;
+        }
         default:
             break;
     }
@@ -3339,7 +3357,8 @@ wasmCWriteInitMemories(
                     wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
                     break;
                 }
-                case wasmDataSegmentModeGNULD: {
+                case wasmDataSegmentModeGNULD:
+                case wasmDataSegmentModeNSLD: {
                     fprintf(file, "ds + %lu", (unsigned long)dataSegmentOffset);
                     break;
                 }
@@ -3639,8 +3658,8 @@ wasmCWriteImplementationFile(
     }
 
     if (parallel) {
-        char filename[2048];
-        sprintf(filename, "%05d.c", fileIndex);
+        char filename[13];
+        sprintf(filename, "%010d.c", fileIndex);
         file = fopen(filename, "w");
         if (file == NULL) {
             fprintf(stderr, "w2c2: failed to open file %s for writing\n", filename);

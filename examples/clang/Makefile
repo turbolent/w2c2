@@ -2,9 +2,17 @@ CFLAGS += -I../..
 LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
-clang: ../../wasi/wasi.o inits.o datasegments.o
+OBJS :=  ../../wasi/wasi.o inits.o
+
+ifeq ($(shell uname -s),Darwin)
+    LDFLAGS += -sectcreate __DATA __datasegments datasegments
+else
+    OBJS += datasegments.o
+endif
+
+clang: $(OBJS)
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) datasegments.o ../../wasi/wasi.o -o clang $(LDFLAGS)
+	$(CC) $(CFLAGS) $(filter-out inits.o, $(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS) -o clang $(LDFLAGS)
 
 datasegments.o: inits.c
 	ld -r -b binary -o datasegments.o datasegments
