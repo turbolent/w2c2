@@ -3,8 +3,10 @@ LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
 OBJS :=  ../../wasi/wasi.o inits.o
+MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
+    MODE = ns-ld
     LDFLAGS += -sectcreate __DATA __datasegments datasegments
 else
     OBJS += datasegments.o
@@ -23,7 +25,7 @@ inits.o: CFLAGS += -O0
 	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
 
 inits.c: clang.wasm
-	$(W2C2) -d gnu-ld -j 12 -o . -f 100 $^
+	$(W2C2) -d $(MODE) -j 12 -o . -f 100 $^
 
 .PHONY: clean
 clean:
