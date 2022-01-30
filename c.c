@@ -3831,6 +3831,8 @@ wasmCWriteModuleParallel(
     }
 
     initsJob.module = module;
+    initsJob.dataSegmentMode = options.dataSegmentMode;
+    initsJob.pretty = options.pretty;
 
     declarationsJob.module = module;
     declarationsJob.pretty = options.pretty;
