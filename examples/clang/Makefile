@@ -7,7 +7,7 @@ MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
     # at least Darwin 11 / Mac OS X 10.7 ?
-    ifeq ($(shell test `uname -r | grep -o "^[0-9]"` -gt 10; echo $$?),0)
+    ifeq ($(shell test `uname -r | egrep -o "^[0-9]+"` -gt 10; echo $$?),0)
     MODE = sectcreate1
     else
     MODE = sectcreate2
