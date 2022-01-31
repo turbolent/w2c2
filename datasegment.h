@@ -16,7 +16,8 @@ static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}};
 typedef enum WasmDataSegmentMode {
     wasmDataSegmentModeArrays,
     wasmDataSegmentModeGNULD,
-    wasmDataSegmentModeNSLD
+    wasmDataSegmentModeSectcreate1,
+    wasmDataSegmentModeSectcreate2
 } WasmDataSegmentMode;
 
 #endif /* W2C2_DATASEGMENT_H */

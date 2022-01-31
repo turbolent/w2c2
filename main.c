@@ -75,16 +75,20 @@ main(
                     dataSegmentMode = wasmDataSegmentModeArrays;
                 } else if (strcmp(optarg, "gnu-ld") == 0) {
                     dataSegmentMode = wasmDataSegmentModeGNULD;
-                } else if (strcmp(optarg, "ns-ld") == 0) {
-                    dataSegmentMode = wasmDataSegmentModeNSLD;
+                } else if (strcmp(optarg, "sectcreate1") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeSectcreate1;
+                } else if (strcmp(optarg, "sectcreate2") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeSectcreate2;
                 } else if (strcmp(optarg, "help") == 0) {
                     fprintf(
                         stderr,
                         "Supported data segment modes are:\n"
-                        "arrays    Writes each data segment as a C array\n"
-                        "gnu-ld    All data segments are embedded into a data section using GNU LD\n"
-                        "ns-ld     All data segments are embedded into a data section using NS LD "
-                        "(NeXTSTEP, OPENSTEP, Darwin/macOS)\n"
+                        "arrays         Writes each data segment as a C array\n"
+                        "gnu-ld         All data segments are embedded into a data section using GNU LD\n"
+                        "sectcreate1    All data segments are embedded into a data section using sectcreate\n"
+                        "               and accessed using asm (modern Mach-O LD)\n"
+                        "sectcreate2    All data segments are embedded into a data section using sectcreate\n"
+                        "               and accessed using Mach-O getsectdata (older Mach-O LD)\n"
                     );
                     return EXIT_SUCCESS;
                 } else {

@@ -3199,8 +3199,12 @@ wasmCWriteDataSegmentsAsSection(
             fputs("extern char _binary_datasegments_start[];\n\n", file);
             break;
         }
-        case wasmDataSegmentModeNSLD: {
+        case wasmDataSegmentModeSectcreate1: {
             fputs("extern char datasegments __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            break;
+        }
+        case wasmDataSegmentModeSectcreate2: {
+            fputs("#include <mach-o/getsect.h>\n\n", file);
             break;
         }
         default: {
@@ -3246,7 +3250,8 @@ wasmCWriteDataSegments(
             break;
         }
         case wasmDataSegmentModeGNULD:
-        case wasmDataSegmentModeNSLD: {
+        case wasmDataSegmentModeSectcreate1:
+        case wasmDataSegmentModeSectcreate2: {
             wasmCWriteDataSegmentsAsSection(file, module, mode, pretty);
             break;
         }
@@ -3309,8 +3314,16 @@ wasmCWriteInitMemories(
             fputs("static char* ds = _binary_datasegments_start;\n", file);
             break;
         }
-        case wasmDataSegmentModeNSLD: {
+        case wasmDataSegmentModeSectcreate1: {
             fputs("static char* ds = &datasegments;\n", file);
+            break;
+        }
+        case wasmDataSegmentModeSectcreate2: {
+            fputs(
+                "unsigned long len = 0;\n"
+                "char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
+                file
+            );
             break;
         }
         default:
@@ -3358,7 +3371,8 @@ wasmCWriteInitMemories(
                     break;
                 }
                 case wasmDataSegmentModeGNULD:
-                case wasmDataSegmentModeNSLD: {
+                case wasmDataSegmentModeSectcreate1:
+                case wasmDataSegmentModeSectcreate2: {
                     fprintf(file, "ds + %lu", (unsigned long)dataSegmentOffset);
                     break;
                 }

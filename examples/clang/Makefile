@@ -6,7 +6,12 @@ OBJS :=  ../../wasi/wasi.o inits.o
 MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
-    MODE = ns-ld
+    # at least Darwin 11 / Mac OS X 10.7 ?
+    ifeq ($(shell test `uname -r | grep -o "^[0-9]"` -gt 10; echo $$?),0)
+    MODE = sectcreate1
+    else
+    MODE = sectcreate2
+    endif
     LDFLAGS += -sectcreate __DATA __datasegments datasegments
 else
     OBJS += datasegments.o
