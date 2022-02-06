@@ -87,13 +87,25 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorsAdd(
     WasiFileDescriptors* descriptors,
-    int fd
+    int fd,
+    char* path
 ) {
-    WasiFileDescriptor fileDescriptor = {-1, NULL};
-    fileDescriptor.fd = fd;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    descriptor.fd = fd;
+    if (path != NULL) {
+        char* pathCopy = NULL;
+        size_t length = strlen(path);
+        MUST (length > 0 && length < PATH_MAX)
+        pathCopy = malloc(length + 1);
+        MUST (pathCopy != NULL)
+        memcpy(pathCopy, path, length);
+        pathCopy[length] = '\0';
+        path = pathCopy;
+    }
+    descriptor.path = path;
     descriptors->length++;
     MUST (wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length))
-    descriptors->fds[descriptors->length - 1] = fileDescriptor;
+    descriptors->fds[descriptors->length - 1] = descriptor;
     return true;
 }
 
@@ -101,9 +113,10 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
     int nativeFD,
-    U32* wasiFD
+    U32* wasiFD,
+    char* path
 ) {
-    MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD))
+    MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path))
     if (wasiFD != NULL) {
         *wasiFD = wasi.fds.length - 1;
     }
@@ -125,17 +138,13 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorGet(
     U32 wasiFD,
-    int* nativeFD,
-    DIR** nativeDir
+    WasiFileDescriptor* result
 ) {
-    int result = -1;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     MUST (wasiFD < wasi.fds.length)
-    result = wasi.fds.fds[wasiFD].fd;
-    MUST (result >= 0)
-    *nativeFD = result;
-    if (nativeDir != NULL) {
-        *nativeDir = wasi.fds.fds[wasiFD].dir;
-    }
+    descriptor = wasi.fds.fds[wasiFD];
+    MUST (descriptor.fd >= 0)
+    *result = descriptor;
     return true;
 }
 
@@ -156,15 +165,17 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorClose(
     U32 wasiFD
 ) {
-    int nativeFD = -1;
-    DIR* nativeDir = NULL;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    MUST (wasiFileDescriptorGet(wasiFD, &descriptor))
 
-    MUST (wasiFileDescriptorGet(wasiFD, &nativeFD, &nativeDir))
-
-    if (nativeDir != NULL) {
-        MUST (closedir(nativeDir) == 0)
+    if (descriptor.dir != NULL) {
+        MUST (closedir(descriptor.dir) == 0)
     } else {
-        MUST (close(nativeFD) == 0)
+        MUST (close(descriptor.fd) == 0)
+    }
+
+    if (descriptor.path != NULL) {
+        free(descriptor.path);
     }
 
     MUST (wasiFileDescriptorSet(wasiFD, -1))
@@ -237,7 +248,7 @@ wasiPreopenAdd(
     if (preopen.fd < 0) {
         return true;
     }
-    return wasiFileDescriptorAdd(preopen.fd, wasiFD);
+    return wasiFileDescriptorAdd(preopen.fd, wasiFD, preopen.path);
 }
 
 bool
@@ -271,9 +282,9 @@ wasiInit(
     wasi.argc = argc;
     wasi.argv = argv;
 
-    MUST (wasiFileDescriptorAdd(STDIN_FILENO, NULL))
-    MUST (wasiFileDescriptorAdd(STDOUT_FILENO, NULL))
-    MUST (wasiFileDescriptorAdd(STDERR_FILENO, NULL))
+    MUST (wasiFileDescriptorAdd(STDIN_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAdd(STDOUT_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAdd(STDERR_FILENO, NULL, NULL))
 
     {
         short preopenIndex = 0;
@@ -414,7 +425,7 @@ wasiFdWrite(
 ) {
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
-    int nativeFD = -1;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
     U8* temporaryBuffer = NULL;
 #endif
@@ -426,7 +437,7 @@ wasiFdWrite(
        ));
     }
 
-    if (!wasiFileDescriptorGet(wasiFD, &nativeFD, NULL)) {
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_write: bad FD"));
         return wasiErrnoBadf;
     }
@@ -503,7 +514,7 @@ wasiFdWrite(
 #endif
 
     /* Perform the writes */
-    total = writev(nativeFD, iovecs, ciovecsCount);
+    total = writev(descriptor.fd, iovecs, ciovecsCount);
 
     free(iovecs);
 
@@ -542,14 +553,14 @@ wasiFdRead(
 ) {
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
-    int nativeFD = -1;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
         "fd_[p]read(wasiFD=%d, iovecsPointer=%d, iovecsCount=%d, resultPointer=%d, offset=%lld)",
         wasiFD, iovecsPointer, iovecsCount, resultPointer, offset
     ));
 
-    if (!wasiFileDescriptorGet(wasiFD, &nativeFD, NULL)) {
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_[p]read: bad FD"));
         return wasiErrnoBadf;
     }
@@ -581,7 +592,7 @@ wasiFdRead(
     }
 
     /* Perform the reads */
-    total = readFunc(nativeFD, iovecs, iovecsCount, offset);
+    total = readFunc(descriptor.fd, iovecs, iovecsCount, offset);
 
     if (total < 0) {
         free(iovecs);
@@ -819,15 +830,15 @@ wasiFdSeek(
     int nativeWhence,
     U32 resultPointer
 ) {
-    int nativeFD = -1;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     off_t result = 0;
 
-    if (!wasiFileDescriptorGet(wasiFD, &nativeFD, NULL)) {
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_seek: bad FD"));
         return wasiErrnoBadf;
     }
 
-    result = lseek(nativeFD, (off_t)offset, nativeWhence);
+    result = lseek(descriptor.fd, (off_t)offset, nativeWhence);
     if (result == (off_t)-1) {
         WASI_TRACE(("fd_seek: lseek failed: %s", strerror(errno)));
         return wasiErrno();
@@ -969,8 +980,7 @@ wasiFdReaddir(
     U64 cookie,
     U32 bufferUsedPointer
 ) {
-    int nativeFD = -1;
-    DIR* nativeDir = NULL;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     char* name = NULL;
     struct dirent* entry;
     size_t nameLength = 0;
@@ -985,50 +995,37 @@ wasiFdReaddir(
         wasiDirFD, bufferPointer, bufferLength, cookie, bufferUsedPointer
     ));
 
-    if (!wasiFileDescriptorGet(wasiDirFD, &nativeFD, &nativeDir)) {
+    if (!wasiFileDescriptorGet(wasiDirFD, &descriptor)) {
         WASI_TRACE(("fd_readdir: bad FD"));
         return wasiErrnoBadf;
     }
 
-    if (nativeDir == NULL) {
+    if (descriptor.dir == NULL) {
 
         if (cookie != 0) {
             WASI_TRACE(("fd_readdir: invalid cookie at start of readdir: %d", cookie));
             return wasiErrnoBadf;
         }
 
-#if defined(F_GETPATH)
-#include <sys/syslimits.h>
-#include <fcntl.h>
-
-        char dirPath[PATH_MAX];
-        if (fcntl(nativeFD, F_GETPATH, dirPath) == -1) {
-            WASI_TRACE(("fd_readdir: fcntl failed: %s", strerror(errno)));
-            return wasiErrno();
-        }
-
-        nativeDir = opendir(dirPath);
-#else
-        nativeDir = fdopendir(nativeFD);
-#endif
-        if (nativeDir == NULL) {
+        descriptor.dir = opendir(descriptor.path);
+        if (descriptor.dir == NULL) {
             WASI_TRACE(("fd_readdir: fdopendir failed: %s", strerror(errno)));
             return wasiErrno();
         }
 
-        if (!wasiDirectorySet(wasiDirFD, nativeDir)) {
+        if (!wasiDirectorySet(wasiDirFD, descriptor.dir)) {
             WASI_TRACE(("fd_readdir: setting DIR failed"));
             return wasiErrnoBadf;
         }
     } else {
-        long current = telldir(nativeDir);
+        long current = telldir(descriptor.dir);
         if (current < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
         }
 
         if (current != cookie) {
-            seekdir(nativeDir, cookie);
+            seekdir(descriptor.dir, cookie);
         }
     }
 
@@ -1039,7 +1036,7 @@ wasiFdReaddir(
         WASI_TRACE(("fd_readdir: bufferRemaining=%d", bufferRemaining));
 
         errno = 0;
-        entry = readdir(nativeDir);
+        entry = readdir(descriptor.dir);
         if (entry == NULL) {
             if (errno != 0) {
                 WASI_TRACE(("fd_readdir: readdir failed: %s", strerror(errno)));
@@ -1049,7 +1046,7 @@ wasiFdReaddir(
             break;
         }
 
-        next = telldir(nativeDir);
+        next = telldir(descriptor.dir);
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
@@ -1444,27 +1441,27 @@ wasiFdFdstatGet(
     U16 wasiFlags = 0;
     struct stat stat;
     int nativeFlags = 0;
-    int nativeFD = 0;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
         "fd_fdstat_get(wasiFD=%d, resultPointer=%d)",
         wasiFD, resultPointer
     ));
 
-    if (!wasiFileDescriptorGet(wasiFD, &nativeFD, NULL)) {
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_fdstat_get: bad FD"));
         return wasiErrnoBadf;
     }
 
     /* Get fileType */
-    if (fstat(nativeFD, &stat) != 0) {
+    if (fstat(descriptor.fd, &stat) != 0) {
         WASI_TRACE(("fd_fdstat_get: fstat failed: %s", strerror(errno)));
         return wasiErrno();
     }
     fileType = wasiFileTypeFromMode(stat.st_mode);
 
     /* Get flags */
-    nativeFlags = fcntl(nativeFD, F_GETFL);
+    nativeFlags = fcntl(descriptor.fd, F_GETFL);
     if (nativeFlags < 0) {
         WASI_TRACE(("fd_fdstat_get: fcntl failed: %s", strerror(errno)));
         return wasiErrno();
@@ -1724,7 +1721,7 @@ wasiPathOpen(
     WASI_TRACE(("path_open: nativeFD=%d", nativeFD));
 
     /* Register the WASI file descriptor */
-    if (!wasiFileDescriptorAdd(nativeFD, &wasiFD)) {
+    if (!wasiFileDescriptorAdd(nativeFD, &wasiFD, resolvedPath)) {
         WASI_TRACE(("path_open: adding FD failed"));
         return wasiErrnoBadf;
     }
@@ -1837,13 +1834,13 @@ wasiFdFilestatGet(
     U32 wasiFD,
     struct stat* st
 ) {
-    int nativeFD = -1;
-    if (!wasiFileDescriptorGet(wasiFD, &nativeFD, NULL)) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_filestat_get: bad FD"));
         return wasiErrnoBadf;
     }
 
-    if (fstat(nativeFD, st) != 0) {
+    if (fstat(descriptor.fd, st) != 0) {
         WASI_TRACE(("fd_filestat_get: fstat failed: %s", strerror(errno)));
         return wasiErrno();
     }

@@ -8,7 +8,10 @@
 typedef struct WasiFileDescriptor {
     int fd;
     DIR* dir;
+    char* path;
 } WasiFileDescriptor;
+
+static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
 
 typedef struct WasiFileDescriptors {
     WasiFileDescriptor* fds;
@@ -50,7 +53,8 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
     int nativeFD,
-    U32* wasiFD
+    U32* wasiFD,
+    char* path
 );
 
 bool
@@ -64,8 +68,7 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorGet(
     U32 wasiFD,
-    int* nativeFD,
-    DIR** nativeDir
+    WasiFileDescriptor* result
 );
 
 bool
