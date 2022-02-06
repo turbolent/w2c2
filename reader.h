@@ -18,6 +18,7 @@ typedef enum {
     wasmModuleReaderInvalidSectionID,
     wasmModuleReaderInvalidSectionSize,
     wasmModuleReaderIncorrectSectionRead,
+    wasmModuleReaderInvalidCustomSectionName,
     wasmModuleReaderInvalidTypeSectionTypeCount,
     wasmModuleReaderInvalidFunctionTypeIndicator,
     wasmModuleReaderInvalidFunctionTypeParameterCount,
