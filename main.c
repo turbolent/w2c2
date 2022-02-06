@@ -1,10 +1,9 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <ctype.h>
-#ifdef _WIN32
-  #include "getopt_impl.h"
-#else 
+#ifdef HAS_GETOPT
   #include <getopt.h>
+#else
+  #include "getopt_impl.h"
 #endif
 
 #include "buffer.h"

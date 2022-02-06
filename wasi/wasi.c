@@ -1161,8 +1161,13 @@ I64
 convertTimespec(
     struct timespec t
 ) {
+#ifdef _NEXT_SOURCE
+    return t.ts_sec * NSEC_PER_SEC
+           + t.ts_nsec;
+#else
     return t.tv_sec * NSEC_PER_SEC
            + t.tv_nsec;
+#endif
 }
 
 static
@@ -1474,9 +1479,11 @@ wasiFdFdstatGet(
     if (nativeFlags & O_NONBLOCK) {
         wasiFlags |= wasiFdflagsNonblock;
     }
+#ifdef O_SYNC
     if (nativeFlags & O_SYNC) {
         wasiFlags |= wasiFdflagsRsync | wasiFdflagsSync;
     }
+#endif
 
     /* Store result */
     memset(
@@ -1688,9 +1695,11 @@ wasiPathOpen(
     if (fdFlags & wasiFdflagsNonblock) {
         nativeFlags |= O_NONBLOCK;
     }
+#ifdef O_SYNC
     if (fdFlags & wasiFdflagsSync) {
         nativeFlags |= O_SYNC;
     }
+#endif
     /* wasiFdflagsRsync is ignored, as O_RSYNC is often not implemented */
 
     /* Convert WASI fsRightsBase to native flags */
@@ -1770,6 +1779,13 @@ getStatTimes(
     modification->tv_nsec = stat->st_mtim.tv_nsec;
     creation->tv_sec = stat->st_ctim.tv_sec;
     creation->tv_nsec = stat->st_ctim.tv_nsec;
+#elif defined(_NEXT_SOURCE)
+    access->ts_sec = stat->st_atime;
+    access->ts_nsec = 0;
+    modification->ts_sec = stat->st_mtime;
+    modification->ts_nsec = 0;
+    creation->ts_sec = stat->st_ctime;
+    creation->ts_nsec = 0;
 #else
     access->tv_sec = stat->st_atime;
     access->tv_nsec = 0;

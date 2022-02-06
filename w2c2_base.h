@@ -113,13 +113,17 @@ typedef double F64;
 #define swap64(x) (x)
 #endif
 
-#ifdef __GNUC__
+#define GCC_VERSION (__GNUC__ * 10000 \
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
+
+#if defined(__GNUC__) && GCC_VERSION >= 30406
 #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
 #define WARN_UNUSED_RESULT
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && GCC_VERSION >= 20905
 #define NORETURN __attribute__((noreturn))
 #else
 #define NORETURN
@@ -184,7 +188,7 @@ trapDescription(
     }
 }
 
-extern NORETURN void trap(Trap);
+extern void trap(Trap) NORETURN;
 
 #define TRAP(x) (trap(x), 0)
 

@@ -2,6 +2,7 @@
 #define W2C2_WASI_H
 
 #include "../w2c2_base.h"
+#include <sys/types.h>
 #include <dirent.h>
 
 typedef struct WasiFileDescriptor {

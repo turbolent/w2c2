@@ -27,11 +27,13 @@ endif
 ifeq ($(UNAME),WASI)
 	OUTPUT  := w2c2.wasm
 endif
+ifeq ($(UNAME),Linux)
+	LDFLAGS += -lm
+endif
 
 ifndef OUTPUT
 	OUTPUT  := w2c2
-	CFLAGS  += -pthread -DHAS_PTHREAD
-	LDFLAGS += -lm
+	CFLAGS  += -pthread -DHAS_PTHREAD -DHAS_GETOPT
 endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))
