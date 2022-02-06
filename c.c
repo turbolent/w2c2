@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <math.h>
-#define HAS_PTHREAD 1
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif
