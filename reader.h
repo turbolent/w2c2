@@ -10,6 +10,8 @@ typedef struct {
     WasmModule* module;
 } WasmModuleReader;
 
+static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL};
+
 typedef enum {
     wasmModuleReaderInvalidMagic,
     wasmModuleReaderAllocationFailed,

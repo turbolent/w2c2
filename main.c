@@ -45,13 +45,14 @@ main(
     char* outputPath = NULL;
     U32 functionsPerFile = 10;
     bool pretty = false;
+    WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
 
-    int index;
-    int c;
+    int index = 0;
+    int c = -1;
 
     opterr = 0;
 
-    while ((c = getopt(argc, argv, "j:o:f:ph")) != -1) {
+    while ((c = getopt(argc, argv, "j:o:f:d:ph")) != -1) {
         switch (c) {
             case 'j': {
                 jobCount = strtoul(optarg, NULL, 0);
@@ -69,15 +70,47 @@ main(
                 pretty = true;
                 break;
             }
+            case 'd': {
+                if (strcmp(optarg, "arrays") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeArrays;
+                } else if (strcmp(optarg, "gnu-ld") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeGNULD;
+                } else if (strcmp(optarg, "sectcreate1") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeSectcreate1;
+                } else if (strcmp(optarg, "sectcreate2") == 0) {
+                    dataSegmentMode = wasmDataSegmentModeSectcreate2;
+                } else if (strcmp(optarg, "help") == 0) {
+                    fprintf(
+                        stderr,
+                        "Supported data segment modes are:\n"
+                        "arrays         Writes each data segment as a C array\n"
+                        "gnu-ld         All data segments are embedded into a data section using GNU LD\n"
+                        "sectcreate1    All data segments are embedded into a data section using sectcreate\n"
+                        "               and accessed using asm (modern Mach-O LD)\n"
+                        "sectcreate2    All data segments are embedded into a data section using sectcreate\n"
+                        "               and accessed using Mach-O getsectdata (older Mach-O LD)\n"
+                    );
+                    return EXIT_SUCCESS;
+                } else {
+                    fprintf(
+                        stderr,
+                        "w2c2: unsupported data segment mode '%s'. Use 'help' to print available modes\n",
+                        optarg
+                    );
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
             case 'h': {
                 fprintf(
                     stderr,
                     "usage: w2c2 [options] filename\n\n"
                     "options:\n"
                     "  -h         Print this help message\n"
-                    "  -j         Number of jobCount (>1 enables parallel compilation and requires -o)\n"
-                    "  -f         Number of functions per file when parallel compilation is enabled\n"
-                    "  -o PATH    Path for the output file(s), by default use stdout. Required for parallel compilation\n"
+                    "  -j N       Number of jobCount (>1 enables parallel compilation and requires -o)\n"
+                    "  -f N       Number of functions per file when parallel compilation is enabled\n"
+                    "  -o PATH    Path for the output file(s). Default: use stdout. Required for parallel compilation\n"
+                    "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n"
                     "  -p         Generate pretty code\n"
                 );
                 return 0;
@@ -126,16 +159,24 @@ main(
     modulePath = argv[index];
 
     {
-        WasmModuleReader wasmModuleReader;
-        if (!readWasmBinary(modulePath, &wasmModuleReader)) {
+        WasmModuleReader reader = emptyWasmModuleReader;
+        WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
+
+        if (!readWasmBinary(modulePath, &reader)) {
             return 1;
         }
 
         if (jobCount == 1) {
-            functionsPerFile = wasmModuleReader.module->functions.count;
+            functionsPerFile = reader.module->functions.count;
         }
 
-        if (!wasmCWriteModule(outputPath, wasmModuleReader.module, jobCount, functionsPerFile, pretty)) {
+        writeOptions.outputPath = outputPath;
+        writeOptions.jobCount = jobCount;
+        writeOptions.functionsPerFile = functionsPerFile;
+        writeOptions.pretty = pretty;
+        writeOptions.dataSegmentMode = dataSegmentMode;
+
+        if (!wasmCWriteModule(reader.module, writeOptions)) {
             fprintf(stderr, "w2c2: failed to compile\n");
             return 1;
         }

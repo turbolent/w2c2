@@ -18,6 +18,12 @@ stringBuilderInitialize(
     StringBuilder* stringBuilder
 );
 
+bool
+WARN_UNUSED_RESULT
+stringBuilderReset(
+    StringBuilder* stringBuilder
+);
+
 void
 stringBuilderFree(
     StringBuilder* stringBuilder
