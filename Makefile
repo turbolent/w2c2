@@ -5,7 +5,7 @@ ifeq ($(OS),Windows_NT)
 endif
 ifdef WASI_CC
 	UNAME := WASI
-	CC    := $(WASI_CC)
+	CC := $(WASI_CC)
 endif
 ifndef UNAME
 	UNAME := $(shell uname -s)
@@ -20,20 +20,35 @@ endif
 CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 ifeq ($(UNAME),Windows)
-	OUTPUT  := w2c2.exe
-	CC      := clang
-	CFLAGS  += -D_CRT_SECURE_NO_WARNINGS
+	OUTPUT := w2c2.exe
+	CC := clang
+	CFLAGS += -D_CRT_SECURE_NO_WARNINGS
 endif
 ifeq ($(UNAME),WASI)
-	OUTPUT  := w2c2.wasm
+	OUTPUT := w2c2.wasm
 endif
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
+	ifneq (,$(findstring threads,$(FEATURES)))
+	CFLAGS += -pthread
+	endif
+endif
+
+ifneq (,$(findstring threads,$(FEATURES)))
+	CFLAGS += -DHAS_PTHREAD
+endif
+
+ifneq (,$(findstring getopt,$(FEATURES)))
+	CFLAGS += -DHAS_GETOPT
+endif
+
+ifneq (,$(findstring debugging,$(FEATURES)))
+	CFLAGS += -DHAS_LIBDWARF
+	LDFLAGS += -ldwarf
 endif
 
 ifndef OUTPUT
-	OUTPUT  := w2c2
-	CFLAGS  += -pthread -DHAS_PTHREAD -DHAS_GETOPT
+	OUTPUT := w2c2
 endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))

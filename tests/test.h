@@ -1,5 +1,5 @@
 #include "w2c2_base.h"
-    
+
 extern U32 *g_spectest_globalX5Fi32;
 extern U64 *g_spectest_globalX5Fi64;
 extern void (*f_spectest_print)(void);

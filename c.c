@@ -523,6 +523,8 @@ typedef struct WasmCFunctionWriter {
     U32 indent;
     bool ignore;
     bool pretty;
+    bool debug;
+    WasmDebugLines* debugLines;
 } WasmCFunctionWriter;
 
 static
@@ -532,17 +534,15 @@ WARN_UNUSED_RESULT
 wasmCWriteIndent(
     WasmCFunctionWriter* writer
 ) {
-    if (!writer->pretty) {
-        return true;
-    } else {
+    if (writer->pretty) {
         StringBuilder* builder = writer->builder;
         U32 indent = writer->indent;
         U32 index = 0;
         for (; index <= indent; index++) {
             MUST (stringBuilderAppend(builder, indentation))
         }
-        return true;
     }
+    return true;
 }
 
 static
@@ -2157,11 +2157,73 @@ wasmCWriteBranchTableExpr(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteDebugLine(
+    StringBuilder* builder,
+    WasmDebugLine* debugLine
+
+) {
+    MUST (stringBuilderAppend(builder, "#line "))
+    MUST (stringBuilderAppendI64(builder, debugLine->number))
+    MUST (stringBuilderAppend(builder, " \""))
+    MUST (stringBuilderAppend(builder, debugLine->path))
+    MUST (stringBuilderAppend(builder, "\"\n"))
+    return true;
+}
+
+
+static
+WasmDebugLine*
+wasmCGetDebugLine(
+    WasmDebugLines* debugLines,
+    size_t absoluteAddress
+) {
+    WasmDebugLine* debugLine = NULL;
+    if (debugLines->length == 0) {
+        return NULL;
+    }
+
+    debugLine = debugLines->debugLines;
+
+    if (debugLines->length > 1) {
+        WasmDebugLine* nextDebugLine = debugLine + 1;
+        if (absoluteAddress >= nextDebugLine->address) {
+            debugLines->length--;
+            debugLines->debugLines++;
+            debugLine = debugLines->debugLines;
+        }
+    }
+
+    if (absoluteAddress < debugLine->address) {
+       return NULL;
+    }
+
+    return debugLine;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionCode(
     WasmCFunctionWriter* writer,
     WasmOpcode* opcode
 ) {
-    while (wasmOpcodeRead(writer->code, opcode)) {
+    while (true) {
+        if (writer->debug) {
+            size_t relativeAddress = writer->function.code.length - writer->code->length;
+            size_t absoluteAddress = writer->function.start + relativeAddress;
+            WasmDebugLine* debugLine = wasmCGetDebugLine(
+                writer->debugLines,
+                absoluteAddress
+            );
+            if (debugLine != NULL) {
+                MUST (wasmCWriteDebugLine(writer->builder, debugLine))
+            }
+        }
+
+        if (!wasmOpcodeRead(writer->code, opcode)) {
+            break;
+        }
+
         switch (*opcode) {
             case wasmOpcodeNop:
                 break;
@@ -2753,7 +2815,9 @@ wasmCWriteFunctionBody(
     WasmLabelStack* labelStack,
     const WasmModule* module,
     const WasmFunction function,
-    bool pretty
+    WasmDebugLines* debugLines,
+    bool pretty,
+    bool debug
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -2789,6 +2853,8 @@ wasmCWriteFunctionBody(
         writer.indent = 0;
         writer.ignore = false;
         writer.pretty = pretty;
+        writer.debug = debug;
+        writer.debugLines = debugLines;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
         MUST (wasmCWriteFunctionCode(&writer, &opcode))
@@ -2881,9 +2947,11 @@ WARN_UNUSED_RESULT
 wasmCWriteFunctionImplementations(
     FILE* file,
     const WasmModule* module,
+    WasmDebugLines* debugLines,
     U32 startIndex,
     U32 endIndex,
-    bool pretty
+    bool pretty,
+    bool debug
 ) {
     U32 functionImportCount = module->functionImports.length;
 
@@ -2899,9 +2967,33 @@ wasmCWriteFunctionImplementations(
         wasmTypeStackClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
 
-        wasmCWriteFileFunctionSignature(file, module, function, functionImportCount + functionIndex, true, pretty);
+        if (debug) {
+            WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
+            if (debugLine != NULL) {
+                fprintf(file, "#line %llu \"%s\"\n", debugLine->number, debugLine->path);
+            }
+        }
+
+        wasmCWriteFileFunctionSignature(
+            file,
+            module,
+            function,
+            functionImportCount + functionIndex,
+            true,
+            pretty
+        );
         fputc(' ', file);
-        MUST (wasmCWriteFunctionBody(file, &typeStack, &stackDeclarations, &labelStack, module, function, pretty))
+        MUST (wasmCWriteFunctionBody(
+            file,
+            &typeStack,
+            &stackDeclarations,
+            &labelStack,
+            module,
+            function,
+            debugLines,
+            pretty,
+            debug
+        ))
         fputs("\n", file);
     }
 
@@ -3649,23 +3741,25 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteImplementationFile(
     const WasmModule* module,
+    WasmDebugLines* debugLines,
     U32 fileIndex,
     U32 functionsPerFile,
     FILE* singleFile,
     U32 startFunctionIndex,
-    bool pretty
+    bool pretty,
+    bool debug
 ) {
     U32 functionCount = module->functions.count;
     bool parallel = singleFile == NULL;
     FILE* file = singleFile;
 
-    U32 endIndex = startFunctionIndex + functionsPerFile;
-    if (endIndex > functionCount) {
-        endIndex = functionCount;
+    U32 endFunctionIndex = startFunctionIndex + functionsPerFile;
+    if (endFunctionIndex > functionCount) {
+        endFunctionIndex = functionCount;
     }
 
     /* Do not create empty files */
-    if (startFunctionIndex > endIndex) {
+    if (startFunctionIndex > endFunctionIndex) {
         return true;
     }
 
@@ -3685,9 +3779,11 @@ wasmCWriteImplementationFile(
         MUST (wasmCWriteFunctionImplementations(
             file,
             module,
+            debugLines,
             startFunctionIndex,
-            endIndex,
-            pretty
+            endFunctionIndex,
+            pretty,
+            debug
         ))
     }
 
@@ -3728,7 +3824,9 @@ typedef struct WasmCImplementationWriterJob {
     U32 functionCountPerJob;
     U32 functionsPerFile;
     const WasmModule* module;
+    WasmDebugLines debugLines;
     bool pretty;
+    bool debug;
     bool result;
 } WasmCImplementationWriterJob;
 
@@ -3743,7 +3841,9 @@ wasmCImplementationWriterThread(
     U32 functionCountPerJob = job->functionCountPerJob;
     U32 functionsPerFile = job->functionsPerFile;
     const WasmModule* module = job->module;
+    WasmDebugLines* debugLines = &job->debugLines;
     bool pretty = job->pretty;
+    bool debug = job->debug;
 
     U32 startFunctionIndex = jobIndex * functionCountPerJob;
     U32 maxFunctionIndex = startFunctionIndex + functionCountPerJob;
@@ -3755,11 +3855,13 @@ wasmCImplementationWriterThread(
     ) {
         bool result = wasmCWriteImplementationFile(
             module,
+            debugLines,
             fileIndex,
             functionsPerFile,
             NULL,
             startFunctionIndex,
-            pretty
+            pretty,
+            debug
         );
         if (!result) {
             fprintf(
@@ -3880,7 +3982,9 @@ wasmCWriteModuleParallel(
             job.functionCountPerJob = functionCountPerJob;
             job.functionsPerFile = options.functionsPerFile;
             job.module = module;
+            job.debugLines = module->debugLines;
             job.pretty = options.pretty;
+            job.debug = options.debug;
             job.result = false;
             implementationJobs[jobIndex] = job;
 
@@ -3972,6 +4076,7 @@ wasmCWriteModule(
     WasmCWriteModuleOptions options
 ) {
     FILE *singleFile = NULL;
+    WasmDebugLines debugLines = module->debugLines;
 
 #if HAS_PTHREAD
     if (options.jobCount > 1) {
@@ -4001,11 +4106,13 @@ wasmCWriteModule(
 
     MUST (wasmCWriteImplementationFile(
         module,
+        &debugLines,
         0,
         options.functionsPerFile,
         singleFile,
         0,
-        options.pretty
+        options.pretty,
+        options.debug
     ))
 
     /* Write initializations code */

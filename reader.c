@@ -8,6 +8,7 @@
 #include "datasegment.h"
 #include "table.h"
 #include "elementsegment.h"
+#include "debug.h"
 
 static const U8 wasmMagic[] = {
     0x00, 0x61, 0x73, 0x6D,
@@ -31,6 +32,8 @@ wasmModuleReaderErrorMessage(
             return "invalid section read";
         case wasmModuleReaderInvalidCustomSectionName:
             return "invalid custom section name";
+        case wasmModuleReaderDebugSectionAppendFailed:
+            return "failed to append debug section";
         case wasmModuleReaderInvalidTypeSectionTypeCount:
             return "invalid type section type count";
         case wasmModuleReaderInvalidFunctionTypeIndicator:
@@ -287,6 +290,8 @@ typedef void (* WasmSectionReader)(
     WasmModuleReaderError** error
 );
 
+static const char* wasmDebugSectionNamePrefix = ".debug_";
+
 static
 void
 wasmReadCustomSection(
@@ -297,7 +302,6 @@ wasmReadCustomSection(
     char* name = NULL;
     U8* start = reader->buffer.data;
     U8* end = NULL;
-    U32 remaining = 0;
 
     /* Read name */
     if (!wasmReadName(&reader->buffer, &name)) {
@@ -310,12 +314,26 @@ wasmReadCustomSection(
 
     end = reader->buffer.data;
 
-    remaining = sectionSize - (end - start);
+    sectionSize -= end - start;
 
-    bufferSkip(&reader->buffer, remaining);
+    if (strncmp(name, wasmDebugSectionNamePrefix, strlen(wasmDebugSectionNamePrefix)) == 0) {
+        WasmDebugSection section;
+        section.name = name;
+        section.buffer.data = reader->buffer.data;
+        section.buffer.length = sectionSize;
 
-    fprintf(stderr, "w2c2: skipping custom section '%s' (size %d)\n", name, remaining);
+        if (!wasmDebugSectionsAppend(&reader->module->debugSections, section)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderDebugSectionAppendFailed
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+    } else {
+        fprintf(stderr, "w2c2: skipping custom section '%s' (size %d)\n", name, sectionSize);
+    }
 
+    bufferSkip(&reader->buffer, sectionSize);
     *error = NULL;
 }
 
@@ -1129,6 +1147,8 @@ wasmReadCodeSection(
     U32 functionCount = 0;
     U32 functionIndex = 0;
 
+    size_t codeStart = reader->module->length - reader->buffer.length;
+
     /* Read function count */
     if (leb128ReadU32(&reader->buffer, &functionCount) == 0) {
         static WasmModuleReaderError wasmModuleReaderError = {
@@ -1182,6 +1202,7 @@ wasmReadCodeSection(
                 return;
             }
 
+            function->start = reader->module->length - reader->buffer.length - codeStart;
             function->code.data = reader->buffer.data;
             codeSize -= reader->buffer.data - localsDeclarationsOffset;
             function->code.length = codeSize;
@@ -1549,7 +1570,7 @@ wasmModuleReadSection(
         return;
     }
 
-    sectionID = (WasmSectionID) (rawSectionID);
+    sectionID = (WasmSectionID) rawSectionID;
 
     /* Read section size */
     if (leb128ReadU32(&reader->buffer, &sectionSize) == 0) {
@@ -1600,9 +1621,12 @@ wasmModuleReadSection(
 void
 wasmModuleRead(
     WasmModuleReader* reader,
+    bool debug,
     WasmModuleReaderError** error
 ) {
     WasmModule* module = NULL;
+
+    size_t length = reader->buffer.length;
 
     wasmModuleReadMagic(reader, error);
     if (*error != NULL) {
@@ -1617,11 +1641,12 @@ wasmModuleRead(
         *error = &wasmModuleReaderError;
         return;
     }
+    module->length = length;
     reader->module = module;
 
     while (true) {
         if (bufferAtEnd(&reader->buffer)) {
-            return;
+            break;
         }
 
         wasmModuleReadSection(reader, error);
@@ -1630,5 +1655,9 @@ wasmModuleRead(
         }
 
         *error = NULL;
+    }
+
+    if (debug && module->debugSections.count > 0) {
+        module->debugLines = wasmParseDebugInfo(module->debugSections);
     }
 }

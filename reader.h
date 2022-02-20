@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "module.h"
 
-typedef struct {
+typedef struct WasmModuleReader {
     Buffer buffer;
     WasmModule* module;
 } WasmModuleReader;
@@ -19,6 +19,7 @@ typedef enum {
     wasmModuleReaderInvalidSectionSize,
     wasmModuleReaderIncorrectSectionRead,
     wasmModuleReaderInvalidCustomSectionName,
+    wasmModuleReaderDebugSectionAppendFailed,
     wasmModuleReaderInvalidTypeSectionTypeCount,
     wasmModuleReaderInvalidFunctionTypeIndicator,
     wasmModuleReaderInvalidFunctionTypeParameterCount,
@@ -71,6 +72,7 @@ wasmModuleReaderErrorMessage(
 void
 wasmModuleRead(
     WasmModuleReader* reader,
+    bool debug,
     WasmModuleReaderError** error
 );
 
