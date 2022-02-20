@@ -15,17 +15,19 @@ static
 bool
 readWasmBinary(
     const char* path,
-    WasmModuleReader* wasmModuleReaderResult
+    WasmModuleReader* wasmModuleReaderResult,
+    bool debug
 ) {
     WasmModuleReaderError* error = NULL;
-
-    wasmModuleReaderResult->buffer = readFile(path);
-    if (wasmModuleReaderResult->buffer.data == NULL) {
+    Buffer buffer = readFile(path);
+    if (buffer.data == NULL) {
         fprintf(stderr, "w2c2: failed to read file %s\n", path);
         return false;
     }
 
-    wasmModuleRead(wasmModuleReaderResult, &error);
+    wasmModuleReaderResult->buffer = buffer;
+
+    wasmModuleRead(wasmModuleReaderResult, debug, &error);
     if (error != NULL) {
         fprintf(stderr, "w2c2: failed to read module: %s\n", wasmModuleReaderErrorMessage(error));
         return false;
@@ -44,6 +46,7 @@ main(
     char* outputPath = NULL;
     U32 functionsPerFile = 10;
     bool pretty = false;
+    bool debug = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
 
     int index = 0;
@@ -51,7 +54,7 @@ main(
 
     opterr = 0;
 
-    while ((c = getopt(argc, argv, "j:o:f:d:ph")) != -1) {
+    while ((c = getopt(argc, argv, "j:o:f:d:pgh")) != -1) {
         switch (c) {
             case 'j': {
                 jobCount = strtoul(optarg, NULL, 0);
@@ -67,6 +70,10 @@ main(
             }
             case 'p': {
                 pretty = true;
+                break;
+            }
+            case 'g': {
+                debug = true;
                 break;
             }
             case 'd': {
@@ -101,17 +108,15 @@ main(
                 break;
             }
             case 'h': {
-                fprintf(
-                    stderr,
-                    "usage: w2c2 [options] filename\n\n"
-                    "options:\n"
-                    "  -h         Print this help message\n"
-                    "  -j N       Number of jobCount (>1 enables parallel compilation and requires -o)\n"
-                    "  -f N       Number of functions per file when parallel compilation is enabled\n"
-                    "  -o PATH    Path for the output file(s). Default: use stdout. Required for parallel compilation\n"
-                    "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n"
-                    "  -p         Generate pretty code\n"
-                );
+                fprintf(stderr, "usage: w2c2 [options] filename\n\n");
+                fprintf(stderr, "options:\n");
+                fprintf(stderr, "  -h         Print this help message\n");
+                fprintf(stderr, "  -j N       Number of jobs (>1 enables parallel compilation and requires -o)\n");
+                fprintf(stderr, "  -f N       Number of functions per file when parallel compilation is enabled\n");
+                fprintf(stderr, "  -o PATH    Path for the output file(s). Default: use stdout. Required for parallel compilation\n");
+                fprintf(stderr, "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n");
+                fprintf(stderr, "  -g         Generate debug information (#line directives) based on DWARF\n");
+                fprintf(stderr, "  -p         Generate pretty code\n");
                 return 0;
             }
             case '?': {
@@ -161,7 +166,7 @@ main(
         WasmModuleReader reader = emptyWasmModuleReader;
         WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
 
-        if (!readWasmBinary(modulePath, &reader)) {
+        if (!readWasmBinary(modulePath, &reader, debug)) {
             return 1;
         }
 
@@ -173,6 +178,7 @@ main(
         writeOptions.jobCount = jobCount;
         writeOptions.functionsPerFile = functionsPerFile;
         writeOptions.pretty = pretty;
+        writeOptions.debug = debug;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
         if (!wasmCWriteModule(reader.module, writeOptions)) {

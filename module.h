@@ -11,6 +11,7 @@
 #include "datasegment.h"
 #include "table.h"
 #include "elementsegment.h"
+#include "debug.h"
 
 typedef struct WasmFunctionTypes {
     WasmFunctionType* functionTypes;
@@ -53,6 +54,7 @@ typedef struct WasmElementSegments {
 } WasmElementSegments;
 
 typedef struct WasmModule {
+    size_t length;
     WasmFunctionTypes functionTypes;
     WasmFunctions functions;
     WasmExports exports;
@@ -67,6 +69,8 @@ typedef struct WasmModule {
     WasmElementSegments elementSegments;
     U32 startFunctionIndex;
     bool hasStartFunction;
+    WasmDebugSections debugSections;
+    WasmDebugLines debugLines;
 } WasmModule;
 
 static
@@ -137,6 +141,30 @@ wasmModuleGetFunctionType(
             *result = module->functionTypes.functionTypes[function.functionTypeIndex];
         }
     }
+    return true;
+}
+
+bool
+WARN_UNUSED_RESULT
+wasmDebugSectionsEnsureCapacity(
+    WasmDebugSections* debugSections,
+    size_t count
+);
+
+static
+__inline__
+bool
+WARN_UNUSED_RESULT
+wasmDebugSectionsAppend(
+    WasmDebugSections* debugSections,
+    WasmDebugSection debugSection
+) {
+    const size_t newCount = debugSections->count + 1;
+    MUST (wasmDebugSectionsEnsureCapacity(debugSections, newCount))
+
+    debugSections->debugSections[debugSections->count] = debugSection;
+    debugSections->count = newCount;
+
     return true;
 }
 

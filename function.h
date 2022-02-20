@@ -9,8 +9,11 @@ typedef struct WasmFunction {
     U32 functionTypeIndex;
     WasmLocalsDeclarations localsDeclarations;
     Buffer code;
+    /* Offset relative to the code section start (function count) */
+    U32 start;
 } WasmFunction;
 
-static const WasmFunction wasmEmptyFunction = {0, {NULL, 0}, {NULL, 0}};
+static const WasmFunction wasmEmptyFunction =
+    {0, {NULL, 0}, {NULL, 0}, 0};
 
 #endif /* W2C2_FUNCTION_H */
