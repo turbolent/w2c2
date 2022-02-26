@@ -93,14 +93,10 @@ wasiFileDescriptorsAdd(
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     descriptor.fd = fd;
     if (path != NULL) {
-        char* pathCopy = NULL;
         size_t length = strlen(path);
         MUST (length > 0 && length < PATH_MAX)
-        pathCopy = malloc(length + 1);
-        MUST (pathCopy != NULL)
-        memcpy(pathCopy, path, length);
-        pathCopy[length] = '\0';
-        path = pathCopy;
+        path = strndup(path, length);
+        MUST (path != NULL);
     }
     descriptor.path = path;
     descriptors->length++;
@@ -222,14 +218,10 @@ wasiPreopensAdd(
     WasiPreopen preopen
 ) {
     if (preopen.path != NULL) {
-        char* pathCopy = NULL;
         size_t length = strlen(preopen.path);
         MUST (length > 0 && length < PATH_MAX)
-        pathCopy = malloc(length + 1);
-        MUST (pathCopy != NULL)
-        memcpy(pathCopy, preopen.path, length);
-        pathCopy[length] = '\0';
-        preopen.path = pathCopy;
+        preopen.path = strndup(preopen.path, length);
+        MUST (preopen.path != NULL)
     }
 
     preopens->length++;
