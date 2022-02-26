@@ -16,7 +16,8 @@
 
 /*
  * leb128ReadU32 reads and decodes an unsigned 32-bit integer
- * from the given buffer and stores the value in result
+ * from the given buffer and stores the value in result.
+ * Returns the number of read bytes.
  */
 static
 size_t
@@ -50,7 +51,8 @@ leb128ReadU32(
 
 /*
  * leb128ReadI32 reads and decodes a signed 32-bit integer
- * from the given buffer and stores the value in result
+ * from the given buffer and stores the value in result.
+ * Returns the number of read bytes.
  */
 static
 __inline__
@@ -99,7 +101,8 @@ leb128ReadI32(
 
 /*
  * leb128ReadU64 reads and decodes an unsigned 32-bit integer
- * from the given buffer and stores the value in result
+ * from the given buffer and stores the value in result.
+ * Returns the number of read bytes.
  */
 static
 size_t
@@ -133,7 +136,8 @@ leb128ReadU64(
 
 /*
  * leb128ReadI64 reads and decodes a signed 32-bit integer
- * from the given buffer and stores the value in result
+ * from the given buffer and stores the value in result.
+ * Returns the number of read bytes.
  */
 static
 __inline__
