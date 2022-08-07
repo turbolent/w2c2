@@ -18,12 +18,23 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 
 - Coremark 1.0: ~7% slower than native
 
+## Compilation
+
+```sh
+make
+```
+
+To enables certain features, list them in the `FEATURES` variable passed to `make`, e.g. `make FEATURES="threads"`:
+
+- Parallel compilation requires [pthreads](https://en.wikipedia.org/wiki/Pthreads) on the host system. Add `threads` to `FEATURES`.
+- If the host system has support for [getopt](https://en.wikipedia.org/wiki/Getopt), add `getopt` to `FEATURES`.
+- Generating debug information requires `libdwarf` on the host system. Add `debugging` to `FEATURES`.
+
 ## Usage
 
 Compile `module.wasm` to `module.c`:
 
 ```sh
-make release
 ./w2c2 -o module.c module.wasm
 ```
 
@@ -100,3 +111,13 @@ make run-tests
 - [ ] sock_recv
 - [ ] sock_send
 - [ ] sock_shutdown
+
+## Development
+
+To build a debug release, pass `BUILD=debug` to `make`.
+
+To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e.g. `make BUILD=debug SANITIZERS="base clang address thread"`.
+- `base` enables the [Undefined Behavior Sanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
+- `clang` enables Clang-specific sanitizers
+- `thread` enables the [Thread Sanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
+- `address` enables the [Address Sanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
