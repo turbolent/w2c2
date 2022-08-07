@@ -14,7 +14,7 @@ typedef struct WasmCWriteModuleOptions {
 } WasmCWriteModuleOptions;
 
 static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
-    NULL, 0, 0, false, wasmDataSegmentModeArrays
+    NULL, 0, 0, false, false, wasmDataSegmentModeArrays
 };
 
 bool
