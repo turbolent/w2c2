@@ -3136,13 +3136,10 @@ wasmCWriteFunctionExport(
     FILE* file,
     const WasmModule* module,
     WasmExport export,
-    WasmFunction function,
+    WasmFunctionType functionType,
     bool external,
     bool pretty
 ) {
-    const WasmFunctionType functionType =
-        module->functionTypes.functionTypes[function.functionTypeIndex];
-
     if (external) {
         fputs("extern ", file);
     }
@@ -3182,10 +3179,18 @@ wasmCWriteExports(
         WasmExport export = module->exports.exports[exportIndex];
         switch (export.kind) {
             case wasmExportKindFunction: {
+                WasmFunctionType functionType = wasmEmptyFunctionType;
+                U32 functionTypeIndex = 0;
                 U32 functionImportCount = module->functionImports.length;
-                U32 functionIndex = export.index - functionImportCount;
-                const WasmFunction function = module->functions.functions[functionIndex];
-                wasmCWriteFunctionExport(file, module, export, function, external, pretty);
+                if (export.index < functionImportCount) {
+                    const WasmFunctionImport functionImport = module->functionImports.imports[export.index];
+                    functionTypeIndex = functionImport.functionTypeIndex;
+                } else {
+                    const WasmFunction function = module->functions.functions[export.index - functionImportCount];
+                    functionTypeIndex = function.functionTypeIndex;
+                }
+                functionType = module->functionTypes.functionTypes[functionTypeIndex];
+                wasmCWriteFunctionExport(file, module, export, functionType, external, pretty);
                 break;
             }
             case wasmExportKindMemory: {
