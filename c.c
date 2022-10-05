@@ -1180,13 +1180,12 @@ wasmCWriteLoadExpr(
             MUST (wasmCWrite(writer, "("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)("))
+            MUST (wasmCWrite(writer, "(U64)"))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
-            MUST (wasmCWrite(writer, ")"))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
@@ -1275,13 +1274,12 @@ wasmCWriteStoreExpr(
             MUST (wasmCWrite(writer, "("))
             MUST (wasmCWriteStringMemoryName(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)("))
+            MUST (wasmCWrite(writer, "(U64)"))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
                 stackIndex1,
                 writer->typeStack->valueTypes[stackIndex1]
             ))
-            MUST (wasmCWrite(writer, ")"))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
@@ -1501,7 +1499,11 @@ wasmCWriteSignedInfixBinaryExpr(
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
-    MUST (wasmCWrite(writer, " = ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " = ("))
+    } else {
+        MUST (wasmCWrite(writer, "=("))
+    }
     MUST (wasmCWrite(writer, valueTypeNames[parameter1Type]))
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
@@ -1511,9 +1513,15 @@ wasmCWriteSignedInfixBinaryExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, " "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " "))
+    }
     MUST (wasmCWrite(writer, operator))
-    MUST (wasmCWrite(writer, " ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " ("))
+    } else {
+        MUST (wasmCWrite(writer, "("))
+    }
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
     MUST (wasmCWrite(writer, ")"))
     MUST (wasmCWriteStringStackName(
@@ -1592,7 +1600,11 @@ wasmCWriteSignedShiftRightExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, " = ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " = ("))
+    } else {
+        MUST (wasmCWrite(writer, "=("))
+    }
     MUST (wasmCWrite(writer, valueTypeNames[resultType]))
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[resultType]))
@@ -1602,13 +1614,21 @@ wasmCWriteSignedShiftRightExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, " >> ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " >> ("))
+    } else {
+        MUST (wasmCWrite(writer, ">>("))
+    }
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
-    MUST (wasmCWrite(writer, " & "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " & "))
+    } else {
+        MUST (wasmCWrite(writer, "&"))
+    }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, "));\n"))
 
@@ -1641,13 +1661,21 @@ wasmCWriteUnsignedShiftRightExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, " >>= ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " >>= ("))
+    } else {
+        MUST (wasmCWrite(writer, ">>=("))
+    }
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
-    MUST (wasmCWrite(writer, " & "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " & "))
+    } else {
+        MUST (wasmCWrite(writer, "&"))
+    }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, ");\n"))
 
@@ -1680,13 +1708,21 @@ wasmCWriteShiftLeftExpr(
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
-    MUST (wasmCWrite(writer, " <<= ("))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " <<= ("))
+    } else {
+        MUST (wasmCWrite(writer, "<<=("))
+    }
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
-    MUST (wasmCWrite(writer, " & "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " & "))
+    } else {
+        MUST (wasmCWrite(writer, "&"))
+    }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, ");\n"))
 
@@ -1730,7 +1766,11 @@ wasmCWriteIfExpr(
 
     if (!ignore) {
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "if ("))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, "if ("))
+        } else {
+            MUST (wasmCWrite(writer, "if("))
+        }
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmCWriteStringStackName(
@@ -1739,7 +1779,11 @@ wasmCWriteIfExpr(
                 writer->typeStack->valueTypes[stackIndex0]
             ))
         }
-        MUST (wasmCWrite(writer, ") {\n"))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, ") {\n"))
+        } else {
+            MUST (wasmCWrite(writer, "){\n"))
+        }
 
         wasmTypeStackDrop(writer->typeStack, 1);
 
@@ -1770,7 +1814,11 @@ wasmCWriteIfExpr(
         if (!ignore) {
             writer->typeStack->length = typeStackLengthBeforeBranches;
 
-            MUST (wasmCWrite(writer, " else {\n"))
+            if (writer->pretty) {
+                MUST (wasmCWrite(writer, " else {\n"))
+            } else {
+                MUST (wasmCWrite(writer, "else{\n"))
+            }
 
             writer->indent++;
         }
@@ -1954,7 +2002,11 @@ wasmCWriteGoto(
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
-            MUST (wasmCWrite(writer, "; "))
+            if (writer->pretty) {
+                MUST (wasmCWrite(writer, "; "))
+            } else {
+                MUST (wasmCWrite(writer, ";"))
+            }
         }
     }
 
@@ -1991,13 +2043,21 @@ wasmCWriteSelectExpr(
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
-    MUST (wasmCWrite(writer, " ? "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " ? "))
+    } else {
+        MUST (wasmCWrite(writer, "?"))
+    }
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex2,
         writer->typeStack->valueTypes[stackIndex2]
     ))
-    MUST (wasmCWrite(writer, " : "))
+    if (writer->pretty) {
+        MUST (wasmCWrite(writer, " : "))
+    } else {
+        MUST (wasmCWrite(writer, ":"))
+    }
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex1,
@@ -2057,15 +2117,23 @@ wasmCWriteBranchIfExpr(
     if (!writer->ignore) {
 
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "if ("))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, "if ("))
+        } else {
+            MUST (wasmCWrite(writer, "if("))
+        }
         MUST (wasmCWriteStringStackName(
             writer->builder,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
-        MUST (wasmCWrite(writer, ") {\n"))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, ") {\n"))
+        } else {
+            MUST (wasmCWrite(writer, "){\n"))
+        }
+
         writer->indent++;
 
         wasmTypeStackDrop(writer->typeStack, 1);
@@ -2104,13 +2172,21 @@ wasmCWriteBranchTableExpr(
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "switch ("))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, "switch ("))
+        } else {
+            MUST (wasmCWrite(writer, "switch("))
+        }
         MUST (wasmCWriteStringStackName(
             writer->builder,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
-        MUST (wasmCWrite(writer, ") {\n"))
+        if (writer->pretty) {
+            MUST (wasmCWrite(writer, ") {\n"))
+        } else {
+            MUST (wasmCWrite(writer, "){\n"))
+        }
 
         wasmTypeStackDrop(writer->typeStack, 1);
 
@@ -3102,7 +3178,11 @@ wasmCWriteInitGlobals(
             fputs(indentation, file);
         }
         wasmCWriteFileGlobalName(file, module, module->globalImports.length + globalIndex, false);
-        fputs(" = ", file);
+        if (pretty) {
+            fputs(" = ", file);
+        } else {
+            fputs("=", file);
+        }
         {
             Buffer code = global.init;
             MUST (stringBuilderReset(&stringBuilder))
@@ -3224,7 +3304,11 @@ wasmCWriteInitExports(
                     fputs(indentation, file);
                 }
                 wasmCWriteExportName(file, export.name);
-                fputs(" = ", file);
+                if (pretty) {
+                    fputs(" = ", file);
+                } else {
+                    fputs("=", file);
+                }
                 wasmCWriteFileFunctionName(file, module, export.index, true);
                 fputs(";\n", file);
                 break;
@@ -3234,7 +3318,11 @@ wasmCWriteInitExports(
                     fputs(indentation, file);
                 }
                 wasmCWriteExportName(file, export.name);
-                fputs(" = ", file);
+                if (pretty) {
+                    fputs(" = ", file);
+                } else {
+                    fputs("=", file);
+                }
                 wasmCWriteFileMemoryName(file, module, export.index, true);
                 fputs(";\n", file);
                 break;
@@ -3259,7 +3347,11 @@ wasmCWriteDataSegmentsAsArrays(
         WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
         fputs("const U8 ", file);
         wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-        fputs("[] = {\n", file);
+        if (pretty) {
+            fputs("[] = {\n", file);
+        } else {
+            fputs("[]={\n", file);
+        }
         if (pretty) {
             fputs(indentation, file);
         }
@@ -3565,8 +3657,10 @@ wasmCWriteInitTables(
 
             if (pretty) {
                 fputs(indentation, file);
+                fputs("offset = ", file);
+            } else {
+                fputs("offset=", file);
             }
-            fputs("offset = ", file);
             {
                 Buffer code = elementSegment.offset;
                 MUST (stringBuilderReset(&stringBuilder))
@@ -3583,9 +3677,13 @@ wasmCWriteInitTables(
                         fputs(indentation, file);
                     }
                     wasmCWriteFileTableName(file, module, elementSegment.tableIndex, false);
-                    fprintf(file, ".data[offset + %u] = (wasmFunc)(", functionIndexIndex);
+                    if (pretty) {
+                        fprintf(file, ".data[offset + %u] = (wasmFunc)", functionIndexIndex);
+                    } else {
+                        fprintf(file, ".data[offset+%u]=(wasmFunc)", functionIndexIndex);
+                    }
                     wasmCWriteFileFunctionName(file, module, functionIndex, true);
-                    fputs(");\n", file);
+                    fputs(";\n", file);
                 }
             }
         }
