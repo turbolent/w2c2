@@ -13,26 +13,20 @@ typedef struct WasmLabel {
 
 static const WasmLabel wasmEmptyLabel = {0, 0, NULL};
 
+ARRAY_TYPE(
+    WasmLabels,
+    WasmLabel,
+    wasmLabels,
+    labels,
+    label
+)
+
 typedef struct WasmLabelStack {
-    WasmLabel* labels;
+    WasmLabels labels;
     U32 nextLabelIndex;
-    size_t length;
-    size_t capacity;
 } WasmLabelStack;
 
-static const WasmLabelStack wasmEmptyLabelStack = {NULL, 0, 0, 0};
-
-void
-wasmLabelStackFree(
-    WasmLabelStack labelStack
-);
-
-bool
-WARN_UNUSED_RESULT
-wasmLabelStackEnsureCapacity(
-    WasmLabelStack* labelStack,
-    size_t length
-);
+static const WasmLabelStack wasmEmptyLabelStack = {{0, 0, NULL}, 0};
 
 static
 __inline__
@@ -41,11 +35,11 @@ wasmLabelStackClear(
     WasmLabelStack* labelStack
 ) {
     U32 index = 0;
-    for (; index < labelStack->capacity; index++) {
-        labelStack->labels[index] = wasmEmptyLabel;
+    for (; index < labelStack->labels.capacity; index++) {
+        labelStack->labels.labels[index] = wasmEmptyLabel;
     }
 
-    labelStack->length = 0;
+    labelStack->labels.length = 0;
     labelStack->nextLabelIndex = 0;
 }
 
@@ -59,20 +53,14 @@ wasmLabelStackPush(
     WasmValueType* type,
     WasmLabel* result
 ) {
-    const size_t currentLength = labelStack->length;
-    const size_t newLength = currentLength + 1;
+    result->index = labelStack->nextLabelIndex;
+    result->typeStackLength = typeStackLength;
+    result->type = type;
 
-    MUST (wasmLabelStackEnsureCapacity(labelStack, newLength))
-    {
-        const size_t labelIndex = labelStack->nextLabelIndex++;
+    MUST (wasmLabelsAppend(&labelStack->labels, *result))
 
-        result->index = labelIndex;
-        result->typeStackLength = typeStackLength;
-        result->type = type;
+    labelStack->nextLabelIndex++;
 
-        labelStack->labels[currentLength] = *result;
-        labelStack->length = newLength;
-    }
     return true;
 }
 
@@ -82,11 +70,11 @@ void
 wasmLabelStackPop(
     WasmLabelStack* labelStack
 ) {
-    if (!labelStack->length) {
+    if (!labelStack->labels.length) {
         return;
     }
 
-    labelStack->length--;
+    labelStack->labels.length--;
 }
 
 static
@@ -96,7 +84,7 @@ wasmLabelStackGetTopIndex(
     const WasmLabelStack* labelStack,
     const U32 index
 ) {
-    return labelStack->length - 1 - index;
+    return labelStack->labels.length - 1 - index;
 }
 
 #endif /* W2C2_LABELSTACK_H */
