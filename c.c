@@ -1981,7 +1981,7 @@ wasmCWriteGoto(
     WasmCFunctionWriter* writer,
     U32 labelStackIndex
 ) {
-    WasmLabel label = writer->labelStack->labels[labelStackIndex];
+    WasmLabel label = writer->labelStack->labels.labels[labelStackIndex];
 
     MUST (wasmCWriteIndent(writer))
 
@@ -3075,7 +3075,7 @@ wasmCWriteFunctionImplementations(
 
     wasmTypeStackFree(&typeStack);
     wasmTypeStackFree(&stackDeclarations);
-    wasmLabelStackFree(labelStack);
+    wasmLabelsFree(&labelStack.labels);
 
     return true;
 }
