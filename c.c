@@ -667,7 +667,7 @@ wasmCWriteCallExpr(
                 U32 resultIndex = 0;
                 for (; resultIndex < resultCount; resultIndex++) {
                     const WasmValueType resultType = functionType.resultTypes[resultIndex];
-                    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+                    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
                 }
             }
         }
@@ -780,7 +780,7 @@ wasmCWriteCallIndirectExpr(
             U32 resultIndex = 0;
             for (; resultIndex < resultCount; resultIndex++) {
                 const WasmValueType resultType = functionType.resultTypes[resultIndex];
-                MUST (wasmTypeStackPush(writer->typeStack, resultType))
+                MUST (wasmTypeStackAppend(writer->typeStack, resultType))
             }
         }
     }
@@ -822,7 +822,7 @@ wasmCWriteLocalGetExpr(
             );
             return false;
         }
-        MUST (wasmTypeStackPush(writer->typeStack, localType))
+        MUST (wasmTypeStackAppend(writer->typeStack, localType))
         {
             U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
@@ -924,7 +924,7 @@ wasmCWriteGlobalGetExpr(
             );
             return false;
         }
-        MUST (wasmTypeStackPush(writer->typeStack, globalType))
+        MUST (wasmTypeStackAppend(writer->typeStack, globalType))
         {
             U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
@@ -1071,7 +1071,7 @@ wasmCWriteConstExpr(
 
     if (!writer->ignore) {
         const WasmValueType resultType = wasmOpcodeResultType(opcode);
-        MUST (wasmTypeStackPush(writer->typeStack, resultType))
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
@@ -1195,7 +1195,7 @@ wasmCWriteLoadExpr(
 
             wasmTypeStackDrop(writer->typeStack, 1);
 
-            MUST (wasmTypeStackPush(writer->typeStack, resultType))
+            MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         }
     }
 
@@ -1329,7 +1329,7 @@ wasmCWriteMemorySize(
     if (!writer->ignore) {
         static const WasmValueType resultType = wasmValueTypeI32;
 
-        MUST (wasmTypeStackPush(writer->typeStack, resultType))
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
@@ -1423,7 +1423,7 @@ wasmCWriteUnaryExpr(
     MUST (wasmCWrite(writer, ");\n"))
 
     wasmTypeStackDrop(writer->typeStack, 1);
-    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
 }
@@ -1476,7 +1476,7 @@ wasmCWriteInfixBinaryExpr(
 
     wasmTypeStackDrop(writer->typeStack, 2);
 
-    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
 }
@@ -1532,7 +1532,7 @@ wasmCWriteSignedInfixBinaryExpr(
     MUST (wasmCWrite(writer, ");\n"))
 
     wasmTypeStackDrop(writer->typeStack, 2);
-    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
 }
@@ -1571,7 +1571,7 @@ wasmCWritePrefixBinaryExpr(
     MUST (wasmCWrite(writer, ");\n"))
 
     wasmTypeStackDrop(writer->typeStack, 2);
-    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
 }
@@ -1845,7 +1845,7 @@ wasmCWriteIfExpr(
         wasmLabelStackPop(writer->labelStack);
 
         if (blockType != NULL) {
-            MUST (wasmTypeStackPush(writer->typeStack, blockValueType))
+            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
         }
     }
 
@@ -1907,7 +1907,7 @@ wasmCWriteBlockExpr(
         wasmLabelStackPop(writer->labelStack);
 
         if (blockType != NULL) {
-            MUST (wasmTypeStackPush(writer->typeStack, blockValueType))
+            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
         }
     }
 
@@ -1967,7 +1967,7 @@ wasmCWriteLoopExpr(
         wasmLabelStackPop(writer->labelStack);
 
         if (blockType != NULL) {
-            MUST (wasmTypeStackPush(writer->typeStack, blockValueType))
+            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
         }
     }
 
@@ -2067,7 +2067,7 @@ wasmCWriteSelectExpr(
 
     wasmTypeStackDrop(writer->typeStack, 3);
 
-    MUST (wasmTypeStackPush(writer->typeStack, resultType))
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
 }
@@ -2864,7 +2864,7 @@ wasmCWriteFunctionReturn(
         /* TODO: add support for multiple result values */
         const WasmValueType returnType = functionType.resultTypes[0];
         wasmTypeStackClear(writer->typeStack);
-        MUST (wasmTypeStackPush(writer->typeStack, returnType))
+        MUST (wasmTypeStackAppend(writer->typeStack, returnType))
 
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
@@ -3073,8 +3073,8 @@ wasmCWriteFunctionImplementations(
         fputs("\n", file);
     }
 
-    wasmTypeStackFree(typeStack);
-    wasmTypeStackFree(stackDeclarations);
+    wasmTypeStackFree(&typeStack);
+    wasmTypeStackFree(&stackDeclarations);
     wasmLabelStackFree(labelStack);
 
     return true;

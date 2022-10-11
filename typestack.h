@@ -4,43 +4,17 @@
 #include <stdio.h>
 #include "w2c2_base.h"
 #include "valuetype.h"
+#include "array.h"
 
-typedef struct WasmTypeStack {
-    WasmValueType* valueTypes;
-    size_t length;
-    size_t capacity;
-} WasmTypeStack;
+ARRAY_TYPE(
+    WasmTypeStack,
+    WasmValueType,
+    wasmTypeStack,
+    valueTypes,
+    valueType
+)
 
-static const WasmTypeStack wasmEmptyTypeStack = {NULL, 0, 0};
-
-void
-wasmTypeStackFree(
-    WasmTypeStack typeStack
-);
-
-bool
-WARN_UNUSED_RESULT
-wasmTypeStackEnsureCapacity(
-    WasmTypeStack* typeStack,
-    size_t length
-);
-
-static
-__inline__
-bool
-WARN_UNUSED_RESULT
-wasmTypeStackPush(
-    WasmTypeStack* typeStack,
-    const WasmValueType valueType
-) {
-    const size_t newLength = typeStack->length + 1;
-    MUST (wasmTypeStackEnsureCapacity(typeStack, newLength))
-
-    typeStack->valueTypes[typeStack->length] = valueType;
-    typeStack->length = newLength;
-
-    return true;
-}
+static const WasmTypeStack wasmEmptyTypeStack = {0, 0, NULL};
 
 static
 __inline__
