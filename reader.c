@@ -442,22 +442,15 @@ wasmReadFunctionImport(
     import.name = name;
     import.functionTypeIndex = functionTypeIndex;
 
-    {
-        size_t newLength = reader->module->functionImports.length + 1;
-
-        if (!wasmFunctionImportsEnsureCapacity(&reader->module->functionImports, newLength)) {
-            static WasmModuleReaderError wasmModuleReaderError = {
-                wasmModuleReaderAllocationFailed
-            };
-            *error = &wasmModuleReaderError;
-            return;
-        }
-
-        *error = NULL;
-
-        reader->module->functionImports.length = newLength;
-        reader->module->functionImports.imports[newLength - 1] = import;
+    if (!wasmFunctionImportsAppend(&reader->module->functionImports, import)) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderAllocationFailed
+        };
+        *error = &wasmModuleReaderError;
+        return;
     }
+
+    *error = NULL;
 }
 
 static
@@ -480,22 +473,15 @@ wasmReadGlobalImport(
     import.name = name;
     import.globalType = globalType;
 
-    {
-        size_t newLength = reader->module->globalImports.length + 1;
-
-        if (!wasmGlobalImportsEnsureCapacity(&reader->module->globalImports, newLength)) {
-            static WasmModuleReaderError wasmModuleReaderError = {
-                wasmModuleReaderAllocationFailed
-            };
-            *error = &wasmModuleReaderError;
-            return;
-        }
-
-        *error = NULL;
-
-        reader->module->globalImports.length = newLength;
-        reader->module->globalImports.imports[newLength - 1] = import;
+    if (!wasmGlobalImportsAppend(&reader->module->globalImports, import)) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderAllocationFailed
+        };
+        *error = &wasmModuleReaderError;
+        return;
     }
+
+    *error = NULL;
 }
 
 static
@@ -586,22 +572,15 @@ wasmReadMemoryImport(
         return;
     }
 
-    {
-        size_t newLength = reader->module->memoryImports.length + 1;
-
-        if (!wasmMemoryImportsEnsureCapacity(&reader->module->memoryImports, newLength)) {
-            static WasmModuleReaderError wasmModuleReaderError = {
-                wasmModuleReaderAllocationFailed
-            };
-            *error = &wasmModuleReaderError;
-            return;
-        }
-
-        *error = NULL;
-
-        reader->module->memoryImports.length = newLength;
-        reader->module->memoryImports.imports[newLength - 1] = import;
+    if (!wasmMemoryImportsAppend(&reader->module->memoryImports, import)) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderAllocationFailed
+        };
+        *error = &wasmModuleReaderError;
+        return;
     }
+
+    *error = NULL;
 }
 
 static
@@ -655,22 +634,15 @@ wasmReadTableImport(
         return;
     }
 
-    {
-        size_t newLength = reader->module->tableImports.length + 1;
-
-        if (!wasmTableImportsEnsureCapacity(&reader->module->tableImports, newLength)) {
-            static WasmModuleReaderError wasmModuleReaderError = {
-                wasmModuleReaderAllocationFailed
-            };
-            *error = &wasmModuleReaderError;
-            return;
-        }
-
-        *error = NULL;
-
-        reader->module->tableImports.length = newLength;
-        reader->module->tableImports.imports[newLength - 1] = import;
+    if (!wasmTableImportsAppend(&reader->module->tableImports, import)) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderAllocationFailed
+        };
+        *error = &wasmModuleReaderError;
+        return;
     }
+
+    *error = NULL;
 }
 
 static
@@ -1657,7 +1629,9 @@ wasmModuleRead(
         *error = NULL;
     }
 
-    if (debug && module->debugSections.count > 0) {
+    if (debug && module->debugSections.length > 0) {
         module->debugLines = wasmParseDebugInfo(module->debugSections);
+    } else {
+        module->debugLines = emptyWasmDebugLines;
     }
 }

@@ -4,6 +4,7 @@
 #include "w2c2_base.h"
 #include "valuetype.h"
 #include "global.h"
+#include "array.h"
 
 typedef enum WasmImportKind {
     wasmImportKindFunction,
@@ -23,18 +24,13 @@ typedef struct WasmFunctionImport {
 
 static const WasmFunctionImport wasmEmptyFunctionImport = {NULL, NULL, 0};
 
-typedef struct WasmFunctionImports {
-    WasmFunctionImport* imports;
-    size_t length;
-    size_t capacity;
-} WasmFunctionImports;
-
-bool
-WARN_UNUSED_RESULT
-wasmFunctionImportsEnsureCapacity(
-    WasmFunctionImports* functionImports,
-    size_t length
-);
+ARRAY_TYPE(
+    WasmFunctionImports,
+    WasmFunctionImport,
+    wasmFunctionImports,
+    imports,
+    import
+)
 
 /* Global imports */
 
@@ -46,18 +42,13 @@ typedef struct WasmGlobalImport {
 
 static const WasmGlobalImport wasmEmptyGlobalImport = {NULL, NULL, {0, false}};
 
-typedef struct WasmGlobalImports {
-    WasmGlobalImport* imports;
-    size_t length;
-    size_t capacity;
-} WasmGlobalImports;
-
-bool
-WARN_UNUSED_RESULT
-wasmGlobalImportsEnsureCapacity(
-    WasmGlobalImports* globalImports,
-    size_t length
-);
+ARRAY_TYPE(
+    WasmGlobalImports,
+    WasmGlobalImport,
+    wasmGlobalImports,
+    imports,
+    import
+)
 
 /* Memory imports */
 
@@ -70,18 +61,13 @@ typedef struct WasmMemoryImport {
 
 static const WasmMemoryImport wasmEmptyMemoryImport = {NULL, NULL, 0, 0};
 
-typedef struct WasmMemoryImports {
-    WasmMemoryImport* imports;
-    size_t length;
-    size_t capacity;
-} WasmMemoryImports;
-
-bool
-WARN_UNUSED_RESULT
-wasmMemoryImportsEnsureCapacity(
-    WasmMemoryImports* memoryImports,
-    size_t length
-);
+ARRAY_TYPE(
+    WasmMemoryImports,
+    WasmMemoryImport,
+    wasmMemoryImports,
+    imports,
+    import
+)
 
 /* Table imports */
 
@@ -94,17 +80,12 @@ typedef struct WasmTableImport {
 
 static const WasmTableImport wasmEmptyTableImport = {NULL, NULL, 0, 0};
 
-typedef struct WasmTableImports {
-    WasmTableImport* imports;
-    size_t length;
-    size_t capacity;
-} WasmTableImports;
-
-bool
-WARN_UNUSED_RESULT
-wasmTableImportsEnsureCapacity(
-    WasmTableImports* tableImports,
-    size_t length
-);
+ARRAY_TYPE(
+    WasmTableImports,
+    WasmTableImport,
+    wasmTableImports,
+    imports,
+    import
+)
 
 #endif /* W2C2_IMPORT_H */

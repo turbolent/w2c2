@@ -144,28 +144,4 @@ wasmModuleGetFunctionType(
     return true;
 }
 
-bool
-WARN_UNUSED_RESULT
-wasmDebugSectionsEnsureCapacity(
-    WasmDebugSections* debugSections,
-    size_t count
-);
-
-static
-__inline__
-bool
-WARN_UNUSED_RESULT
-wasmDebugSectionsAppend(
-    WasmDebugSections* debugSections,
-    WasmDebugSection debugSection
-) {
-    const size_t newCount = debugSections->count + 1;
-    MUST (wasmDebugSectionsEnsureCapacity(debugSections, newCount))
-
-    debugSections->debugSections[debugSections->count] = debugSection;
-    debugSections->count = newCount;
-
-    return true;
-}
-
 #endif /* W2C2_MODULE_H */

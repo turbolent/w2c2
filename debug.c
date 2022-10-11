@@ -3,26 +3,6 @@
 #include "buffer.h"
 #include "str.h"
 
-bool
-wasmDebugLinesEnsureCapacity(
-    WasmDebugLines* debugLines,
-    size_t length
-) {
-    if (length > debugLines->capacity) {
-        size_t newCapacity = length + (debugLines->capacity >> 1u);
-        void* newValueTypes = NULL;
-        if (debugLines->debugLines == NULL) {
-            newValueTypes = calloc(newCapacity * sizeof(WasmDebugLine), 1);
-        } else {
-            newValueTypes = realloc(debugLines->debugLines, newCapacity * sizeof(WasmDebugLine));
-        }
-        MUST (newValueTypes != NULL)
-        debugLines->debugLines = (WasmDebugLine*) newValueTypes;
-        debugLines->capacity = newCapacity;
-    }
-    return true;
-}
-
 #if HAS_LIBDWARF
 
 #include <stdio.h>
