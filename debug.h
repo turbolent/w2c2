@@ -3,17 +3,20 @@
 
 #include "w2c2_base.h"
 #include "buffer.h"
+#include "array.h"
 
 typedef struct WasmDebugSection {
     char* name;
     Buffer buffer;
 } WasmDebugSection;
 
-typedef struct WasmDebugSections {
-    WasmDebugSection* debugSections;
-    U32 count;
-    U32 capacity;
-} WasmDebugSections;
+ARRAY_TYPE(
+    WasmDebugSections,
+    WasmDebugSection,
+    wasmDebugSections,
+    debugSections,
+    debugSection
+)
 
 typedef struct WasmDebugLine {
     U64 address;
@@ -21,37 +24,15 @@ typedef struct WasmDebugLine {
     U64 number;
 } WasmDebugLine;
 
-typedef struct WasmDebugLines {
-    WasmDebugLine* debugLines;
-    size_t length;
-    size_t capacity;
-} WasmDebugLines;
+ARRAY_TYPE(
+    WasmDebugLines,
+    WasmDebugLine,
+    wasmDebugLines,
+    debugLines,
+    debugLine
+)
 
-static const WasmDebugLines emptyWasmDebugLines = {NULL, 0, 0};
-
-bool
-WARN_UNUSED_RESULT
-wasmDebugLinesEnsureCapacity(
-    WasmDebugLines* debugLines,
-    size_t length
-);
-
-static
-__inline__
-bool
-WARN_UNUSED_RESULT
-wasmDebugLinesPush(
-    WasmDebugLines* debugLines,
-    WasmDebugLine debugLine
-) {
-    const size_t newLength = debugLines->length + 1;
-    MUST (wasmDebugLinesEnsureCapacity(debugLines, newLength))
-
-    debugLines->debugLines[debugLines->length] = debugLine;
-    debugLines->length = newLength;
-
-    return true;
-}
+static const WasmDebugLines emptyWasmDebugLines = {0, 0, NULL};
 
 WasmDebugLines
 wasmParseDebugInfo(
