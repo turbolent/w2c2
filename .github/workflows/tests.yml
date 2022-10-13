@@ -62,6 +62,8 @@ jobs:
         working-directory: ./tests
         run: make gen
       - name: Run tests
+        env:
+          CC: ${{ matrix.system.cc }}
         working-directory: ./tests
         run: |
           make run-tests EXECUTE=${{ matrix.system.qemu }} 2>&1 | tee results
