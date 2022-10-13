@@ -12,10 +12,10 @@
   (elem 0x0 (i32.const 0) $f $f)
   (elem 0x000 (offset (i32.const 0)))
   (elem 0 (offset (i32.const 0)) $f $f)
-  (elem $t1 (i32.const 0))
-  (elem $t2 (i32.const 0) $f $f)
-  (elem $t3 (offset (i32.const 0)))
-  (elem $t4 (offset (i32.const 0)) $f $f)
+  (elem $t (i32.const 0))
+  (elem $t (i32.const 0) $f $f)
+  (elem $t (offset (i32.const 0)))
+  (elem $t (offset (i32.const 0)) $f $f)
 )
 
 ;; Basic use
