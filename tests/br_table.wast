@@ -1,35 +1,3 @@
-(module
-  (func (export "switch_like") (param $p i32) (result i32)
-    (block
-      (block
-        (block
-          (block (get_local $p)
-            (br_table
-              2   ;; p == 0 => (br 2)
-              1   ;; p == 1 => (br 1)
-              0   ;; p == 2 => (br 0)
-              3)) ;; else => (br 3)
-          ;; Target for (br 0)
-          (i32.const 100)
-          (return))
-        ;; Target for (br 1)
-        (i32.const 101)
-        (return))
-      ;; Target for (br 2)
-      (i32.const 102)
-      (return))
-    ;; Target for (br 3)
-    (i32.const 103)
-    (return)
-  )
-)
-
-(assert_return (invoke "switch_like" (i32.const 0)) (i32.const 102))
-(assert_return (invoke "switch_like" (i32.const 1)) (i32.const 101))
-(assert_return (invoke "switch_like" (i32.const 2)) (i32.const 100))
-(assert_return (invoke "switch_like" (i32.const 3)) (i32.const 103))
-(assert_return (invoke "switch_like" (i32.const 4)) (i32.const 103))
-(assert_return (invoke "switch_like" (i32.const 5)) (i32.const 103))
 
 ;; Test `br_table` operator
 
