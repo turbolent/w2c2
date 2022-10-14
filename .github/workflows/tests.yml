@@ -58,7 +58,7 @@ jobs:
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
-        run: make BUILD=${{ matrix.build }}
+        run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.build }}"
       - name: Generate tests
         working-directory: ./tests
         run: make gen
