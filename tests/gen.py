@@ -165,10 +165,10 @@ def generate_test_files(json_path):
 
 
 def gen(paths):
-    wast2json_opts = ""
+    wast2json_opts = []
     wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
     if compare_versions(wast2json_version, "1.0.25") > 0:
-        wast2json_opts = "--disable-bulk-memory"
+        wast2json_opts.append("--disable-bulk-memory")
 
     for wast_path in paths:
         print(wast_path)
@@ -176,7 +176,7 @@ def gen(paths):
         # Convert WAST to JSON and WASM files, if needed
         json_path = Path(wast_path).with_suffix('.json')
         if not json_path.exists():
-            subprocess.check_call(['wast2json', wast2json_opts, wast_path])
+            subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
 
         generate_test_files(json_path)
 
