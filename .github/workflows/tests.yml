@@ -24,17 +24,12 @@ jobs:
           - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static     }
           - { target: arm,      toolchain: gcc-arm-linux-gnueabi,       cc: arm-linux-gnueabi-gcc,       qemu: qemu-arm-static      }
           - { target: armhf,    toolchain: gcc-arm-linux-gnueabihf,     cc: arm-linux-gnueabihf-gcc,     qemu: qemu-arm-static      }
-          # fails on memory.30 i32_load8_s tests
-          # - { target: aarch64,  toolchain: gcc-aarch64-linux-gnu,       cc: aarch64-linux-gnu-gcc,       qemu: qemu-aarch64-static  }
-          # fails on memory.30 i32_load8_s tests
-          # - { target: riscv64,  toolchain: gcc-riscv64-linux-gnu,       cc: riscv64-linux-gnu-gcc,       qemu: qemu-riscv64-static  }
+          - { target: aarch64,  toolchain: gcc-aarch64-linux-gnu,       cc: aarch64-linux-gnu-gcc,       qemu: qemu-aarch64-static  }
+          - { target: riscv64,  toolchain: gcc-riscv64-linux-gnu,       cc: riscv64-linux-gnu-gcc,       qemu: qemu-riscv64-static  }
           - { target: ppc,      toolchain: gcc-powerpc-linux-gnu,       cc: powerpc-linux-gnu-gcc,       qemu: qemu-ppc-static      }
-          # fails on memory.30 i32_load8_s tests
-          # - { target: ppc64,    toolchain: gcc-powerpc64-linux-gnu,     cc: powerpc64-linux-gnu-gcc,     qemu: qemu-ppc64-static    }
-          # fails on memory.30 i32_load8_s tests
-          # - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
-          # fails on memory.30 i32_load8_s tests
-          # - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static    }
+          - { target: ppc64,    toolchain: gcc-powerpc64-linux-gnu,     cc: powerpc64-linux-gnu-gcc,     qemu: qemu-ppc64-static    }
+          - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
+          - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static    }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static     }
           # fails on float_exprs.87 f32.arithmetic_nan_bitpattern tests
           # - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static   }
