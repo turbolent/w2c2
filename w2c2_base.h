@@ -13,7 +13,7 @@ typedef enum bool {
 #endif
 
 typedef unsigned char U8;
-typedef char I8;
+typedef signed char I8;
 
 typedef unsigned short U16;
 typedef short I16;
