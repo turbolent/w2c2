@@ -7,6 +7,15 @@ import sys
 from pathlib import Path
 
 
+def compare_versions(a, b):
+    for [a, b] in zip(*[[int(s) for s in v.split('.')] for v in [a, b]]):
+        if a < b:
+            return -1
+        elif a > b:
+            return 1
+    return 0
+
+
 def export_name(name):
     escape_char = 'X'
     res = "e_"
@@ -156,13 +165,18 @@ def generate_test_files(json_path):
 
 
 def gen(paths):
+    wast2json_opts = ""
+    wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
+    if compare_versions(wast2json_version, "1.0.25") > 0:
+        wast2json_opts = "--disable-bulk-memory"
+
     for wast_path in paths:
         print(wast_path)
             
         # Convert WAST to JSON and WASM files, if needed
         json_path = Path(wast_path).with_suffix('.json')
         if not json_path.exists():
-            subprocess.check_call(['wast2json', wast_path])
+            subprocess.check_call(['wast2json', wast2json_opts, wast_path])
 
         generate_test_files(json_path)
 
