@@ -1,6 +1,8 @@
 W2C2 ?= ../w2c2
 PYTHON3 ?= python3
 
+CFLAGS ?= -O0 -g
+
 EXE =
 
 ifeq ($(TARGET),Wii)
@@ -47,7 +49,7 @@ test_%$(EXE): test_%.o main.o
 
 test_%.c: %.wasm
 	echo "#include \"test.h\"" > $@
-	$(W2C2) $< >> $@
+	$(W2C2) $< $@
 	cat $(patsubst test_%.c,assert_%.c,$@) >> $@
 
 %.o: %.c
@@ -63,10 +65,10 @@ clean: clean-wasm-json clean-assertions clean-compiled
 	-rm -f main.o
 
 clean-wasm-json:
-	-rm -f *.json *.wasm
+	-rm -f *.json *.wasm *[0-9]*.wat
 
 clean-assertions:
-	-rm -f assert_*.c
+	-rm -f assert_*.c *[0-9]*.h
 
 clean-compiled:
 	-rm -f test_*

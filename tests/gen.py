@@ -1,5 +1,8 @@
 import json
 import glob
+import re
+from os.path import splitext
+
 import math
 import struct
 import subprocess
@@ -18,7 +21,7 @@ def compare_versions(a, b):
 
 def export_name(name):
     escape_char = 'X'
-    res = "e_"
+    res = ""
     for c in name:
         if c.isalnum() and c != escape_char:
             res += c
@@ -63,20 +66,25 @@ def convert_value(value, t):
     raise Exception("unsupported type {}".format(t))
 
 
-test_preamble = """
-#include <stdio.h>
-#include "w2c2_base.h"
-#include "test.h"
-
-void test() {
-"""
+invalid_char_regex = re.compile('[^a-zA-Z0-9]')
 
 def generate_test_files(json_path):
 
     test_file = None
 
-    def create_test_file(filename):
+    def create_test_file(filename, module_name):
         nonlocal test_file
+
+        test_preamble = f"""
+#include <stdio.h>
+#include "w2c2_base.h"
+#include "test.h"
+#include "{module_name}.h"
+
+void test() {{
+    {module_name}Instance instance;
+    {module_name}Instantiate(&instance, resolveTestImports);
+"""
         test_path = Path(filename)
         test_path = test_path.with_name('assert_' + test_path.name).with_suffix('.c')
         print("    " + str(test_path))
@@ -95,13 +103,16 @@ def generate_test_files(json_path):
     with open(json_path, 'r') as f:
         info = json.load(f)
 
+        module_name = ""
+
         for command in info['commands']:
             t = command['type']
             action = command.get('action')
             if t == "module":
-                close_test_file()
                 filename = command['filename']
-                create_test_file(filename)
+                module_name = invalid_char_regex.sub('', splitext(filename)[0])
+                close_test_file()
+                create_test_file(filename, module_name)
                 test_file.write("    printStart(\"{}\");\n".format(filename))
 
             elif action is not None and action['type'] == 'invoke':
@@ -121,11 +132,15 @@ def generate_test_files(json_path):
                 if 'nan' in args:
                     continue
 
-                argument_list = ', '.join(args)
+                field = action['field']
 
-                call = "(*{})({})".format(export_name(action['field']), argument_list)
+                call = "{}_{}({})".format(
+                    module_name,
+                    export_name(field),
+                    ', '.join(['&instance', *args])
+                )
 
-                description = "{}({})".format(action['field'], argument_list)
+                description = "{}({})".format(field, ', '.join(args))
 
                 if t == 'assert_return':
 
