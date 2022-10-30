@@ -2,7 +2,7 @@ CFLAGS += -I../..
 LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
-OBJS :=  ../../wasi/wasi.o inits.o
+OBJS :=  ../../wasi/wasi.o clang.o
 MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
@@ -19,19 +19,19 @@ endif
 
 clang: $(OBJS)
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(filter-out inits.o, $(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS) -o clang $(LDFLAGS)
+	$(CC) $(CFLAGS) $(filter-out clang.o, $(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS) -o clang $(LDFLAGS)
 
-datasegments.o: inits.c
+datasegments.o: clang.c
 	ld -r -b binary -o datasegments.o datasegments
 
-inits.o: CFLAGS += -O0
+clang.o: CFLAGS += -O0
 
 %.o: %.c
 	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
 
-inits.c: clang.wasm
-	$(W2C2) -d $(MODE) -j 12 -o . -f 100 $^
+clang.c: clang.wasm
+	$(W2C2) -d $(MODE) -j 12 -f 100 $^ $@
 
 .PHONY: clean
 clean:
-	rm -f clang datasegments decls.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f clang datasegments clang.h $(filter-out main.c,$(wildcard *.c)) *.o

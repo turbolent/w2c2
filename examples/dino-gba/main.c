@@ -1,17 +1,31 @@
 #include <gba.h>
 
 #include "../../w2c2_base.h"
+#include "dino.h"
 
-#define INPUT e_mem->data[0]
-#define FP(o) (e_mem->data[0x5000 + (o)] / 8)
+#define INPUT mem->data[0]
+#define FP(o) (mem->data[0x5000 + (o)] / 8)
 
-/* Imports */
-
-F32 Math_random(void) {
+static
+F32
+Math_random() {
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
-F32 (*f_Math_random)(void) = &Math_random;
+static
+void*
+resolveImport(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "Math") == 0
+        && strcmp(name, "random") == 0
+        ) {
+        return (void*)Math_random;
+    }
+
+    return NULL;
+}
 
 void
 trap(
@@ -20,32 +34,13 @@ trap(
     abort();
 }
 
-
-/* Exports */
-
-extern wasmMemory (*e_mem);
-
-extern void (*e_run)();
-
-extern void init();
-
-/* Config */
-/*
-void vblankInterrupt() {
-    scanKeys();
-
-    (*e_run)();
-
-}*/
-
 int main(int argc, char* argv[]) {
+    dinoInstance instance;
+    dinoInstantiate(&instance, resolveImport);
+    wasmMemory* mem = dino_mem(&instance);
 
     /* Set up the interrupt handlers */
     irqInit();
-
-/*
-    irqSet(IRQ_VBLANK, vblankInterrupt);
-*/
 
     /* Enable Vblank Interrupt to allow VblankIntrWait */
     irqEnable(IRQ_VBLANK);
@@ -56,10 +51,7 @@ int main(int argc, char* argv[]) {
     /* Set screen mode & background to display */
     REG_DISPCNT = MODE_3 | BG2_ON;
 
-    /* Initialize module */
-    init();
-
-    (*e_run)();
+    dino_run(&instance);
 
     while (true) {
         scanKeys();
@@ -80,7 +72,7 @@ int main(int argc, char* argv[]) {
             INPUT |= 2;
         }
 
-        (*e_run)();
+        dino_run(&instance);
 
         for (int y = 0; y < SCREEN_HEIGHT; y++) {
             for (int x = 0; x < SCREEN_WIDTH; x++) {

@@ -2,21 +2,35 @@
 
 #include <SDL.h>
 
-#include "w2c2_base.h"
+#include "../../w2c2_base.h"
+#include "dino.h"
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-#define MEM(o) e_mem->data[e_mem->size - o - 1]
+#define MEM(o) mem->data[mem->size - o - 1]
 #else
-#define MEM(o) e_mem->data[o]
+#define MEM(o) mem->data[o]
 #endif
 
-/* Imports */
-
-F32 Math_random(void) {
+static
+F32
+Math_random() {
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
-F32 (*f_Math_random)(void) = &Math_random;
+static
+void*
+resolveImport(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "Math") == 0
+        && strcmp(name, "random") == 0
+    ) {
+        return (void*)Math_random;
+    }
+
+    return NULL;
+}
 
 void
 trap(
@@ -25,15 +39,6 @@ trap(
     fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
     abort();
 }
-
-
-/* Exports */
-
-extern wasmMemory (*e_mem);
-
-extern void (*e_run)();
-
-extern void init();
 
 /* Config */
 
@@ -45,8 +50,9 @@ static const U32 framebufferOffset = 0x5000;
 /* Main */
 
 int main(int argc, char* argv[]) {
-    /* Initialize module */
-    init();
+    dinoInstance instance;
+    dinoInstantiate(&instance, resolveImport);
+    wasmMemory* mem = dino_mem(&instance);
 
     /* Initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0) {
@@ -62,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     SDL_WM_SetCaption("Dino", NULL);
 
-    (*e_run)();
+    dino_run(&instance);
 
     bool running = false;
     U32 last = SDL_GetTicks();
@@ -70,7 +76,7 @@ int main(int argc, char* argv[]) {
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     SDL_Surface* offscreen = SDL_CreateRGBSurfaceFrom(
-        e_mem->data + 0x5000,
+        mem->data + 0x5000,
         width,
         height,
         32,
@@ -117,7 +123,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (running) {
-            (*e_run)();
+            dino_run(&instance);
         }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
@@ -127,11 +133,11 @@ int main(int argc, char* argv[]) {
             U32 x = 0;
             for (; x < width; x++) {
                 U32 pixelOffset = y * (width * 4) + (x * 4);
-                U32 memoryOffset = e_mem->size - framebufferOffset - pixelOffset;
-                pixels[pixelOffset] = e_mem->data[memoryOffset];
-                pixels[pixelOffset + 1] = e_mem->data[memoryOffset - 1];
-                pixels[pixelOffset + 2] = e_mem->data[memoryOffset - 2];
-                pixels[pixelOffset + 3] = e_mem->data[memoryOffset - 3];
+                U32 memoryOffset = mem->size - framebufferOffset - pixelOffset;
+                pixels[pixelOffset] = mem->data[memoryOffset];
+                pixels[pixelOffset + 1] = mem->data[memoryOffset - 1];
+                pixels[pixelOffset + 2] = mem->data[memoryOffset - 2];
+                pixels[pixelOffset + 3] = mem->data[memoryOffset - 3];
             }
         }
 #else
