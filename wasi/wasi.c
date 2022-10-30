@@ -16,19 +16,9 @@
 
 #include "wasi.h"
 
-#define WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
-  WASM_IMPORT(returnType, wasiX5Funstable_##name, parameters, body)
-
-#define WASI_PREVIEW1_IMPORT(returnType, name, parameters, body) \
-  WASM_IMPORT(returnType, wasiX5FsnapshotX5Fpreview1_##name, parameters, body)
-
-#define WASI_IMPORT(returnType, name, parameters, body) \
-  WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
-  WASI_PREVIEW1_IMPORT(returnType, name, parameters, body)
-
 static
 void
-tracePrintf(const char *fmt, ...) {
+tracePrintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     fprintf(stderr, "### WASI: ");
@@ -43,7 +33,7 @@ tracePrintf(const char *fmt, ...) {
 #define WASI_TRACE(args)
 #endif
 
-extern wasmMemory (*e_memory);
+extern wasmMemory* wasiMemory(void* instance);
 
 static WASI wasi;
 
@@ -96,7 +86,7 @@ wasiFileDescriptorsAdd(
         size_t length = strlen(path);
         MUST (length > 0 && length < PATH_MAX)
         path = strndup(path, length);
-        MUST (path != NULL);
+        MUST (path != NULL)
     }
     descriptor.path = path;
     descriptors->length++;
@@ -398,23 +388,28 @@ resolvePath(
     return true;
 }
 
-WASI_IMPORT(void, procX5Fexit, (U32 code), {
+void
+wasiProcExit(
+    void* instance,
+    U32 code
+) {
     WASI_TRACE(("proc_exit(code=%d)", code));
 
     exit(code);
-})
+}
 
 static const size_t ciovecSize = 8;
 
-static
-__inline__
 U32
-wasiFdWrite(
+wasiFDWrite(
+    void* instance,
     U32 wasiFD,
     U32 ciovecsPointer,
     U32 ciovecsCount,
     U32 resultPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     struct iovec* iovecs = NULL;
     ssize_t total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
@@ -446,8 +441,8 @@ wasiFdWrite(
         U32 ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
             U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 bufferPointer = i32_load(e_memory, ciovecPointer);
-            U32 length = i32_load(e_memory, ciovecPointer + 4);
+            U32 bufferPointer = i32_load(memory, ciovecPointer);
+            U32 length = i32_load(memory, ciovecPointer + 4);
 
             if (wasiFD > 2) {
                 WASI_TRACE((
@@ -456,7 +451,7 @@ wasiFdWrite(
                 ));
             }
 
-            iovecs[ciovecIndex].iov_base = e_memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
             iovecs[ciovecIndex].iov_len = length;
         }
     }
@@ -464,13 +459,13 @@ wasiFdWrite(
 
     /* Convert WASI ciovecs to native iovecs */
     {
-        U8* memoryStart = e_memory->data + e_memory->size - 1;
+        U8* memoryStart = memory->data + memory->size - 1;
 
         U32 totalLength = 0;
         U32 ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
             U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 length = i32_load(e_memory, ciovecPointer + 4);
+            U32 length = i32_load(memory, ciovecPointer + 4);
             iovecs[ciovecIndex].iov_len = length;
             totalLength += length;
         }
@@ -484,7 +479,7 @@ wasiFdWrite(
         ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
             U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 bufferPointer = i32_load(e_memory, ciovecPointer);
+            U32 bufferPointer = i32_load(memory, ciovecPointer);
             U32 length = iovecs[ciovecIndex].iov_len;
             U8* bufferStart = memoryStart - bufferPointer;
             U32 i = 0;
@@ -520,22 +515,17 @@ wasiFdWrite(
     }
 
     /* Store the amount of written bytes at the result pointer */
-    i32_store(e_memory, resultPointer, total);
+    i32_store(memory, resultPointer, total);
 
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, fdX5Fwrite, (U32 wasiFD, U32 ciovecsPointer, U32 ciovecsCount, U32 resultPointer), {
-    return wasiFdWrite(wasiFD, ciovecsPointer, ciovecsCount, resultPointer);
-})
-
-
 static const size_t iovecSize = 8;
 
 static
-__inline__
 U32
-wasiFdRead(
+fdReadImpl(
+    wasmMemory* memory,
     ssize_t readFunc(int, const struct iovec*, int, off_t),
     U32 wasiFD,
     U32 iovecsPointer,
@@ -566,16 +556,16 @@ wasiFdRead(
     /* Convert WASI iovecs to native iovecs */
     {
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-        U8* memoryStart = e_memory->data + e_memory->size;
+        U8* memoryStart = memory->data + memory->size;
 #endif
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
             U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
-            U32 bufferPointer = i32_load(e_memory, iovecPointer);
-            U32 length = i32_load(e_memory, iovecPointer + 4);
+            U32 bufferPointer = i32_load(memory, iovecPointer);
+            U32 length = i32_load(memory, iovecPointer + 4);
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-            iovecs[iovecIndex].iov_base = e_memory->data + bufferPointer;
+            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
             iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - length;
 #endif
@@ -584,7 +574,7 @@ wasiFdRead(
     }
 
     /* Perform the reads */
-    total = readFunc(descriptor.fd, iovecs, iovecsCount, offset);
+    total = readFunc(descriptor.fd, iovecs, (int)iovecsCount, offset);
 
     if (total < 0) {
         free(iovecs);
@@ -612,10 +602,11 @@ wasiFdRead(
     free(iovecs);
 
     /* Store the amount of read bytes at the result pointer */
-    i32_store(e_memory, resultPointer, total);
+    i32_store(memory, resultPointer, total);
 
     return wasiErrnoSuccess;
 }
+
 ssize_t
 readvWrapper(
     int fd,
@@ -626,10 +617,27 @@ readvWrapper(
     return readv(fd, iovecs, count);
 }
 
-WASI_IMPORT(U32, fdX5Fread, (U32 wasiFD, U32 iovecsPointer, U32 iovecsCount, U32 resultPointer), {
+U32
+wasiFDRead(
+    void* instance,
+    U32 wasiFD,
+    U32 iovecsPointer,
+    U32 iovecsCount,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
     /* NOTE: offset -1 is ignored by readvWrapper */
-    return wasiFdRead(readvWrapper, wasiFD, iovecsPointer, iovecsCount, resultPointer, -1);
-})
+    const int offset = -1;
+    return fdReadImpl(
+        memory,
+        readvWrapper,
+        wasiFD,
+        iovecsPointer,
+        iovecsCount,
+        resultPointer,
+        offset
+    );
+}
 
 static
 __inline__
@@ -666,6 +674,7 @@ wrapPositional(
     return res;
 }
 
+static
 ssize_t
 preadvFallback(
     int fd,
@@ -676,11 +685,35 @@ preadvFallback(
     return wrapPositional(readv, fd, iovecs, count, offset);
 }
 
-WASI_IMPORT(U32, fdX5Fpread, (U32 wasiFD, U32 iovecsPointer, U32 iovecsCount, U32 offset, U32 resultPointer), {
-    return wasiFdRead(preadvFallback, wasiFD, iovecsPointer, iovecsCount, resultPointer, offset);
-})
+U32
+wasiFDPread(
+    void* instance,
+    U32 wasiFD,
+    U32 iovecsPointer,
+    U32 iovecsCount,
+    U32 offset,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+    return fdReadImpl(
+        memory,
+        preadvFallback,
+        wasiFD,
+        iovecsPointer,
+        iovecsCount,
+        resultPointer,
+        offset
+    );
+}
 
-WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer), {
+U32
+wasiEnvironSizesGet(
+    void* instance,
+    U32 envcPointer,
+    U32 envpBufSizePointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     int envpIndex = 0;
     size_t envpBufSize = 0;
 
@@ -694,22 +727,23 @@ WASI_IMPORT(U32, environX5FsizesX5Fget, (U32 envcPointer, U32 envpBufSizePointer
         envpIndex++;
     }
 
-    i32_store(e_memory, envcPointer, wasi.envc);
-    i32_store(e_memory, envpBufSizePointer, envpBufSize);
+    i32_store(memory, envcPointer, wasi.envc);
+    i32_store(memory, envpBufSizePointer, envpBufSize);
 
     return wasiErrnoSuccess;
-})
+}
 
-static
-__inline__
 U32
 wasiEnvironGet(
+    void* instance,
     U32 envpPointer,
     U32 envpBufPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     U32 index = 0;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    U8* memoryStart = e_memory->data + e_memory->size - 1;
+    U8* memoryStart = memory->data + memory->size - 1;
 #endif
 
     WASI_TRACE((
@@ -722,7 +756,7 @@ wasiEnvironGet(
         size_t length = strlen(env) + 1;
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
-            e_memory->data + envpBufPointer,
+            memory->data + envpBufPointer,
             env,
             length
         );
@@ -733,7 +767,7 @@ wasiEnvironGet(
         }
 #endif
         i32_store(
-            e_memory,
+            memory,
             envpPointer + index * sizeof(U32),
             envpBufPointer
         );
@@ -743,11 +777,14 @@ wasiEnvironGet(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, environX5Fget, (U32 envpPointer, U32 envpBufPointer), {
-    return wasiEnvironGet(envpPointer, envpBufPointer);
-})
+U32
+wasiArgsSizesGet(
+    void* instance,
+    U32 argcPointer,
+    U32 argvBufSizePointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
 
-WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), {
     size_t argvBufSize = 0;
     U32 argvIndex = 0;
 
@@ -760,22 +797,23 @@ WASI_IMPORT(U32, argsX5FsizesX5Fget, (U32 argcPointer, U32 argvBufSizePointer), 
         argvBufSize += strlen(wasi.argv[argvIndex]) + 1;
     }
 
-    i32_store(e_memory, argcPointer, wasi.argc);
-    i32_store(e_memory, argvBufSizePointer, argvBufSize);
+    i32_store(memory, argcPointer, wasi.argc);
+    i32_store(memory, argvBufSizePointer, argvBufSize);
 
     return wasiErrnoSuccess;
-})
+}
 
-static
-__inline__
 U32
 wasiArgsGet(
+    void* instance,
     U32 argvPointer,
     U32 argvBufPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     U32 index = 0;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    U8* memoryStart = e_memory->data + e_memory->size - 1;
+    U8* memoryStart = memory->data + memory->size - 1;
 #endif
 
     WASI_TRACE((
@@ -788,7 +826,7 @@ wasiArgsGet(
         size_t length = strlen(arg) + 1;
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
-            e_memory->data + argvBufPointer,
+            memory->data + argvBufPointer,
             arg,
             length
         );
@@ -799,7 +837,7 @@ wasiArgsGet(
         }
 #endif
         i32_store(
-            e_memory,
+            memory,
             argvPointer + index * sizeof(U32),
             argvBufPointer
         );
@@ -809,14 +847,10 @@ wasiArgsGet(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, argsX5Fget, (U32 argvPointer, U32 argvBufPointer), {
-    return wasiArgsGet(argvPointer, argvBufPointer);
-})
-
 static
-__inline__
 U32
-wasiFdSeek(
+fdSeekImpl(
+    wasmMemory* memory,
     U32 wasiFD,
     U64 offset,
     int nativeWhence,
@@ -836,7 +870,7 @@ wasiFdSeek(
         return wasiErrno();
     }
 
-    i64_store(e_memory, resultPointer, result);
+    i64_store(memory, resultPointer, result);
 
     return wasiErrnoSuccess;
 }
@@ -860,7 +894,16 @@ convertPreview1Whence(
     }
 }
 
-WASI_PREVIEW1_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
+U32
+wasiPreview1FDSeek(
+    void* instance,
+    U32 wasiFD,
+    U64 offset,
+    U32 whence,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     int nativeWhence = 0;
 
     WASI_TRACE((
@@ -874,13 +917,14 @@ WASI_PREVIEW1_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 re
         return wasiErrnoInval;
     }
 
-    return wasiFdSeek(
+    return fdSeekImpl(
+        memory,
         wasiFD,
         offset,
         nativeWhence,
         resultPointer
     );
-})
+}
 
 static
 __inline__
@@ -901,7 +945,16 @@ convertUnstableWhence(
     }
 }
 
-WASI_UNSTABLE_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 resultPointer), {
+U32
+wasiUnstableFDSeek(
+    void* instance,
+    U32 wasiFD,
+    U64 offset,
+    U32 whence,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     int nativeWhence = 0;
 
     WASI_TRACE((
@@ -915,28 +968,36 @@ WASI_UNSTABLE_IMPORT(U32, fdX5Fseek, (U32 wasiFD, U64 offset, U32 whence, U32 re
         return wasiErrnoInval;
     }
 
-    return wasiFdSeek(
+    return fdSeekImpl(
+        memory,
         wasiFD,
         offset,
         nativeWhence,
         resultPointer
     );
-})
+}
 
-WASI_IMPORT(U32, fdX5Ftell, (U32 wasiFD, U32 resultPointer), {
+U32
+wasiFDTell(
+    void* instance,
+    U32 wasiFD,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
 
     WASI_TRACE((
         "fd_tell(wasiFD=%d, resultPointer=%d)",
         wasiFD, resultPointer
     ));
 
-    return wasiFdSeek(
+    return fdSeekImpl(
+        memory,
         wasiFD,
         0,
         SEEK_CUR,
         resultPointer
     );
-})
+}
 
 static
 __inline__
@@ -962,16 +1023,17 @@ wasiFileTypeFromDirentFileType(
 
 #define WASI_DIRENT_SIZE 24
 
-static
-__inline__
 U32
-wasiFdReaddir(
+wasiFDReaddir(
+    void* instance,
     U32 wasiDirFD,
     U32 bufferPointer,
     U32 bufferLength,
     U64 cookie,
     U32 bufferUsedPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     char* name = NULL;
     struct dirent* entry;
@@ -1017,7 +1079,7 @@ wasiFdReaddir(
         }
 
         if (current != cookie) {
-            seekdir(descriptor.dir, cookie);
+            seekdir(descriptor.dir, (long)cookie);
         }
     }
 
@@ -1059,7 +1121,7 @@ wasiFdReaddir(
             nextSize = bufferRemaining;
         }
         memcpy(
-            e_memory->data + bufferPointer + bufferUsed,
+            memory->data + bufferPointer + bufferUsed,
             entryData,
             nextSize
         );
@@ -1072,7 +1134,7 @@ wasiFdReaddir(
             nextSize = bufferRemaining;
         }
         memcpy(
-            e_memory->data + bufferPointer + bufferUsed,
+            memory->data + bufferPointer + bufferUsed,
             name,
             nextSize
         );
@@ -1085,14 +1147,14 @@ wasiFdReaddir(
 
         if (bufferRemaining < WASI_DIRENT_SIZE) {
             U32 index = 0;
-            U8 *base = e_memory->data + e_memory->size - bufferPointer - bufferUsed - 1;
+            U8* base = memory->data + memory->size - bufferPointer - bufferUsed - 1;
             for (; index < bufferRemaining; index++) {
                 base[-index] = entryData[-index];
             }
             bufferUsed += bufferRemaining;
         } else {
             memcpy(
-                e_memory->data + e_memory->size - bufferPointer - bufferUsed - WASI_DIRENT_SIZE,
+                memory->data + memory->size - bufferPointer - bufferUsed - WASI_DIRENT_SIZE,
                 entryData,
                 WASI_DIRENT_SIZE
             );
@@ -1103,7 +1165,7 @@ wasiFdReaddir(
 
         {
             U32 index = 0;
-            U8 *base = e_memory->data + e_memory->size - bufferPointer - bufferUsed - 1;
+            U8* base = memory->data + memory->size - bufferPointer - bufferUsed - 1;
 
             nextSize = nameLength;
             if (bufferRemaining < nextSize) {
@@ -1119,7 +1181,7 @@ wasiFdReaddir(
     }
 
     i64_store(
-        e_memory,
+        memory,
         bufferUsedPointer,
         bufferUsed
     );
@@ -1127,11 +1189,11 @@ wasiFdReaddir(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, fdX5Freaddir, (U32 wasiDirFD, U32 bufferPointer, U32 bufferLength, U64 cookie, U32 bufferUsedPointer), {
-    return wasiFdReaddir(wasiDirFD, bufferPointer, bufferLength, cookie, bufferUsedPointer);
-})
-
-WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
+U32
+wasiFDClose(
+    void* instance,
+    U32 wasiFD
+) {
     WASI_TRACE(("fd_close(wasiFD=%d)", wasiFD));
 
     if (!wasiFileDescriptorClose(wasiFD)) {
@@ -1139,7 +1201,7 @@ WASI_IMPORT(U32, fdX5Fclose, (U32 wasiFD), {
         return wasiErrnoBadf;
     }
     return wasiErrnoSuccess;
-})
+}
 
 #define NSEC_PER_SEC 1000000000LL
 #define NSEC_PER_USEC 1000LL
@@ -1185,14 +1247,15 @@ addTimevals(
     }
 }
 
-static
-__inline__
 U32
 wasiClockTimeGet(
+    void* instance,
     U32 clockID,
     U64 precision,
     U32 resultPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     I64 result = 0;
 
     WASI_TRACE((
@@ -1292,7 +1355,7 @@ wasiClockTimeGet(
     WASI_TRACE(("clock_time_get: result=%lld", result));
 
     i64_store(
-        e_memory,
+        memory,
         resultPointer,
         result
     );
@@ -1300,17 +1363,14 @@ wasiClockTimeGet(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, clockX5FtimeX5Fget, (U32 clockID, U64 precision, U32 resultPointer), {
-    return wasiClockTimeGet(clockID, precision, resultPointer);
-})
-
-static
-__inline__
 U32
 wasiClockResGet(
+    void* instance,
     U32 clockID,
     U32 resultPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     I64 result = 0;
 
     WASI_TRACE((
@@ -1366,13 +1426,13 @@ wasiClockResGet(
 #else
     switch (clockID) {
         case WASI_CLOCK_REALTIME: {
-            result = 1e6;
+            result = 1000000;
             break;
         }
         case WASI_CLOCK_MONOTONIC:
         case WASI_CLOCK_PROCESS_CPUTIME_ID:
         case WASI_CLOCK_THREAD_CPUTIME_ID: {
-            result = 1e3;
+            result = 1000;
             break;
         }
         default: {
@@ -1385,18 +1445,13 @@ wasiClockResGet(
     WASI_TRACE(("clock_res_get: result=%lld", result));
 
     i64_store(
-        e_memory,
+        memory,
         resultPointer,
         result
     );
 
     return wasiErrnoSuccess;
 }
-
-WASI_IMPORT(U32, clockX5FresX5Fget, (U32 clockID, U32 resultPointer), {
-    return wasiClockResGet(clockID, resultPointer);
-})
-
 
 static
 __inline__
@@ -1422,13 +1477,14 @@ wasiFileTypeFromMode(
 
 static const size_t wasiFdstatSize = 24;
 
-static
-__inline__
 U32
 wasiFdFdstatGet(
+    void* instance,
     U32 wasiFD,
     U32 resultPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     U8 fileType = wasiFileTypeUnknown;
     U16 wasiFlags = 0;
     struct stat stat;
@@ -1475,28 +1531,36 @@ wasiFdFdstatGet(
 #endif
 
     /* Store result */
-    memset(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-        e_memory->data + resultPointer,
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        e_memory->data + e_memory->size - resultPointer - wasiFdstatSize,
-#endif
+    memset(
+        memory->data + resultPointer,
         0,
         wasiFdstatSize
     );
-    i32_store8(e_memory, resultPointer, fileType);
-    i32_store16(e_memory, resultPointer + 2, wasiFlags);
-    i64_store(e_memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
-    i64_store(e_memory, resultPointer + 16, /* TODO: inherited rights. all for now */ (U64)-1);
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    memset(
+        memory->data + memory->size - resultPointer - wasiFdstatSize,
+        0,
+        wasiFdstatSize
+    );
+#endif
+
+    i32_store8(memory, resultPointer, fileType);
+    i32_store16(memory, resultPointer + 2, wasiFlags);
+    i64_store(memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
+    i64_store(memory, resultPointer + 16, /* TODO: inherited rights. all for now */ (U64)-1);
 
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, fdX5FfdstatX5Fget, (U32 wasiFD, U32 resultPointer), {
-    return wasiFdFdstatGet(wasiFD, resultPointer);
-})
+U32
+wasiFDPrestatGet(
+    void* instance,
+    U32 wasiFD,
+    U32 prestatPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
 
-WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
     WasiPreopen preopen = wasiEmptyPreopen;
     U32 length = 0;
 
@@ -1511,20 +1575,21 @@ WASI_IMPORT(U32, fdX5FprestatX5Fget, (U32 wasiFD, U32 prestatPointer), {
     }
 
     length = strlen(preopen.path) + 1;
-    i32_store(e_memory, prestatPointer, wasiPreopentypeDirectory);
-    i32_store(e_memory, prestatPointer + 4, length);
+    i32_store(memory, prestatPointer, wasiPreopentypeDirectory);
+    i32_store(memory, prestatPointer + 4, length);
 
     return wasiErrnoSuccess;
-})
+}
 
-static
-__inline__
 U32
 wasiFdPrestatDirName(
+    void* instance,
     U32 wasiFD,
     U32 pathPointer,
     U32 pathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     WasiPreopen preopen = wasiEmptyPreopen;
     size_t length = 0;
 
@@ -1545,13 +1610,13 @@ wasiFdPrestatDirName(
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memcpy(
-        e_memory->data + pathPointer,
+        memory->data + pathPointer,
         preopen.path,
         length
     );
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     {
-        U8* base = e_memory->data + e_memory->size - 1 - pathPointer;
+        U8* base = memory->data + memory->size - 1 - pathPointer;
 
         U32 i = 0;
         for (; i < length; i++) {
@@ -1563,19 +1628,16 @@ wasiFdPrestatDirName(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, fdX5FprestatX5FdirX5Fname, (U32 wasiFD, U32 pathPointer, U32 pathLength), {
-    return wasiFdPrestatDirName(wasiFD, pathPointer, pathLength);
-})
-
 static
 __inline__
 bool
 getBigEndianPath(
+    wasmMemory* memory,
     U32 pathPointer,
     U32 pathLength,
     char path[PATH_MAX]
 ) {
-    char* base = (char*) e_memory->data + e_memory->size - 1 - pathPointer;
+    char* base = (char*) memory->data + memory->size - 1 - pathPointer;
     U32 i = 0;
 
     MUST (pathLength <= PATH_MAX)
@@ -1589,10 +1651,9 @@ getBigEndianPath(
     return true;
 }
 
-static
-__inline__
 U32
 wasiPathOpen(
+    void* instance,
     U32 wasiDirFD,
     U32 dirFlags,
     U32 pathPointer,
@@ -1603,8 +1664,10 @@ wasiPathOpen(
     U32 fdFlags,
     U32 fdPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -1643,7 +1706,7 @@ wasiPathOpen(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_open: bad path"));
         return wasiErrnoInval;
     }
@@ -1721,34 +1784,10 @@ wasiPathOpen(
     WASI_TRACE(("path_open: wasiFD=%d", wasiFD));
 
     /* Store the file descriptor at the result pointer */
-    i32_store(e_memory, fdPointer, wasiFD);
+    i32_store(memory, fdPointer, wasiFD);
 
     return wasiErrnoSuccess;
 }
-
-WASI_IMPORT(U32, pathX5Fopen, (
-    U32 wasiDirFD,
-    U32 dirFlags,
-    U32 pathPointer,
-    U32 pathLength,
-    U32 oflags,
-    U64 fsRightsBase,
-    U64 fsRightsInheriting,
-    U32 fdFlags,
-    U32 fdPointer
-), {
-    return wasiPathOpen(
-        wasiDirFD,
-        dirFlags,
-        pathPointer,
-        pathLength,
-        oflags,
-        fsRightsBase,
-        fsRightsInheriting,
-        fdFlags,
-        fdPointer
-    );
-})
 
 static
 __inline__
@@ -1791,6 +1830,7 @@ static
 __inline__
 void
 storePreview1Filestat(
+    wasmMemory* memory,
     U32 statPointer,
     struct stat* stat
 ) {
@@ -1800,29 +1840,33 @@ storePreview1Filestat(
 
     getStatTimes(stat, &access, &modification, &creation);
 
-    memset(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-        e_memory->data + statPointer,
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        e_memory->data + e_memory->size - statPointer - wasiPreview1FilestatSize,
-#endif
+    memset(
+        memory->data + statPointer,
         0,
         wasiPreview1FilestatSize
     );
-    i64_store(e_memory, statPointer,  stat->st_dev);
-    i64_store(e_memory, statPointer + 8,  stat->st_ino);
-    i32_store8(e_memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
-    i64_store(e_memory, statPointer + 24, stat->st_nlink);
-    i64_store(e_memory, statPointer + 32, stat->st_size);
-    i64_store(e_memory, statPointer + 40, convertTimespec(access));
-    i64_store(e_memory, statPointer + 48, convertTimespec(modification));
-    i64_store(e_memory, statPointer + 56, convertTimespec(creation));
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    memset(
+        memory->data + memory->size - statPointer - wasiPreview1FilestatSize,
+        0,
+        wasiPreview1FilestatSize
+    );
+#endif
+
+    i64_store(memory, statPointer,  stat->st_dev);
+    i64_store(memory, statPointer + 8,  stat->st_ino);
+    i32_store8(memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
+    i64_store(memory, statPointer + 24, stat->st_nlink);
+    i64_store(memory, statPointer + 32, stat->st_size);
+    i64_store(memory, statPointer + 40, convertTimespec(access));
+    i64_store(memory, statPointer + 48, convertTimespec(modification));
+    i64_store(memory, statPointer + 56, convertTimespec(creation));
 }
 
 static
-__inline__
 U32
-wasiFdFilestatGet(
+fdFilestatGetImpl(
     U32 wasiFD,
     struct stat* st
 ) {
@@ -1840,7 +1884,14 @@ wasiFdFilestatGet(
     return wasiErrnoSuccess;
 }
 
-WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
+U32
+wasiPreview1FDFilestatGet(
+    void* instance,
+    U32 wasiFD,
+    U32 statPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     struct stat stat;
     U32 res = wasiErrnoInval;
 
@@ -1849,15 +1900,15 @@ WASI_PREVIEW1_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
         wasiFD, statPointer
     ));
 
-    res = wasiFdFilestatGet(wasiFD, &stat);
+    res = fdFilestatGetImpl(wasiFD, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
 
-    storePreview1Filestat(statPointer, &stat);
+    storePreview1Filestat(memory, statPointer, &stat);
 
     return wasiErrnoSuccess;
-})
+}
 
 static const size_t wasiUnstableFilestatSize = 64;
 
@@ -1865,6 +1916,7 @@ static
 __inline__
 void
 storeUnstableFilestat(
+    wasmMemory* memory,
     U32 statPointer,
     struct stat* stat
 ) {
@@ -1874,26 +1926,38 @@ storeUnstableFilestat(
 
     getStatTimes(stat, &access, &modification, &creation);
 
-    memset(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-        e_memory->data + statPointer,
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        e_memory->data + e_memory->size - statPointer - wasiUnstableFilestatSize,
-#endif
+    memset(
+        memory->data + statPointer,
         0,
         wasiUnstableFilestatSize
     );
-    i64_store(e_memory, statPointer, stat->st_dev);
-    i64_store(e_memory, statPointer + 8, stat->st_ino);
-    i32_store8(e_memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
-    i32_store(e_memory, statPointer + 20, stat->st_nlink);
-    i64_store(e_memory, statPointer + 24, stat->st_size);
-    i64_store(e_memory, statPointer + 32, convertTimespec(access));
-    i64_store(e_memory, statPointer + 40, convertTimespec(modification));
-    i64_store(e_memory, statPointer + 48, convertTimespec(creation));
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    memset(
+        memory->data + memory->size - statPointer - wasiUnstableFilestatSize,
+        0,
+        wasiUnstableFilestatSize
+    );
+#endif
+
+    i64_store(memory, statPointer, stat->st_dev);
+    i64_store(memory, statPointer + 8, stat->st_ino);
+    i32_store8(memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
+    i32_store(memory, statPointer + 20, stat->st_nlink);
+    i64_store(memory, statPointer + 24, stat->st_size);
+    i64_store(memory, statPointer + 32, convertTimespec(access));
+    i64_store(memory, statPointer + 40, convertTimespec(modification));
+    i64_store(memory, statPointer + 48, convertTimespec(creation));
 }
 
-WASI_UNSTABLE_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
+U32
+wasiUnstableFDFilestatGet(
+    void* instance,
+    U32 wasiFD,
+    U32 statPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     struct stat stat;
     U32 res = wasiErrnoInval;
 
@@ -1902,21 +1966,21 @@ WASI_UNSTABLE_IMPORT(U32, fdX5FfilestatX5Fget, (U32 wasiFD, U32 statPointer), {
         wasiFD, statPointer
     ));
 
-    res = wasiFdFilestatGet(wasiFD, &stat);
+    res = fdFilestatGetImpl(wasiFD, &stat);
 
     if (res != wasiErrnoSuccess) {
         return res;
     }
 
-    storeUnstableFilestat(statPointer, &stat);
+    storeUnstableFilestat(memory, statPointer, &stat);
 
     return wasiErrnoSuccess;
-})
+}
 
 static
-__inline__
 U32
-wasiPathFilestatGet(
+pathFilestatGetImpl(
+    wasmMemory* memory,
     U32 wasiFD,
     U32 lookupFlags,
     U32 pathPointer,
@@ -1924,7 +1988,7 @@ wasiPathFilestatGet(
     struct stat* st
 ) {
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -1938,7 +2002,7 @@ wasiPathFilestatGet(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_filestat_get: bad path"));
         return wasiErrnoInval;
     }
@@ -1965,13 +2029,17 @@ wasiPathFilestatGet(
     return wasiErrnoSuccess;
 }
 
-WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
+U32
+wasiPreview1PathFilestatGet(
+    void* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
     U32 pathLength,
     U32 statPointer
-), {
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     struct stat stat;
     U32 res = wasiErrnoInval;
 
@@ -1980,23 +2048,27 @@ WASI_PREVIEW1_IMPORT(U32, pathX5FfilestatX5Fget, (
         dirFD, lookupFlags, pathPointer, pathLength, statPointer
     ));
 
-    res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
+    res = pathFilestatGetImpl(memory, dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
 
-    storePreview1Filestat(statPointer, &stat);
+    storePreview1Filestat(memory, statPointer, &stat);
 
     return wasiErrnoSuccess;
-})
+}
 
-WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
+U32
+wasiUnstablePathFilestatGet(
+    void* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
     U32 pathLength,
     U32 statPointer
-), {
+) {
+    wasmMemory* memory = wasiMemory(instance);
+
     struct stat stat;
     U32 res = wasiErrnoInval;
 
@@ -2005,20 +2077,19 @@ WASI_UNSTABLE_IMPORT(U32, pathX5FfilestatX5Fget, (
         dirFD, lookupFlags, pathPointer, pathLength, statPointer
     ));
 
-    res = wasiPathFilestatGet(dirFD, lookupFlags, pathPointer, pathLength, &stat);
+    res = pathFilestatGetImpl(memory, dirFD, lookupFlags, pathPointer, pathLength, &stat);
     if (res != wasiErrnoSuccess) {
         return res;
     }
 
-    storeUnstableFilestat(statPointer, &stat);
+    storeUnstableFilestat(memory, statPointer, &stat);
 
     return wasiErrnoSuccess;
-})
+}
 
-static
-__inline__
 U32
 wasiPathRename(
+    void* instance,
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
@@ -2026,9 +2097,11 @@ wasiPathRename(
     U32 newPathPointer,
     U32 newPathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* oldPath = (char*) e_memory->data + oldPathPointer;
-    char* newPath = (char*) e_memory->data + newPathPointer;
+    char* oldPath = (char*) memory->data + oldPathPointer;
+    char* newPath = (char*) memory->data + newPathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char oldPath[PATH_MAX];
     char newPath[PATH_MAX];
@@ -2066,12 +2139,12 @@ wasiPathRename(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(oldPathPointer, oldPathLength, oldPath)) {
+    if (!getBigEndianPath(memory, oldPathPointer, oldPathLength, oldPath)) {
         WASI_TRACE(("path_rename: bad old path"));
         return wasiErrnoInval;
     }
 
-    if (!getBigEndianPath(newPathPointer, newPathLength, newPath)) {
+    if (!getBigEndianPath(memory, newPathPointer, newPathLength, newPath)) {
         WASI_TRACE(("path_rename: bad new path"));
         return wasiErrnoInval;
     }
@@ -2101,34 +2174,17 @@ wasiPathRename(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5Frename, (
-    U32 oldDirFD,
-    U32 oldPathPointer,
-    U32 oldPathLength,
-    U32 newDirFD,
-    U32 newPathPointer,
-    U32 newPathLength
-), {
-    return wasiPathRename(
-        oldDirFD,
-        oldPathPointer,
-        oldPathLength,
-        newDirFD,
-        newPathPointer,
-        newPathLength
-    );
-})
-
-static
-__inline__
 U32
 wasiPathUnlinkFile(
+    void* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -2147,7 +2203,7 @@ wasiPathUnlinkFile(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_unlink_file: bad path"));
         return wasiErrnoInval;
     }
@@ -2172,20 +2228,17 @@ wasiPathUnlinkFile(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5FunlinkX5Ffile, (U32 dirFD, U32 pathPointer, U32 pathLength), {
-    return wasiPathUnlinkFile(dirFD, pathPointer, pathLength);
-})
-
-static
-__inline__
 U32
-pathRemoveDirectory(
+wasiPathRemoveDirectory(
+    void* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -2204,7 +2257,7 @@ pathRemoveDirectory(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_remove_directory: bad path"));
         return wasiErrnoInval;
     }
@@ -2229,21 +2282,17 @@ pathRemoveDirectory(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5FremoveX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
-    return pathRemoveDirectory(dirFD, pathPointer, pathLength);
-})
-
-static
-__inline__
-
 U32
 wasiPathCreateDirectory(
+    void* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -2263,7 +2312,7 @@ wasiPathCreateDirectory(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_create_directory: bad path"));
         return wasiErrnoInval;
     }
@@ -2288,22 +2337,19 @@ wasiPathCreateDirectory(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5FcreateX5Fdirectory, (U32 dirFD, U32 pathPointer, U32 pathLength), {
-    return wasiPathCreateDirectory(dirFD, pathPointer, pathLength);
-})
-
-static
-__inline__
 U32
 wasiPathSymlink(
+    void* instance,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
     U32 newPathPointer,
     U32 newPathLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* newPath = (char*) e_memory->data + newPathPointer;
+    char* newPath = (char*) memory->data + newPathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char newPath[PATH_MAX];
 #endif
@@ -2328,16 +2374,16 @@ wasiPathSymlink(
     }
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    memcpy(oldResolvedPath, e_memory->data + oldPathPointer, oldPathLength);
+    memcpy(oldResolvedPath, memory->data + oldPathPointer, oldPathLength);
     oldResolvedPath[oldPathLength] = '\0';
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(oldPathPointer, oldPathLength, oldResolvedPath)) {
+    if (!getBigEndianPath(memory, oldPathPointer, oldPathLength, oldResolvedPath)) {
         WASI_TRACE(("path_symlink: bad old path"));
         return wasiErrnoInval;
     }
 
-    if (!getBigEndianPath(newPathPointer, newPathLength, newPath)) {
+    if (!getBigEndianPath(memory, newPathPointer, newPathLength, newPath)) {
         WASI_TRACE(("path_symlink: bad new path"));
         return wasiErrnoInval;
     }
@@ -2362,26 +2408,9 @@ wasiPathSymlink(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5Fsymlink, (
-    U32 oldPathPointer,
-    U32 oldPathLength,
-    U32 dirFD,
-    U32 newPathPointer,
-    U32 newPathLength
-), {
-    return wasiPathSymlink(
-        oldPathPointer,
-        oldPathLength,
-        dirFD,
-        newPathPointer,
-        newPathLength
-    );
-})
-
-static
-__inline__
 U32
 wasiPathReadlink(
+    void* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
@@ -2389,8 +2418,10 @@ wasiPathReadlink(
     U32 bufferLength,
     U32 lengthPointer
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    char* path = (char*) e_memory->data + pathPointer;
+    char* path = (char*) memory->data + pathPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     char path[PATH_MAX];
 #endif
@@ -2410,7 +2441,7 @@ wasiPathReadlink(
     }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(pathPointer, pathLength, path)) {
+    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
         WASI_TRACE(("path_readlink: bad path"));
         return wasiErrnoInval;
     }
@@ -2427,9 +2458,9 @@ wasiPathReadlink(
 
     /* TODO: big-endian support */
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    buffer = (char*)e_memory->data + bufferPointer;
+    buffer = (char*)memory->data + bufferPointer;
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    buffer = (char*)e_memory->data + e_memory->size - bufferPointer - bufferLength;
+    buffer = (char*)memory->data + memory->size - bufferPointer - bufferLength;
 #endif
 
     length = readlink(resolvedPath, buffer, bufferLength);
@@ -2450,48 +2481,43 @@ wasiPathReadlink(
     }
 #endif
 
-    i32_store(e_memory, lengthPointer, length);
+    i32_store(memory, lengthPointer, length);
 
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, pathX5Freadlink, (
-    U32 dirFD,
-    U32 pathPointer,
-    U32 pathLength,
-    U32 bufferPointer,
-    U32 bufferLength,
-    U32 lengthPointer
-), {
-    return wasiPathReadlink(
-        dirFD,
-        pathPointer,
-        pathLength,
-        bufferPointer,
-        bufferLength,
-        lengthPointer
-    );
-})
-
-WASI_IMPORT(U32, fdX5FfdstatX5FsetX5Fflags, (U32 fd, U32 flags), {
+U32
+wasiFDFdstatSetFlags(
+    void* instance,
+    U32 fd,
+    U32 flags
+) {
     /* TODO: */
     WASI_TRACE(("fd_fdstat_set_flags: unimplemented function"));
     return wasiErrnoNosys;
-})
+}
 
-WASI_IMPORT(U32, pollX5Foneoff, (U32 inPointer, U32 outPointer, U32 subscriptionCount, U32 eventCount), {
+U32
+wasiPollOneoff(
+    void* instance,
+    U32 inPointer,
+    U32 outPointer,
+    U32 subscriptionCount,
+    U32 eventCount
+) {
     /* TODO: */
     WASI_TRACE(("poll_oneoff: unimplemented function"));
     return wasiErrnoNosys;
-})
+}
 
-static
-__inline__
 U32
 wasiRandomGet(
+    void* instance,
     U32 bufferPointer,
     U32 bufferLength
 ) {
+    wasmMemory* memory = wasiMemory(instance);
+
     ssize_t result = 0;
     int fd = -1;
 
@@ -2508,9 +2534,9 @@ wasiRandomGet(
     result = read(
         fd,
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    e_memory->data + bufferPointer,
+    memory->data + bufferPointer,
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        e_memory->data + e_memory->size - bufferPointer - bufferLength,
+        memory->data + memory->size - bufferPointer - bufferLength,
 #endif
         bufferLength
     );
@@ -2526,6 +2552,154 @@ wasiRandomGet(
     return wasiErrnoSuccess;
 }
 
-WASI_IMPORT(U32, randomX5Fget, (U32 bufferPointer, U32 bufferLength), {
-    return wasiRandomGet(bufferPointer, bufferLength);
-})
+
+
+void*
+wasiResolveImport(
+    const char* module,
+    const char* name
+) {
+    bool isWASI = false;
+
+    if (strcmp(module, "wasi_snapshot_preview1") == 0) {
+        isWASI = true;
+
+        if (strcmp(name, "fd_seek") == 0) {
+            return (void*)wasiPreview1FDSeek;
+        }
+
+        if (strcmp(name, "fd_filestat_get") == 0) {
+            return (void*)wasiPreview1FDFilestatGet;
+        }
+
+        if (strcmp(name, "path_filestat_get") == 0) {
+            return (void*)wasiPreview1PathFilestatGet;
+        }
+
+    } else if (strcmp(module, "wasi_unstable") == 0) {
+        isWASI = true;
+
+        if (strcmp(name, "fd_seek") == 0) {
+            return (void*)wasiUnstableFDSeek;
+        }
+
+        if (strcmp(name, "fd_filestat_get") == 0) {
+            return (void*)wasiUnstableFDFilestatGet;
+        }
+
+        if (strcmp(name, "path_filestat_get") == 0) {
+            return (void*)wasiUnstablePathFilestatGet;
+        }
+
+    }
+
+    if (!isWASI) {
+        return NULL;
+    }
+
+    if (strcmp(name, "proc_exit") == 0) {
+        return (void*)wasiProcExit;
+    }
+
+    if (strcmp(name, "fd_write") == 0) {
+        return (void*)wasiFDWrite;
+    }
+
+    if (strcmp(name, "fd_read") == 0) {
+        return (void*)wasiFDRead;
+    }
+
+    if (strcmp(name, "fd_pread") == 0) {
+        return (void*)wasiFDPread;
+    }
+
+    if (strcmp(name, "environ_sizes_get") == 0) {
+        return (void*)wasiEnvironSizesGet;
+    }
+
+    if (strcmp(name, "environ_get") == 0) {
+        return (void*)wasiEnvironGet;
+    }
+
+    if (strcmp(name, "args_sizes_get") == 0) {
+        return (void*)wasiArgsSizesGet;
+    }
+
+    if (strcmp(name, "args_get") == 0) {
+        return (void*)wasiArgsGet;
+    }
+
+    if (strcmp(name, "fd_tell") == 0) {
+        return (void*)wasiFDTell;
+    }
+
+    if (strcmp(name, "fd_readdir") == 0) {
+        return (void*)wasiFDReaddir;
+    }
+
+    if (strcmp(name, "fd_close") == 0) {
+        return (void*)wasiFDClose;
+    }
+
+    if (strcmp(name, "clock_time_get") == 0) {
+        return (void*)wasiClockTimeGet;
+    }
+
+    if (strcmp(name, "clock_res_get") == 0) {
+        return (void*)wasiClockResGet;
+    }
+
+    if (strcmp(name, "fd_fdstat_get") == 0) {
+        return (void*)wasiFdFdstatGet;
+    }
+
+    if (strcmp(name, "fd_prestat_get") == 0) {
+        return (void*)wasiFDPrestatGet;
+    }
+
+    if (strcmp(name, "fd_prestat_dir_name") == 0) {
+        return (void*)wasiFdPrestatDirName;
+    }
+
+    if (strcmp(name, "path_open") == 0) {
+        return (void*)wasiPathOpen;
+    }
+
+    if (strcmp(name, "path_rename") == 0) {
+        return (void*)wasiPathRename;
+    }
+
+    if (strcmp(name, "path_unlink_file") == 0) {
+        return (void*)wasiPathUnlinkFile;
+    }
+
+    if (strcmp(name, "path_create_directory") == 0) {
+        return (void*)wasiPathCreateDirectory;
+    }
+
+    if (strcmp(name, "path_remove_directory") == 0) {
+        return (void*)wasiPathRemoveDirectory;
+    }
+
+    if (strcmp(name, "path_symlink") == 0) {
+        return (void*)wasiPathSymlink;
+    }
+
+    if (strcmp(name, "path_readlink") == 0) {
+        return (void*)wasiPathReadlink;
+    }
+
+    if (strcmp(name, "fd_fdstat_set_flags") == 0) {
+        return (void*)wasiFDFdstatSetFlags;
+    }
+
+    if (strcmp(name, "poll_oneoff") == 0) {
+        return (void*)wasiPollOneoff;
+    }
+
+    if (strcmp(name, "random_get") == 0) {
+        return (void*)wasiRandomGet;
+    }
+
+    return NULL;
+}
