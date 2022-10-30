@@ -386,4 +386,5 @@ wasmParseDebugInfo(
     return emptyWasmDebugLines;
 }
 
-#endif
+#endif /* HAS_LIBDWARF */
+

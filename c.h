@@ -21,6 +21,7 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
     const WasmModule* module,
+    const char* moduleName,
     WasmCWriteModuleOptions options
 );
 

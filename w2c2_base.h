@@ -420,7 +420,7 @@ DEFINE_REINTERPRET(i32_reinterpret_f32, F32, U32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
-typedef struct {
+typedef struct wasmMemory {
     U8* data;
     U32 pages, maxPages;
     U32 size;
@@ -441,6 +441,22 @@ wasmAllocateMemory(
     memory->size = size;
     memory->pages = initialPages;
     memory->maxPages = maxPages;
+}
+
+static
+__inline__
+void
+wasmFreeMemory(
+    wasmMemory* memory
+) {
+    if (memory->data == NULL) {
+        return;
+    }
+
+    free(memory->data);
+
+    memory->size = 0;
+    memory->pages = 0;
 }
 
 static
@@ -562,7 +578,7 @@ DEFINE_STORE(i64_store32, U32, U64)
 
 typedef void (*wasmFunc)(void);
 
-typedef struct {
+typedef struct wasmTable {
     wasmFunc* data;
     U32 size, maxSize;
 } wasmTable;
@@ -580,10 +596,21 @@ wasmAllocateTable(
     table->data = calloc(size, sizeof(wasmFunc));
 }
 
-#define TF(table, index, t) ((t)((table).data[index]))
+static
+__inline__
+void
+wasmFreeTable(
+    wasmTable* table
+) {
+    if (table->data == NULL) {
+        return;
+    }
 
-#define WASM_IMPORT(returnType, name, parameters, body) \
-  static returnType _##name parameters body             \
-  returnType (*f_##name) parameters = _##name;
+    free(table->data);
+
+    table->size = 0;
+}
+
+#define TF(table, index, t) ((t)((table).data[index]))
 
 #endif /* W2C2_BASE_H */

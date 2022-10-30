@@ -12,6 +12,11 @@ typedef enum WasmExportKind {
     wasmExportKind_count
 } WasmExportKind;
 
+const char*
+wasmExportKindDescription(
+    WasmExportKind exportKind
+);
+
 typedef struct WasmExport {
     char* name;
     WasmExportKind kind;
