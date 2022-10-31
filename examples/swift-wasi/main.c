@@ -3,8 +3,7 @@
 #include <unistd.h>
 #include "../../w2c2_base.h"
 #include "../../wasi/wasi.h"
-
-extern void (*e_X5Fstart)();
+#include "swiftwasi.h"
 
 void
 trap(
@@ -14,7 +13,12 @@ trap(
     abort();
 }
 
-extern void init();
+wasmMemory*
+wasiMemory(
+    void* instance
+) {
+    return swiftwasi_memory((swiftwasiInstance*)instance);
+}
 
 extern char** environ;
 
@@ -44,10 +48,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    /* Initialize module */
-    init();
-
-    (*e_X5Fstart)();
+    {
+        swiftwasiInstance instance;
+        swiftwasiInstantiate(&instance, wasiResolveImport);
+        swiftwasi_X5Fstart(&instance);
+        swiftwasiFreeInstance(&instance);
+    }
 
     return 0;
 }

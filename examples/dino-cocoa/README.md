@@ -11,6 +11,7 @@ https://github.com/binji/raw-wasm/tree/master/dino
 
 ```shell
 mkdir build
+cd build
 cmake ..
 make
 open dino.app

@@ -3,10 +3,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-wasmMemory *e_memory;
-
-wasmMemory m;
-
 extern char** environ;
 
 extern
@@ -45,8 +41,8 @@ testResolvePath(
 
 int
 main(int argc, char* argv[]) {
+    wasmMemory m;
     wasmAllocateMemory(&m, 2, 65535);
-    e_memory = &m;
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;

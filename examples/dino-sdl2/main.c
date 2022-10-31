@@ -3,14 +3,28 @@
 #include <SDL.h>
 
 #include "w2c2_base.h"
+#include "dino.h"
 
-/* Imports */
-
-F32 Math_random(void) {
+static
+F32
+Math_random() {
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
-F32 (*f_Math_random)(void) = &Math_random;
+static
+void*
+resolveImport(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "Math") == 0
+        && strcmp(name, "random") == 0
+    ) {
+        return (void*)Math_random;
+    }
+
+    return NULL;
+}
 
 void
 trap(
@@ -19,15 +33,6 @@ trap(
     fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
     abort();
 }
-
-
-/* Exports */
-
-extern wasmMemory (*e_mem);
-
-extern void (*e_run)();
-
-extern void init();
 
 /* Config */
 
@@ -39,8 +44,9 @@ static const U32 frameDuration = 1.0 / 60 * 1000;
 /* Main */
 
 int main() {
-    /* Initialize module */
-    init();
+    dinoInstance instance;
+    dinoInstantiate(&instance, resolveImport);
+    wasmMemory* mem = dino_mem(&instance);
 
     /* Initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -83,7 +89,7 @@ int main() {
     );
 
     /* Draw initial frame */
-    (*e_run)();
+    dino_run(&instance);
 
     bool running = false;
     U32 last = SDL_GetTicks();
@@ -117,20 +123,20 @@ int main() {
             }
 
             if (down) {
-                e_mem->data[0] |= bit;
+                mem->data[0] |= bit;
             } else {
-                e_mem->data[0] &= ~bit;
+                mem->data[0] &= ~bit;
             }
         }
 
         /* Advance game loop */
         if (running) {
-            (*e_run)();
+            dino_run(&instance);
         }
 
         /* Render */
         SDL_RenderClear(renderer);
-        SDL_UpdateTexture(screenTexture, NULL, e_mem->data + 0x5000, width * 4);
+        SDL_UpdateTexture(screenTexture, NULL, mem->data + 0x5000, width * 4);
         SDL_RenderCopy(renderer, screenTexture, NULL, NULL);
         SDL_RenderPresent(renderer);
 

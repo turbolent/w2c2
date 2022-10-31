@@ -6,11 +6,11 @@ coremark: coremark.o main.o ../../wasi/wasi.o
 	$(CC) $^ -o coremark $(LDFLAGS)
 
 %.c: %.wasm
-	$(W2C2) -o $@ $<
+	$(W2C2) $< $@
 
 %.o: %.c
 	$(CC) -I../.. -c $(CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:
-	rm -f *.o coremark
+	rm -f *.o coremark coremark.c coremark.h

@@ -2,28 +2,38 @@
 #include "../../w2c2_base.h"
 
 #import "DinoView.h"
+#include "dino.h"
 
-#define MEM(o) e_mem->data[o]
+#define MEM(o) mem->data[o]
 
-/* Imports */
-
-WASM_IMPORT(F32, Math_random, (), {
+static
+F32
+Math_random() {
     return (F32)rand()/(F32)(RAND_MAX);
-})
+}
+
+static
+void*
+resolveImport(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "Math") == 0
+        && strcmp(name, "random") == 0
+        ) {
+        return (void*)Math_random;
+    }
+
+    return NULL;
+}
 
 void
 trap(
     Trap trap
 ) {}
 
-
-/* Exports */
-
-extern wasmMemory (*e_mem);
-
-extern void (*e_run)(void);
-
-extern void init(void);
+static wasmMemory* mem = NULL;
+static dinoInstance instance;
 
 /* Config */
 
@@ -36,7 +46,7 @@ static const U32 framebufferOffset = 0x5000;
 
 @property (strong) NSTimer *redrawTimer;
 @property (strong) NSBitmapImageRep *image;
-@property (assign)BOOL space;
+@property (assign) BOOL space;
 @property (assign) BOOL down;
 
 @end
@@ -50,7 +60,8 @@ static const U32 framebufferOffset = 0x5000;
         [self setSpace:NO];
         [self setDown:NO];
 
-        init();
+        dinoInstantiate(&instance, resolveImport);
+        mem = dino_mem(&instance);
 
         self.image = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
                                                              pixelsWide:width
@@ -87,7 +98,7 @@ static const U32 framebufferOffset = 0x5000;
         MEM(0) &= ~2;
     }
 
-    (*e_run)();
+    dino_run(&instance);
 
     [self setNeedsDisplay:YES];
 }
@@ -97,7 +108,7 @@ static const U32 framebufferOffset = 0x5000;
     [super drawRect:dirtyRect];
 
     memcpy(self.image.bitmapData,
-           e_mem->data + framebufferOffset,
+           mem->data + framebufferOffset,
            width * 4 * height);
 
     [self.image drawInRect:[self bounds]];

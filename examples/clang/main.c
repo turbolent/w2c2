@@ -3,15 +3,22 @@
 #include <unistd.h>
 #include "../../w2c2_base.h"
 #include "../../wasi/wasi.h"
-
-extern void (*e_X5Fstart)();
+#include "clang.h"
 
 void
 trap(
     Trap trap
-) {}
+) {
+    fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
+    abort();
+}
 
-extern void init();
+wasmMemory*
+wasiMemory(
+    void* instance
+) {
+    return clang_memory((clangInstance*)instance);
+}
 
 extern char** environ;
 
@@ -41,10 +48,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    /* Initialize module */
-    init();
-
-    (*e_X5Fstart)();
+    {
+        clangInstance instance;
+        clangInstantiate(&instance, wasiResolveImport);
+        clang_X5Fstart(&instance);
+        clangFreeInstance(&instance);
+    }
 
     return 0;
 }

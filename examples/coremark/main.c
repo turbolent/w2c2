@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "../../w2c2_base.h"
 #include "../../wasi/wasi.h"
-
-extern void (*e_X5Fstart)();
+#include "coremark.h"
 
 void
 trap(
@@ -12,20 +11,25 @@ trap(
     abort();
 }
 
-extern void init();
+wasmMemory*
+wasiMemory(
+    void* instance
+) {
+    return coremark_memory((coremarkInstance*)instance);
+}
 
 extern char** environ;
 
 /* Main */
 
 int main(int argc, char* argv[]) {
+    coremarkInstance instance;
+    coremarkInstantiate(&instance, wasiResolveImport);
+
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;
     }
 
-    /* Initialize module */
-    init();
-
-    (*e_X5Fstart)();
+    coremark_X5Fstart(&instance);
 }

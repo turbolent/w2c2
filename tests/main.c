@@ -3,29 +3,57 @@
 
 static U32 spectest_global_i32 = 666;
 
-U32 *g_spectest_globalX5Fi32 = &spectest_global_i32;
-
 static U64 spectest_global_i64 = 666;
-
-U64 *g_spectest_globalX5Fi64 = &spectest_global_i64;
 
 static void spectest_print() {
     printf("spectest.print()\n");
 }
 
-void (*f_spectest_print)(void) = &spectest_print;
-
 static void spectest_printX5Fi32(U32 l0) {
     printf("spectest.print_i32(%d)\n", l0);
 }
 
-void (*f_spectest_printX5Fi32)(U32 l0) = &spectest_printX5Fi32;
-
 static wasmTable spectest_table;
 static wasmMemory spectest_memory;
 
-wasmTable* t_spectest_table = &spectest_table;
-wasmMemory* m_spectest_memory = &spectest_memory;
+void*
+resolveTestImports(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "spectest") != 0) {
+        fprintf(stderr, "FAIL: import of unknown module: %s\n", module);
+        return NULL;
+    }
+
+    if (strcmp(name, "table") == 0) {
+        return (void*)&spectest_table;
+    }
+
+    if (strcmp(name, "memory") == 0) {
+        return (void*)&spectest_memory;
+    }
+
+    if (strcmp(name, "global_i32") == 0) {
+        return (void*)&spectest_global_i32;
+    }
+
+    if (strcmp(name, "global_i64") == 0) {
+        return (void*)&spectest_global_i64;
+    }
+
+    if (strcmp(name, "print") == 0) {
+        return (void*)spectest_print;
+    }
+
+    if (strcmp(name, "print_i32") == 0) {
+        return (void*)spectest_printX5Fi32;
+    }
+
+    fprintf(stderr, "FAIL: import of unknown spectest item: %s\n", name);
+
+    return NULL;
+}
 
 void
 trap(
@@ -96,12 +124,10 @@ static void initTest() {
     wasmAllocateTable(&spectest_table, 10, 20);
 }
 
-extern void init(void);
 extern void test(void);
 
 int main() {
     initTest();
-    init();
     test();
     return 0;
 }

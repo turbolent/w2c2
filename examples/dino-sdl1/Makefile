@@ -6,11 +6,11 @@ dino: dino.o main.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.c: %.wasm
-	$(W2C2) -o $@ $<
+	$(W2C2) $< $@
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
-	rm -f *.o dino.c dino
+	rm -f *.o dino.c dino.h dino

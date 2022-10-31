@@ -15,18 +15,17 @@ LDFLAGS = -specs=ds_arm9.specs -mthumb -mthumb-interwork -L$(DEVKITPRO)/libnds/l
 
 %.elf:
 
-
 dino.nds: dino.elf
 
 dino.elf: dino.o main.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.c: %.wasm
-	$(W2C2) -o $@ $<
+	$(W2C2) $< $@
 
 %.o: %.c
 	$(CC) -I../.. $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
-	rm -f *.o dino.c dino.elf
+	rm -f *.o dino.c dino.h dino.elf

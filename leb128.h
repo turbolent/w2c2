@@ -20,6 +20,7 @@
  * Returns the number of read bytes.
  */
 static
+__inline__
 size_t
 leb128ReadU32(
     Buffer* buffer,
@@ -105,6 +106,7 @@ leb128ReadI32(
  * Returns the number of read bytes.
  */
 static
+__inline__
 size_t
 leb128ReadU64(
     Buffer* buffer,

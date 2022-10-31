@@ -1,15 +1,28 @@
 #include <stdio.h>
 #include <ctype.h>
+#ifndef _WIN32
+#include <limits.h>
+#endif
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 #ifdef HAS_GETOPT
   #include <getopt.h>
 #else
   #include "getopt_impl.h"
-#endif
+#endif /* HAS_GETOPT */
 
 #include "buffer.h"
 #include "file.h"
 #include "reader.h"
 #include "c.h"
+#include "stringbuilder.h"
+
+#if HAS_PTHREAD
+static char* const optString = "j:f:d:pgh";
+#else
+static char* const optString = "f:d:pgh";
+#endif /* HAS_PTHREAD */
 
 static
 bool
@@ -36,6 +49,29 @@ readWasmBinary(
     return true;
 }
 
+static
+void
+getPathModuleName(
+    char* moduleName,
+    char* modulePath
+) {
+    int j = 0;
+    size_t ext;
+    size_t i = strlen(modulePath)-1;
+    while (i && modulePath[i] == '/') i--;
+    while (i && modulePath[i] != '.' && modulePath[i] != '/') i--;
+    ext = i;
+    while (i && modulePath[i-1] != '/') i--;
+
+    for (; i < ext; i++) {
+        if (!isalnum(modulePath[i])) {
+            continue;
+        }
+        moduleName[j++] = modulePath[i];
+    }
+    moduleName[j] = '\0';
+}
+
 int
 main(
     int argc,
@@ -48,22 +84,21 @@ main(
     bool pretty = false;
     bool debug = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
+    char moduleName[PATH_MAX];
 
     int index = 0;
     int c = -1;
 
     opterr = 0;
 
-    while ((c = getopt(argc, argv, "j:o:f:d:pgh")) != -1) {
+    while ((c = getopt(argc, argv, optString)) != -1) {
         switch (c) {
+#if HAS_PTHREAD
             case 'j': {
                 jobCount = strtoul(optarg, NULL, 0);
                 break;
             }
-            case 'o': {
-                outputPath = optarg;
-                break;
-            }
+#endif /* HAS_PTHREAD */
             case 'f': {
                 functionsPerFile = strtoul(optarg, NULL, 0);
                 break;
@@ -108,22 +143,29 @@ main(
                 break;
             }
             case 'h': {
-                fprintf(stderr, "usage: w2c2 [options] filename\n\n");
+                fprintf(stderr, "w2c2\n");
+                fprintf(stderr, "  Compiles a WebAssembly module in binary format to a C source file and header\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "usage:\n");
+                fprintf(stderr, "  w2c2 [options] MODULE OUTPUT\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "arguments:\n");
+                fprintf(stderr, "  MODULE: Path of binary WebAssembly module\n");
+                fprintf(stderr, "  OUTPUT: Path of output file(s)\n");
+                fprintf(stderr, "\n");
                 fprintf(stderr, "options:\n");
                 fprintf(stderr, "  -h         Print this help message\n");
-                fprintf(stderr, "  -j N       Number of jobs (>1 enables parallel compilation and requires -o)\n");
+#if HAS_PTHREAD
+                fprintf(stderr, "  -j N       Number of jobs (>1 enables parallel compilation)\n");
+#endif /* HAS_PTHREAD */
                 fprintf(stderr, "  -f N       Number of functions per file when parallel compilation is enabled\n");
-                fprintf(stderr, "  -o PATH    Path for the output file(s). Default: use stdout. Required for parallel compilation\n");
                 fprintf(stderr, "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n");
                 fprintf(stderr, "  -g         Generate debug information (#line directives) based on DWARF\n");
                 fprintf(stderr, "  -p         Generate pretty code\n");
                 return 0;
             }
             case '?': {
-                if (optopt == 'o') {
-                    fprintf(stderr, "w2c2: option -%c requires an argument.\n", optopt);
-                }
-                else if (isprint(optopt)) {
+                if (isprint(optopt)) {
                     fprintf(stderr, "w2c2: unknown option `-%c'.\n", optopt);
                 } else {
                     fprintf(
@@ -139,28 +181,40 @@ main(
         }
     }
 
-    index = optind;
-
-    if (index >= argc) {
-        fprintf(stderr, "w2c2: expected filename argument.\nTry '-h' for more information.\n");
-        return 1;
-    }
-
+#if HAS_PTHREAD
     if (jobCount < 1) {
         fprintf(stderr, "w2c2: expected jobCount >= 1, got %d\n", jobCount);
         return 1;
     }
+#endif /* HAS_PTHREAD */
 
-    if (jobCount > 1 && outputPath == NULL) {
+    index = optind;
+
+    /* Module argument */
+
+    if (index >= argc) {
         fprintf(
             stderr,
-            "w2c2: expected output path argument for parallel compilation.\n"
+            "w2c2: expected filename argument.\n"
             "Try '-h' for more information.\n"
         );
         return 1;
     }
+    modulePath = argv[index++];
 
-    modulePath = argv[index];
+    /* Output path argument */
+
+    if (index >= argc) {
+        fprintf(
+            stderr,
+            "w2c2: expected output path argument.\n"
+            "Try '-h' for more information.\n"
+        );
+        return 1;
+    }
+    outputPath = argv[index++];
+
+    getPathModuleName(moduleName, modulePath);
 
     {
         WasmModuleReader reader = emptyWasmModuleReader;
@@ -181,7 +235,7 @@ main(
         writeOptions.debug = debug;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
-        if (!wasmCWriteModule(reader.module, writeOptions)) {
+        if (!wasmCWriteModule(reader.module, moduleName, writeOptions)) {
             fprintf(stderr, "w2c2: failed to compile\n");
             return 1;
         }
