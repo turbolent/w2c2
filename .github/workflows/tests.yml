@@ -8,6 +8,10 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -74,4 +78,30 @@ jobs:
         working-directory: ./tests
         run: |
           make run-tests EXECUTE=${{ matrix.system.qemu }} 2>&1 | tee results
+          ! grep -q "^FAIL: " results
+
+  macos:
+    runs-on: macos-latest
+    name: "macOS, ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [release, debug]
+        threads: [true, false]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          brew install wabt python3
+      - name: Build
+        run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
+      - name: Generate tests
+        working-directory: ./tests
+        run: make gen
+      - name: Run tests
+        working-directory: ./tests
+        run: |
+          make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
