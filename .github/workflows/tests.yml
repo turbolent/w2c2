@@ -96,9 +96,6 @@ jobs:
         run: |
           brew install wabt python3
       - name: Build
-        env:
-          CC: ${{ matrix.system.cc }}
-          LDFLAGS: -static
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
       - name: Generate tests
         working-directory: ./tests
