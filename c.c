@@ -8,10 +8,13 @@
 #ifndef _WIN32
   #include <unistd.h>
   #include <errno.h>
-#include <libgen.h>
-#include <limits.h>
-
+  #include <libgen.h>
+  #include <limits.h>
 #endif /* _WIN32 */
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 #include "c.h"
 #include "stringbuilder.h"
