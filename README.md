@@ -10,8 +10,9 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 - Written in C89 and generates C89
 - Support for older operating systems and architectures
 - Support for big-endian systems
-- Streaming compilation, low memory usage
+- Streaming/single-pass compilation, low memory usage
 - Parallel compilation into multiple files
+- Support for multiple modules and instances
 - WASI implementation which is able to run `clang.wasm`
 
 ## Performance
