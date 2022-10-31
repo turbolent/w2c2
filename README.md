@@ -32,18 +32,20 @@ To enables certain features, list them in the `FEATURES` variable passed to `mak
 
 ## Usage
 
-Compile `module.wasm` to `module.c`:
+For example, to compile `module.wasm` to `module.c` (and `module.h`):
 
 ```sh
-./w2c2 -o module.c module.wasm
+./w2c2 module.wasm module.c
 ```
 
 ### Parallel Compilation
 
-Compile `module.wasm` using 12 concurrent jobs into multiple files with 100 functions each:
+When w2c2 was built with the `threads` feature (see above), it is possible to compile the module in parallel.
+
+For example, to compile `module.wasm` (and `module.h`), using 12 concurrent jobs, into multiple files with 100 functions each:
 
 ```sh
-./w2c2 -o module_directory -j 12 -f 100 module.wasm
+./w2c2 -j 12 -f 100 module.wasm module.c
 ```
 
 ## Examples
@@ -52,12 +54,13 @@ Coremark:
 
 ```sh
 cd examples/coremark
+make
 ./coremark
 ```
 
 ## Testing
 
-Requires Python 3 and wabt (for wast2json).
+Requires Python 3 and [wabt](https://github.com/WebAssembly/wabt) (for `wast2json`).
 
 ```sh
 cd tests
