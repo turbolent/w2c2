@@ -4016,10 +4016,10 @@ __inline__
 void
 wasmCWriteIncludes(
     FILE* file,
-    const char* moduleName
+    const char* headerName
 ) {
     wasmCWriteBaseInclude(file);
-    fprintf(file, "#include \"%s.h\"\n\n", moduleName);
+    fprintf(file, "#include \"%s\"\n\n", headerName);
 }
 
 static
@@ -4209,6 +4209,7 @@ WARN_UNUSED_RESULT
 wasmCWriteImplementationFile(
     const WasmModule* module,
     const char* moduleName,
+    const char* headerName,
     WasmDebugLines* debugLines,
     U32 fileIndex,
     U32 functionsPerFile,
@@ -4243,7 +4244,7 @@ wasmCWriteImplementationFile(
             );
             return false;
         }
-        wasmCWriteIncludes(file, moduleName);
+        wasmCWriteIncludes(file, headerName);
     }
 
     {
@@ -4283,6 +4284,7 @@ typedef struct WasmCImplementationWriterJob {
     U32 functionsPerFile;
     const WasmModule* module;
     const char* moduleName;
+    const char* headerName;
     WasmDebugLines debugLines;
     bool pretty;
     bool debug;
@@ -4302,6 +4304,7 @@ wasmCImplementationWriterThread(
     const WasmModule* module = job->module;
     WasmDebugLines* debugLines = &job->debugLines;
     const char* moduleName = job->moduleName;
+    const char* headerName = job->headerName;
     bool pretty = job->pretty;
     bool debug = job->debug;
 
@@ -4316,6 +4319,7 @@ wasmCImplementationWriterThread(
         bool result = wasmCWriteImplementationFile(
             module,
             moduleName,
+            headerName,
             debugLines,
             fileIndex,
             functionsPerFile,
@@ -4366,6 +4370,7 @@ WARN_UNUSED_RESULT
 wasmCWriteModuleParallel(
     const WasmModule* module,
     const char* moduleName,
+    const char* headerName,
     WasmCWriteModuleOptions options
 ) {
     bool success = true;
@@ -4392,6 +4397,7 @@ wasmCWriteModuleParallel(
             job.functionsPerFile = options.functionsPerFile;
             job.module = module;
             job.moduleName = moduleName;
+            job.headerName = headerName;
             job.debugLines = module->debugLines;
             job.pretty = options.pretty;
             job.debug = options.debug;
@@ -4452,6 +4458,7 @@ wasmCWriteModuleImplementation(
     const WasmModule* module,
     const char* moduleName,
     const char* filename,
+    const char* headerName,
     WasmCWriteModuleOptions options
 ) {
     WasmDebugLines debugLines = module->debugLines;
@@ -4470,18 +4477,19 @@ wasmCWriteModuleImplementation(
         return false;
     }
 
-    wasmCWriteIncludes(file, moduleName);
+    wasmCWriteIncludes(file, headerName);
 
     /* Write implementations */
 
 #if HAS_PTHREAD
     if (options.jobCount > 1) {
-        MUST (wasmCWriteModuleParallel(module, moduleName, options))
+        MUST (wasmCWriteModuleParallel(module, moduleName, headerName, options))
     } else {
 #endif /* HAS_PTHREAD */
         MUST (wasmCWriteImplementationFile(
             module,
             moduleName,
+            headerName,
             &debugLines,
             0,
             options.functionsPerFile,
@@ -4555,7 +4563,7 @@ wasmCWriteModule(
     }
 
     MUST (wasmCWriteModuleHeader(module, moduleName, headerName, options.pretty))
-    MUST (wasmCWriteModuleImplementation(module, moduleName, outputName, options))
+    MUST (wasmCWriteModuleImplementation(module, moduleName, outputName, headerName, options))
 
     return true;
 }

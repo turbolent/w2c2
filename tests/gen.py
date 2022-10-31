@@ -75,19 +75,23 @@ def generate_test_files(json_path):
     def create_test_file(filename, module_name):
         nonlocal test_file
 
-        test_preamble = f"""
+        test_path = Path(filename)
+        test_path = test_path.with_name('assert_' + test_path.name).with_suffix('.c')
+        print("    " + str(test_path))
+
+        header = Path(filename)
+        header = header.with_name('test_' + header.name).with_suffix('.h')
+
+        test_preamble = """
 #include <stdio.h>
 #include "w2c2_base.h"
 #include "test.h"
-#include "{module_name}.h"
+#include "{header}"
 
 void test() {{
     {module_name}Instance instance;
     {module_name}Instantiate(&instance, resolveTestImports);
-"""
-        test_path = Path(filename)
-        test_path = test_path.with_name('assert_' + test_path.name).with_suffix('.c')
-        print("    " + str(test_path))
+""".format(header=header, module_name=module_name)
         test_file = open(test_path, 'w')
         test_file.write(test_preamble)
 
