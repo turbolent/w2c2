@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <ctype.h>
-#include <libgen.h>
+#ifndef _WIN32
 #include <limits.h>
-
+#endif
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 #ifdef HAS_GETOPT
   #include <getopt.h>
 #else
