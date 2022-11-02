@@ -1,6 +1,8 @@
 #ifndef W2C2_STR_H
 #define W2C2_STR_H
 
+#if !HAS_STRDUP
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -11,5 +13,7 @@ char *strdup(const char *s) {
     }
     return r;
 }
+
+#endif
 
 #endif /* W2C2_STR_H */
