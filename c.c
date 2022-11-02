@@ -3537,6 +3537,11 @@ wasmCWriteDataSegmentsAsArrays(
     U32 dataSegmentIndex = 0;
     for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
         WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+
+        if (!dataSegment.bytes.length) {
+            continue;
+        }
+
         fputs("const U8 ", file);
         wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
         if (pretty) {
@@ -3761,6 +3766,10 @@ wasmCWriteInitMemories(
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
                 WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+
+                if (!dataSegment.bytes.length) {
+                    continue;
+                }
 
                 if (pretty) {
                     fputs(indentation, file);
