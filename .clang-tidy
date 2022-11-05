@@ -1,0 +1,21 @@
+---
+Checks: "-*,\
+bugprone-*,\
+cert-*,\
+clang-analyzer-*,\
+concurrency-*,\
+misc-*,\
+-misc-no-recursion,\
+performance-*,\
+portability-*,\
+readability-*,\
+"
+CheckOptions:
+  - { key: readability-function-cognitive-complexity.Threshold,    value: 75 }
+  - { key: readability-identifier-naming.StructCase,               value: CamelCase  }
+  - { key: readability-identifier-naming.FunctionCase,             value: camelBack  }
+  - { key: readability-identifier-naming.VariableCase,             value: camelBack }
+  - { key: readability-identifier-naming.MacroDefinitionCase,      value: UPPER_CASE }
+  - { key: readability-identifier-naming.EnumConstantCase,         value: camelBack }
+  - { key: readability-identifier-naming.GlobalConstantCase,       value: camelBack }
+  - { key: readability-identifier-naming.StaticConstantCase,       value: camelBack }

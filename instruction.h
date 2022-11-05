@@ -76,7 +76,6 @@ wasmLoadStoreInstructionRead(
 /* WasmCallInstruction */
 
 typedef struct WasmCallInstruction {
-    WasmOpcode opcode;
     U32 funcIndex;
 } WasmCallInstruction;
 
@@ -84,14 +83,12 @@ bool
 WARN_UNUSED_RESULT
 wasmCallInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmCallInstruction* result
 );
 
 /* WasmCallIndirectInstruction */
 
 typedef struct WasmCallIndirectInstruction {
-    WasmOpcode opcode;
     U32 functionTypeIndex;
     U32 tableIndex;
 } WasmCallIndirectInstruction;
@@ -100,7 +97,6 @@ bool
 WARN_UNUSED_RESULT
 wasmCallIndirectInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmCallIndirectInstruction* result
 );
 
@@ -122,7 +118,6 @@ wasmBranchInstructionRead(
 /* WasmBranchTableInstruction */
 
 typedef struct WasmBranchTableInstruction {
-    WasmOpcode opcode;
     U32* labelIndices;
     U32 labelIndexCount;
     U32 defaultLabelIndex;
@@ -137,7 +132,6 @@ bool
 WARN_UNUSED_RESULT
 wasmBranchTableInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmBranchTableInstruction* result
 );
 

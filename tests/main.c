@@ -120,8 +120,8 @@ void printOK(const char* description) {
 }
 
 static void initTest() {
-    wasmAllocateMemory(&spectest_memory, 1, 2);
-    wasmAllocateTable(&spectest_table, 10, 20);
+    wasmMemoryAllocate(&spectest_memory, 1, 2);
+    wasmTableAllocate(&spectest_table, 10, 20);
 }
 
 extern void test(void);

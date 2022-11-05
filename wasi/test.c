@@ -42,7 +42,7 @@ testResolvePath(
 int
 main(int argc, char* argv[]) {
     wasmMemory m;
-    wasmAllocateMemory(&m, 2, 65535);
+    wasmMemoryAllocate(&m, 2, 65535);
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;
