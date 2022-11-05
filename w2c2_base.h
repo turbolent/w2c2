@@ -431,7 +431,7 @@ typedef struct wasmMemory {
 static
 __inline__
 void
-wasmAllocateMemory(
+wasmMemoryAllocate(
     wasmMemory* memory,
     U32 initialPages,
     U32 maxPages
@@ -446,7 +446,7 @@ wasmAllocateMemory(
 static
 __inline__
 void
-wasmFreeMemory(
+wasmMemoryFree(
     wasmMemory* memory
 ) {
     if (memory->data == NULL) {
@@ -462,7 +462,7 @@ wasmFreeMemory(
 static
 __inline__
 U32
-wasmGrowMemory(
+wasmMemoryGrow(
     wasmMemory* memory,
     U32 delta
 ) {
@@ -586,7 +586,7 @@ typedef struct wasmTable {
 static
 __inline__
 void
-wasmAllocateTable(
+wasmTableAllocate(
     wasmTable* table,
     U32 size,
     U32 maxSize
@@ -599,7 +599,7 @@ wasmAllocateTable(
 static
 __inline__
 void
-wasmFreeTable(
+wasmTableFree(
     wasmTable* table
 ) {
     if (table->data == NULL) {

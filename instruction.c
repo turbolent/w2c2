@@ -83,13 +83,11 @@ wasmLoadStoreInstructionRead(
 bool
 wasmCallInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmCallInstruction* result
 ) {
     U32 funcIndex = 0;
     MUST (leb128ReadU32(buffer, &funcIndex) > 0)
 
-    result->opcode = opcode;
     result->funcIndex = funcIndex;
 
     return true;
@@ -100,7 +98,6 @@ wasmCallInstructionRead(
 bool
 wasmCallIndirectInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmCallIndirectInstruction* result
 ) {
     U32 typeIndex = 0;
@@ -109,7 +106,6 @@ wasmCallIndirectInstructionRead(
     MUST (leb128ReadU32(buffer, &typeIndex) > 0)
     MUST (leb128ReadU32(buffer, &memoryIndex) > 0)
 
-    result->opcode = opcode;
     result->functionTypeIndex = typeIndex;
     result->tableIndex = memoryIndex;
 
@@ -138,7 +134,6 @@ wasmBranchInstructionRead(
 bool
 wasmBranchTableInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmBranchTableInstruction* result
 ) {
     U32 labelIndexCount = 0;
@@ -157,7 +152,6 @@ wasmBranchTableInstructionRead(
 
     MUST (leb128ReadU32(buffer, &defaultLabelIndex) > 0)
 
-    result->opcode = opcode;
     result->labelIndexCount = labelIndexCount;
     result->labelIndices = labelIndices;
     result->defaultLabelIndex = defaultLabelIndex;

@@ -21,7 +21,7 @@ static const U8 d1[] = {
 static wasmMemory m0;
 
 static void initMemories(void) {
-    wasmAllocateMemory(&m0, 2, 65535);
+    wasmMemoryAllocate(&m0, 2, 65535);
     LOAD_DATA(m0, 40u, d0, 790);
     LOAD_DATA(m0, 20443u, d1, 37);
 }

@@ -22,31 +22,31 @@
 #include "typestack.h"
 #include "labelstack.h"
 
-static const char* localNamePrefix = "l";
-static const char* globalNamePrefix = "g";
-static const char* memoryNamePrefix = "m";
-static const char* dataSegmentNamePrefix = "d";
-static const char* tableNamePrefix = "t";
-static const char* stackNamePrefix = "s";
-static const char* labelNamePrefix = "L";
+static const char* const localNamePrefix = "l";
+static const char* const globalNamePrefix = "g";
+static const char* const memoryNamePrefix = "m";
+static const char* const dataSegmentNamePrefix = "d";
+static const char* const tableNamePrefix = "t";
+static const char* const stackNamePrefix = "s";
+static const char* const labelNamePrefix = "L";
 
-static const char* valueTypeNames[wasmValueType_count] = {
+static const char* const valueTypeNames[wasmValueType_count] = {
     "U32", "U64", "F32", "F64"
 };
 
-static const char* signedTypeNames[2] = {
+static const char* const signedTypeNames[2] = {
     "I32", "I64"
 };
 
-static const char* shiftMaskStrings[2] = {
+static const char* const shiftMaskStrings[2] = {
     "31", "63"
 };
 
-static const char* valueTypeStackNames[wasmValueType_count] = {
+static const char* const valueTypeStackNames[wasmValueType_count] = {
     "i", "j", "f", "d"
 };
 
-static const char* indentation = "  ";
+static const char* const indentation = "  ";
 
 static
 __inline__
@@ -629,14 +629,9 @@ WARN_UNUSED_RESULT
 wasmCWriteCallExpr(
     WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeCall;
     WasmCallInstruction instruction;
-    if (!wasmCallInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+    if (!wasmCallInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid call instruction encoding\n");
         return false;
     }
 
@@ -729,14 +724,9 @@ WARN_UNUSED_RESULT
 wasmCWriteCallIndirectExpr(
     WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeCallIndirect;
     WasmCallIndirectInstruction instruction;
-    if (!wasmCallIndirectInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+    if (!wasmCallIndirectInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid call_indirect instruction encoding\n");
         return false;
     }
 
@@ -817,13 +807,10 @@ wasmCWriteLocalGetExpr(
     WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeLocalGet;
+
     WasmLocalInstruction instruction;
     if (!wasmLocalInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+        fprintf(stderr, "w2c2: invalid local.get instruction encoding\n");
         return false;
     }
 
@@ -838,8 +825,7 @@ wasmCWriteLocalGetExpr(
         if (!gotType) {
             fprintf(
                 stderr,
-                "w2c2: invalid %s instruction: invalid local index: %u\n",
-                wasmOpcodeDescription(opcode),
+                "w2c2: invalid local.get instruction: invalid local index: %u\n",
                 instruction.localIndex
             );
             return false;
@@ -920,6 +906,7 @@ wasmCWriteGlobalGetExpr(
     WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeGlobalGet;
+
     WasmGlobalInstruction instruction;
     if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
@@ -969,6 +956,7 @@ wasmCWriteGlobalSetExpr(
     WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeGlobalSet;
+
     WasmGlobalInstruction instruction;
     if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(
@@ -1087,7 +1075,7 @@ wasmCWriteConstExpr(
 ) {
     WasmConstInstruction instruction;
     if (!wasmConstInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid const instruction\n");
+        fprintf(stderr, "w2c2: invalid const instruction encoding\n");
         return false;
     }
 
@@ -1117,7 +1105,7 @@ wasmCWriteLoadExpr(
 ) {
     WasmLoadStoreInstruction instruction;
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid load instruction\n");
+        fprintf(stderr, "w2c2: invalid load instruction encoding\n");
         return false;
     }
 
@@ -1233,7 +1221,7 @@ wasmCWriteStoreExpr(
 ) {
     WasmLoadStoreInstruction instruction;
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid store instruction\n");
+        fprintf(stderr, "w2c2: invalid store instruction encoding\n");
         return false;
     }
 
@@ -1326,12 +1314,13 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemorySize(
-    WasmCFunctionWriter* writer,
-    const WasmOpcode opcode
+    WasmCFunctionWriter* writer
 ) {
+    static const WasmOpcode opcode = wasmOpcodeMemorySize;
+
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory instruction\n");
+        fprintf(stderr, "w2c2: invalid memory.size instruction encoding\n");
         return false;
     }
 
@@ -1340,7 +1329,7 @@ wasmCWriteMemorySize(
         if (instruction.memoryIndex != expectedMemoryIndex) {
             fprintf(
                 stderr,
-                "w2c2: invalid memory instruction: expected memory index %u, got %u\n",
+                "w2c2: invalid memory.size instruction: expected memory index %u, got %u\n",
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1357,9 +1346,18 @@ wasmCWriteMemorySize(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+            MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                resultType
+            ))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, false))
+            MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                instruction.memoryIndex,
+                false
+            ))
             MUST (wasmCWrite(writer, ".pages;\n"))
         }
     }
@@ -1371,12 +1369,13 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryGrow(
-    WasmCFunctionWriter* writer,
-    const WasmOpcode opcode
+    WasmCFunctionWriter* writer
 ) {
+    static const WasmOpcode opcode = wasmOpcodeMemoryGrow;
+
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory instruction\n");
+        fprintf(stderr, "w2c2: invalid memory.grow instruction encoding\n");
         return false;
     }
 
@@ -1385,7 +1384,7 @@ wasmCWriteMemoryGrow(
         if (instruction.memoryIndex != expectedMemoryIndex) {
             fprintf(
                 stderr,
-                "w2c2: invalid memory instruction: expected memory index %u, got %u\n",
+                "w2c2: invalid memory.grow instruction: expected memory index %u, got %u\n",
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1403,8 +1402,13 @@ wasmCWriteMemoryGrow(
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWrite(writer, "wasmGrowMemory("))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+            MUST (wasmCWrite(writer, "wasmMemoryGrow("))
+            MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                instruction.memoryIndex,
+                true
+            ))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStringStackName(
                 writer->builder,
@@ -1779,7 +1783,7 @@ wasmCWriteIfExpr(
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
 
-    WasmValueType blockValueType;
+    WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
         fprintf(stderr, "w2c2: invalid if instruction: expected block type\n");
@@ -1886,7 +1890,7 @@ wasmCWriteBlockExpr(
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
 
-    WasmValueType blockValueType;
+    WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
         fprintf(stderr, "w2c2: invalid block instruction: expected block type\n");
@@ -1948,7 +1952,7 @@ wasmCWriteLoopExpr(
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
 
-    WasmValueType blockValueType;
+    WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
         fprintf(stderr, "w2c2: invalid loop instruction: expected block type\n");
@@ -2098,16 +2102,13 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteBranchExpr(
-    WasmCFunctionWriter* writer,
-    const WasmOpcode opcode
+    WasmCFunctionWriter* writer
 ) {
+    static const WasmOpcode opcode = wasmOpcodeBr;
+
     WasmBranchInstruction instruction;
     if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+        fprintf(stderr, "w2c2: invalid br instruction encoding\n");
         return false;
     }
 
@@ -2123,16 +2124,13 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteBranchIfExpr(
-    WasmCFunctionWriter* writer,
-    const WasmOpcode opcode
+    WasmCFunctionWriter* writer
 ) {
+    static const WasmOpcode opcode = wasmOpcodeBrIf;
+
     WasmBranchInstruction instruction;
     if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+        fprintf(stderr, "w2c2: invalid br.if instruction encoding\n");
         return false;
     }
 
@@ -2177,16 +2175,11 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteBranchTableExpr(
-    WasmCFunctionWriter* writer,
-    const WasmOpcode opcode
+    WasmCFunctionWriter* writer
 ) {
     WasmBranchTableInstruction instruction;
-    if (!wasmBranchTableInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
-        );
+    if (!wasmBranchTableInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid br_table instruction encoding\n");
         return false;
     }
 
@@ -2358,16 +2351,16 @@ wasmCWriteFunctionCode(
                 break;
             }
             case wasmOpcodeBr: {
-                MUST (wasmCWriteBranchExpr(writer, *opcode))
+                MUST (wasmCWriteBranchExpr(writer))
                 writer->ignore = true;
                 break;
             }
             case wasmOpcodeBrIf: {
-                MUST (wasmCWriteBranchIfExpr(writer, *opcode))
+                MUST (wasmCWriteBranchIfExpr(writer))
                 break;
             }
             case wasmOpcodeBrTable: {
-                MUST (wasmCWriteBranchTableExpr(writer, *opcode))
+                MUST (wasmCWriteBranchTableExpr(writer))
                 writer->ignore = true;
                 break;
             }
@@ -2425,11 +2418,11 @@ wasmCWriteFunctionCode(
                 break;
             }
             case wasmOpcodeMemorySize: {
-                MUST (wasmCWriteMemorySize(writer, *opcode))
+                MUST (wasmCWriteMemorySize(writer))
                 break;
             }
             case wasmOpcodeMemoryGrow: {
-                MUST (wasmCWriteMemoryGrow(writer, *opcode))
+                MUST (wasmCWriteMemoryGrow(writer))
                 break;
             }
             default: {
@@ -3188,7 +3181,7 @@ wasmCWriteConstantExpr(
             WasmValueType resultType = wasmOpcodeResultType(opcode);
             WasmConstInstruction instruction;
             if (!wasmConstInstructionRead(&code, opcode, &instruction)) {
-                fprintf(stderr, "w2c2: invalid const instruction\n");
+                fprintf(stderr, "w2c2: invalid const instruction encoding\n");
                 return false;
             }
             MUST (wasmCWriteLiteral(builder, resultType, instruction.value))
@@ -3754,7 +3747,7 @@ wasmCWriteInitMemories(
                 if (pretty) {
                     fputs(indentation, file);
                 }
-                fputs("wasmAllocateMemory(", file);
+                fputs("wasmMemoryAllocate(", file);
                 wasmCWriteFileMemoryUse(file, module, memoryImportCount + memoryIndex, true);
                 fprintf(file, ", %u, %u);\n", memory.min, memory.max);
             }
@@ -3830,7 +3823,7 @@ wasmCWriteFreeMemories(
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmFreeMemory(", file);
+        fputs("wasmMemoryFree(", file);
         wasmCWriteFileMemoryUse(file, module, memoryImportCount + memoryIndex, true);
         fputs(");\n", file);
     }
@@ -3911,7 +3904,7 @@ wasmCWriteInitTables(
                 if (pretty) {
                     fputs(indentation, file);
                 }
-                fputs("wasmAllocateTable(", file);
+                fputs("wasmTableAllocate(", file);
                 wasmCWriteFileTableUse(file, module, tableImportCount + tableIndex, true);
                 fprintf(file, ", %u, %u);\n", table.min, table.max);
             }
@@ -3978,7 +3971,7 @@ wasmCWriteFreeTables(
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmFreeTable(", file);
+        fputs("wasmTableFree(", file);
         wasmCWriteFileTableUse(file, module, tableImportCount + tableIndex, true);
         fputs(");\n", file);
     }
@@ -4363,7 +4356,9 @@ roundUp(
 ) {
     if (multiple == 0) {
         return n;
-    } else {
+    }
+
+    {
         U32 remainder = n % multiple;
         if (remainder == 0) {
             return n;
