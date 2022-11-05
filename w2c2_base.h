@@ -500,6 +500,41 @@ wasmGrowMemory(
     return oldPages;
 }
 
+static
+__inline__
+void
+wasmMemoryCopy(
+    wasmMemory* destinationMemory,
+    wasmMemory* sourceMemory,
+    U32 destinationAddress,
+    U32 sourceAddress,
+    U32 count
+) {
+    // TODO: big-endian support
+    memmove(
+        destinationMemory->data + destinationAddress,
+        sourceMemory->data + sourceAddress,
+        count
+    );
+}
+
+static
+__inline__
+void
+wasmMemoryFill(
+    wasmMemory* memory,
+    U32 destinationAddress,
+    U32 value,
+    U32 count
+) {
+    // TODO: big-endian support
+    memset(
+        memory->data + destinationAddress,
+        value,
+        count
+    );
+}
+
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
 static __inline__ void load_data(void *dest, const void *src, size_t n) {
     size_t i = 0;

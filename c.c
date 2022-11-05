@@ -1418,6 +1418,153 @@ wasmCWriteMemoryGrow(
     return true;
 }
 
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryCopy(
+    WasmCFunctionWriter* writer
+) {
+    WasmMemoryCopyInstruction instruction;
+    if (!wasmMemoryCopyInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid memory.copy instruction encoding\n");
+        return false;
+    }
+
+    /* Validate */
+    {
+        static const U32 expectedMemoryIndex = 0;
+        if (instruction.memoryIndex1 != expectedMemoryIndex) {
+            fprintf(
+                stderr,
+                "w2c2: invalid memory.copy instruction: expected memory index 1 to be %u, got %u\n",
+                expectedMemoryIndex,
+                instruction.memoryIndex1
+            );
+            return false;
+        }
+
+        if (instruction.memoryIndex2 != expectedMemoryIndex) {
+            fprintf(
+                stderr,
+                "w2c2: invalid memory.copy instruction: expected memory index 2 to be %u, got %u\n",
+                expectedMemoryIndex,
+                instruction.memoryIndex2
+            );
+            return false;
+        }
+    }
+
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryCopy(\n"))
+        MUST (wasmCWriteStringMemoryUse(
+            writer->builder,
+            writer->module,
+            instruction.memoryIndex1,
+            true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringMemoryUse(
+            writer->builder,
+            writer->module,
+            instruction.memoryIndex2,
+            true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex2,
+            writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex1,
+            writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex0,
+            writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryFill(
+    WasmCFunctionWriter* writer,
+    WasmMiscOpcode miscOpcode
+) {
+    WasmMiscMemoryInstruction instruction;
+    if (!wasmMiscMemoryInstructionRead(writer->code, miscOpcode, &instruction)) {
+        fprintf(stderr, "w2c2: invalid memory.fill instruction encoding\n");
+        return false;
+    }
+
+    {
+        static const U32 expectedMemoryIndex = 0;
+        if (instruction.memoryIndex != expectedMemoryIndex) {
+            fprintf(
+                stderr,
+                "w2c2: invalid memory.fill instruction: expected memory index %u, got %u\n",
+                expectedMemoryIndex,
+                instruction.memoryIndex
+            );
+            return false;
+        }
+    }
+
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryFill(\n"))
+        MUST (wasmCWriteStringMemoryUse(
+            writer->builder,
+            writer->module,
+            instruction.memoryIndex,
+            true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex2,
+            writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex1,
+            writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex0,
+            writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+    }
+
+    return true;
+}
+
 
 static
 bool
@@ -2432,6 +2579,116 @@ wasmCWriteFunctionCode(
                 MUST (wasmCWriteMemoryGrow(writer, *opcode))
                 break;
             }
+            case wasmOpcodeMiscPrefix: {
+                WasmMiscOpcode miscOpcode = 0;
+                MUST (leb128ReadU32(writer->code, &miscOpcode) > 0)
+
+                switch (miscOpcode) {
+                    case wasmMiscOpcodeMemoryInit: {
+                        // TODO: refactor into instruction read function
+                        U32 dataIndex = 0;
+                        U8 memoryIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
+                        MUST (bufferReadByte(writer->code, &memoryIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeDataDrop: {
+                        // TODO: refactor into instruction read function
+                        U32 dataIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeMemoryCopy: {
+                        MUST (wasmCWriteMemoryCopy(writer))
+                        continue;
+                    }
+                    case wasmMiscOpcodeMemoryFill: {
+                        MUST (wasmCWriteMemoryFill(writer, miscOpcode))
+                        continue;
+                    }
+                    case wasmMiscOpcodeTableInit: {
+                        // TODO: refactor into instruction read function
+                        U32 elemIndex = 0;
+                        U32 tableIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
+                        MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeElemDrop: {
+                        // TODO: refactor into instruction read function
+                        U32 elemIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeTableCopy: {
+                        // TODO: refactor into instruction read function
+                        U32 tableIndex1 = 0;
+                        U32 tableIndex2 = 0;
+                        MUST (leb128ReadU32(writer->code, &tableIndex1) > 0)
+                        MUST (leb128ReadU32(writer->code, &tableIndex2) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeTableGrow: {
+                        // TODO: refactor into instruction read function
+                        U32 tableIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeTableSize: {
+                        // TODO: refactor into instruction read function
+                        U32 tableIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+                        break;
+                    }
+                    case wasmMiscOpcodeTableFill: {
+                        // TODO: refactor into instruction read function
+                        U32 tableIndex = 0;
+                        MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                if (!writer->ignore) {
+                    switch (miscOpcode) {
+                        case wasmMiscOpcodeI32TruncSatF32S: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI32TruncSatF32U: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI32TruncSatF64S: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI32TruncSatF64U: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI64TruncSatF32S: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI64TruncSatF32U: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI64TruncSatF64S: {
+                            break;
+                        }
+                        case wasmMiscOpcodeI64TruncSatF64U: {
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+
+                fprintf(
+                    stderr,
+                    "w2c2: unsupported misc opcode: %s\n",
+                    wasmMiscOpcodeDescription(miscOpcode)
+                );
+
+                break;
+            }
             default: {
                 if (writer->ignore) {
                     break;
@@ -2815,9 +3072,15 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, *opcode, "i64_reinterpret_f64"))
                         break;
                     }
-                    default:
-                        fprintf(stderr, "w2c2: unsupported opcode %s\n", wasmOpcodeDescription(*opcode));
+                    default: {
+                        fprintf(
+                            stderr,
+                            "w2c2: unsupported opcode %s (0x%X)\n",
+                            wasmOpcodeDescription(*opcode),
+                            *opcode
+                        );
                         return false;
+                    }
                 }
             }
         }
