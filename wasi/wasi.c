@@ -1485,11 +1485,13 @@ wasiFdFdstatGet(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-    U8 fileType = wasiFileTypeUnknown;
+    WasiFileType fileType = wasiFileTypeUnknown;
     U16 wasiFlags = 0;
     struct stat stat;
     int nativeFlags = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    WasiRights baseRights = 0;
+    WasiRights inheritingRights = 0;
 
     WASI_TRACE((
         "fd_fdstat_get(wasiFD=%d, resultPointer=%d)",
@@ -1507,6 +1509,34 @@ wasiFdFdstatGet(
         return wasiErrno();
     }
     fileType = wasiFileTypeFromMode(stat.st_mode);
+
+    switch (fileType) {
+        case wasiFileTypeCharacterDevice: {
+            if (isatty(descriptor.fd)) {
+                baseRights = wasiRightsTTYBase;
+                inheritingRights = wasiRightsTTYInheriting;
+            } else {
+                baseRights = wasiRightsAll;
+                inheritingRights = wasiRightsAll;
+            }
+            break;
+        }
+        case wasiFileTypeDirectory: {
+            baseRights = wasiRightsDirectoryBase;
+            inheritingRights = wasiRightsDirectoryInheriting;
+            break;
+        }
+        case wasiFileTypeRegularFile: {
+            baseRights = wasiRightsRegularFileBase;
+            inheritingRights = wasiRightsRegularFileInheriting;
+            break;
+        }
+        default: {
+            baseRights = wasiRightsAll;
+            inheritingRights = wasiRightsAll;
+            break;
+        }
+    }
 
     /* Get flags */
     nativeFlags = fcntl(descriptor.fd, F_GETFL);
@@ -1547,8 +1577,8 @@ wasiFdFdstatGet(
 
     i32_store8(memory, resultPointer, fileType);
     i32_store16(memory, resultPointer + 2, wasiFlags);
-    i64_store(memory, resultPointer + 8, /* TODO: rights. all for now */ (U64)-1);
-    i64_store(memory, resultPointer + 16, /* TODO: inherited rights. all for now */ (U64)-1);
+    i64_store(memory, resultPointer + 8, baseRights);
+    i64_store(memory, resultPointer + 16, inheritingRights);
 
     return wasiErrnoSuccess;
 }
