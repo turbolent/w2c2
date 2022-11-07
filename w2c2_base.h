@@ -510,13 +510,20 @@ wasmMemoryCopy(
     U32 sourceAddress,
     U32 count
 ) {
-    // TODO: big-endian support
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memmove(
         destinationMemory->data + destinationAddress,
         sourceMemory->data + sourceAddress,
         count
     );
-}
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    memmove(
+        destinationMemory->data + destinationMemory->size - 1 - destinationAddress,
+        sourceMemory->data + sourceMemory->size - 1 - sourceAddress,
+        count
+    );
+#endif
+    }
 
 static
 __inline__
@@ -527,16 +534,30 @@ wasmMemoryFill(
     U32 value,
     U32 count
 ) {
-    // TODO: big-endian support
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + destinationAddress,
         value,
         count
     );
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+    memset(
+        memory->data + memory->size - 1 - destinationAddress - count,
+        value,
+        count
+    );
+#endif
 }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-static __inline__ void load_data(void *dest, const void *src, size_t n) {
+static
+__inline__
+void
+load_data(
+    void *dest,
+    const void *src,
+    size_t n
+) {
     size_t i = 0;
     U8* destChars = dest;
     memcpy(dest, src, n);
@@ -565,7 +586,14 @@ static __inline__ void load_data(void *dest, const void *src, size_t n) {
 
 #elif WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
-static __inline__ void load_data(void *dest, const void *src, size_t n) {
+static
+__inline__
+void
+load_data(
+    void *dest,
+    const void *src,
+    size_t n
+) {
     memcpy(dest, src, n);
 }
 

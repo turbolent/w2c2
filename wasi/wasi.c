@@ -2552,8 +2552,6 @@ wasiRandomGet(
     return wasiErrnoSuccess;
 }
 
-
-
 void*
 wasiResolveImport(
     const char* module,
