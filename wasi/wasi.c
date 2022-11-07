@@ -1044,7 +1044,7 @@ wasiFDReaddir(
     U32 bufferUsed = 0;
     U64 next = 0;
     U64 inode = 0;
-	struct stat entry_stat;
+    struct stat entry_stat;
     U8 entryData[WASI_DIRENT_SIZE];
 
     WASI_TRACE((
@@ -1109,13 +1109,13 @@ wasiFDReaddir(
         nameLength = strlen(name);
 #ifndef __HAIKU__
         if (entry->d_type != DT_UNKNOWN) {
-			fileType = wasiFileTypeFromDirentFileType(entry->d_type);
-		} else {
+            fileType = wasiFileTypeFromDirentFileType(entry->d_type);
+        } else {
 #endif
             if (lstat(descriptor.path, &entry_stat)) {
                 WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
                 return wasiErrno();
-			}
+            }
 
             if (S_ISREG(entry_stat.st_mode)) {
                 fileType = wasiFileTypeRegularFile;
