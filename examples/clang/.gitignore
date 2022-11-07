@@ -1,4 +1,5 @@
 [0-9]*.c
 clang.h
 clang.c
+clang
 
