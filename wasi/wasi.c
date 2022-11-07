@@ -1043,9 +1043,6 @@ wasiFDReaddir(
     U32 bufferUsed = 0;
     U64 next = 0;
     U64 inode = 0;
-#if !defined(DTTOIF)
-    struct stat entry_stat;
-#endif
     U8 entryData[WASI_DIRENT_SIZE];
 
     WASI_TRACE((
@@ -1108,17 +1105,25 @@ wasiFDReaddir(
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
+        /*
+        Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
+        When available, some file systems always supply an unknown type regardless.
+        Fallback is supplied by lstat in either case.
+        */
 #if defined (DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
-#else
-        if (lstat(descriptor.path, &entry_stat)) {
-            WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
-            return wasiErrno();
+#endif
+        if (fileType==wasiFileTypeUnknown) {
+            struct stat entry_stat;
+
+            if (lstat(descriptor.path, &entry_stat)) {
+                WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
+
+            fileType = wasiFileTypeFromMode(entry_stat.st_mode);
         }
 
-        fileType = wasiFileTypeFromMode(entry_stat.st_mode);
-
-#endif
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
         memset(entryData, 0, WASI_DIRENT_SIZE);
