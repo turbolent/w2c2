@@ -999,29 +999,28 @@ wasiFDTell(
     );
 }
 
-#ifndef __HAIKU__
 static
 __inline__
 WasiFileType
-wasiFileTypeFromDirentFileType(
-    U8 direntFileType
+wasiFileTypeFromMode(
+    mode_t mode
 ) {
-    switch (direntFileType) {
-        case DT_BLK:
+    switch (mode & S_IFMT) {
+        case S_IFBLK:
             return wasiFileTypeBlockDevice;
-        case DT_CHR:
+        case S_IFCHR:
             return wasiFileTypeCharacterDevice;
-        case DT_DIR:
+        case S_IFDIR:
             return wasiFileTypeDirectory;
-        case DT_REG:
+        case S_IFREG:
             return wasiFileTypeRegularFile;
-        case DT_LNK:
+        case S_IFLNK:
             return wasiFileTypeSymbolicLink;
         default:
             return wasiFileTypeUnknown;
     }
 }
-#endif
+
 
 #define WASI_DIRENT_SIZE 24
 
@@ -1044,7 +1043,9 @@ wasiFDReaddir(
     U32 bufferUsed = 0;
     U64 next = 0;
     U64 inode = 0;
+#if !defined(DTTOIF)
     struct stat entry_stat;
+#endif
     U8 entryData[WASI_DIRENT_SIZE];
 
     WASI_TRACE((
@@ -1107,32 +1108,16 @@ wasiFDReaddir(
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
-#ifndef __HAIKU__
-        if (entry->d_type != DT_UNKNOWN) {
-            fileType = wasiFileTypeFromDirentFileType(entry->d_type);
-        } else {
-#endif
-            if (lstat(descriptor.path, &entry_stat)) {
-                WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
-                return wasiErrno();
-            }
-
-            if (S_ISREG(entry_stat.st_mode)) {
-                fileType = wasiFileTypeRegularFile;
-            } else if (S_ISDIR(entry_stat.st_mode)) {
-                fileType = wasiFileTypeDirectory;
-            } else if (S_ISLNK(entry_stat.st_mode)) {
-                fileType = wasiFileTypeSymbolicLink;
-            } else if (S_ISCHR(entry_stat.st_mode)) {
-                fileType = wasiFileTypeCharacterDevice;
-            } else if (S_ISBLK(entry_stat.st_mode)) {
-                fileType = wasiFileTypeBlockDevice;
-            } else {
-                fileType = wasiFileTypeUnknown;
-            }
-
-#ifndef __HAIKU__
+#if defined (DTTOIF)
+        fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
+#else
+        if (lstat(descriptor.path, &entry_stat)) {
+            WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
+            return wasiErrno();
         }
+
+        fileType = wasiFileTypeFromMode(entry_stat.st_mode);
+
 #endif
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
@@ -1479,28 +1464,6 @@ wasiClockResGet(
     );
 
     return wasiErrnoSuccess;
-}
-
-static
-__inline__
-WasiFileType
-wasiFileTypeFromMode(
-    mode_t mode
-) {
-    switch (mode & S_IFMT) {
-        case S_IFBLK:
-            return wasiFileTypeBlockDevice;
-        case S_IFCHR:
-            return wasiFileTypeCharacterDevice;
-        case S_IFDIR:
-            return wasiFileTypeDirectory;
-        case S_IFREG:
-            return wasiFileTypeRegularFile;
-        case S_IFLNK:
-            return wasiFileTypeSymbolicLink;
-        default:
-            return wasiFileTypeUnknown;
-    }
 }
 
 static const size_t wasiFdstatSize = 24;
