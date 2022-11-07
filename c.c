@@ -2585,7 +2585,7 @@ wasmCWriteFunctionCode(
 
                 switch (miscOpcode) {
                     case wasmMiscOpcodeMemoryInit: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 dataIndex = 0;
                         U8 memoryIndex = 0;
                         MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
@@ -2593,7 +2593,7 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmMiscOpcodeDataDrop: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 dataIndex = 0;
                         MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
                         break;
@@ -2607,7 +2607,7 @@ wasmCWriteFunctionCode(
                         continue;
                     }
                     case wasmMiscOpcodeTableInit: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 elemIndex = 0;
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
@@ -2615,13 +2615,13 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmMiscOpcodeElemDrop: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 elemIndex = 0;
                         MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
                         break;
                     }
                     case wasmMiscOpcodeTableCopy: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 tableIndex1 = 0;
                         U32 tableIndex2 = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex1) > 0)
@@ -2629,19 +2629,19 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmMiscOpcodeTableGrow: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
                         break;
                     }
                     case wasmMiscOpcodeTableSize: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
                         break;
                     }
                     case wasmMiscOpcodeTableFill: {
-                        // TODO: refactor into instruction read function
+                        /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
                         break;
