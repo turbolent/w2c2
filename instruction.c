@@ -182,3 +182,41 @@ wasmMemoryInstructionRead(
 
     return true;
 }
+
+/* WasmMiscMemoryInstruction */
+
+bool
+WARN_UNUSED_RESULT
+wasmMiscMemoryInstructionRead(
+    Buffer* buffer,
+    WasmMiscOpcode opcode,
+    WasmMiscMemoryInstruction* result
+) {
+    U32 memoryIndex = 0;
+    MUST(leb128ReadU32(buffer, &memoryIndex) > 0)
+
+    result->opcode = opcode;
+    result->memoryIndex = memoryIndex;
+
+    return true;
+}
+
+/* WasmMemoryCopyInstruction */
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryCopyInstructionRead(
+    Buffer* buffer,
+    WasmMemoryCopyInstruction* result
+) {
+    U8 memoryIndex1 = 0;
+    U8 memoryIndex2 = 0;
+    MUST (bufferReadByte(buffer, &memoryIndex1) > 0)
+    MUST (bufferReadByte(buffer, &memoryIndex2) > 0)
+
+    result->memoryIndex1 = memoryIndex1;
+    result->memoryIndex2 = memoryIndex2;
+
+    return true;
+}
+

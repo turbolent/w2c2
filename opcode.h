@@ -177,12 +177,39 @@ typedef enum WasmOpcode {
     wasmOpcodeI32ReinterpretF32  = 0xBC,
     wasmOpcodeI64ReinterpretF64  = 0xBD,
     wasmOpcodeF32ReinterpretI32  = 0xBE,
-    wasmOpcodeF64ReinterpretI64  = 0xBF
+    wasmOpcodeF64ReinterpretI64  = 0xBF,
+    wasmOpcodeMiscPrefix         = 0xFC
 } WasmOpcode;
 
 const char*
 wasmOpcodeDescription(
     WasmOpcode opcode
+);
+
+typedef enum WasmMiscOpcode {
+    wasmMiscOpcodeI32TruncSatF32S    = 0,
+    wasmMiscOpcodeI32TruncSatF32U    = 1,
+    wasmMiscOpcodeI32TruncSatF64S    = 2,
+    wasmMiscOpcodeI32TruncSatF64U    = 3,
+    wasmMiscOpcodeI64TruncSatF32S    = 4,
+    wasmMiscOpcodeI64TruncSatF32U    = 5,
+    wasmMiscOpcodeI64TruncSatF64S    = 6,
+    wasmMiscOpcodeI64TruncSatF64U    = 7,
+    wasmMiscOpcodeMemoryInit         = 8,
+    wasmMiscOpcodeDataDrop           = 9,
+    wasmMiscOpcodeMemoryCopy         = 10,
+    wasmMiscOpcodeMemoryFill         = 11,
+    wasmMiscOpcodeTableInit          = 12,
+    wasmMiscOpcodeElemDrop           = 13,
+    wasmMiscOpcodeTableCopy          = 14,
+    wasmMiscOpcodeTableGrow          = 15,
+    wasmMiscOpcodeTableSize          = 16,
+    wasmMiscOpcodeTableFill          = 17
+} WasmMiscOpcode;
+
+const char*
+wasmMiscOpcodeDescription(
+    WasmMiscOpcode miscOpcode
 );
 
 WasmValueType

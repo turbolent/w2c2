@@ -744,3 +744,49 @@ wasmOpcodeParameter1Type(
             return 0;
     }
 }
+
+const char*
+wasmMiscOpcodeDescription(
+    WasmMiscOpcode miscOpcode
+) {
+    switch (miscOpcode) {
+    case wasmMiscOpcodeI32TruncSatF32S:
+        return "i32.trunc_sat_f32_s";
+    case wasmMiscOpcodeI32TruncSatF32U:
+        return "i32.trunc_sat_f32_u";
+    case wasmMiscOpcodeI32TruncSatF64S:
+        return "i32.trunc_sat_f64_s";
+    case wasmMiscOpcodeI32TruncSatF64U:
+        return "i32.trunc_sat_f64_u";
+    case wasmMiscOpcodeI64TruncSatF32S:
+        return "i64.trunc_sat_f32_s";
+    case wasmMiscOpcodeI64TruncSatF32U:
+        return "i64.trunc_sat_f32_u";
+    case wasmMiscOpcodeI64TruncSatF64S:
+        return "i64.trunc_sat_f64_s";
+    case wasmMiscOpcodeI64TruncSatF64U:
+        return "i64.trunc_sat_f64_u";
+    case wasmMiscOpcodeMemoryInit:
+        return "memory.init";
+    case wasmMiscOpcodeDataDrop:
+        return "data.drop";
+    case wasmMiscOpcodeMemoryCopy:
+        return "memory.copy";
+    case wasmMiscOpcodeMemoryFill:
+        return "memory.fill";
+    case wasmMiscOpcodeTableInit:
+        return "table.init";
+    case wasmMiscOpcodeElemDrop:
+        return "elem.drop";
+    case wasmMiscOpcodeTableCopy:
+        return "table.copy";
+    case wasmMiscOpcodeTableGrow:
+        return "table.grow";
+    case wasmMiscOpcodeTableSize:
+        return "table.size";
+    case wasmMiscOpcodeTableFill:
+        return "table.fill";
+    default:
+        return "unknown";
+    }
+}

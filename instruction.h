@@ -150,4 +150,33 @@ wasmMemoryInstructionRead(
     WasmMemoryInstruction* result
 );
 
+/* WasmMiscMemoryInstruction */
+
+typedef struct WasmMiscMemoryInstruction {
+    WasmMiscOpcode opcode;
+    U32 memoryIndex;
+} WasmMiscMemoryInstruction;
+
+bool
+WARN_UNUSED_RESULT
+wasmMiscMemoryInstructionRead(
+    Buffer* buffer,
+    WasmMiscOpcode opcode,
+    WasmMiscMemoryInstruction* result
+);
+
+/* WasmMemoryCopyInstruction */
+
+typedef struct WasmMemoryCopyInstruction {
+    U32 memoryIndex1;
+    U32 memoryIndex2;
+} WasmMemoryCopyInstruction;
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryCopyInstructionRead(
+    Buffer* buffer,
+    WasmMemoryCopyInstruction* result
+);
+
 #endif /* W2C2_INSTRUCTION_H */
