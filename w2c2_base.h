@@ -518,8 +518,8 @@ wasmMemoryCopy(
     );
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     memmove(
-        destinationMemory->data + destinationMemory->size - 1 - destinationAddress,
-        sourceMemory->data + sourceMemory->size - 1 - sourceAddress,
+        destinationMemory->data + destinationMemory->size - destinationAddress - count,
+        sourceMemory->data + sourceMemory->size - sourceAddress - count,
         count
     );
 #endif
@@ -542,7 +542,7 @@ wasmMemoryFill(
     );
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     memset(
-        memory->data + memory->size - 1 - destinationAddress - count,
+        memory->data + memory->size - destinationAddress - count,
         value,
         count
     );
