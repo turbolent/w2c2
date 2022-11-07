@@ -77,7 +77,7 @@ jobs:
           LDFLAGS: -static
         working-directory: ./tests
         run: |
-          make run-tests EXECUTE=${{ matrix.system.qemu }} 2>&1 | tee results
+          make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
 
   macos:
