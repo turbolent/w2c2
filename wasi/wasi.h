@@ -318,6 +318,96 @@ static const WasiRights wasiRightsSockSend = 1ULL << 34;
 /* The right to invoke `sock_send_to` */
 static const WasiRights wasiRightsSockSendTo = 1ULL << 35;
 
+static const WasiRights wasiRightsAll =
+    wasiRightsFdDatasync
+    | wasiRightsFdRead
+    | wasiRightsFdSeek
+    | wasiRightsFdFdstatSetFlags
+    | wasiRightsFdSync
+    | wasiRightsFdTell
+    | wasiRightsFdWrite
+    | wasiRightsFdAdvise
+    | wasiRightsFdAllocate
+    | wasiRightsPathCreateDirectory
+    | wasiRightsPathCreateFile
+    | wasiRightsPathLinkSource
+    | wasiRightsPathLinkTarget
+    | wasiRightsPathOpen
+    | wasiRightsFdReaddir
+    | wasiRightsPathReadlink
+    | wasiRightsPathRenameSource
+    | wasiRightsPathRenameTarget
+    | wasiRightsPathFilestatGet
+    | wasiRightsPathFilestatSetSize
+    | wasiRightsPathFilestatSetTimes
+    | wasiRightsFdFilestatGet
+    | wasiRightsFdFilestatSetSize
+    | wasiRightsFdFilestatSetTimes
+    | wasiRightsPathSymlink
+    | wasiRightsPathRemoveDirectory
+    | wasiRightsPathUnlinkFile
+    | wasiRightsPollFdReadwrite
+    | wasiRightsSockShutdown
+    | wasiRightsSockOpen
+    | wasiRightsSockClose
+    | wasiRightsSockBind
+    | wasiRightsSockRecv
+    | wasiRightsSockRecvFrom
+    | wasiRightsSockSend
+    | wasiRightsSockSendTo;
+
+static const WasiRights wasiRightsRegularFileBase =
+    wasiRightsFdDatasync
+    | wasiRightsFdRead
+    | wasiRightsFdSeek
+    | wasiRightsFdFdstatSetFlags
+    | wasiRightsFdSync
+    | wasiRightsFdTell
+    | wasiRightsFdWrite
+    | wasiRightsFdAdvise
+    | wasiRightsFdAllocate
+    | wasiRightsFdFilestatGet
+    | wasiRightsFdFilestatSetSize
+    | wasiRightsFdFilestatSetTimes
+    | wasiRightsPollFdReadwrite;
+
+static const WasiRights wasiRightsRegularFileInheriting = 0;
+
+static const WasiRights wasiRightsDirectoryBase =
+    wasiRightsFdFdstatSetFlags
+    | wasiRightsFdSync
+    | wasiRightsFdAdvise
+    | wasiRightsPathCreateDirectory
+    | wasiRightsPathCreateFile
+    | wasiRightsPathLinkSource
+    | wasiRightsPathLinkTarget
+    | wasiRightsPathOpen
+    | wasiRightsFdReaddir
+    | wasiRightsPathReadlink
+    | wasiRightsPathRenameSource
+    | wasiRightsPathRenameTarget
+    | wasiRightsPathFilestatGet
+    | wasiRightsPathFilestatSetSize
+    | wasiRightsPathFilestatSetTimes
+    | wasiRightsFdFilestatGet
+    | wasiRightsFdFilestatSetTimes
+    | wasiRightsPathSymlink
+    | wasiRightsPathUnlinkFile
+    | wasiRightsPathRemoveDirectory
+    | wasiRightsPollFdReadwrite;
+
+static const WasiRights wasiRightsDirectoryInheriting =
+    wasiRightsDirectoryBase
+    | wasiRightsRegularFileBase;
+
+static const WasiRights wasiRightsTTYBase =
+    wasiRightsFdRead
+    | wasiRightsFdFdstatSetFlags
+    | wasiRightsFdWrite
+    | wasiRightsFdFilestatGet
+    | wasiRightsPollFdReadwrite;
+
+static const WasiRights wasiRightsTTYInheriting = 0;
 
 /* Error codes returned by functions.
  * Not all of these error codes are returned by the functions provided by this API;
