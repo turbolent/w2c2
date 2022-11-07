@@ -184,12 +184,22 @@ void test() {{
 
 
 def gen(paths):
+    wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
+    has_new_wabt = compare_versions(wast2json_version, "1.0.25") > 0
+
+    memory_files = {'memory_copy.wast', 'memory_fill.wast'}
+
     for wast_path in paths:
         print(wast_path)
 
         wast2json_opts = []
-        if wast_path in ('memory_copy.wast', 'memory_fill.wast'):
-            wast2json_opts.append('--enable-bulk-memory')
+
+        if has_new_wabt:
+            if wast_path not in memory_files:
+                wast2json_opts.append('--disable-bulk-memory')
+        else:
+            if wast_path in memory_files:
+                wast2json_opts.append('--enable-bulk-memory')
 
         # Convert WAST to JSON and WASM files, if needed
         json_path = Path(wast_path).with_suffix('.json')
