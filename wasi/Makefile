@@ -1,4 +1,4 @@
-CFLAGS += -std=c89 -Wunused-result -Wall -Wno-long-long -Wno-unused-function -DPATH_MAX=65536
+CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 LDFLAGS += -lm
 
 ifneq (,$(findstring base,$(SANITIZERS)))
