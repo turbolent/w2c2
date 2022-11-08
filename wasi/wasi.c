@@ -1105,17 +1105,20 @@ wasiFDReaddir(
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
+        
         /*
         Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
         When available, some file systems always supply an unknown type regardless.
         Fallback is supplied by lstat in either case.
         */
+
 #if defined (DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
 #else
         fileType = wasiFileTypeUnknown;
 #endif
-        if (fileType==wasiFileTypeUnknown) {
+
+        if (fileType == wasiFileTypeUnknown) {
             struct stat entryStat;
 
             if (lstat(descriptor.path, &entryStat)) {
