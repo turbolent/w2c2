@@ -1002,24 +1002,25 @@ wasiFDTell(
 static
 __inline__
 WasiFileType
-wasiFileTypeFromDirentFileType(
-    U8 direntFileType
+wasiFileTypeFromMode(
+    mode_t mode
 ) {
-    switch (direntFileType) {
-        case DT_BLK:
+    switch (mode & S_IFMT) {
+        case S_IFBLK:
             return wasiFileTypeBlockDevice;
-        case DT_CHR:
+        case S_IFCHR:
             return wasiFileTypeCharacterDevice;
-        case DT_DIR:
+        case S_IFDIR:
             return wasiFileTypeDirectory;
-        case DT_REG:
+        case S_IFREG:
             return wasiFileTypeRegularFile;
-        case DT_LNK:
+        case S_IFLNK:
             return wasiFileTypeSymbolicLink;
         default:
             return wasiFileTypeUnknown;
     }
 }
+
 
 #define WASI_DIRENT_SIZE 24
 
@@ -1104,7 +1105,29 @@ wasiFDReaddir(
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
-        fileType = wasiFileTypeFromDirentFileType(entry->d_type);
+        
+        /*
+        Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
+        When available, some file systems always supply an unknown type regardless.
+        Fallback is supplied by lstat in either case.
+        */
+
+#if defined (DTTOIF)
+        fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
+#else
+        fileType = wasiFileTypeUnknown;
+#endif
+
+        if (fileType == wasiFileTypeUnknown) {
+            struct stat entryStat;
+
+            if (lstat(descriptor.path, &entryStat)) {
+                WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
+
+            fileType = wasiFileTypeFromMode(entryStat.st_mode);
+        }
 
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
 
@@ -1451,28 +1474,6 @@ wasiClockResGet(
     );
 
     return wasiErrnoSuccess;
-}
-
-static
-__inline__
-WasiFileType
-wasiFileTypeFromMode(
-    mode_t mode
-) {
-    switch (mode & S_IFMT) {
-        case S_IFBLK:
-            return wasiFileTypeBlockDevice;
-        case S_IFCHR:
-            return wasiFileTypeCharacterDevice;
-        case S_IFDIR:
-            return wasiFileTypeDirectory;
-        case S_IFREG:
-            return wasiFileTypeRegularFile;
-        case S_IFLNK:
-            return wasiFileTypeSymbolicLink;
-        default:
-            return wasiFileTypeUnknown;
-    }
 }
 
 static const size_t wasiFdstatSize = 24;

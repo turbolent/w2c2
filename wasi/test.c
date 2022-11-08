@@ -39,6 +39,11 @@ testResolvePath(
     fprintf(stderr, "OK: resolvePath(%s, %s) == %s\n", directory, path, expected);
 }
 
+/* Unused but expected by the WASI implementation */
+wasmMemory* wasiMemory(void* instance) {
+    return NULL;
+};
+
 int
 main(int argc, char* argv[]) {
     wasmMemory m;
