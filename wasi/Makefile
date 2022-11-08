@@ -1,4 +1,3 @@
-# TODO Find out why limits.h doesn't define PATH_MAX on Manjaro Linux
 CFLAGS += -std=c89 -Wunused-result -Wall -Wno-long-long -Wno-unused-function -DPATH_MAX=65536
 LDFLAGS += -lm
 

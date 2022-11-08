@@ -39,11 +39,15 @@ testResolvePath(
     fprintf(stderr, "OK: resolvePath(%s, %s) == %s\n", directory, path, expected);
 }
 
-wasmMemory wasiMemory;
+/* Unused but expected by the WASI implementation */
+wasmMemory* wasiMemory(void* instance) {
+    return NULL;
+};
 
 int
 main(int argc, char* argv[]) {
-    wasmMemoryAllocate(&wasiMemory, 2, 65535);
+    wasmMemory m;
+    wasmMemoryAllocate(&m, 2, 65535);
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;

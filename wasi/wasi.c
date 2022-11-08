@@ -1112,16 +1112,18 @@ wasiFDReaddir(
         */
 #if defined (DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
+#else
+        fileType = wasiFileTypeUnknown;
 #endif
         if (fileType==wasiFileTypeUnknown) {
-            struct stat entry_stat;
+            struct stat entryStat;
 
-            if (lstat(descriptor.path, &entry_stat)) {
+            if (lstat(descriptor.path, &entryStat)) {
                 WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
                 return wasiErrno();
             }
 
-            fileType = wasiFileTypeFromMode(entry_stat.st_mode);
+            fileType = wasiFileTypeFromMode(entryStat.st_mode);
         }
 
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
