@@ -16,6 +16,20 @@
 
 #include "wasi.h"
 
+#if NEED_STRNDUP
+char *strndup(const char *s, size_t n) {
+    const char *p = memchr(s, 0, n);
+    size_t l = p ? p-s : n;
+    char *d = malloc(l + 1);
+    if (!d) {
+        return NULL;
+    }
+    memcpy(d, s, l);
+    d[l] = '\0';
+    return d;
+}
+#endif
+
 static
 void
 tracePrintf(const char* fmt, ...) {

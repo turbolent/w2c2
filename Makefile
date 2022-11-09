@@ -42,6 +42,10 @@ ifneq (,$(findstring getopt,$(FEATURES)))
 	CFLAGS += -DHAS_GETOPT
 endif
 
+ifneq (,$(findstring strdup,$(FEATURES)))
+	CFLAGS += -DHAS_STRDUP
+endif
+
 ifneq (,$(findstring debugging,$(FEATURES)))
 	CFLAGS += -DHAS_LIBDWARF
 	LDFLAGS += -ldwarf
