@@ -1119,12 +1119,12 @@ wasiFDReaddir(
         inode = entry->d_ino;
         name = entry->d_name;
         nameLength = strlen(name);
-        
+
         /*
-        Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
-        When available, some file systems always supply an unknown type regardless.
-        Fallback is supplied by lstat in either case.
-        */
+         * Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
+         * When available, some file systems always supply an unknown type regardless.
+         * Fallback is supplied by lstat in either case.
+         */
 
 #if defined (DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
@@ -1308,24 +1308,24 @@ wasiClockTimeGet(
 
 
         switch (clockID) {
-            case WASI_CLOCK_REALTIME: {
+            case wasiClockRealtime: {
                 nativeClockID = CLOCK_REALTIME;
                 break;
             }
 #ifdef _POSIX_MONOTONIC_CLOCK
-            case WASI_CLOCK_MONOTONIC: {
+            case wasiClockMonotonic: {
                 nativeClockID = CLOCK_MONOTONIC;
                 break;
             }
 #endif
 #ifdef _POSIX_CPUTIME
-            case WASI_CLOCK_PROCESS_CPUTIME_ID: {
+            case wasiClockProcessCputimeId: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
 #ifdef _POSIX_THREAD_CPUTIME
-            case WASI_CLOCK_THREAD_CPUTIME_ID: {
+            case wasiClockThreadCputimeId: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
             }
@@ -1347,7 +1347,7 @@ wasiClockTimeGet(
     }
 #else
     switch (clockID) {
-        case WASI_CLOCK_REALTIME: {
+        case wasiClockRealtime: {
             struct timeval tv;
             if (gettimeofday(&tv, NULL) != 0) {
                 WASI_TRACE(("clock_time_get: gettimeofday failed: %s", strerror(errno)));
@@ -1357,7 +1357,7 @@ wasiClockTimeGet(
             break;
         }
 #ifdef __MACH__
-        case WASI_CLOCK_MONOTONIC: {
+        case wasiClockMonotonic: {
 #include <mach/mach_time.h>
             static mach_timebase_info_data_t timebase = {0, 0};
 
@@ -1370,7 +1370,7 @@ wasiClockTimeGet(
             break;
         }
 #endif
-        case WASI_CLOCK_PROCESS_CPUTIME_ID: {
+        case wasiClockProcessCputimeId: {
             struct rusage ru;
             int ret = getrusage(RUSAGE_SELF, &ru);
             if (ret != 0) {
@@ -1423,24 +1423,24 @@ wasiClockResGet(
 
 
         switch (clockID) {
-            case WASI_CLOCK_REALTIME: {
+            case wasiClockRealtime: {
                 nativeClockID = CLOCK_REALTIME;
                 break;
             }
 #ifdef _POSIX_MONOTONIC_CLOCK
-            case WASI_CLOCK_MONOTONIC: {
+            case wasiClockMonotonic: {
                 nativeClockID = CLOCK_MONOTONIC;
                 break;
             }
 #endif
 #ifdef _POSIX_CPUTIME
-            case WASI_CLOCK_PROCESS_CPUTIME_ID: {
+            case wasiClockProcessCputimeId: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
 #ifdef _POSIX_THREAD_CPUTIME
-            case WASI_CLOCK_THREAD_CPUTIME_ID: {
+            case wasiClockThreadCputimeId: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
             }
@@ -1462,13 +1462,13 @@ wasiClockResGet(
     }
 #else
     switch (clockID) {
-        case WASI_CLOCK_REALTIME: {
+        case wasiClockRealtime: {
             result = 1000000;
             break;
         }
-        case WASI_CLOCK_MONOTONIC:
-        case WASI_CLOCK_PROCESS_CPUTIME_ID:
-        case WASI_CLOCK_THREAD_CPUTIME_ID: {
+        case wasiClockMonotonic:
+        case wasiClockProcessCputimeId:
+        case wasiClockThreadCputimeId: {
             result = 1000;
             break;
         }

@@ -93,584 +93,584 @@ wasiPreopenGet(
 
 
 /* Identifiers for preopened capabilities */
-typedef U8 WasiPreopentype;
+typedef enum WasiPreopentype {
 
-/* A pre-opened directory */
-static const WasiPreopentype wasiPreopentypeDirectory = 0;
-
+    /* A pre-opened directory */
+    wasiPreopentypeDirectory = 0
+} WasiPreopentype;
 
 /* The type of a file descriptor or file */
-typedef U8 WasiFileType;
+typedef enum WasiFileType {
 
-/*  The type of the file descriptor or file is unknown or is different from any of the other types specified */
-static const WasiFileType wasiFileTypeUnknown = 0;
+    /* The type of the file descriptor or file is unknown or is different from any of the other types specified */
+    wasiFileTypeUnknown = 0,
 
-/* The file descriptor or file refers to a block device inode */
-static const WasiFileType wasiFileTypeBlockDevice = 1;
+    /* The file descriptor or file refers to a block device inode */
+    wasiFileTypeBlockDevice = 1,
 
-/* The file descriptor or file refers to a character device inode. */
-static const WasiFileType wasiFileTypeCharacterDevice = 2;
+    /* The file descriptor or file refers to a character device inode. */
+    wasiFileTypeCharacterDevice = 2,
 
-/* The file descriptor or file refers to a directory inode */
-static const WasiFileType wasiFileTypeDirectory = 3;
+    /* The file descriptor or file refers to a directory inode */
+    wasiFileTypeDirectory = 3,
 
-/* The file descriptor or file refers to a regular file inode */
-static const WasiFileType wasiFileTypeRegularFile = 4;
+    /* The file descriptor or file refers to a regular file inode */
+    wasiFileTypeRegularFile = 4,
 
-/* The file refers to a symbolic link inode */
-static const WasiFileType wasiFileTypeSymbolicLink = 7;
-
+    /* The file refers to a symbolic link inode */
+    wasiFileTypeSymbolicLink = 7
+} WasiFileType;
 
 /* File descriptor flags */
-typedef U16 WasiFdflags;
+typedef enum WasiFdflags {
 
-/* Append mode: Data written to the file is always appended to the file's end */
-static const WasiFdflags wasiFdflagsAppend = 1ULL << 0;
+    /* Append mode: Data written to the file is always appended to the file's end */
+    wasiFdflagsAppend = 1ULL << 0,
 
-/*
- * Write according to synchronized I/O data integrity completion.
- * Only the data stored in the file is synchronized
- */
-static const WasiFdflags wasiFdflagsDsync = 1ULL << 1;
+    /*
+     * Write according to synchronized I/O data integrity completion.
+     * Only the data stored in the file is synchronized
+     */
+    wasiFdflagsDsync = 1ULL << 1,
 
-/* Non-blocking mode */
-static const WasiFdflags wasiFdflagsNonblock = 1ULL << 2;
+    /* Non-blocking mode */
+    wasiFdflagsNonblock = 1ULL << 2,
 
-/* Synchronized read I/O operations */
-static const WasiFdflags wasiFdflagsRsync = 1ULL << 3;
+    /* Synchronized read I/O operations */
+    wasiFdflagsRsync = 1ULL << 3,
 
-/*
- * Write according to synchronized I/O file integrity completion.
- * In addition to synchronizing the data stored in the file,
- * the implementation may also synchronously update the file's metadata
- */
-static const WasiFdflags wasiFdflagsSync = 1ULL << 4;
+    /*
+     * Write according to synchronized I/O file integrity completion.
+     * In addition to synchronizing the data stored in the file,
+     * the implementation may also synchronously update the file's metadata
+     */
+    wasiFdflagsSync = 1ULL << 4
 
+} WasiFdflags;
 
 /* Open flags used by path_open */
-typedef U16 WasiOflags;
+typedef enum WasiOflags {
 
-/* Create file if it does not exist */
-static const WasiOflags wasiOflagsCreat = 1ULL << 0;
+    /* Create file if it does not exist */
+    wasiOflagsCreat = 1ULL << 0,
 
-/* Fail if not a directory */
-static const WasiOflags wasiOflagsDirectory = 1ULL << 1;
+    /* Fail if not a directory */
+    wasiOflagsDirectory = 1ULL << 1,
 
-/* Fail if file already exists */
-static const WasiOflags wasiOflagsExcl = 1ULL << 2;
+    /* Fail if file already exists */
+    wasiOflagsExcl = 1ULL << 2,
 
-/* Truncate file to size 0 */
-static const WasiOflags wasiOflagsTrunc = 1ULL << 3;
+    /* Truncate file to size 0 */
+    wasiOflagsTrunc = 1ULL << 3
+} WasiOflags;
 
+typedef enum WasiLookupFlag {
 
-typedef U32 WasiLookupFlag;
-
-/* As long as the resolved path corresponds to a symbolic link, it is expanded */
-static const WasiLookupFlag wasiLookupFlagSymlinkFollow = 1ULL << 0;
-
+    /* As long as the resolved path corresponds to a symbolic link, it is expanded */
+    wasiLookupFlagSymlinkFollow = 1ULL << 0
+} WasiLookupFlag;
 
 /* File descriptor rights, determining which actions may be performed */
-typedef U64 WasiRights;
+typedef enum WasiRights {
 
-/*
- * The right to invoke `fd_datasync`.
- * If `path_open` is set, includes the right to invoke
- * `path_open` with fdflags dsync
- */
-static const WasiRights wasiRightsFdDatasync = 1ULL << 0;
+    /*
+     * The right to invoke `fd_datasync`.
+     * If `path_open` is set, includes the right to invoke
+     * `path_open` with fdflags dsync
+     */
+    wasiRightsFdDatasync = 1ULL << 0,
 
-/*
- * The right to invoke `fd_read` and `sock_recv`.
- * If rights fd_seek is set, includes the right to invoke `fd_pread`.
- */
-static const WasiRights wasiRightsFdRead = 1ULL << 1;
+    /*
+     * The right to invoke `fd_read` and `sock_recv`.
+     * If rights fd_seek is set, includes the right to invoke `fd_pread`.
+     */
+    wasiRightsFdRead = 1ULL << 1,
 
-/* The right to invoke `fd_seek`. This flag implies rights fd_tell */
-static const WasiRights wasiRightsFdSeek = 1ULL << 2;
+    /* The right to invoke `fd_seek`. This flag implies rights fd_tell */
+    wasiRightsFdSeek = 1ULL << 2,
 
-/* The right to invoke `fd_fdstat_set_flags` */
-static const WasiRights wasiRightsFdFdstatSetFlags = 1ULL << 3;
+    /* The right to invoke `fd_fdstat_set_flags` */
+    wasiRightsFdFdstatSetFlags = 1ULL << 3,
 
-/*
- * The right to invoke `fd_sync`.
- * If `path_open` is set, includes the right to invoke
- * `path_open` with fdflags rsync and fdflags dsync.
- */
-static const WasiRights wasiRightsFdSync = 1ULL << 4;
+    /*
+     * The right to invoke `fd_sync`.
+     * If `path_open` is set, includes the right to invoke
+     * `path_open` with fdflags rsync and fdflags dsync.
+     */
+    wasiRightsFdSync = 1ULL << 4,
 
-/*
- * The right to invoke `fd_seek` in such a way that the file offset
- * remains unaltered (i.e., whence cur with offset zero), or to
- * invoke `fd_tell`.
- */
-static const WasiRights wasiRightsFdTell = 1ULL << 5;
+    /*
+     * The right to invoke `fd_seek` in such a way that the file offset
+     * remains unaltered (i.e., whence cur with offset zero), or to
+     * invoke `fd_tell`.
+     */
+    wasiRightsFdTell = 1ULL << 5,
 
-/*
- * The right to invoke `fd_write` and `sock_send`.
- * If right `FdSeek` is set, includes the right to invoke `fd_pwrite`.
- */
-static const WasiRights wasiRightsFdWrite = 1ULL << 6;
+    /*
+     * The right to invoke `fd_write` and `sock_send`.
+     * If right `FdSeek` is set, includes the right to invoke `fd_pwrite`.
+     */
+    wasiRightsFdWrite = 1ULL << 6,
 
-/* The right to invoke `fd_advise` */
-static const WasiRights wasiRightsFdAdvise = 1ULL << 7;
+    /* The right to invoke `fd_advise` */
+    wasiRightsFdAdvise = 1ULL << 7,
 
-/* The right to invoke `fd_allocate` */
-static const WasiRights wasiRightsFdAllocate = 1ULL << 8;
+    /* The right to invoke `fd_allocate` */
+    wasiRightsFdAllocate = 1ULL << 8,
 
-/* The right to invoke `path_create_directory` */
-static const WasiRights wasiRightsPathCreateDirectory = 1ULL << 9;
+    /* The right to invoke `path_create_directory` */
+    wasiRightsPathCreateDirectory = 1ULL << 9,
 
-/* If `path_open` is set, the right to invoke `path_open` with oflags creat */
-static const WasiRights wasiRightsPathCreateFile = 1ULL << 10;
+    /* If `path_open` is set, the right to invoke `path_open` with oflags creat */
+    wasiRightsPathCreateFile = 1ULL << 10,
 
-/*
- * The right to invoke `path_link` with the file descriptor as the
- * source directory.
- */
-static const WasiRights wasiRightsPathLinkSource = 1ULL << 11;
+    /*
+     * The right to invoke `path_link` with the file descriptor as the
+     * source directory.
+     */
+    wasiRightsPathLinkSource = 1ULL << 11,
 
-/*
- * The right to invoke `path_link` with the file descriptor as the
- * target directory.
- */
-static const WasiRights wasiRightsPathLinkTarget = 1ULL << 12;
+    /*
+     * The right to invoke `path_link` with the file descriptor as the
+     * target directory.
+     */
+    wasiRightsPathLinkTarget = 1ULL << 12,
 
-/* The right to invoke `path_open` */
-static const WasiRights wasiRightsPathOpen = 1ULL << 13;
+    /* The right to invoke `path_open` */
+    wasiRightsPathOpen = 1ULL << 13,
 
-/* The right to invoke `fd_readdir` */
-static const WasiRights wasiRightsFdReaddir = 1ULL << 14;
+    /* The right to invoke `fd_readdir` */
+    wasiRightsFdReaddir = 1ULL << 14,
 
-/* The right to invoke `path_readlink` */
-static const WasiRights wasiRightsPathReadlink = 1ULL << 15;
+    /* The right to invoke `path_readlink` */
+    wasiRightsPathReadlink = 1ULL << 15,
 
-/*
- * The right to invoke `path_rename` with the file descriptor as the source
- * directory.
- */
-static const WasiRights wasiRightsPathRenameSource = 1ULL << 16;
+    /*
+     * The right to invoke `path_rename` with the file descriptor as the source
+     * directory.
+     */
+    wasiRightsPathRenameSource = 1ULL << 16,
 
-/*
- * The right to invoke `path_rename` with the file descriptor as the target
- * directory.
- */
-static const WasiRights wasiRightsPathRenameTarget = 1ULL << 17;
+    /*
+     * The right to invoke `path_rename` with the file descriptor as the target
+     * directory.
+     */
+    wasiRightsPathRenameTarget = 1ULL << 17,
 
-/* The right to invoke `path_filestat_get` */
-static const WasiRights wasiRightsPathFilestatGet = 1ULL << 18;
+    /* The right to invoke `path_filestat_get` */
+    wasiRightsPathFilestatGet = 1ULL << 18,
 
-/*
- * The right to change a file's size (there is no `path_filestat_set_size`).
- * If `path_open` is set, includes the right to invoke `path_open` with
- * oflags trunc.
- */
-static const WasiRights wasiRightsPathFilestatSetSize = 1ULL << 19;
+    /*
+     * The right to change a file's size (there is no `path_filestat_set_size`).
+     * If `path_open` is set, includes the right to invoke `path_open` with
+     * oflags trunc.
+     */
+    wasiRightsPathFilestatSetSize = 1ULL << 19,
 
-/* The right to invoke `path_filestat_set_times` */
-static const WasiRights wasiRightsPathFilestatSetTimes = 1ULL << 20;
+    /* The right to invoke `path_filestat_set_times` */
+    wasiRightsPathFilestatSetTimes = 1ULL << 20,
 
-/* The right to invoke `fd_filestat_get` */
-static const WasiRights wasiRightsFdFilestatGet = 1ULL << 21;
+    /* The right to invoke `fd_filestat_get` */
+    wasiRightsFdFilestatGet = 1ULL << 21,
 
-/* The right to invoke `fd_filestat_set_size` */
-static const WasiRights wasiRightsFdFilestatSetSize = 1ULL << 22;
+    /* The right to invoke `fd_filestat_set_size` */
+    wasiRightsFdFilestatSetSize = 1ULL << 22,
 
-/* The right to invoke `fd_filestat_set_times` */
-static const WasiRights wasiRightsFdFilestatSetTimes = 1ULL << 23;
+    /* The right to invoke `fd_filestat_set_times` */
+    wasiRightsFdFilestatSetTimes = 1ULL << 23,
 
-/* The right to invoke `path_symlink` */
-static const WasiRights wasiRightsPathSymlink = 1ULL << 24;
+    /* The right to invoke `path_symlink` */
+    wasiRightsPathSymlink = 1ULL << 24,
 
-/* The right to invoke `path_remove_directory` */
-static const WasiRights wasiRightsPathRemoveDirectory = 1ULL << 25;
+    /* The right to invoke `path_remove_directory` */
+    wasiRightsPathRemoveDirectory = 1ULL << 25,
 
-/* The right to invoke `path_unlink_file` */
-static const WasiRights wasiRightsPathUnlinkFile = 1ULL << 26;
+    /* The right to invoke `path_unlink_file` */
+    wasiRightsPathUnlinkFile = 1ULL << 26,
 
-/*
- * If rights fd_read is set, includes the right to invoke `poll_oneoff` to
- * subscribe to event type fd_read. If rights fd_write is set, includes
- * the right to invoke `poll_oneoff` to subscribe to eventtype fd_write.
- */
-static const WasiRights wasiRightsPollFdReadwrite = 1ULL << 27;
+    /*
+     * If rights fd_read is set, includes the right to invoke `poll_oneoff` to
+     * subscribe to event type fd_read. If rights fd_write is set, includes
+     * the right to invoke `poll_oneoff` to subscribe to eventtype fd_write.
+     */
+    wasiRightsPollFdReadwrite = 1ULL << 27,
 
-/* The right to invoke `sock_shutdown` */
-static const WasiRights wasiRightsSockShutdown = 1ULL << 28;
+    /* The right to invoke `sock_shutdown` */
+    wasiRightsSockShutdown = 1ULL << 28,
 
-/* The right to invoke `sock_open` */
-static const WasiRights wasiRightsSockOpen = 1ULL << 29;
+    /* The right to invoke `sock_open` */
+    wasiRightsSockOpen = 1ULL << 29,
 
-/* The right to invoke `sock_close` */
-static const WasiRights wasiRightsSockClose = 1ULL << 30;
+    /* The right to invoke `sock_close` */
+    wasiRightsSockClose = 1ULL << 30,
 
-/* The right to invoke `sock_bind` */
-static const WasiRights wasiRightsSockBind = 1ULL << 31;
+    /* The right to invoke `sock_bind` */
+    wasiRightsSockBind = 1ULL << 31,
 
-/* The right to invoke `sock_recv` */
-static const WasiRights wasiRightsSockRecv = 1ULL << 32;
+    /* The right to invoke `sock_recv` */
+    wasiRightsSockRecv = 1ULL << 32,
 
-/* The right to invoke `sock_recv_from` */
-static const WasiRights wasiRightsSockRecvFrom = 1ULL << 33;
+    /* The right to invoke `sock_recv_from` */
+    wasiRightsSockRecvFrom = 1ULL << 33,
 
-/* The right to invoke `sock_send` */
-static const WasiRights wasiRightsSockSend = 1ULL << 34;
+    /* The right to invoke `sock_send` */
+    wasiRightsSockSend = 1ULL << 34,
 
-/* The right to invoke `sock_send_to` */
-static const WasiRights wasiRightsSockSendTo = 1ULL << 35;
+    /* The right to invoke `sock_send_to` */
+    wasiRightsSockSendTo = 1ULL << 35,
 
-static const WasiRights wasiRightsAll =
-    wasiRightsFdDatasync
-    | wasiRightsFdRead
-    | wasiRightsFdSeek
-    | wasiRightsFdFdstatSetFlags
-    | wasiRightsFdSync
-    | wasiRightsFdTell
-    | wasiRightsFdWrite
-    | wasiRightsFdAdvise
-    | wasiRightsFdAllocate
-    | wasiRightsPathCreateDirectory
-    | wasiRightsPathCreateFile
-    | wasiRightsPathLinkSource
-    | wasiRightsPathLinkTarget
-    | wasiRightsPathOpen
-    | wasiRightsFdReaddir
-    | wasiRightsPathReadlink
-    | wasiRightsPathRenameSource
-    | wasiRightsPathRenameTarget
-    | wasiRightsPathFilestatGet
-    | wasiRightsPathFilestatSetSize
-    | wasiRightsPathFilestatSetTimes
-    | wasiRightsFdFilestatGet
-    | wasiRightsFdFilestatSetSize
-    | wasiRightsFdFilestatSetTimes
-    | wasiRightsPathSymlink
-    | wasiRightsPathRemoveDirectory
-    | wasiRightsPathUnlinkFile
-    | wasiRightsPollFdReadwrite
-    | wasiRightsSockShutdown
-    | wasiRightsSockOpen
-    | wasiRightsSockClose
-    | wasiRightsSockBind
-    | wasiRightsSockRecv
-    | wasiRightsSockRecvFrom
-    | wasiRightsSockSend
-    | wasiRightsSockSendTo;
+    wasiRightsAll =
+        wasiRightsFdDatasync
+        | wasiRightsFdRead
+        | wasiRightsFdSeek
+        | wasiRightsFdFdstatSetFlags
+        | wasiRightsFdSync
+        | wasiRightsFdTell
+        | wasiRightsFdWrite
+        | wasiRightsFdAdvise
+        | wasiRightsFdAllocate
+        | wasiRightsPathCreateDirectory
+        | wasiRightsPathCreateFile
+        | wasiRightsPathLinkSource
+        | wasiRightsPathLinkTarget
+        | wasiRightsPathOpen
+        | wasiRightsFdReaddir
+        | wasiRightsPathReadlink
+        | wasiRightsPathRenameSource
+        | wasiRightsPathRenameTarget
+        | wasiRightsPathFilestatGet
+        | wasiRightsPathFilestatSetSize
+        | wasiRightsPathFilestatSetTimes
+        | wasiRightsFdFilestatGet
+        | wasiRightsFdFilestatSetSize
+        | wasiRightsFdFilestatSetTimes
+        | wasiRightsPathSymlink
+        | wasiRightsPathRemoveDirectory
+        | wasiRightsPathUnlinkFile
+        | wasiRightsPollFdReadwrite
+        | wasiRightsSockShutdown
+        | wasiRightsSockOpen
+        | wasiRightsSockClose
+        | wasiRightsSockBind
+        | wasiRightsSockRecv
+        | wasiRightsSockRecvFrom
+        | wasiRightsSockSend
+        | wasiRightsSockSendTo,
 
-static const WasiRights wasiRightsRegularFileBase =
-    wasiRightsFdDatasync
-    | wasiRightsFdRead
-    | wasiRightsFdSeek
-    | wasiRightsFdFdstatSetFlags
-    | wasiRightsFdSync
-    | wasiRightsFdTell
-    | wasiRightsFdWrite
-    | wasiRightsFdAdvise
-    | wasiRightsFdAllocate
-    | wasiRightsFdFilestatGet
-    | wasiRightsFdFilestatSetSize
-    | wasiRightsFdFilestatSetTimes
-    | wasiRightsPollFdReadwrite;
+    wasiRightsRegularFileBase =
+        wasiRightsFdDatasync
+        | wasiRightsFdRead
+        | wasiRightsFdSeek
+        | wasiRightsFdFdstatSetFlags
+        | wasiRightsFdSync
+        | wasiRightsFdTell
+        | wasiRightsFdWrite
+        | wasiRightsFdAdvise
+        | wasiRightsFdAllocate
+        | wasiRightsFdFilestatGet
+        | wasiRightsFdFilestatSetSize
+        | wasiRightsFdFilestatSetTimes
+        | wasiRightsPollFdReadwrite,
 
-static const WasiRights wasiRightsRegularFileInheriting = 0;
+    wasiRightsRegularFileInheriting = 0,
 
-static const WasiRights wasiRightsDirectoryBase =
-    wasiRightsFdFdstatSetFlags
-    | wasiRightsFdSync
-    | wasiRightsFdAdvise
-    | wasiRightsPathCreateDirectory
-    | wasiRightsPathCreateFile
-    | wasiRightsPathLinkSource
-    | wasiRightsPathLinkTarget
-    | wasiRightsPathOpen
-    | wasiRightsFdReaddir
-    | wasiRightsPathReadlink
-    | wasiRightsPathRenameSource
-    | wasiRightsPathRenameTarget
-    | wasiRightsPathFilestatGet
-    | wasiRightsPathFilestatSetSize
-    | wasiRightsPathFilestatSetTimes
-    | wasiRightsFdFilestatGet
-    | wasiRightsFdFilestatSetTimes
-    | wasiRightsPathSymlink
-    | wasiRightsPathUnlinkFile
-    | wasiRightsPathRemoveDirectory
-    | wasiRightsPollFdReadwrite;
+    wasiRightsDirectoryBase =
+        wasiRightsFdFdstatSetFlags
+        | wasiRightsFdSync
+        | wasiRightsFdAdvise
+        | wasiRightsPathCreateDirectory
+        | wasiRightsPathCreateFile
+        | wasiRightsPathLinkSource
+        | wasiRightsPathLinkTarget
+        | wasiRightsPathOpen
+        | wasiRightsFdReaddir
+        | wasiRightsPathReadlink
+        | wasiRightsPathRenameSource
+        | wasiRightsPathRenameTarget
+        | wasiRightsPathFilestatGet
+        | wasiRightsPathFilestatSetSize
+        | wasiRightsPathFilestatSetTimes
+        | wasiRightsFdFilestatGet
+        | wasiRightsFdFilestatSetTimes
+        | wasiRightsPathSymlink
+        | wasiRightsPathUnlinkFile
+        | wasiRightsPathRemoveDirectory
+        | wasiRightsPollFdReadwrite,
 
-static const WasiRights wasiRightsDirectoryInheriting =
-    wasiRightsDirectoryBase
-    | wasiRightsRegularFileBase;
+    wasiRightsDirectoryInheriting =
+        wasiRightsDirectoryBase
+        | wasiRightsRegularFileBase,
 
-static const WasiRights wasiRightsTTYBase =
-    wasiRightsFdRead
-    | wasiRightsFdFdstatSetFlags
-    | wasiRightsFdWrite
-    | wasiRightsFdFilestatGet
-    | wasiRightsPollFdReadwrite;
+    wasiRightsTTYBase =
+        wasiRightsFdRead
+        | wasiRightsFdFdstatSetFlags
+        | wasiRightsFdWrite
+        | wasiRightsFdFilestatGet
+        | wasiRightsPollFdReadwrite,
 
-static const WasiRights wasiRightsTTYInheriting = 0;
+    wasiRightsTTYInheriting = 0
+} WasiRights;
+
 
 /* Error codes returned by functions.
  * Not all of these error codes are returned by the functions provided by this API;
  * some are used in higher-level library layers,
  * and others are provided merely for alignment with POSIX.
  */
-typedef U32 WasiErrno;
-
-/* No error occurred. System call completed successfully */
-static const WasiErrno wasiErrnoSuccess = 0;
-
-/* Argument list too long */
-static const WasiErrno wasiErrno2big = 1;
-
-/* Permission denied */
-static const WasiErrno wasiErrnoAcces = 2;
-
-/* Address in use */
-static const WasiErrno wasiErrnoAddrinuse = 3;
-
-/* Address not available */
-static const WasiErrno wasiErrnoAddrnotavail = 4;
-
-/* Address family not supported */
-static const WasiErrno wasiErrnoAfnosupport = 5;
-
-/* Resource unavailable, or operation would block */
-static const WasiErrno wasiErrnoAgain = 6;
-
-/* Connection already in progress */
-static const WasiErrno wasiErrnoAlready = 7;
-
-/* Bad file descriptor */
-static const WasiErrno wasiErrnoBadf = 8;
-
-/* Bad message */
-static const WasiErrno wasiErrnoBadmsg = 9;
-
-/* Device or resource busy */
-static const WasiErrno wasiErrnoBusy = 10;
-
-/* Operation canceled */
-static const WasiErrno wasiErrnoCanceled = 11;
-
-/* No child processes */
-static const WasiErrno wasiErrnoChild = 12;
-
-/* Connection aborted */
-static const WasiErrno wasiErrnoConnaborted = 13;
-
-/* Connection refused */
-static const WasiErrno wasiErrnoConnrefused = 14;
-
-/* Connection reset */
-static const WasiErrno wasiErrnoConnreset = 15;
-
-/* Resource deadlock would occur */
-static const WasiErrno wasiErrnoDeadlk = 16;
-
-/* Destination address required */
-static const WasiErrno wasiErrnoDestaddrreq = 17;
-
-/* Mathematics argument out of domain of function */
-static const WasiErrno wasiErrnoDom = 18;
-
-/* Reserved */
-static const WasiErrno wasiErrnoDquot = 19;
-
-/* File exists */
-static const WasiErrno wasiErrnoExist = 20;
-
-/* Bad address */
-static const WasiErrno wasiErrnoFault = 21;
-
-/* File too large */
-static const WasiErrno wasiErrnoFbig = 22;
-
-/* Host is unreachable */
-static const WasiErrno wasiErrnoHostunreach = 23;
-
-/* Identifier removed */
-static const WasiErrno wasiErrnoIdrm = 24;
-
-/* Illegal byte sequence */
-static const WasiErrno wasiErrnoIlseq = 25;
-
-/* Operation in progress */
-static const WasiErrno wasiErrnoInprogress = 26;
-
-/* Interrupted function */
-static const WasiErrno wasiErrnoIntr = 27;
-
-/* Invalid argument */
-static const WasiErrno wasiErrnoInval = 28;
-
-/* I/O error */
-static const WasiErrno wasiErrnoIo = 29;
-
-/* Socket is connected */
-static const WasiErrno wasiErrnoIsconn = 30;
-
-/* Is a directory */
-static const WasiErrno wasiErrnoIsdir = 31;
-
-/* Too many levels of symbolic links */
-static const WasiErrno wasiErrnoLoop = 32;
-
-/* File descriptor value too large */
-static const WasiErrno wasiErrnoMfile = 33;
-
-/* Too many links */
-static const WasiErrno wasiErrnoMlink = 34;
-
-/* Message too large */
-static const WasiErrno wasiErrnoMsgsize = 35;
-
-/* Reserved */
-static const WasiErrno wasiErrnoMultihop = 36;
-
-/* Filename too long */
-static const WasiErrno wasiErrnoNametoolong = 37;
-
-/* Network is down */
-static const WasiErrno wasiErrnoNetdown = 38;
-
-/* Connection aborted by network */
-static const WasiErrno wasiErrnoNetreset = 39;
-
-/* Network unreachable */
-static const WasiErrno wasiErrnoNetunreach = 40;
-
-/* Too many files open in system */
-static const WasiErrno wasiErrnoNfile = 41;
-
-/* No buffer space available */
-static const WasiErrno wasiErrnoNobufs = 42;
-
-/* No such device */
-static const WasiErrno wasiErrnoNodev = 43;
-
-/* No such file or directory */
-static const WasiErrno wasiErrnoNoent = 44;
-
-/* Executable file format error */
-static const WasiErrno wasiErrnoNoexec = 45;
-
-/* No locks available */
-static const WasiErrno wasiErrnoNolck = 46;
-
-/* Reserved */
-static const WasiErrno wasiErrnoNolink = 47;
-
-/* Not enough space */
-static const WasiErrno wasiErrnoNomem = 48;
-
-/* No message of the desired type */
-static const WasiErrno wasiErrnoNomsg = 49;
-
-/* Protocol not available */
-static const WasiErrno wasiErrnoNoprotoopt = 50;
-
-/* No space left on device */
-static const WasiErrno wasiErrnoNospc = 51;
-
-/* Function not supported */
-static const WasiErrno wasiErrnoNosys = 52;
-
-/* The socket is not connected */
-static const WasiErrno wasiErrnoNotconn = 53;
-
-/* Not a directory or a symbolic link to a directory */
-static const WasiErrno wasiErrnoNotdir = 54;
-
-/* Directory not empty */
-static const WasiErrno wasiErrnoNotempty = 55;
-
-/* State not recoverable */
-static const WasiErrno wasiErrnoNotrecoverable = 56;
-
-/* Not a socket */
-static const WasiErrno wasiErrnoNotsock = 57;
-
-/* Not supported, or operation not supported on socket */
-static const WasiErrno wasiErrnoNotsup = 58;
-
-/* Inappropriate I/O control operation */
-static const WasiErrno wasiErrnoNotty = 59;
-
-/* No such device or address */
-static const WasiErrno wasiErrnoNxio = 60;
-
-/* Value too large to be stored in data type */
-static const WasiErrno wasiErrnoOverflow = 61;
-
-/* Previous owner died */
-static const WasiErrno wasiErrnoOwnerdead = 62;
-
-/* Operation not permitted */
-static const WasiErrno wasiErrnoPerm = 63;
-
-/* Broken pipe */
-static const WasiErrno wasiErrnoPipe = 64;
-
-/* Protocol error */
-static const WasiErrno wasiErrnoProto = 65;
-
-/* Protocol not supported */
-static const WasiErrno wasiErrnoProtonosupport = 66;
-
-/* Protocol wrong type for socket */
-static const WasiErrno wasiErrnoPrototype = 67;
-
-/* Result too large */
-static const WasiErrno wasiErrnoRange = 68;
-
-/* Read-only file system */
-static const WasiErrno wasiErrnoRofs = 69;
-
-/* Invalid seek */
-static const WasiErrno wasiErrnoSpipe = 70;
-
-/* No such process */
-static const WasiErrno wasiErrnoSrch = 71;
-
-/* Reserved */
-static const WasiErrno wasiErrnoStale = 72;
-
-/* Connection timed out */
-static const WasiErrno wasiErrnoTimedout = 73;
-
-/* Text file busy */
-static const WasiErrno wasiErrnoTxtbsy = 74;
-
-/* Cross-device link */
-static const WasiErrno wasiErrnoXdev = 75;
-
-/* Extension: Capabilities insufficient */
-static const WasiErrno wasiErrnoNotcapable = 76;
-
+typedef enum WasiErrno {
+
+    /* No error occurred. System call completed successfully */
+     wasiErrnoSuccess = 0,
+
+    /* Argument list too long */
+     wasiErrno2big = 1,
+    
+    /* Permission denied */
+     wasiErrnoAcces = 2,
+    
+    /* Address in use */
+    wasiErrnoAddrinuse = 3,
+    
+    /* Address not available */
+    wasiErrnoAddrnotavail = 4,
+    
+    /* Address family not supported */
+    wasiErrnoAfnosupport = 5,
+    
+    /* Resource unavailable, or operation would block */
+    wasiErrnoAgain = 6,
+    
+    /* Connection already in progress */
+    wasiErrnoAlready = 7,
+    
+    /* Bad file descriptor */
+    wasiErrnoBadf = 8,
+    
+    /* Bad message */
+    wasiErrnoBadmsg = 9,
+    
+    /* Device or resource busy */
+    wasiErrnoBusy = 10,
+    
+    /* Operation canceled */
+    wasiErrnoCanceled = 11,
+    
+    /* No child processes */
+    wasiErrnoChild = 12,
+    
+    /* Connection aborted */
+    wasiErrnoConnaborted = 13,
+    
+    /* Connection refused */
+    wasiErrnoConnrefused = 14,
+    
+    /* Connection reset */
+    wasiErrnoConnreset = 15,
+    
+    /* Resource deadlock would occur */
+    wasiErrnoDeadlk = 16,
+    
+    /* Destination address required */
+    wasiErrnoDestaddrreq = 17,
+    
+    /* Mathematics argument out of domain of function */
+    wasiErrnoDom = 18,
+    
+    /* Reserved */
+    wasiErrnoDquot = 19,
+    
+    /* File exists */
+    wasiErrnoExist = 20,
+    
+    /* Bad address */
+    wasiErrnoFault = 21,
+    
+    /* File too large */
+    wasiErrnoFbig = 22,
+    
+    /* Host is unreachable */
+    wasiErrnoHostunreach = 23,
+    
+    /* Identifier removed */
+    wasiErrnoIdrm = 24,
+    
+    /* Illegal byte sequence */
+    wasiErrnoIlseq = 25,
+    
+    /* Operation in progress */
+    wasiErrnoInprogress = 26,
+    
+    /* Interrupted function */
+    wasiErrnoIntr = 27,
+    
+    /* Invalid argument */
+    wasiErrnoInval = 28,
+    
+    /* I/O error */
+    wasiErrnoIo = 29,
+    
+    /* Socket is connected */
+    wasiErrnoIsconn = 30,
+    
+    /* Is a directory */
+    wasiErrnoIsdir = 31,
+    
+    /* Too many levels of symbolic links */
+    wasiErrnoLoop = 32,
+    
+    /* File descriptor value too large */
+    wasiErrnoMfile = 33,
+    
+    /* Too many links */
+    wasiErrnoMlink = 34,
+    
+    /* Message too large */
+    wasiErrnoMsgsize = 35,
+    
+    /* Reserved */
+    wasiErrnoMultihop = 36,
+    
+    /* Filename too long */
+    wasiErrnoNametoolong = 37,
+    
+    /* Network is down */
+    wasiErrnoNetdown = 38,
+    
+    /* Connection aborted by network */
+    wasiErrnoNetreset = 39,
+    
+    /* Network unreachable */
+    wasiErrnoNetunreach = 40,
+    
+    /* Too many files open in system */
+    wasiErrnoNfile = 41,
+    
+    /* No buffer space available */
+    wasiErrnoNobufs = 42,
+    
+    /* No such device */
+    wasiErrnoNodev = 43,
+    
+    /* No such file or directory */
+    wasiErrnoNoent = 44,
+    
+    /* Executable file format error */
+    wasiErrnoNoexec = 45,
+    
+    /* No locks available */
+    wasiErrnoNolck = 46,
+    
+    /* Reserved */
+    wasiErrnoNolink = 47,
+    
+    /* Not enough space */
+    wasiErrnoNomem = 48,
+    
+    /* No message of the desired type */
+    wasiErrnoNomsg = 49,
+    
+    /* Protocol not available */
+    wasiErrnoNoprotoopt = 50,
+    
+    /* No space left on device */
+    wasiErrnoNospc = 51,
+    
+    /* Function not supported */
+    wasiErrnoNosys = 52,
+    
+    /* The socket is not connected */
+    wasiErrnoNotconn = 53,
+    
+    /* Not a directory or a symbolic link to a directory */
+    wasiErrnoNotdir = 54,
+    
+    /* Directory not empty */
+    wasiErrnoNotempty = 55,
+    
+    /* State not recoverable */
+    wasiErrnoNotrecoverable = 56,
+    
+    /* Not a socket */
+    wasiErrnoNotsock = 57,
+    
+    /* Not supported, or operation not supported on socket */
+    wasiErrnoNotsup = 58,
+    
+    /* Inappropriate I/O control operation */
+    wasiErrnoNotty = 59,
+    
+    /* No such device or address */
+    wasiErrnoNxio = 60,
+    
+    /* Value too large to be stored in data type */
+    wasiErrnoOverflow = 61,
+    
+    /* Previous owner died */
+    wasiErrnoOwnerdead = 62,
+    
+    /* Operation not permitted */
+    wasiErrnoPerm = 63,
+    
+    /* Broken pipe */
+    wasiErrnoPipe = 64,
+    
+    /* Protocol error */
+    wasiErrnoProto = 65,
+    
+    /* Protocol not supported */
+    wasiErrnoProtonosupport = 66,
+    
+    /* Protocol wrong type for socket */
+    wasiErrnoPrototype = 67,
+    
+    /* Result too large */
+    wasiErrnoRange = 68,
+    
+    /* Read-only file system */
+    wasiErrnoRofs = 69,
+    
+    /* Invalid seek */
+    wasiErrnoSpipe = 70,
+    
+    /* No such process */
+    wasiErrnoSrch = 71,
+    
+    /* Reserved */
+    wasiErrnoStale = 72,
+    
+    /* Connection timed out */
+    wasiErrnoTimedout = 73,
+    
+    /* Text file busy */
+    wasiErrnoTxtbsy = 74,
+    
+    /* Cross-device link */
+    wasiErrnoXdev = 75,
+    
+    /* Extension: Capabilities insufficient */
+    wasiErrnoNotcapable = 76
+} WasiErrno;
 
 /* Identifiers for clocks */
-typedef U32 WasiClock;
+typedef enum WasiClock {
 
-/* The clock measuring real time. Time value zero corresponds with 1970-01-01T00:00:00Z */
-static const WasiClock wasiClockRealtime = 0;
-#define WASI_CLOCK_REALTIME 0
+    /* The clock measuring real time. Time value zero corresponds with 1970-01-01T00:00:00Z */
+    wasiClockRealtime = 0,
 
-/*
- * The store-wide monotonic clock, which is defined as a clock measuring real time,
- * whose value cannot be adjusted and which cannot have negative clock jumps.
- * The epoch of this clock is undefined.
- * The absolute time value of this clock therefore has no meaning
- */
-static const WasiClock wasiClockMonotonic = 1;
-#define WASI_CLOCK_MONOTONIC 1
+    /*
+     * The store-wide monotonic clock, which is defined as a clock measuring real time,
+     * whose value cannot be adjusted and which cannot have negative clock jumps.
+     * The epoch of this clock is undefined.
+     * The absolute time value of this clock therefore has no meaning
+     */
+    wasiClockMonotonic = 1,
 
-/* The CPU-time clock associated with the current process */
-static const WasiClock wasiClockProcessCputimeId = 2;
-#define WASI_CLOCK_PROCESS_CPUTIME_ID 2
+    /* The CPU-time clock associated with the current process */
+    wasiClockProcessCputimeId = 2,
 
-/* The CPU-time clock associated with the current thread */
-static const WasiClock wasiClockThreadCputimeId = 3;
-#define WASI_CLOCK_THREAD_CPUTIME_ID 3
+    /* The CPU-time clock associated with the current thread */
+    wasiClockThreadCputimeId = 3
+} WasiClock;
 
 void
 wasiProcExit(
