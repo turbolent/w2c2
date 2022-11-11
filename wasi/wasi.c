@@ -32,6 +32,9 @@ char *strndup(const char *s, size_t n) {
 
 static
 void
+#ifdef __GNUC__
+__attribute__ ((format(printf, 1, 2)))
+#endif
 tracePrintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -41,7 +44,7 @@ tracePrintf(const char* fmt, ...) {
     va_end(args);
 }
 
-#ifdef WASI_TRACE_ENABLED
+#if WASI_TRACE_ENABLED
 #define WASI_TRACE(args) (tracePrintf args)
 #else
 #define WASI_TRACE(args)
@@ -104,7 +107,10 @@ wasiFileDescriptorsAdd(
     }
     descriptor.path = path;
     descriptors->length++;
-    MUST (wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length))
+    if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+        free(path);
+        return false;
+    }
     descriptors->fds[descriptors->length - 1] = descriptor;
     return true;
 }
@@ -433,7 +439,11 @@ wasiFDWrite(
 
     if (wasiFD > 2) {
         WASI_TRACE((
-           "fd_write(wasiFD=%d, ciovecsPointer=%d, ciovecsCount=%d, resultPointer=%d)",
+           "fd_write("
+           "wasiFD=%d, "
+           "ciovecsPointer=0x%x, "
+           "ciovecsCount=%d, "
+           "resultPointer=0x%x)",
            wasiFD, ciovecsPointer, ciovecsCount, resultPointer
        ));
     }
@@ -460,7 +470,7 @@ wasiFDWrite(
 
             if (wasiFD > 2) {
                 WASI_TRACE((
-                    "fd_write: length=%d, bufferPointer=%d",
+                    "fd_write: length=%d, bufferPointer=0x%x",
                     length, bufferPointer
                 ));
             }
@@ -506,7 +516,7 @@ wasiFDWrite(
             totalLength += length;
             if (wasiFD > 2) {
                 WASI_TRACE((
-                    "fd_write: length=%d, bufferPointer=%d",
+                    "fd_write: length=%d, bufferPointer=0x%x",
                     length, bufferPointer
                 ));
             }
@@ -552,8 +562,17 @@ fdReadImpl(
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
-        "fd_[p]read(wasiFD=%d, iovecsPointer=%d, iovecsCount=%d, resultPointer=%d, offset=%lld)",
-        wasiFD, iovecsPointer, iovecsCount, resultPointer, offset
+        "fd_[p]read("
+        "wasiFD=%d, "
+        "iovecsPointer=0x%x, "
+        "iovecsCount=%d, "
+        "resultPointer=0x%x, "
+        "offset=%lld)",
+        wasiFD,
+        iovecsPointer,
+        iovecsCount,
+        resultPointer,
+        offset
     ));
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -732,7 +751,7 @@ wasiEnvironSizesGet(
     size_t envpBufSize = 0;
 
     WASI_TRACE((
-        "environ_sizes_get(envcPointer=%d, envpBufSizePointer=%d)",
+        "environ_sizes_get(envcPointer=0x%x, envpBufSizePointer=0x%x)",
         envcPointer, envpBufSizePointer
     ));
 
@@ -761,7 +780,7 @@ wasiEnvironGet(
 #endif
 
     WASI_TRACE((
-        "environ_get(envpPointer=%d, envpBufPointer=%d)",
+        "environ_get(envpPointer=0x%x, envpBufPointer=0x%x)",
         envpPointer, envpBufPointer
     ));
 
@@ -803,7 +822,7 @@ wasiArgsSizesGet(
     U32 argvIndex = 0;
 
     WASI_TRACE((
-        "args_sizes_get(argcPointer=%d, argvBufSizePointer=%d)",
+        "args_sizes_get(argcPointer=0x%x, argvBufSizePointer=0x%x)",
         argcPointer, argvBufSizePointer
     ));
 
@@ -831,7 +850,7 @@ wasiArgsGet(
 #endif
 
     WASI_TRACE((
-        "args_get(argvPointer=%d, argvBufPointer=%d)",
+        "args_get(argvPointer=0x%x, argvBufPointer=0x%x)",
         argvPointer, argvBufPointer
     ));
 
@@ -921,8 +940,15 @@ wasiPreview1FDSeek(
     int nativeWhence = 0;
 
     WASI_TRACE((
-        "fd_seek(wasiFD=%d, offset=%lld, whence=%d, resultPointer=%d)",
-        wasiFD, (off_t)offset, whence, resultPointer
+        "fd_seek("
+        "wasiFD=%d, "
+        "offset=%lld, "
+        "whence=%d, "
+        "resultPointer=0x%x)",
+        wasiFD,
+        (off_t)offset,
+        whence,
+        resultPointer
     ));
 
     nativeWhence = convertPreview1Whence(whence);
@@ -972,8 +998,15 @@ wasiUnstableFDSeek(
     int nativeWhence = 0;
 
     WASI_TRACE((
-        "fd_seek(wasiFD=%d, offset=%lld, whence=%d, resultPointer=%d)",
-        wasiFD, (off_t)offset, whence, resultPointer
+        "fd_seek("
+        "wasiFD=%d, "
+        "offset=%lld, "
+        "whence=%d, "
+        "resultPointer=0x%x)",
+        wasiFD,
+        (off_t)offset,
+        whence,
+        resultPointer
     ));
 
     nativeWhence = convertUnstableWhence(whence);
@@ -1000,7 +1033,7 @@ wasiFDTell(
     wasmMemory* memory = wasiMemory(instance);
 
     WASI_TRACE((
-        "fd_tell(wasiFD=%d, resultPointer=%d)",
+        "fd_tell(wasiFD=%d, resultPointer=0x%x)",
         wasiFD, resultPointer
     ));
 
@@ -1060,8 +1093,17 @@ wasiFDReaddir(
     U8 entryData[WASI_DIRENT_SIZE];
 
     WASI_TRACE((
-        "fd_readdir(wasiDirFD=%d, bufferPointer=%d, bufferLength=%d, cookie=%lld, bufferUsedPointer=%d)",
-        wasiDirFD, bufferPointer, bufferLength, cookie, bufferUsedPointer
+        "fd_readdir("
+        "wasiDirFD=%d, "
+        "bufferPointer=0x%x, "
+        "bufferLength=%d, "
+        "cookie=%lld, "
+        "bufferUsedPointer=0x%x)",
+        wasiDirFD,
+        bufferPointer,
+        bufferLength,
+        cookie,
+        bufferUsedPointer
     ));
 
     if (!wasiFileDescriptorGet(wasiDirFD, &descriptor)) {
@@ -1072,7 +1114,7 @@ wasiFDReaddir(
     if (descriptor.dir == NULL) {
 
         if (cookie != 0) {
-            WASI_TRACE(("fd_readdir: invalid cookie at start of readdir: %d", cookie));
+            WASI_TRACE(("fd_readdir: invalid cookie at start of readdir: %llu", cookie));
             return wasiErrnoBadf;
         }
 
@@ -1102,7 +1144,7 @@ wasiFDReaddir(
         size_t bufferRemaining = bufferLength - bufferUsed;
         size_t nextSize = 0;
 
-        WASI_TRACE(("fd_readdir: bufferRemaining=%d", bufferRemaining));
+        WASI_TRACE(("fd_readdir: bufferRemaining=%lu", bufferRemaining));
 
         errno = 0;
         entry = readdir(descriptor.dir);
@@ -1296,7 +1338,7 @@ wasiClockTimeGet(
     I64 result = 0;
 
     WASI_TRACE((
-        "clock_time_get(clockID=%d, precision=%lld, resultPointer=%d)",
+        "clock_time_get(clockID=%d, precision=%lld, resultPointer=0x%x)",
         clockID, precision, resultPointer
     ));
 
@@ -1372,12 +1414,12 @@ wasiClockTimeGet(
 #endif
         case wasiClockProcessCputimeId: {
             struct rusage ru;
+            WASI_TRACE(("clock_time_get: getrusage(RUSAGE_SELF)"));
             int ret = getrusage(RUSAGE_SELF, &ru);
             if (ret != 0) {
                 WASI_TRACE(("clock_time_get: getrusage failed: %s", strerror(errno)));
                 return wasiErrno();
             }
-            WASI_TRACE(("clock_time_get: getrusage: ru_utime=%d, ru_stime=%d", ru.ru_utime, ru.ru_stime));
             addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
             result = convertTimeval(ru.ru_utime);
             break;
@@ -1411,7 +1453,7 @@ wasiClockResGet(
     I64 result = 0;
 
     WASI_TRACE((
-        "clock_res_get(clockID=%d, resultPointer=%d)",
+        "clock_res_get(clockID=%d, resultPointer=0x%x)",
         clockID, resultPointer
     ));
 
@@ -1509,7 +1551,7 @@ wasiFdFdstatGet(
     WasiRights inheritingRights = 0;
 
     WASI_TRACE((
-        "fd_fdstat_get(wasiFD=%d, resultPointer=%d)",
+        "fd_fdstat_get(wasiFD=%d, resultPointer=0x%x)",
         wasiFD, resultPointer
     ));
 
@@ -1610,7 +1652,7 @@ wasiFDPrestatGet(
     U32 length = 0;
 
     WASI_TRACE((
-        "fd_prestat_get(wasiFD=%d, prestatPointer=%d)",
+        "fd_prestat_get(wasiFD=%d, prestatPointer=0x%x)",
         wasiFD, prestatPointer
     ));
 
@@ -1639,7 +1681,7 @@ wasiFdPrestatDirName(
     size_t length = 0;
 
     WASI_TRACE((
-        "fd_prestat_dir_name(wasiFD=%d, pathPointer=%d, pathLength=%d)",
+        "fd_prestat_dir_name(wasiFD=%d, pathPointer=0x%x, pathLength=%d)",
         wasiFD, pathPointer, pathLength
     ));
 
@@ -1727,13 +1769,13 @@ wasiPathOpen(
         "path_open("
         "wasiDirFD=%d, "
         "dirFlags=%d, "
-        "pathPointer=%d, "
+        "pathPointer=0x%x, "
         "pathLength=%d, "
         "oflags=%d, "
         "fsRightsBase=%llu, "
         "fsRightsInheriting=%llu, "
         "fdFlags=%d, "
-        "fdPointer=%d)",
+        "fdPointer=0x%x)",
         wasiDirFD,
         dirFlags,
         pathPointer,
@@ -1899,14 +1941,46 @@ storePreview1Filestat(
     );
 #endif
 
-    i64_store(memory, statPointer,  stat->st_dev);
-    i64_store(memory, statPointer + 8,  stat->st_ino);
-    i32_store8(memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
-    i64_store(memory, statPointer + 24, stat->st_nlink);
-    i64_store(memory, statPointer + 32, stat->st_size);
-    i64_store(memory, statPointer + 40, convertTimespec(access));
-    i64_store(memory, statPointer + 48, convertTimespec(modification));
-    i64_store(memory, statPointer + 56, convertTimespec(creation));
+    {
+        dev_t dev = stat->st_dev;
+        ino_t ino = stat->st_ino;
+        WasiFileType wasiFileType = wasiFileTypeFromMode(stat->st_mode);
+        nlink_t nlink = stat->st_nlink;
+        off_t size = stat->st_size;
+        I64 accessTime = convertTimespec(access);
+        I64 modificationTime = convertTimespec(modification);
+        I64 creationTime = convertTimespec(creation);
+
+        WASI_TRACE((
+            "storing preview1 filestat to 0x%x: "
+            "dev=%d, "
+            "ino=%llu, "
+            "wasiFileType=%d, "
+            "nlink=%d, "
+            "size=%lld, "
+            "accessTime=%lld, "
+            "modificationTime=%lld, "
+            "creationTime=%lld",
+            statPointer,
+            dev,
+            ino,
+            wasiFileType,
+            nlink,
+            size,
+            accessTime,
+            modificationTime,
+            creationTime
+        ));
+
+        i64_store(memory, statPointer, dev);
+        i64_store(memory, statPointer + 8, ino);
+        i32_store8(memory, statPointer + 16, wasiFileType);
+        i64_store(memory, statPointer + 24, nlink);
+        i64_store(memory, statPointer + 32, size);
+        i64_store(memory, statPointer + 40, accessTime);
+        i64_store(memory, statPointer + 48, modificationTime);
+        i64_store(memory, statPointer + 56, creationTime);
+    }
 }
 
 static
@@ -1941,7 +2015,7 @@ wasiPreview1FDFilestatGet(
     U32 res = wasiErrnoInval;
 
     WASI_TRACE((
-        "fd_filestat_get(wasiFD=%d, statPointer=%d)",
+        "fd_filestat_get(wasiFD=%d, statPointer=0x%x)",
         wasiFD, statPointer
     ));
 
@@ -1985,14 +2059,46 @@ storeUnstableFilestat(
     );
 #endif
 
-    i64_store(memory, statPointer, stat->st_dev);
-    i64_store(memory, statPointer + 8, stat->st_ino);
-    i32_store8(memory, statPointer + 16, wasiFileTypeFromMode(stat->st_mode));
-    i32_store(memory, statPointer + 20, stat->st_nlink);
-    i64_store(memory, statPointer + 24, stat->st_size);
-    i64_store(memory, statPointer + 32, convertTimespec(access));
-    i64_store(memory, statPointer + 40, convertTimespec(modification));
-    i64_store(memory, statPointer + 48, convertTimespec(creation));
+    {
+        dev_t dev = stat->st_dev;
+        ino_t ino = stat->st_ino;
+        WasiFileType wasiFileType = wasiFileTypeFromMode(stat->st_mode);
+        nlink_t nlink = stat->st_nlink;
+        off_t size = stat->st_size;
+        I64 accessTime = convertTimespec(access);
+        I64 modificationTime = convertTimespec(modification);
+        I64 creationTime = convertTimespec(creation);
+
+        WASI_TRACE((
+           "storing unstable filestat to 0x%x: "
+           "dev=%d, "
+           "ino=%llu, "
+           "wasiFileType=%d, "
+           "nlink=%d, "
+           "size=%lld, "
+           "accessTime=%lld, "
+           "modificationTime=%lld, "
+           "creationTime=%lld",
+           statPointer,
+           dev,
+           ino,
+           wasiFileType,
+           nlink,
+           size,
+           accessTime,
+           modificationTime,
+           creationTime
+        ));
+
+        i64_store(memory, statPointer, dev);
+        i64_store(memory, statPointer + 8, ino);
+        i32_store8(memory, statPointer + 16, wasiFileType);
+        i32_store(memory, statPointer + 20, nlink);
+        i64_store(memory, statPointer + 24, size);
+        i64_store(memory, statPointer + 32, accessTime);
+        i64_store(memory, statPointer + 40, modificationTime);
+        i64_store(memory, statPointer + 48, creationTime);
+    }
 }
 
 U32
@@ -2007,7 +2113,7 @@ wasiUnstableFDFilestatGet(
     U32 res = wasiErrnoInval;
 
     WASI_TRACE((
-        "fd_filestat_get(wasiFD=%d, statPointer=%d)",
+        "fd_filestat_get(wasiFD=%d, statPointer=0x%x)",
         wasiFD, statPointer
     ));
 
@@ -2089,8 +2195,17 @@ wasiPreview1PathFilestatGet(
     U32 res = wasiErrnoInval;
 
     WASI_TRACE((
-        "path_filestat_get(dirFD=%d, lookupFlags=%d, pathPointer=%d, pathLength=%d, statPointer=%d)",
-        dirFD, lookupFlags, pathPointer, pathLength, statPointer
+        "path_filestat_get("
+        "dirFD=%d, "
+        "lookupFlags=%d, "
+        "pathPointer=0x%x, "
+        "pathLength=%d, "
+        "statPointer=0x%x)",
+        dirFD,
+        lookupFlags,
+        pathPointer,
+        pathLength,
+        statPointer
     ));
 
     res = pathFilestatGetImpl(memory, dirFD, lookupFlags, pathPointer, pathLength, &stat);
@@ -2118,8 +2233,17 @@ wasiUnstablePathFilestatGet(
     U32 res = wasiErrnoInval;
 
     WASI_TRACE((
-        "path_filestat_get(dirFD=%d, lookupFlags=%d, pathPointer=%d, pathLength=%d, statPointer=%d)",
-        dirFD, lookupFlags, pathPointer, pathLength, statPointer
+        "path_filestat_get("
+        "dirFD=%d, "
+        "lookupFlags=%d, "
+        "pathPointer=0x%x, "
+        "pathLength=%d, "
+        "statPointer=0x%x)",
+        dirFD,
+        lookupFlags,
+        pathPointer,
+        pathLength,
+        statPointer
     ));
 
     res = pathFilestatGetImpl(memory, dirFD, lookupFlags, pathPointer, pathLength, &stat);
@@ -2160,10 +2284,10 @@ wasiPathRename(
     WASI_TRACE((
         "path_rename("
         "oldDirFD=%d, "
-        "oldPathPointer=%d, "
+        "oldPathPointer=0x%x, "
         "oldPathLength=%d, "
         "newDirFD=%d, "
-        "newPathPointer=%d, "
+        "newPathPointer=0x%x, "
         "newPathLength=%d)",
         oldDirFD,
         oldPathPointer,
@@ -2195,7 +2319,7 @@ wasiPathRename(
     }
 #endif
 
-    WASI_TRACE(("path_filestat_get: oldPath=%.*s, newPath=%.*s", oldPathLength, oldPath, newPathLength, newPath));
+    WASI_TRACE(("path_rename: oldPath=%.*s, newPath=%.*s", oldPathLength, oldPath, newPathLength, newPath));
 
     if (!resolvePath(oldPreopen.path, oldPath, oldPathLength, oldResolvedPath)) {
         WASI_TRACE(("path_rename: old path resolution failed"));
@@ -2238,7 +2362,7 @@ wasiPathUnlinkFile(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
-        "path_unlink_file(dirFD=%d, pathPointer=%d, pathLength=%d)",
+        "path_unlink_file(dirFD=%d, pathPointer=0x%x, pathLength=%d)",
         dirFD, pathPointer, pathLength
     ));
 
@@ -2292,7 +2416,7 @@ wasiPathRemoveDirectory(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
-        "path_remove_directory(dirFD=%d, pathPointer=%d, pathLength=%d)",
+        "path_remove_directory(dirFD=%d, pathPointer=0x%x, pathLength=%d)",
         dirFD, pathPointer, pathLength
     ));
 
@@ -2347,7 +2471,7 @@ wasiPathCreateDirectory(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
-        "path_create_directory(dirFD=%d, pathPointer=%d, pathLength=%d)",
+        "path_create_directory(dirFD=%d, pathPointer=0x%x, pathLength=%d)",
         dirFD, pathPointer, pathLength
     ));
 
@@ -2404,8 +2528,17 @@ wasiPathSymlink(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
-        "path_symlink(oldPathPointer=%d, oldPathLength=%d, dirFD=%d, newPathPointer=%d, newPathLength=%d)",
-        oldPathPointer, oldPathLength, dirFD, newPathPointer, newPathLength
+        "path_symlink("
+        "oldPathPointer=0x%x, "
+        "oldPathLength=%d, "
+        "dirFD=%d, "
+        "newPathPointer=0x%x, "
+        "newPathLength=%d)",
+        oldPathPointer,
+        oldPathLength,
+        dirFD,
+        newPathPointer,
+        newPathLength
     ));
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
@@ -2476,8 +2609,19 @@ wasiPathReadlink(
     WasiPreopen preopen = wasiEmptyPreopen;
 
     WASI_TRACE((
-        "path_readlink(dirFD=%d, pathPointer=%d, pathLength=%d, bufferPointer=%d, bufferLength=%d, lengthPointer=%d)",
-        dirFD, pathPointer, pathLength, bufferPointer, bufferLength, lengthPointer
+        "path_readlink("
+        "dirFD=%d, "
+        "pathPointer=0x%x, "
+        "pathLength=%d, "
+        "bufferPointer=0x%x, "
+        "bufferLength=%d, "
+        "lengthPointer=0x%x)",
+        dirFD,
+        pathPointer,
+        pathLength,
+        bufferPointer,
+        bufferLength,
+        lengthPointer
     ));
 
     if (!wasiPreopenGet(dirFD, &preopen)) {
@@ -2567,7 +2711,7 @@ wasiRandomGet(
     int fd = -1;
 
     WASI_TRACE((
-        "random_get(bufferPointer=%d, bufferLength=%d)",
+        "random_get(bufferPointer=0x%x, bufferLength=%d)",
         bufferPointer, bufferLength
     ));
 
