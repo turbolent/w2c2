@@ -12,7 +12,7 @@ python: $(OBJS)
 	$(CC) -I.. -O2 $(CFLAGS) -c $< -o $@
 
 python.c: python.wasm
-	$(W2C2) $^ $@
+	$(W2C2) -j 8 -f 100 $^ $@
 
 .PHONY: clean
 clean:
