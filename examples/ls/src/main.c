@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
                 case DT_REG: typeString = "DT_REG"; break;
                 case DT_UNKNOWN: typeString = "DT_UNKNOWN"; break;
                 default: typeString = "?"; break;
-            };
+            }
 
             printf(
                 "%s (%s)\n",
@@ -70,6 +70,22 @@ int main(int argc, char** argv) {
                 st.st_ino,
                 st.st_size
             );
+
+            switch (st.st_mode & S_IFMT) {
+                case S_IFBLK: typeString = "DT_BLK"; break;
+                case S_IFCHR: typeString = "DT_CHR"; break;
+                case S_IFDIR: typeString = "DT_DIR"; break;
+                case S_IFIFO: typeString = "DT_FIFO"; break;
+                case S_IFLNK: typeString = "DT_LNK"; break;
+                case S_IFREG: typeString = "DT_REG"; break;
+                default: typeString = "?"; break;
+            }
+
+            printf(
+                "  stat_type: %s\n",
+                typeString
+            );
+
         } else if (errno) {
             fprintf(stderr, "Couldn't read directory '%s': %s\n", argv[1], strerror(errno));
             return 1;
