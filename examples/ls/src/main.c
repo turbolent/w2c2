@@ -3,6 +3,9 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -10,15 +13,23 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    DIR* dir = opendir(argv[1]);
+    const char* basepath = argv[1];
+    size_t baselen = strlen(basepath);
+
+    DIR* dir = opendir(basepath);
     if (!dir) {
-        fprintf(stderr, "Couldn't open directory '%s': %s\n", argv[1], strerror(errno));
+        fprintf(stderr, "Couldn't open directory '%s': %s\n", basepath, strerror(errno));
         return 1;
     }
 
     while (1) {
         struct dirent* dirent = readdir(dir);
         if (dirent) {
+            char fullpath[baselen + 1 + strlen(dirent->d_name) + 1];
+            strcpy(fullpath, basepath);
+            fullpath[baselen] = '/';
+            strcpy(fullpath + baselen + 1, dirent->d_name);
+
             const char* typeString;
             switch (dirent->d_type) {
                 case DT_BLK: typeString = "DT_BLK"; break;
@@ -32,10 +43,32 @@ int main(int argc, char** argv) {
             };
 
             printf(
-                "%s : %s -> %" PRIu64 "\n",
+                "%s (%s)\n",
                 dirent->d_name,
+                fullpath
+            );
+
+            printf(
+                "  dirent_type: %s\n"
+                "  dirent_ino: %llu\n",
                 typeString,
                 dirent->d_ino
+            );
+
+            struct stat st;
+            if (stat(fullpath, &st) == -1) {
+                fprintf(stderr, "Couldn't stat '%s': %s\n", dirent->d_name, strerror(errno));
+                return 1;
+            }
+
+            printf(
+                "  stat_mode: %d\n"
+                "  stat_ino: %llu\n"
+                "  stat_size: %llu\n"
+                ,
+                st.st_mode,
+                st.st_ino,
+                st.st_size
             );
         } else if (errno) {
             fprintf(stderr, "Couldn't read directory '%s': %s\n", argv[1], strerror(errno));
