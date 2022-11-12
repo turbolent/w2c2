@@ -1086,7 +1086,8 @@ wasiFDReaddir(
     char* name = NULL;
     struct dirent* entry;
     size_t nameLength = 0;
-    WasiFileType fileType = wasiFileTypeUnknown;
+    // NOTE: use target types, e.g. U8 for file type, instead of internal types
+    U8 fileType = wasiFileTypeUnknown;
     U32 bufferUsed = 0;
     U64 next = 0;
     U64 inode = 0;
