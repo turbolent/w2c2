@@ -1185,7 +1185,7 @@ wasiFDReaddir(
             fileType = wasiFileTypeFromMode(entryStat.st_mode);
         }
 
-        WASI_TRACE(("fd_readdir: name=%s, fileType=%d", name, fileType));
+        WASI_TRACE(("fd_readdir: name=%s, fileType=%d, inode=%llu", name, fileType, inode));
 
         memset(entryData, 0, WASI_DIRENT_SIZE);
 
