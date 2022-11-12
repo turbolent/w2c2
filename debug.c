@@ -6,37 +6,39 @@
 #if HAS_LIBDWARF
 
 #include <stdio.h>
-#include <libdwarf/libdwarf.h>
-#include <libdwarf/dwarf.h>
+#include <libdwarf.h>
+#include <dwarf.h>
 
 static
 int
 dwarfAccessGetSectionInfo(
     void* obj,
     Dwarf_Half sectionIndex,
-    Dwarf_Obj_Access_Section* accessSection,
+    Dwarf_Obj_Access_Section_a *accessSection,
     int* error
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
     WasmDebugSection section = sections->debugSections[sectionIndex];
 
-    accessSection->addr = 0;
-    accessSection->name = section.name;
-    accessSection->size = section.buffer.length;
-    accessSection->info = 0;
-    accessSection->link = 0;
-    accessSection->type = 0;
-    accessSection->entrysize = 0;
+    accessSection->as_addr = 0;
+    accessSection->as_name = section.name;
+    accessSection->as_size = section.buffer.length;
+    accessSection->as_info = 0;
+    accessSection->as_link = 0;
+    accessSection->as_type = 0;
+    accessSection->as_entrysize = 0;
 
     return DW_DLV_OK;
 }
 
+static const isInfo = true;
+
 static
-Dwarf_Endianness
+Dwarf_Small
 dwarfAccessGetByteOrder(
     void* obj
 ) {
-    return DW_ENDIAN_LITTLE;
+    return DW_END_little;
 }
 
 static
@@ -45,6 +47,14 @@ dwarfAccessGetPointerSize(
     void* obj
 ) {
     return 4;
+}
+
+static
+Dwarf_Unsigned
+dwarfAccessGetFileSize(
+    void* obj
+) {
+    return 0;
 }
 
 static
@@ -61,7 +71,7 @@ dwarfAccessGetSectionCount(
     void* obj
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
-    return sections->count;
+    return sections->length;
 }
 
 static
@@ -91,11 +101,12 @@ dwarfAccessRelocateASection(
     return DW_DLV_NO_ENTRY;
 }
 
-static const struct Dwarf_Obj_Access_Methods_s dwarfAccessMethods = {
+static const struct Dwarf_Obj_Access_Methods_a_s dwarfAccessMethods = {
     dwarfAccessGetSectionInfo,
     dwarfAccessGetByteOrder,
     dwarfAccessGetLengthSize,
     dwarfAccessGetPointerSize,
+    dwarfAccessGetFileSize,
     dwarfAccessGetSectionCount,
     dwarfAccessLoadSection,
     dwarfAccessRelocateASection
@@ -172,7 +183,7 @@ appendSubprogramDebugLine(
         debugLine.path = strdup(files[fileIndex - 1]);
         debugLine.number = line;
 
-        if (!wasmDebugLinesPush(debugLines, debugLine)) {
+        if (!wasmDebugLinesAppend(debugLines, debugLine)) {
             /* TODO: bubble up error? */
         }
     }
@@ -219,7 +230,7 @@ appendSubprogramDebugLines(
             appendSubprogramDebugLines(debug, childDie, files, debugLines);
         }
 
-        res = dwarf_siblingof(debug, childDie, &nextChildDie, &error);
+        res = dwarf_siblingof_b(debug, childDie, isInfo, &nextChildDie, &error);
         dwarf_dealloc(debug, childDie, DW_DLA_DIE);
         childDie = nextChildDie;
 
@@ -240,20 +251,20 @@ wasmParseDebugInfo(
 ) {
     WasmDebugLines debugLines = emptyWasmDebugLines;
     int res = DW_DLV_ERROR;
-    Dwarf_Obj_Access_Interface* interface = NULL;
+    Dwarf_Obj_Access_Interface_a* interface = NULL;
     Dwarf_Debug debug;
     Dwarf_Error error = NULL;
 
-    interface = (Dwarf_Obj_Access_Interface *)calloc(1, sizeof(Dwarf_Obj_Access_Interface*));
+    interface = (Dwarf_Obj_Access_Interface_a*)calloc(1, sizeof(Dwarf_Obj_Access_Interface_a));
     if (!interface) {
         fprintf(stderr, "w2c2: failed to allocate DWARF interface\n");
         goto end;
     }
 
-    interface->object = &sections;
-    interface->methods = &dwarfAccessMethods;
+    interface->ai_object = &sections;
+    interface->ai_methods = &dwarfAccessMethods;
 
-    res = dwarf_object_init(interface, NULL, NULL, &debug, &error);
+    res = dwarf_object_init_b(interface, NULL, NULL, 0, &debug, &error);
     if (res != DW_DLV_OK) {
         fprintf(stderr, "w2c2: failed to init DWARF reader\n");
         goto end;
@@ -267,13 +278,16 @@ wasmParseDebugInfo(
         Dwarf_Signed lineCount = 0;
         Dwarf_Line *lines = NULL;
         int lineIndex = 0;
+        Dwarf_Line_Context lineContext = NULL;
+        Dwarf_Unsigned version = 0;
+        Dwarf_Small tableCount = 0;
 
-        res = dwarf_next_cu_header(debug, NULL, NULL, NULL, NULL, NULL, &error);
+        res = dwarf_next_cu_header_d(debug, isInfo, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error);
         if (res != DW_DLV_OK) {
             break;
         }
 
-        res = dwarf_siblingof(debug, NULL, &cuDie, &error);
+        res = dwarf_siblingof_b(debug, NULL, isInfo, &cuDie, &error);
         if (res != DW_DLV_OK) {
             goto free_die;
         }
@@ -297,9 +311,15 @@ wasmParseDebugInfo(
 
         appendSubprogramDebugLines(debug, cuDie, files, &debugLines);
 
-        res = dwarf_srclines(cuDie, &lines, &lineCount, &error);
+        res = dwarf_srclines_b(cuDie, &version, &tableCount, &lineContext, &error);
         if (res != DW_DLV_OK) {
-            fprintf(stderr, "w2c2: failed to get lines\n");
+            fprintf(stderr, "w2c2: failed to get line context\n");
+            goto free_files;
+        }
+
+        res = dwarf_srclines_from_linecontext(lineContext, &lines, &lineCount, &error);
+        if (res != DW_DLV_OK) {
+            fprintf(stderr, "w2c2: failed to get lines from context\n");
             goto free_files;
         }
 
@@ -336,7 +356,7 @@ wasmParseDebugInfo(
                 goto loop_end;
             }
 
-            if (!wasmDebugLinesPush(&debugLines, debugLine)) {
+            if (!wasmDebugLinesAppend(&debugLines, debugLine)) {
                 goto loop_end;
             }
         }
@@ -354,10 +374,10 @@ free_files:
         dwarf_dealloc(debug, files, DW_DLA_LIST);
 
 loop_end:
-        dwarf_srclines_dealloc(debug, lines, lineCount);
+        dwarf_srclines_dealloc_b(lineContext);
     }
 
-    res = dwarf_object_finish(debug, &error);
+    res = dwarf_object_finish(debug);
     if (res != DW_DLV_OK) {
         fprintf(stderr, "w2c2: failed to finish DWARF reader\n");
     }
