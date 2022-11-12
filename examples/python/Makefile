@@ -1,4 +1,4 @@
-CFLAGS += -I../..
+CFLAGS += -I../.. -O0 -g
 LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
