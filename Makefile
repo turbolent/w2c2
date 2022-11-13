@@ -51,6 +51,10 @@ ifneq (,$(findstring debugging,$(FEATURES)))
 	LDFLAGS += -ldwarf
 endif
 
+ifneq (,$(findstring old_debugging,$(FEATURES)))
+	CFLAGS += -DHAS_OLD_LIBDWARF
+endif
+
 ifndef OUTPUT
 	OUTPUT := w2c2
 endif
