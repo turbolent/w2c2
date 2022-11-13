@@ -3295,7 +3295,8 @@ wasmCWriteFunctionDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    bool pretty,
+    bool debug
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
@@ -3312,6 +3313,12 @@ wasmCWriteFunctionDeclarations(
             false,
             pretty
         );
+        if (debug && functionIndex < module->functionNames.length) {
+            char *functionName = module->functionNames.names[functionIndex];
+            if (functionName != NULL) {
+                fprintf(file," __asm__(\"%s_%s\")", moduleName, functionName);
+            }
+        }
         fputs(";\n\n", file);
     }
 }
@@ -4315,10 +4322,11 @@ wasmCWriteModuleDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    bool pretty,
+    bool debug
 ) {
     wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty);
-    wasmCWriteFunctionDeclarations(file, module, moduleName, pretty);
+    wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug);
     wasmCWriteExports(file, module, moduleName, false, pretty);
 }
 
@@ -4394,7 +4402,8 @@ wasmCWriteModuleHeader(
     const WasmModule* module,
     const char* moduleName,
     const char* filename,
-    bool pretty
+    bool pretty,
+    bool debug
 ) {
     /* Create file */
     FILE *file = NULL;
@@ -4414,7 +4423,7 @@ wasmCWriteModuleHeader(
     fprintf(file, "#define %s_H\n\n", moduleName);
 
     wasmCWriteBaseInclude(file);
-    wasmCWriteModuleDeclarations(file, module, moduleName, pretty);
+    wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug);
     fprintf(
         file,
         "void %sInstantiate(%sInstance* instance, void* resolve(const char* module, const char* name));\n\n",
@@ -4829,7 +4838,7 @@ wasmCWriteModule(
         return false;
     }
 
-    MUST (wasmCWriteModuleHeader(module, moduleName, headerName, options.pretty))
+    MUST (wasmCWriteModuleHeader(module, moduleName, headerName, options.pretty, options.debug))
     MUST (wasmCWriteModuleImplementation(module, moduleName, outputName, headerName, options))
 
     return true;

@@ -8,11 +8,12 @@
 typedef struct WasmModuleReader {
     Buffer buffer;
     WasmModule* module;
+    bool debug;
 } WasmModuleReader;
 
 static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL};
 
-typedef enum {
+typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidMagic,
     wasmModuleReaderAllocationFailed,
     wasmModuleReaderInvalidSectionID,
@@ -57,7 +58,10 @@ typedef enum {
     wasmModuleReaderInvalidElementSectionOffsetExpression,
     wasmModuleReaderInvalidElementSectionFunctionIndexCount,
     wasmModuleReaderInvalidElementSectionFunctionIndex,
-    wasmModuleReaderInvalidStartSectionFunctionIndex
+    wasmModuleReaderInvalidStartSectionFunctionIndex,
+    wasmModuleReaderInvalidNameSectionFunctionNameCount,
+    wasmModuleReaderInvalidNameSectionFunctionIndex,
+    wasmModuleReaderInvalidNameSectionFunctionName
 } WasmModuleReaderErrorCode;
 
 typedef struct WasmModuleReaderError {
@@ -72,7 +76,6 @@ wasmModuleReaderErrorMessage(
 void
 wasmModuleRead(
     WasmModuleReader* reader,
-    bool debug,
     WasmModuleReaderError** error
 );
 

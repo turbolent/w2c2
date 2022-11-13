@@ -9,6 +9,7 @@
 #include "table.h"
 #include "elementsegment.h"
 #include "debug.h"
+#include "name.h"
 
 static const U8 wasmMagic[] = {
     0x00, 0x61, 0x73, 0x6D,
@@ -110,6 +111,12 @@ wasmModuleReaderErrorMessage(
             return "invalid element section function index";
         case wasmModuleReaderInvalidStartSectionFunctionIndex:
             return "invalid start section function index";
+        case wasmModuleReaderInvalidNameSectionFunctionNameCount:
+            return "invalid name section function name count";
+        case wasmModuleReaderInvalidNameSectionFunctionIndex:
+            return "invalid name section function index";
+        case wasmModuleReaderInvalidNameSectionFunctionName:
+            return "invalid name section function name";
         default:
             return "unknown";
     }
@@ -291,6 +298,171 @@ typedef void (* WasmSectionReader)(
 );
 
 static const char* wasmDebugSectionNamePrefix = ".debug_";
+static const char* wasmNameSectionName = "name";
+
+typedef struct WasmFunctionNameEntry {
+    char* name;
+    U32 functionIndex;
+} WasmFunctionNameEntry;
+
+static
+int
+wasmFunctionNameEntryCompareNames(
+    const void* a,
+    const void* b
+) {
+    return strcmp(
+        ((const WasmFunctionNameEntry*)a)->name,
+        ((const WasmFunctionNameEntry*)b)->name
+    );
+}
+
+static
+void
+wasmFunctionNamesRemoveDuplicates(
+    WasmNames* functionNames,
+    WasmModuleReaderError** error
+) {
+
+    size_t functionNameCount = functionNames->length;
+    U32 functionNameIndex = 0;
+
+    WasmFunctionNameEntry* entries = calloc(functionNameCount, sizeof(WasmFunctionNameEntry));
+    if (!entries) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderAllocationFailed
+        };
+        *error = &wasmModuleReaderError;
+        return;
+    }
+
+    for (; functionNameIndex < functionNameCount; functionNameIndex++) {
+        WasmFunctionNameEntry *entry = &entries[functionNameIndex];
+        entry->functionIndex = functionNameIndex;
+        entry->name = functionNames->names[functionNameIndex];
+    }
+
+    qsort(
+        entries,
+        functionNameCount,
+        sizeof(WasmFunctionNameEntry),
+        wasmFunctionNameEntryCompareNames
+    );
+
+    for (functionNameIndex = 1; functionNameIndex < functionNameCount; functionNameIndex++) {
+        const WasmFunctionNameEntry previous = entries[functionNameIndex - 1];
+        const WasmFunctionNameEntry current = entries[functionNameIndex];
+
+        if (strcmp(previous.name, current.name) == 0) {
+            fprintf(
+                stderr,
+                "w2c2: ignoring duplicate function name %s used by functions %d and %d\n",
+                previous.name,
+                previous.functionIndex,
+                current.functionIndex
+            );
+
+            functionNames->names[previous.functionIndex] = NULL;
+            functionNames->names[current.functionIndex] = NULL;
+        }
+    }
+}
+
+static
+void
+wasmReadNameSection(
+    WasmModuleReader* reader,
+    WasmModuleReaderError** error
+) {
+    U32 subsectionIndex = 0;
+    for (; subsectionIndex < wasmNameSubsection_count; subsectionIndex++) {
+        U8 subsectionID = 0;
+        U32 subsectionSize = 0;
+        U32 functionNameCount = 0;
+
+        /* Read subsection ID */
+        if (!bufferReadByte(&reader->buffer, &subsectionID)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidGlobalSectionMutabilityIndicator
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+
+        /* Read subsection size */
+        if (leb128ReadU32(&reader->buffer, &subsectionSize) == 0) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidSectionSize
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+
+        /* Read function names */
+        if (subsectionID == wasmNameSubsectionIDFunctionNames) {
+            const U32 functionCount = reader->module->functions.count;
+
+            U32 functionNameIndex = 0;
+
+            /* Read function name count */
+            if (leb128ReadU32(&reader->buffer, &functionNameCount) == 0) {
+                static WasmModuleReaderError wasmModuleReaderError = {
+                    wasmModuleReaderInvalidNameSectionFunctionNameCount
+                };
+                *error = &wasmModuleReaderError;
+                return;
+            }
+
+            /* Allocate name entries for *all* functions */
+            if (!wasmNamesEnsureCapacity(
+                &reader->module->functionNames,
+                /* NOTE: allocate name entries for *all* functions,
+                 * not just for functions with names (functionNameCount)
+                 */
+                functionCount
+            )) {
+                static WasmModuleReaderError wasmModuleReaderError = {
+                    wasmModuleReaderAllocationFailed
+                };
+                *error = &wasmModuleReaderError;
+                return;
+            }
+            reader->module->functionNames.length = functionCount;
+
+            /* Read function names */
+            for (; functionNameIndex < functionNameCount; functionNameIndex++) {
+                U32 functionIndex = 0;
+                char* functionName = NULL;
+
+                /* Read function index */
+                if (leb128ReadU32(&reader->buffer, &functionIndex) == 0) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidNameSectionFunctionIndex
+                    };
+                    *error = &wasmModuleReaderError;
+                    return;
+                }
+
+                /* Read function name */
+                if (!wasmReadName(&reader->buffer, &functionName)) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidNameSectionFunctionName
+                    };
+                    *error = &wasmModuleReaderError;
+                    return;
+                }
+
+                reader->module->functionNames.names[functionIndex] = functionName;
+            }
+
+            /* Remove duplicates */
+            wasmFunctionNamesRemoveDuplicates(&reader->module->functionNames, error);
+        } else {
+            fprintf(stderr, "w2c2: skipping unsupported name section subsection %d\n", subsectionID);
+            bufferSkip(&reader->buffer, subsectionSize);
+        }
+    }
+}
 
 static
 void
@@ -329,11 +501,16 @@ wasmReadCustomSection(
             *error = &wasmModuleReaderError;
             return;
         }
+
+        bufferSkip(&reader->buffer, sectionSize);
+
+    } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
+        wasmReadNameSection(reader, error);
     } else {
         fprintf(stderr, "w2c2: skipping custom section '%s' (size %d)\n", name, sectionSize);
+        bufferSkip(&reader->buffer, sectionSize);
     }
 
-    bufferSkip(&reader->buffer, sectionSize);
     *error = NULL;
 }
 
@@ -372,6 +549,7 @@ wasmReadTypeSection(
         WasmFunctionType functionType = wasmEmptyFunctionType;
         wasmReadFunctionType(reader, &functionType, error);
         if (*error != NULL) {
+            free(functionTypes);
             return;
         }
         functionTypes[typeIndex] = functionType;
@@ -1593,7 +1771,6 @@ wasmModuleReadSection(
 void
 wasmModuleRead(
     WasmModuleReader* reader,
-    bool debug,
     WasmModuleReaderError** error
 ) {
     WasmModule* module = NULL;
@@ -1629,7 +1806,7 @@ wasmModuleRead(
         *error = NULL;
     }
 
-    if (debug && module->debugSections.length > 0) {
+    if (reader->debug && module->debugSections.length > 0) {
         module->debugLines = wasmParseDebugInfo(module->debugSections);
     } else {
         module->debugLines = emptyWasmDebugLines;

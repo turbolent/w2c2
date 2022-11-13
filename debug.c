@@ -6,7 +6,6 @@
 
 #if HAS_OLD_LIBDWARF
 
-
 #include <stdio.h>
 #include <libdwarf.h>
 #include <dwarf.h>
