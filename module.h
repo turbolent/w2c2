@@ -12,6 +12,7 @@
 #include "table.h"
 #include "elementsegment.h"
 #include "debug.h"
+#include "name.h"
 
 typedef struct WasmFunctionTypes {
     WasmFunctionType* functionTypes;
@@ -71,6 +72,7 @@ typedef struct WasmModule {
     bool hasStartFunction;
     WasmDebugSections debugSections;
     WasmDebugLines debugLines;
+    WasmNames functionNames;
 } WasmModule;
 
 static

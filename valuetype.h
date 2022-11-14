@@ -4,7 +4,7 @@
 #include "buffer.h"
 #include "leb128.h"
 
-typedef enum {
+typedef enum WasmValueType {
     wasmValueTypeI32,
     wasmValueTypeI64,
     wasmValueTypeF32,

@@ -1,3 +1,4 @@
 python.h
 python.c
 python
+*.pyc

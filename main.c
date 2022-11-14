@@ -39,8 +39,9 @@ readWasmBinary(
     }
 
     wasmModuleReaderResult->buffer = buffer;
+    wasmModuleReaderResult->debug = debug;
 
-    wasmModuleRead(wasmModuleReaderResult, debug, &error);
+    wasmModuleRead(wasmModuleReaderResult, &error);
     if (error != NULL) {
         fprintf(stderr, "w2c2: failed to read module: %s\n", wasmModuleReaderErrorMessage(error));
         return false;

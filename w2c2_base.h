@@ -161,7 +161,7 @@ typedef double F64;
 #define UINT64_MAX 18446744073709551615ULL
 #endif
 
-typedef enum {
+typedef enum Trap {
     trapUnreachable,
     trapDivByZero,
     trapIntOverflow,
