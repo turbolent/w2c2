@@ -1169,7 +1169,7 @@ wasiFDReaddir(
          * Fallback is supplied by lstat in either case.
          */
 
-#if defined (DTTOIF)
+#if defined(DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
 #else
         fileType = wasiFileTypeUnknown;
@@ -1178,7 +1178,13 @@ wasiFDReaddir(
         if (fileType == wasiFileTypeUnknown) {
             struct stat entryStat;
 
-            if (lstat(descriptor.path, &entryStat)) {
+            char path[PATH_MAX];
+
+            strcpy(path, descriptor.path);
+            strcat(path, "/");
+            strcat(path, name);
+
+            if (lstat(path, &entryStat)) {
                 WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
                 return wasiErrno();
             }
