@@ -108,6 +108,7 @@ stringBuilderAppendF32(
     F32 value
 ) {
     char buffer[32];
+    /* FLT_DECIMAL_DIG */
     size_t length = sprintf(buffer, "%.9g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
@@ -118,6 +119,7 @@ stringBuilderAppendF64(
     F64 value
 ) {
     char buffer[32];
+    /* DBL_DECIMAL_DIG */
     size_t length = sprintf(buffer, "%.17g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, length);
 }
