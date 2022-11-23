@@ -406,7 +406,7 @@ dwarfAccessGetSectionInfo(
     return DW_DLV_OK;
 }
 
-static const isInfo = true;
+static const bool isInfo = true;
 
 static
 Dwarf_Small
