@@ -1819,7 +1819,7 @@ wasiPathOpen(
     if (oflags & wasiOflagsCreat) {
         nativeFlags |= O_CREAT;
     }
-#if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)
+#if defined(O_DIRECTORY) || (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L))
     if (oflags & wasiOflagsDirectory) {
         nativeFlags |= O_DIRECTORY;
     }
@@ -1865,6 +1865,22 @@ wasiPathOpen(
     if (nativeFD < 0) {
         WASI_TRACE(("path_open: open failed: %s", strerror(errno)));
         return wasiErrno();
+    }
+
+    /* Not all platforms support O_DIRECTORY, so emulate it */
+    if (oflags & wasiOflagsDirectory) {
+        WASI_TRACE(("path_open: emulate O_DIRECTORY"));
+
+        struct stat st;
+
+        if (fstat(nativeFD, &st) < 0) {
+            WASI_TRACE(("path_open: fstat failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+        if (wasiFileTypeFromMode(st.st_mode) != wasiFileTypeDirectory) {
+            return wasiErrnoNotdir;
+        }
     }
 
     WASI_TRACE(("path_open: nativeFD=%d", nativeFD));
@@ -2670,7 +2686,7 @@ wasiPathReadlink(
     {
         U32 i = 0;
         for (; i < length / 2; i++) {
-            U8 value = buffer[i];
+            char value = buffer[i];
             buffer[i] = buffer[length - i - 1];
             buffer[length - i - 1] = value;
         }
