@@ -1184,7 +1184,7 @@ wasiFDReaddir(
 #if defined(DTTOIF)
         fileType = wasiFileTypeFromMode(DTTOIF(entry->d_type));
 #else
-        fileType = wasiFileTypeUnknown;
+        fileType = WASI_FILE_TYPE_UNKNOWN;
 #endif
 
         if (fileType == WASI_FILE_TYPE_UNKNOWN) {
@@ -1384,7 +1384,7 @@ wasiClockTimeGet(
 #endif
             default: {
                 WASI_TRACE(("clock_time_get: invalid clock ID"));
-                return wasiErrnoInval;
+                return WASI_ERRNO_INVAL;
             }
         }
 
@@ -1499,7 +1499,7 @@ wasiClockResGet(
 #endif
             default: {
                 WASI_TRACE(("clock_res_get: invalid clock ID"));
-                return wasiErrnoInval;
+                return WASI_ERRNO_INVAL;
             }
         }
 
