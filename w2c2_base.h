@@ -129,6 +129,12 @@ typedef double F64;
 #define NORETURN
 #endif
 
+#if defined(__GNUC__) && GCC_VERSION >= 20700
+#define UNUSED __attribute__((__unused__))
+#else
+#define UNUSED
+#endif
+
 #ifndef LLONG_MIN
 #define LLONG_MIN (-0x7fffffffffffffffLL-1)
 #endif

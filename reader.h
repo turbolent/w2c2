@@ -11,7 +11,7 @@ typedef struct WasmModuleReader {
     bool debug;
 } WasmModuleReader;
 
-static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL};
+static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL, false};
 
 typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidMagic,

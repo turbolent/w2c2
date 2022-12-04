@@ -518,7 +518,7 @@ static
 void
 wasmReadTypeSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 typeCount = 0;
@@ -907,7 +907,7 @@ static
 void
 wasmReadImportSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 importCount = 0;
@@ -939,7 +939,7 @@ static
 void
 wasmReadFunctionSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 functionCount = 0;
@@ -1037,7 +1037,7 @@ static
 void
 wasmReadMemorySection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 memoryCount = 0;
@@ -1115,7 +1115,7 @@ static
 void
 wasmReadGlobalSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 globalCount = 0;
@@ -1208,7 +1208,7 @@ static
 void
 wasmReadExportSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 exportCount = 0;
@@ -1291,7 +1291,7 @@ static
 void
 wasmReadCodeSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 functionCount = 0;
@@ -1446,7 +1446,7 @@ static
 void
 wasmReadDataSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 dataSegmentCount = 0;
@@ -1494,7 +1494,7 @@ static
 void
 wasmReadTableSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 tableCount = 0;
@@ -1617,7 +1617,7 @@ static
 void
 wasmReadElementSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 elementSegmentCount = 0;
@@ -1665,7 +1665,7 @@ static
 void
 wasmReadStartSection(
     WasmModuleReader* reader,
-    U32 sectionSize,
+    U32 UNUSED(sectionSize),
     WasmModuleReaderError** error
 ) {
     U32 functionIndex = 0;

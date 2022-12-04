@@ -1094,6 +1094,7 @@ wasiFDReaddir(
     char* name = NULL;
     struct dirent* entry;
     size_t nameLength = 0;
+    size_t adjustedNameLength = 0;
     // NOTE: use target types, e.g. U8 for file type, instead of internal types
     U8 fileType = WASI_FILE_TYPE_UNKNOWN;
     U32 bufferUsed = 0;
@@ -1151,6 +1152,7 @@ wasiFDReaddir(
     while (bufferUsed < bufferLength) {
         long tell = 0;
         ssize_t bufferRemaining = bufferLength - bufferUsed;
+        U32 resultPointer = bufferPointer + bufferUsed;
 
         WASI_TRACE(("fd_readdir: bufferRemaining=%ld", bufferRemaining));
 
@@ -1219,8 +1221,6 @@ wasiFDReaddir(
             break;
         }
 
-        U32 resultPointer = bufferPointer + bufferUsed;
-
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memset(
             memory->data + resultPointer,
@@ -1246,7 +1246,7 @@ wasiFDReaddir(
         resultPointer = bufferPointer + bufferUsed;
 
         /* Write as much of the name as fits */
-        size_t adjustedNameLength =
+        adjustedNameLength =
             nameLength > bufferRemaining
             ? bufferRemaining
             : nameLength;
@@ -1341,7 +1341,7 @@ U32
 wasiClockTimeGet(
     void* instance,
     U32 clockID,
-    U64 precision,
+    U64 UNUSED(precision),
     U32 resultPointer
 ) {
     wasmMemory* memory = wasiMemory(instance);
@@ -1424,8 +1424,11 @@ wasiClockTimeGet(
 #endif
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
             struct rusage ru;
+            int ret = 0;
+
             WASI_TRACE(("clock_time_get: getrusage(RUSAGE_SELF)"));
-            int ret = getrusage(RUSAGE_SELF, &ru);
+
+            ret = getrusage(RUSAGE_SELF, &ru);
             if (ret != 0) {
                 WASI_TRACE(("clock_time_get: getrusage failed: %s", strerror(errno)));
                 return wasiErrno();
@@ -1757,7 +1760,7 @@ wasiPathOpen(
     U32 pathLength,
     U32 oflags,
     U64 fsRightsBase,
-    U64 fsRightsInheriting,
+    U64 UNUSED(fsRightsInheriting),
     U32 fdFlags,
     U32 fdPointer
 ) {
@@ -1774,6 +1777,13 @@ wasiPathOpen(
     int nativeFD = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
     U32 wasiFD = 0;
+
+    bool isRead = fsRightsBase & (WASI_RIGHTS_FD_READ
+                                  | WASI_RIGHTS_FD_READDIR);
+    bool isWrite = fsRightsBase & (WASI_RIGHTS_FD_DATASYNC
+                                   | WASI_RIGHTS_FD_WRITE
+                                   | WASI_RIGHTS_FD_ALLOCATE
+                                   | WASI_RIGHTS_FD_FILESTAT_SET_SIZE);
 
     WASI_TRACE((
         "path_open("
@@ -1819,12 +1829,6 @@ wasiPathOpen(
     WASI_TRACE(("path_open: resolvedPath=%s", resolvedPath));
 
     /* Convert WASI fsRightsBase to native flags */
-    bool isRead = fsRightsBase & (WASI_RIGHTS_FD_READ
-                                  | WASI_RIGHTS_FD_READDIR);
-    bool isWrite = fsRightsBase & (WASI_RIGHTS_FD_DATASYNC
-                                   | WASI_RIGHTS_FD_WRITE
-                                   | WASI_RIGHTS_FD_ALLOCATE
-                                   | WASI_RIGHTS_FD_FILESTAT_SET_SIZE);
     nativeFlags = isWrite ? isRead ? O_RDWR : O_WRONLY : O_RDONLY;
 
     /* Convert WASI oflags to native flags */
@@ -1871,8 +1875,6 @@ wasiPathOpen(
 
     /* Not all platforms support O_DIRECTORY, so emulate it */
     if (oflags & WASI_OFLAGS_DIRECTORY) {
-        WASI_TRACE(("path_open: emulate O_DIRECTORY"));
-
         struct stat st;
 
         if (fstat(nativeFD, &st) < 0) {
