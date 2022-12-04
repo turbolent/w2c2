@@ -3835,8 +3835,7 @@ void
 wasmCWriteDataSegmentsAsSection(
     FILE* file,
     const WasmModule* module,
-    WasmDataSegmentMode mode,
-    bool pretty
+    WasmDataSegmentMode mode
 ) {
     static char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
@@ -3917,7 +3916,7 @@ wasmCWriteDataSegments(
         case wasmDataSegmentModeGNULD:
         case wasmDataSegmentModeSectcreate1:
         case wasmDataSegmentModeSectcreate2: {
-            wasmCWriteDataSegmentsAsSection(file, module, mode, pretty);
+            wasmCWriteDataSegmentsAsSection(file, module, mode);
             break;
         }
         default: {

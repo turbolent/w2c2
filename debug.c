@@ -390,7 +390,7 @@ dwarfAccessGetSectionInfo(
     void* obj,
     Dwarf_Half sectionIndex,
     Dwarf_Obj_Access_Section_a *accessSection,
-    int* error
+    int* UNUSED(error)
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
     WasmDebugSection section = sections->debugSections[sectionIndex];
@@ -411,7 +411,7 @@ static const bool isInfo = true;
 static
 Dwarf_Small
 dwarfAccessGetByteOrder(
-    void* obj
+    void* UNUSED(obj)
 ) {
     return DW_END_little;
 }
@@ -419,7 +419,7 @@ dwarfAccessGetByteOrder(
 static
 Dwarf_Small
 dwarfAccessGetPointerSize(
-    void* obj
+    void* UNUSED(obj)
 ) {
     return 4;
 }
@@ -427,7 +427,7 @@ dwarfAccessGetPointerSize(
 static
 Dwarf_Unsigned
 dwarfAccessGetFileSize(
-    void* obj
+    void* UNUSED(obj)
 ) {
     return 0;
 }
@@ -435,7 +435,7 @@ dwarfAccessGetFileSize(
 static
 Dwarf_Small
 dwarfAccessGetLengthSize(
-    void* obj
+    void* UNUSED(obj)
 ) {
     return 4;
 }
@@ -455,7 +455,7 @@ dwarfAccessLoadSection(
     void* obj,
     Dwarf_Half sectionIndex,
     Dwarf_Small** sectionData,
-    int* error
+    int* UNUSED(error)
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
     WasmDebugSection section = sections->debugSections[sectionIndex];
@@ -468,10 +468,10 @@ dwarfAccessLoadSection(
 static
 int
 dwarfAccessRelocateASection(
-    void* obj,
-    Dwarf_Half sectionIndex,
-    Dwarf_Debug debug,
-    int* error
+    void* UNUSED(obj),
+    Dwarf_Half UNUSED(sectionIndex),
+    Dwarf_Debug UNUSED(debug),
+    int* UNUSED(error)
 ) {
     return DW_DLV_NO_ENTRY;
 }
@@ -489,7 +489,10 @@ static const struct Dwarf_Obj_Access_Methods_a_s dwarfAccessMethods = {
 
 static
 int
-compareDebugLines(const void *a, const void *b) {
+compareDebugLines(
+    const void* a,
+    const void* b
+){
     WasmDebugLine* l1 = (WasmDebugLine*) a;
     WasmDebugLine* l2 = (WasmDebugLine*) b;
     if (l1->address < l2->address) {

@@ -10,7 +10,7 @@ readFile(
     FILE* file = NULL;
     Buffer buffer = {NULL, 0};
     U8* data = NULL;
-    long size = 0;
+    size_t size = 0;
     size_t read = 0;
 
     file = fopen(path, "rb");
