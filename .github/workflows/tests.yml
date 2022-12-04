@@ -49,7 +49,7 @@ jobs:
           # - { target: m68k,     toolchain: gcc-m68k-linux-gnu,          cc: m68k-linux-gnu-gcc,          qemu: qemu-m68k-static     }
           - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -91,7 +91,7 @@ jobs:
         threads: [true, false]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: |
           brew install wabt python3
@@ -105,3 +105,34 @@ jobs:
         run: |
           make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
+
+  windows:
+    runs-on: windows-latest
+    name: "Windows, ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [release, debug]
+        threads: [true, false]
+        system:
+          - { target: mingw64, env: x86_64, cc: gcc }
+          - { target: mingw32, env: i686,   cc: gcc }
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.system.target }}
+          install: >-
+            make
+            gcc
+      - name: Build
+        env:
+          CC: ${{ matrix.system.cc }}
+          LDFLAGS: -static
+        run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"

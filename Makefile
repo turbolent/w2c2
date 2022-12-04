@@ -21,8 +21,6 @@ CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-f
 
 ifeq ($(UNAME),Windows)
 	OUTPUT := w2c2.exe
-	CC := clang
-	CFLAGS += -D_CRT_SECURE_NO_WARNINGS
 endif
 ifeq ($(UNAME),WASI)
 	OUTPUT := w2c2.wasm
