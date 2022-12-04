@@ -10,6 +10,9 @@ import sys
 from pathlib import Path
 
 
+gen_dir = Path('gen')
+
+
 def compare_versions(a, b):
     for [a, b] in zip(*[[int(s) for s in v.split('.')] for v in [a, b]]):
         if a < b:
@@ -75,7 +78,7 @@ def generate_test_files(json_path):
     def create_test_file(filename, module_name):
         nonlocal test_file
 
-        test_path = Path(filename)
+        test_path = gen_dir / filename
         test_path = test_path.with_name('assert_' + test_path.name).with_suffix('.c')
         print("    " + str(test_path))
 
@@ -202,7 +205,9 @@ def gen(paths):
                 wast2json_opts.append('--enable-bulk-memory')
 
         # Convert WAST to JSON and WASM files, if needed
-        json_path = Path(wast_path).with_suffix('.json')
+        json_path = gen_dir / Path(wast_path).with_suffix('.json').name
+        wast2json_opts.extend(['-o', str(json_path)])
+
         if not json_path.exists():
             subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
 

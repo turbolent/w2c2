@@ -1,6 +1,1 @@
-assert_*.c
-*.json
-*.wat
 test_*
-*.[0-9]*.wasm
-*[0-9]*.h

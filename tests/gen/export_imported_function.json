@@ -1,0 +1,3 @@
+{"source_filename": "export_imported_function.wast",
+ "commands": [
+  {"type": "module", "line": 1, "filename": "export_imported_function.0.wasm"}]}
