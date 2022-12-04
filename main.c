@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
-#ifndef _WIN32
 #include <limits.h>
 
-#endif
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif

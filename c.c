@@ -5,12 +5,10 @@
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif /* HAS_PTHREAD */
-#ifndef _WIN32
-  #include <unistd.h>
-  #include <errno.h>
-  #include <libgen.h>
-  #include <limits.h>
-#endif /* _WIN32 */
+#include <unistd.h>
+#include <errno.h>
+#include <libgen.h>
+#include <limits.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
