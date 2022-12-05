@@ -34,10 +34,10 @@ LDFLAGS += -lm
 
 .PHONY: run-tests gen clean clean-wasm-json clean-assertions clean-compiled
 
-run-tests: $(patsubst assert_%.c,run-test-%,$(wildcard assert_*.c))
+run-tests: $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
-	$(MAKE) $(patsubst assert_%.c,run-test-%,$(wildcard assert_$**.c))
+	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
@@ -47,10 +47,10 @@ run-test-%: test_%$(EXE)
 test_%$(EXE): test_%.o main.o
 	$(CC) $< main.o -o $@ $(LDFLAGS)
 
-test_%.c: %.wasm
+test_%.c: gen/%.wasm
 	echo "#include \"test.h\"" > $@
 	$(W2C2) $< $@
-	cat $(patsubst test_%.c,assert_%.c,$@) >> $@
+	cat $(patsubst test_%.c,gen/assert_%.c,$@) >> $@
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@
@@ -61,14 +61,5 @@ gen:
 gen-%:
 	$(PYTHON3) gen.py $*
 
-clean: clean-wasm-json clean-assertions clean-compiled
-	-rm -f main.o
-
-clean-wasm-json:
-	-rm -f *.json *.wasm *[0-9]*.wat
-
-clean-assertions:
-	-rm -f assert_*.c *[0-9]*.h
-
-clean-compiled:
-	-rm -f test_*
+clean:
+	-rm -f main.o test_*

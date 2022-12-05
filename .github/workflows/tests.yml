@@ -50,10 +50,6 @@ jobs:
           - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential wabt python3
       - name: Install QEMU
         if: ${{ matrix.system.qemu }}
         run: |
@@ -68,9 +64,6 @@ jobs:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
-      - name: Generate tests
-        working-directory: ./tests
-        run: make gen
       - name: Run tests
         env:
           CC: ${{ matrix.system.cc }}
@@ -92,14 +85,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          brew install wabt python3
       - name: Build
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
-      - name: Generate tests
-        working-directory: ./tests
-        run: make gen
       - name: Run tests
         working-directory: ./tests
         run: |
@@ -136,3 +123,8 @@ jobs:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
+      - name: Run tests
+        working-directory: ./tests
+        run: |
+          make run-tests 2>&1 | tee results
+          ! grep -q "^FAIL: " results
