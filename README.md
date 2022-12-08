@@ -8,12 +8,12 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 - Implements the WebAssembly Core Specification 1.0
 - Passes 99.9% of the WebAssembly core semantics test suite
 - Written in C89 and generates C89
-- Support for older operating systems and architectures
-- Support for big-endian systems
+- Support for older operating systems and architectures (e.g. Mac OS X on PowerPC, Haiku, etc.)
+- Support for big-endian systems (e.g. PowerPC)
 - Streaming/single-pass compilation, low memory usage
 - Parallel compilation into multiple files
 - Support for multiple modules and instances
-- WASI implementation which is able to run `clang.wasm`
+- WASI implementation which is able to run clang and Python
 
 ## Performance
 
