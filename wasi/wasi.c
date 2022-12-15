@@ -32,7 +32,7 @@ char *strndup(const char *s, size_t n) {
 
 static
 void
-#ifdef __GNUC__
+#if defined(__GNUC__) && GCC_VERSION >= 20905
 __attribute__ ((format(printf, 1, 2)))
 #endif
 tracePrintf(const char* fmt, ...) {
@@ -71,7 +71,7 @@ wasiFileDescriptorsEnsureCapacity(
     size_t length
 ) {
     if (length > descriptors->capacity) {
-        size_t newCapacity = length + (descriptors->capacity >> 1u);
+        size_t newCapacity = length + (descriptors->capacity >> 1U);
         void* newFileDescriptors = NULL;
         if (descriptors->fds == NULL) {
             newFileDescriptors = calloc(newCapacity * sizeof(WasiFileDescriptor), 1);
@@ -202,7 +202,7 @@ wasiPreopensEnsureCapacity(
     size_t length
 ) {
     if (length > preopens->capacity) {
-        size_t newCapacity = length + (preopens->capacity >> 1u);
+        size_t newCapacity = length + (preopens->capacity >> 1U);
         void* newPreopens = NULL;
         if (preopens->preopens == NULL) {
             newPreopens = calloc(newCapacity * sizeof(WasiPreopen), 1);
@@ -302,7 +302,7 @@ wasiInit(
 static
 __inline__
 U16
-wasiErrno() {
+wasiErrno(void) {
     switch (errno) {
     case EPERM:
         return WASI_ERRNO_PERM;
@@ -1095,7 +1095,7 @@ wasiFDReaddir(
     struct dirent* entry;
     size_t nameLength = 0;
     size_t adjustedNameLength = 0;
-    // NOTE: use target types, e.g. U8 for file type, instead of internal types
+    /* NOTE: use target types, e.g. U8 for file type, instead of internal types */
     U8 fileType = WASI_FILE_TYPE_UNKNOWN;
     U32 bufferUsed = 0;
     U64 next = 0;
@@ -1408,7 +1408,9 @@ wasiClockTimeGet(
             result = convertTimeval(tv);
             break;
         }
-#ifdef __MACH__
+#if defined(__MACH__)
+#include <mach/mach.h>
+#if defined(CLOCK_NULL)
         case WASI_CLOCK_MONOTONIC: {
 #include <mach/mach_time.h>
             static mach_timebase_info_data_t timebase = {0, 0};
@@ -1421,7 +1423,8 @@ wasiClockTimeGet(
             result = mach_absolute_time() * timebase.numer / timebase.denom;
             break;
         }
-#endif
+#endif /* CLOCK_NULL */
+#endif /* __MACH__*/
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
             struct rusage ru;
             int ret = 0;

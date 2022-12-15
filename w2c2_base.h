@@ -129,7 +129,7 @@ typedef double F64;
 #define NORETURN
 #endif
 
-#if defined(__GNUC__) && GCC_VERSION >= 20700
+#if defined(__GNUC__) && GCC_VERSION >= 20905
 #define UNUSED __attribute__((__unused__))
 #else
 #define UNUSED
@@ -165,6 +165,10 @@ typedef double F64;
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 18446744073709551615ULL
+#endif
+
+#ifndef INFINITY
+#define INFINITY (1.0/0.0)
 #endif
 
 typedef enum Trap {

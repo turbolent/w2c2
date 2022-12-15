@@ -7,8 +7,8 @@
 #endif /* HAS_PTHREAD */
 #include <unistd.h>
 #include <errno.h>
-#include <libgen.h>
 #include <limits.h>
+#include "compat.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
