@@ -16,13 +16,13 @@ typedef unsigned char U8;
 typedef signed char I8;
 
 typedef unsigned short U16;
-typedef short I16;
+typedef signed short I16;
 
 typedef unsigned int U32;
-typedef int I32;
+typedef signed int I32;
 
 typedef unsigned long long int U64;
-typedef long long int I64;
+typedef signed long long int I64;
 
 typedef float F32;
 typedef double F64;
@@ -143,20 +143,20 @@ typedef double F64;
 #define LLONG_MAX 0x7fffffffffffffffLL
 #endif
 
-#ifndef INT32_MIN
-#define INT32_MIN (-0x7fffffff - 1)
-#endif
-
 #ifndef INT32_MAX
 #define INT32_MAX 2147483647
 #endif
 
-#ifndef INT64_MIN
-#define INT64_MIN (-0x7fffffffffffffff - 1)
+#ifndef INT32_MIN
+#define INT32_MIN (-INT32_MAX - 1)
 #endif
 
 #ifndef INT64_MAX
 #define INT64_MAX 9223372036854775807LL
+#endif
+
+#ifndef INT64_MIN
+#define INT64_MIN (-INT64_MAX - 1)
 #endif
 
 #ifndef UINT32_MAX

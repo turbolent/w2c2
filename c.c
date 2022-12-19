@@ -91,7 +91,7 @@ wasmCWriteStringEscaped(
             MUST (stringBuilderAppendChar(builder, c))
         } else {
             MUST (stringBuilderAppendChar(builder, escapeChar))
-            MUST (stringBuilderAppendCharHex(builder, c))
+            MUST (stringBuilderAppendU8Hex(builder, c))
         }
     }
     return true;
@@ -175,7 +175,7 @@ wasmCWriteStringGlobalUse(
         }
         MUST (stringBuilderAppend(builder, "i->"))
         MUST (stringBuilderAppend(builder, globalNamePrefix))
-        MUST (stringBuilderAppendI64(builder, globalIndex))
+        MUST (stringBuilderAppendU32(builder, globalIndex))
     }
     return true;
 }
@@ -260,7 +260,7 @@ wasmCWriteStringMemoryUse(
         }
         MUST (stringBuilderAppend(builder, "i->"))
         MUST (stringBuilderAppend(builder, memoryNamePrefix))
-        MUST (stringBuilderAppendI64(builder, (I64) memoryIndex))
+        MUST (stringBuilderAppendU32(builder, memoryIndex))
     }
     return true;
 }
@@ -331,7 +331,7 @@ wasmCWriteStringTableUse(
         }
         MUST (stringBuilderAppend(builder, "i->"))
         MUST (stringBuilderAppend(builder, tableNamePrefix))
-        MUST (stringBuilderAppendI64(builder, (I64) tableIndex))
+        MUST (stringBuilderAppendU32(builder, tableIndex))
     }
     return true;
 }
@@ -415,7 +415,7 @@ wasmCWriteStringFunctionUse(
         }
         MUST (stringBuilderAppend(builder, moduleName))
         MUST (stringBuilderAppend(builder, "_f"))
-        MUST (stringBuilderAppendI64(builder, (I64) functionIndex))
+        MUST (stringBuilderAppendU32(builder, functionIndex))
     }
     return true;
 }
@@ -448,7 +448,7 @@ wasmCWriteStringStackName(
 ) {
     MUST (stringBuilderAppend(builder, stackNamePrefix))
     MUST (stringBuilderAppend(builder, valueTypeStackNames[localType]))
-    MUST (stringBuilderAppendI64(builder, (I64) stackIndex))
+    MUST (stringBuilderAppendU32(builder, stackIndex))
     return true;
 }
 
@@ -461,7 +461,7 @@ wasmCWriteStringLocalName(
     const U32 localIndex
 ) {
     MUST (stringBuilderAppend(builder, localNamePrefix))
-    MUST (stringBuilderAppendI64(builder, localIndex))
+    MUST (stringBuilderAppendU32(builder, localIndex))
     return true;
 }
 
@@ -474,7 +474,7 @@ wasmCWriteStringLabelName(
     const U32 labelIndex
 ) {
     MUST (stringBuilderAppend(builder, labelNamePrefix))
-    MUST (stringBuilderAppendI64(builder, (I64) labelIndex))
+    MUST (stringBuilderAppendU32(builder, labelIndex))
     return true;
 }
 
@@ -1007,20 +1007,20 @@ wasmCWriteLiteral(
 ) {
     switch (valueType) {
         case wasmValueTypeI32: {
-            MUST (stringBuilderAppendI64(builder, value.i32))
-            MUST (stringBuilderAppend(builder, "u"))
+            MUST (stringBuilderAppendI32(builder, value.i32))
+            MUST (stringBuilderAppend(builder, "U"))
             break;
         }
         case wasmValueTypeI64: {
             MUST (stringBuilderAppendI64(builder, value.i64))
-            MUST (stringBuilderAppend(builder, "ull"))
+            MUST (stringBuilderAppend(builder, "ULL"))
             break;
         }
         case wasmValueTypeF32: {
             U32 bits = (U32) value.i32;
-            if ((bits & 0x7f800000u) == 0x7f800000u) {
-                const char* sign = (bits & 0x80000000) ? "-" : "";
-                U32 significand = bits & 0x7fffffu;
+            if ((bits & 0x7f800000U) == 0x7f800000U) {
+                const char* sign = (bits & 0x80000000U) ? "-" : "";
+                U32 significand = bits & 0x7fffffU;
                 if (significand == 0) {
                     MUST (stringBuilderAppend(builder, sign))
                     MUST (stringBuilderAppend(builder, "INFINITY"))
@@ -1029,7 +1029,7 @@ wasmCWriteLiteral(
                     MUST (stringBuilderAppendU32Hex(builder, bits))
                     MUST (stringBuilderAppend(builder, ")"))
                 }
-            } else if (bits == 0x80000000) {
+            } else if (bits == 0x80000000U) {
                 MUST (stringBuilderAppend(builder, "-0.f"))
             } else {
                 MUST (stringBuilderAppendF32(builder, value.f32))
@@ -1038,9 +1038,9 @@ wasmCWriteLiteral(
         }
         case wasmValueTypeF64: {
             U64 bits = (U64) value.i64;
-            if ((bits & 0x7ff0000000000000ull) == 0x7ff0000000000000ull) {
-                const char* sign = (bits & 0x8000000000000000ull) ? "-" : "";
-                U64 significand = bits & 0x7fffffu;
+            if ((bits & 0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) {
+                const char* sign = (bits & 0x8000000000000000ULL) ? "-" : "";
+                U64 significand = bits & 0x7fffffULL;
                 if (significand == 0) {
                     MUST (stringBuilderAppend(builder, sign))
                     MUST (stringBuilderAppend(builder, "INFINITY"))
@@ -1049,7 +1049,7 @@ wasmCWriteLiteral(
                     MUST (stringBuilderAppendU64Hex(builder, bits))
                     MUST (stringBuilderAppend(builder, ")"))
                 }
-            } else if (bits == 0x8000000000000000ull) {
+            } else if (bits == 0x8000000000000000ULL) {
                 MUST (stringBuilderAppend(builder, "-0.f"))
             } else {
                 MUST (stringBuilderAppendF64(builder, value.f64))
@@ -1196,8 +1196,8 @@ wasmCWriteLoadExpr(
             ))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
-                MUST (wasmCWrite(writer, "u"))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                MUST (wasmCWrite(writer, "U"))
             }
             MUST (wasmCWrite(writer, ");\n"))
 
@@ -1290,8 +1290,8 @@ wasmCWriteStoreExpr(
             ))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendI64(writer->builder, (I64) instruction.offset))
-                MUST (wasmCWrite(writer, "u"))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                MUST (wasmCWrite(writer, "U"))
             }
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStringStackName(
@@ -2355,7 +2355,7 @@ wasmCWriteBranchTableExpr(
             for (; index < instruction.labelIndexCount; index++) {
                 MUST (wasmCWriteIndent(writer))
                 MUST (wasmCWrite(writer, "case "))
-                MUST (stringBuilderAppendI64(writer->builder, index))
+                MUST (stringBuilderAppendU32(writer->builder, index))
                 MUST (wasmCWrite(writer, ":\n"))
                 writer->indent++;
                 {
@@ -2399,7 +2399,7 @@ wasmCWriteDebugLine(
 
 ) {
     MUST (stringBuilderAppend(builder, "#line "))
-    MUST (stringBuilderAppendI64(builder, debugLine->number))
+    MUST (stringBuilderAppendU32(builder, debugLine->number))
     MUST (stringBuilderAppend(builder, " \""))
     MUST (stringBuilderAppend(builder, debugLine->path))
     MUST (stringBuilderAppend(builder, "\"\n"))
@@ -3351,7 +3351,7 @@ wasmCWriteFunctionImplementations(
         if (debug) {
             WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
             if (debugLine != NULL) {
-                fprintf(file, "#line %llu \"%s\"\n", debugLine->number, debugLine->path);
+                fprintf(file, "#line %u \"%s\"\n", (U32)debugLine->number, debugLine->path);
             }
         }
 
@@ -3878,7 +3878,7 @@ wasmCWriteDataSegmentsAsSection(
         if (written != length) {
             fprintf(
                 stderr,
-                "w2c2: failed to write data segment %d: %s",
+                "w2c2: failed to write data segment %u: %s",
                 dataSegmentIndex,
                 strerror(errno)
             );
@@ -4335,7 +4335,12 @@ wasmCWriteInstantiateFunction(
     const char* moduleName,
     bool pretty
 ) {
-    fprintf(file, "void %sInstantiate(%sInstance* i, void* resolve(const char* module, const char* name)) {\n", moduleName, moduleName);
+    fprintf(
+        file,
+        "void %sInstantiate(%sInstance* i, void* resolve(const char* module, const char* name)) {\n",
+        moduleName,
+        moduleName
+    );
 
     if (pretty) {
         fputs(indentation, file);
@@ -4504,7 +4509,7 @@ wasmCWriteImplementationFile(
     }
 
     if (separate) {
-        sprintf(filename, "%010d.c", fileIndex);
+        sprintf(filename, "%010u.c", fileIndex);
         file = fopen(filename, "w");
         if (file == NULL) {
             fprintf(
