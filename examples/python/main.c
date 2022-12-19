@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
     {
         static char* rootPath = "/";
-        int rootFD = open(rootPath, O_DIRECTORY);
+        int rootFD = open(rootPath, O_RDONLY);
         if (rootFD < 0) {
             fprintf(stderr, "failed to open root path\n");
             return 1;
