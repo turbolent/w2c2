@@ -12,7 +12,7 @@ stringBuilderEnsureCapacity(
 ) {
     size_t lengthWithNull = length + 1;
     if (lengthWithNull > stringBuilder->capacity) {
-        size_t newCapacity = lengthWithNull + (stringBuilder->capacity >> 1u);
+        size_t newCapacity = lengthWithNull + (stringBuilder->capacity >> 1U);
         void* newString = realloc(stringBuilder->string, newCapacity);
         MUST (newString != NULL)
         stringBuilder->string = (char*) newString;
@@ -93,13 +93,89 @@ stringBuilderAppendSized(
 }
 
 bool
+stringBuilderAppendU32(
+    StringBuilder* stringBuilder,
+    U32 value
+) {
+    char temp[10];
+    char* tempPointer = temp;
+    char* buffer = NULL;
+
+    MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 11))
+    buffer = stringBuilder->string + stringBuilder->length;
+
+    do {
+        *tempPointer++ = (char)(value % 10) + '0';
+        value /= 10;
+    } while (value > 0);
+
+    do {
+        *buffer++ = *--tempPointer;
+        stringBuilder->length++;
+    } while (tempPointer != temp);
+
+    *buffer = '\0';
+
+    return true;
+}
+
+bool
+stringBuilderAppendI32(
+    StringBuilder* stringBuilder,
+    I32 value
+) {
+    U32 unsignedValue = (U32)value;
+    if (value < 0) {
+        MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 1))
+        stringBuilder->string[stringBuilder->length] = '-';
+        stringBuilder->length++;
+
+        unsignedValue = ~unsignedValue + 1;
+    }
+    return stringBuilderAppendU32(stringBuilder, unsignedValue);
+}
+
+bool
+stringBuilderAppendU64(
+    StringBuilder* stringBuilder,
+    U64 value
+) {
+    char temp[20];
+    char* tempPointer = temp;
+    char* buffer = NULL;
+
+    MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 21))
+    buffer = stringBuilder->string + stringBuilder->length;
+
+    do {
+        *tempPointer++ = (char)(value % 10) + '0';
+        value /= 10;
+    } while (value > 0);
+
+    do {
+        *buffer++ = *--tempPointer;
+        stringBuilder->length++;
+    } while (tempPointer != temp);
+
+    *buffer = '\0';
+
+    return true;
+}
+
+bool
 stringBuilderAppendI64(
     StringBuilder* stringBuilder,
     I64 value
 ) {
-    char buffer[22];
-    size_t length = sprintf(buffer, "%lld", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    U64 unsignedValue = (U64)value;
+    if (value < 0) {
+        MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 1))
+        stringBuilder->string[stringBuilder->length] = '-';
+        stringBuilder->length++;
+
+        unsignedValue = ~unsignedValue + 1;
+    }
+    return stringBuilderAppendU64(stringBuilder, unsignedValue);
 }
 
 bool
@@ -125,9 +201,9 @@ stringBuilderAppendF64(
 }
 
 bool
-stringBuilderAppendCharHex(
+stringBuilderAppendU8Hex(
     StringBuilder* stringBuilder,
-    char value
+    U8 value
 ) {
     char buffer[3];
     size_t length = sprintf(buffer, "%02X", value);

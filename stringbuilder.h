@@ -70,10 +70,32 @@ stringBuilderAppendChar(
 
 bool
 WARN_UNUSED_RESULT
-stringBuilderAppendCharHex(
+stringBuilderAppendU8Hex(
     StringBuilder* stringBuilder,
-    char value
+    U8 value
 );
+
+bool
+WARN_UNUSED_RESULT
+stringBuilderAppendU32(
+    StringBuilder* stringBuilder,
+    U32 value
+);
+
+bool
+WARN_UNUSED_RESULT
+stringBuilderAppendI32(
+    StringBuilder* stringBuilder,
+    I32 value
+);
+
+bool
+WARN_UNUSED_RESULT
+stringBuilderAppendU64(
+    StringBuilder* stringBuilder,
+    U64 value
+);
+
 
 bool
 WARN_UNUSED_RESULT

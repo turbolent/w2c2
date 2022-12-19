@@ -10,7 +10,7 @@ static void spectest_print() {
 }
 
 static void spectest_printX5Fi32(U32 l0) {
-    printf("spectest.print_i32(%d)\n", l0);
+    printf("spectest.print_i32(%u)\n", l0);
 }
 
 static wasmTable spectest_table;
@@ -69,7 +69,7 @@ void assertEqualU32(
     const char *description
 ) {
     if (actual != expected) {
-        fprintf(stderr, "FAIL: %s: %d != %d\n", description, actual, expected);
+        fprintf(stderr, "FAIL: %s: %u != %u\n", description, actual, expected);
     } else {
         fprintf(stderr, "OK: %s\n", description);
     }
@@ -81,7 +81,7 @@ void assertEqualU64(
     const char *description
 ) {
     if (actual != expected) {
-        fprintf(stderr, "FAIL: %s: %lld != %lld\n", description, actual, expected);
+        fprintf(stderr, "FAIL: %s: %llu != %llu\n", description, actual, expected);
     } else {
         fprintf(stderr, "OK: %s\n", description);
     }

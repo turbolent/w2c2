@@ -356,7 +356,7 @@ wasmFunctionNamesRemoveDuplicates(
         if (strcmp(previous.name, current.name) == 0) {
             fprintf(
                 stderr,
-                "w2c2: ignoring duplicate function name %s used by functions %d and %d\n",
+                "w2c2: ignoring duplicate function name %s used by functions %u and %u\n",
                 previous.name,
                 previous.functionIndex,
                 current.functionIndex
@@ -507,7 +507,7 @@ wasmReadCustomSection(
     } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
         wasmReadNameSection(reader, error);
     } else {
-        fprintf(stderr, "w2c2: skipping custom section '%s' (size %d)\n", name, sectionSize);
+        fprintf(stderr, "w2c2: skipping custom section '%s' (size %u)\n", name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
     }
 
