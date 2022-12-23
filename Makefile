@@ -11,13 +11,15 @@ ifndef UNAME
 	UNAME := $(shell uname -s)
 endif
 
+WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+
 ifeq ($(BUILD),release)
 	CFLAGS += -O3
 else
 	CFLAGS += -g -O0
 endif
 
-CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+CFLAGS += -std=c89 $(WARNS)
 
 ifeq ($(UNAME),Windows)
 	OUTPUT := w2c2.exe
