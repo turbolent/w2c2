@@ -7,7 +7,7 @@ Python software and documentation are licensed under the Python Software Foundat
 ## Usage
 
 ```shell
-make
+make python.c
 make -j8
 PYTHONHOME=`pwd` ./python
 ```

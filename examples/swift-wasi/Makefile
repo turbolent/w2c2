@@ -11,7 +11,7 @@ swiftwasi.o: CFLAGS += -O0
 	$(CC) -I../.. -O3 $(CFLAGS) -c $< -o $@
 
 swiftwasi.c: swift-wasi.wasm
-	$(W2C2) -j 12 -f 100 $^ $@
+	$(W2C2) -f 100 $^ $@
 
 .build/wasm32-unknown-wasi/release/swift-wasi.wasm:
 	swift build -Xswiftc -Osize -c release --triple wasm32-unknown-wasi

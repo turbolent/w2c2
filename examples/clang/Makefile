@@ -30,7 +30,7 @@ clang.o: CFLAGS += -O0
 	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
 
 clang.c: clang.wasm
-	$(W2C2) -d $(MODE) -j 12 -f 100 $^ $@
+	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .PHONY: clean
 clean:

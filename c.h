@@ -6,7 +6,7 @@
 
 typedef struct WasmCWriteModuleOptions {
     const char* outputPath;
-    U32 jobCount;
+    U32 threadCount;
     U32 functionsPerFile;
     bool pretty;
     bool debug;

@@ -1,4 +1,7 @@
+[0-9]*.c
 python.h
 python.c
 python
 *.pyc
+datasegments
+

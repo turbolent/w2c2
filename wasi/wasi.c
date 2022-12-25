@@ -14,6 +14,10 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#if defined(__MACH__)
+#include <mach/mach.h>
+#endif /* __MACH__*/
+
 #include "wasi.h"
 
 #if NEED_STRNDUP
@@ -1293,8 +1297,12 @@ wasiFDClose(
     return WASI_ERRNO_SUCCESS;
 }
 
+#ifndef NSEC_PER_SEC
 #define NSEC_PER_SEC 1000000000LL
+#endif
+#ifndef NSEC_PER_USEC
 #define NSEC_PER_USEC 1000LL
+#endif
 
 static
 __inline__
@@ -1408,11 +1416,9 @@ wasiClockTimeGet(
             result = convertTimeval(tv);
             break;
         }
-#if defined(__MACH__)
-#include <mach/mach.h>
-#if defined(CLOCK_NULL)
-        case WASI_CLOCK_MONOTONIC: {
+#if defined(__MACH__) && defined(CLOCK_NULL)
 #include <mach/mach_time.h>
+        case WASI_CLOCK_MONOTONIC: {
             static mach_timebase_info_data_t timebase = {0, 0};
 
             if (!timebase.denom && mach_timebase_info(&timebase) != KERN_SUCCESS) {
@@ -1423,8 +1429,7 @@ wasiClockTimeGet(
             result = mach_absolute_time() * timebase.numer / timebase.denom;
             break;
         }
-#endif /* CLOCK_NULL */
-#endif /* __MACH__*/
+#endif /* defined(__MACH__) && defined(CLOCK_NULL) */
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
             struct rusage ru;
             int ret = 0;

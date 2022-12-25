@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
+#include <unistd.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -18,7 +19,7 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "j:f:d:pgh";
+static char* const optString = "t:f:d:pgh";
 #else
 static char* const optString = "f:d:pgh";
 #endif /* HAS_PTHREAD */
@@ -77,10 +78,10 @@ main(
     int argc,
     char* argv[]
 ) {
-    U32 jobCount = 1;
+    U32 threadCount = 0;
     char* modulePath = NULL;
     char* outputPath = NULL;
-    U32 functionsPerFile = 10;
+    U32 functionsPerFile = 0;
     bool pretty = false;
     bool debug = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
@@ -94,8 +95,8 @@ main(
     while ((c = getopt(argc, argv, optString)) != -1) {
         switch (c) {
 #if HAS_PTHREAD
-            case 'j': {
-                jobCount = strtoul(optarg, NULL, 0);
+            case 't': {
+                threadCount = strtoul(optarg, NULL, 0);
                 break;
             }
 #endif /* HAS_PTHREAD */
@@ -156,11 +157,11 @@ main(
                 fprintf(stderr, "options:\n");
                 fprintf(stderr, "  -h         Print this help message\n");
 #if HAS_PTHREAD
-                fprintf(stderr, "  -j N       Number of jobs (>1 enables parallel compilation)\n");
+                fprintf(stderr, "  -t N       Number of threads\n");
 #endif /* HAS_PTHREAD */
-                fprintf(stderr, "  -f N       Number of functions per file when parallel compilation is enabled\n");
+                fprintf(stderr, "  -f N       Number of functions per file. 0 (default) writes all functions into one file\n");
                 fprintf(stderr, "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n");
-                fprintf(stderr, "  -g         Generate debug information (#line directives) based on DWARF\n");
+                fprintf(stderr, "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n");
                 fprintf(stderr, "  -p         Generate pretty code\n");
                 return 0;
             }
@@ -182,9 +183,13 @@ main(
     }
 
 #if HAS_PTHREAD
-    if (jobCount < 1) {
-        fprintf(stderr, "w2c2: expected jobCount >= 1, got %d\n", jobCount);
+    if (threadCount < 1) {
+#ifdef _SC_NPROCESSORS_ONLN
+        threadCount = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+        fprintf(stderr, "w2c2: expected thread count >= 1, got %d\n", threadCount);
         return 1;
+#endif
     }
 #endif /* HAS_PTHREAD */
 
@@ -224,12 +229,12 @@ main(
             return 1;
         }
 
-        if (jobCount == 1) {
+        if (functionsPerFile == 0) {
             functionsPerFile = reader.module->functions.count;
         }
 
         writeOptions.outputPath = outputPath;
-        writeOptions.jobCount = jobCount;
+        writeOptions.threadCount = threadCount;
         writeOptions.functionsPerFile = functionsPerFile;
         writeOptions.pretty = pretty;
         writeOptions.debug = debug;
