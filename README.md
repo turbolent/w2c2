@@ -43,10 +43,10 @@ For example, to compile `module.wasm` to `module.c` (and `module.h`):
 
 When w2c2 was built with the `threads` feature (see above), it is possible to compile the module in parallel.
 
-For example, to compile `module.wasm` (and `module.h`), using 12 concurrent jobs, into multiple files with 100 functions each:
+For example, to compile `module.wasm` (and `module.h`), into multiple files with 100 functions each:
 
 ```sh
-./w2c2 -j 12 -f 100 module.wasm module.c
+./w2c2 -f 100 module.wasm module.c
 ```
 
 ## Examples

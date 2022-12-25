@@ -29,7 +29,7 @@ datasegments.o: python.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@
 
 python.c: python.wasm
-	$(W2C2) -g -d $(MODE) -j 2 -f 100 $^ $@
+	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .PHONY: clean
 clean:
