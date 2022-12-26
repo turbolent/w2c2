@@ -3247,7 +3247,11 @@ wasmCWriteFileParameters(
     fputs(moduleName, file);
     fputs("Instance*", file);
     if (writeParameterNames) {
-        fputs(" i", file);
+        if (pretty) {
+            fputs(" i", file);
+        } else {
+            fputc('i', file);
+        }
     }
     {
         U32 parameterIndex = 0;
@@ -3391,6 +3395,18 @@ wasmCWriteFunctionImplementations(
 }
 
 static
+W2C2_INLINE
+void
+wasmCWriteGlobalImportType(
+    FILE* file,
+    WasmGlobalImport import,
+    bool pretty
+) {
+    fputs(valueTypeNames[import.globalType.valueType], file);
+    fputc('*', file);
+}
+
+static
 void
 wasmCWriteGlobalImports(
     FILE* file,
@@ -3404,8 +3420,10 @@ wasmCWriteGlobalImports(
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs(valueTypeNames[import.globalType.valueType], file);
-        fputs("* ", file);
+        wasmCWriteGlobalImportType(file, import, pretty);
+        if (pretty) {
+            fputc(' ', file);
+        }
         wasmCWriteFileImportName(file, import.module, import.name);
         fputs(";\n", file);
     }
@@ -3527,7 +3545,7 @@ wasmCWriteInitGlobals(
 static
 W2C2_INLINE
 void
-wasmCWriteInitImport(
+wasmCWriteInitImportAssignment(
     FILE* file,
     const char* module,
     const char* name, 
@@ -3544,12 +3562,48 @@ wasmCWriteInitImport(
             fputs(indentation, file);
             fputs(indentation, file);
         }
-        fputs("(__typeof__(i->", file);
     } else {
-        fputs("=(__typeof__(i->", file);
+        fputc('=', file);
     }
-    wasmCWriteFileImportName(file, module, name);
-    fprintf(file, "))resolve(\"%s\", \"%s\");\n", module, name);
+}
+
+static
+W2C2_INLINE
+void
+wasmCWriteInitImportValue(
+    FILE* file,
+    const char* module,
+    const char* name
+) {
+    fprintf(file, "resolve(\"%s\", \"%s\");\n", module, name);
+}
+
+static
+W2C2_INLINE
+void
+wasmCWriteFunctionImport(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    WasmFunctionImport import,
+    bool declaration,
+    bool pretty
+) {
+    WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
+    fputs(wasmCGetReturnType(functionType), file);
+    fputs("(*", file);
+    if (declaration) {
+        wasmCWriteFileImportName(file, import.module, import.name);
+    }
+    fputc(')', file);
+    wasmCWriteFileParameters(
+        file,
+        moduleName,
+        functionType,
+        false,
+        declaration,
+        pretty
+    );
 }
 
 static
@@ -3557,13 +3611,18 @@ void
 wasmCWriteInitFunctionImports(
     FILE* file,
     const WasmModule* module,
+    const char* moduleName,
     bool pretty
 ) {
     const U32 functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
     for (; functionIndex < functionImportCount; functionIndex++) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        wasmCWriteInitImport(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
+        wasmCWriteFunctionImport(file, module, moduleName, import, false, pretty);
+        fputc(')', file);
+        wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
 
@@ -3578,11 +3637,19 @@ wasmCWriteInitGlobalImports(
     U32 globalIndex = 0;
     for (; globalIndex < globalImportCount; globalIndex++) {
         WasmGlobalImport import = module->globalImports.imports[globalIndex];
-        if (pretty) {
-            fputs(indentation, file);
-        }
-        wasmCWriteInitImport(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteGlobalImportType(file, import, pretty);
+        wasmCWriteInitImportValue(file, import.module, import.name);
     }
+}
+
+static
+W2C2_INLINE
+void
+wasmCWriteMemoryType(
+    FILE* file
+) {
+    fputs("wasmMemory*", file);
 }
 
 static
@@ -3597,11 +3664,19 @@ wasmCWriteInitMemoryImports(
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        if (pretty) {
-            fputs(indentation, file);
-        }
-        wasmCWriteInitImport(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteMemoryType(file);
+        wasmCWriteInitImportValue(file, import.module, import.name);
     }
+}
+
+static
+W2C2_INLINE
+void
+wasmCWriteTableType(
+    FILE* file
+) {
+    fputs("wasmTable*", file);
 }
 
 static
@@ -3616,10 +3691,9 @@ wasmCWriteInitTableImports(
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
         WasmTableImport import = module->tableImports.imports[tableIndex];
-        if (pretty) {
-            fputs(indentation, file);
-        }
-        wasmCWriteInitImport(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteTableType(file);
+        wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
 
@@ -3632,7 +3706,6 @@ wasmCWriteInitImports(
     const char* moduleName,
     bool pretty
 ) {
-
     fprintf(
         file,
         "static void %sInitImports(%sInstance* i, void* resolve(const char* module, const char* name)) {\n",
@@ -3644,7 +3717,7 @@ wasmCWriteInitImports(
     }
     fputs("if (resolve == NULL) { return; }\n", file);
 
-    wasmCWriteInitFunctionImports(file, module, pretty);
+    wasmCWriteInitFunctionImports(file, module, moduleName, pretty);
     wasmCWriteInitMemoryImports(file, module, pretty);
     wasmCWriteInitTableImports(file, module, pretty);
     wasmCWriteInitGlobalImports(file, module, pretty);
@@ -3723,7 +3796,7 @@ wasmCWriteMemoryExport(
     bool writeBody,
     bool pretty
 ) {
-    fprintf(file, "wasmMemory* ");
+    wasmCWriteMemoryType(file);
     wasmCWriteExportName(file, moduleName, export.name);
     fprintf(file, "(%sInstance* i)", moduleName);
     if (writeBody) {
@@ -3942,7 +4015,10 @@ wasmCWriteMemoryImports(
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmMemory* ", file);
+        wasmCWriteMemoryType(file);
+        if (pretty) {
+            fputc(' ', file);
+        }
         wasmCWriteFileImportName(file, import.module, import.name);
         fputs(";\n", file);
     }
@@ -4114,7 +4190,10 @@ wasmCWriteTableImports(
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmTable* ", file);
+        wasmCWriteTableType(file);
+        if (pretty) {
+            fputc(' ', file);
+        }
         wasmCWriteFileImportName(file, import.module, import.name);
         fputs(";\n", file);
     }
@@ -4259,17 +4338,10 @@ wasmCWriteFunctionImports(
     U32 functionIndex = 0;
     for (; functionIndex < functionImportCount; functionIndex++) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        const WasmFunctionType functionType =
-            module->functionTypes.functionTypes[import.functionTypeIndex];
-
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs(wasmCGetReturnType(functionType), file);
-        fputs(" (*", file);
-        wasmCWriteFileImportName(file, import.module, import.name);
-        fputc(')', file);
-        wasmCWriteFileParameters(file, moduleName, functionType, false, true, pretty);
+        wasmCWriteFunctionImport(file, module, moduleName, import, true, pretty);
         fputs(";\n", file);
     }
 }
