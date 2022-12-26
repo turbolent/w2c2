@@ -12,7 +12,9 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
 find_package(PkgConfig)
-pkg_check_modules(DWARF libdwarf)
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(DWARF libdwarf)
+endif()
 
 check_include_file (getopt.h HAVE_GETOPT_H)
 
@@ -45,7 +47,7 @@ if(DWARF_FOUND)
     target_link_libraries(w2c2 PUBLIC ${DWARF_LIBRARIES})
 endif()
 
-if(Threads_FOUND)
+if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
     target_compile_definitions(w2c2 PUBLIC HAS_PTHREAD=1)
     target_link_libraries(w2c2 PUBLIC Threads::Threads)
 endif()
