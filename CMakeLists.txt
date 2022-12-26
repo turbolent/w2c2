@@ -52,6 +52,14 @@ if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
     target_link_libraries(w2c2 PUBLIC Threads::Threads)
 endif()
 
-if (HAVE_GETOPT_H)
+if(HAVE_GETOPT_H)
     target_compile_definitions(w2c2 PUBLIC HAS_GETOPT=1)
+endif()
+
+if(MSVC)
+    target_compile_definitions(w2c2 PUBLIC
+        _CRT_SECURE_NO_DEPRECATE
+        NEED_BASENAME=1
+        NEED_DIRNAME=1
+    )
 endif()
