@@ -39,7 +39,7 @@ stringBuilderAppendSized(
 );
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 stringBuilderAppend(
@@ -54,7 +54,7 @@ stringBuilderAppend(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 stringBuilderAppendChar(

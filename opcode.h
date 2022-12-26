@@ -223,7 +223,7 @@ wasmOpcodeParameter1Type(
 );
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmOpcodeRead(

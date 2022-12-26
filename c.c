@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <limits.h>
 #include "compat.h"
+#include "w2c2_base.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -49,7 +50,7 @@ static const char* const valueTypeStackNames[wasmValueType_count] = {
 static const char* const indentation = "  ";
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileLocalName(
     FILE* file,
@@ -59,7 +60,7 @@ wasmCWriteFileLocalName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileEscaped(
     FILE* file,
@@ -78,7 +79,7 @@ wasmCWriteFileEscaped(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringEscaped(
@@ -100,7 +101,7 @@ wasmCWriteStringEscaped(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileGlobalImportName(
     FILE* file,
@@ -112,7 +113,7 @@ wasmCWriteFileGlobalImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileGlobalNonImportName(
     FILE* file,
@@ -123,7 +124,7 @@ wasmCWriteFileGlobalNonImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileGlobalUse(
     FILE* file,
@@ -183,7 +184,7 @@ wasmCWriteStringGlobalUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileImportName(
     FILE* file,
@@ -196,7 +197,7 @@ wasmCWriteFileImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileMemoryNonImportName(
     FILE* file,
@@ -207,7 +208,7 @@ wasmCWriteFileMemoryNonImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileMemoryUse(
     FILE* file,
@@ -235,7 +236,7 @@ wasmCWriteFileMemoryUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringMemoryUse(
@@ -278,7 +279,7 @@ wasmCWriteFileTableNonImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileTableUse(
     FILE* file,
@@ -306,7 +307,7 @@ wasmCWriteFileTableUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringTableUse(
@@ -339,7 +340,7 @@ wasmCWriteStringTableUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileDataSegmentName(
     FILE* file,
@@ -350,7 +351,7 @@ wasmCWriteFileDataSegmentName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileFunctionNonImportName(
     FILE* file,
@@ -361,7 +362,7 @@ wasmCWriteFileFunctionNonImportName(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileFunctionUse(
     FILE* file,
@@ -389,7 +390,7 @@ wasmCWriteFileFunctionUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringFunctionUse(
@@ -423,7 +424,7 @@ wasmCWriteStringFunctionUse(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteFileStackName(
     FILE* file,
@@ -440,7 +441,7 @@ wasmCWriteFileStackName(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringStackName(
@@ -455,7 +456,7 @@ wasmCWriteStringStackName(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringLocalName(
@@ -468,7 +469,7 @@ wasmCWriteStringLocalName(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStringLabelName(
@@ -481,7 +482,7 @@ wasmCWriteStringLabelName(
 }
 
 static
-__inline__
+W2C2_INLINE
 const char*
 wasmCGetReturnType(
     const WasmFunctionType functionType
@@ -548,7 +549,7 @@ typedef struct WasmCFunctionWriter {
 } WasmCFunctionWriter;
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteIndent(
@@ -566,7 +567,7 @@ wasmCWriteIndent(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWrite(
@@ -577,7 +578,7 @@ wasmCWrite(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteAssign(
@@ -590,7 +591,7 @@ wasmCWriteAssign(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteComma(
@@ -603,7 +604,7 @@ wasmCWriteComma(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWritePlus(
@@ -3524,7 +3525,7 @@ wasmCWriteInitGlobals(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteInitImport(
     FILE* file,
@@ -3654,7 +3655,7 @@ wasmCWriteInitImports(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteExportName(
     FILE* file,
@@ -4274,7 +4275,7 @@ wasmCWriteFunctionImports(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteBaseInclude(
     FILE* file
@@ -4283,7 +4284,7 @@ wasmCWriteBaseInclude(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmCWriteIncludes(
     FILE* file,

@@ -1,6 +1,7 @@
 #ifndef W2C2_LEB128_H
 #define W2C2_LEB128_H
 
+#include "w2c2_base.h"
 #include <stddef.h>
 #include "buffer.h"
 
@@ -20,7 +21,7 @@
  * Returns the number of read bytes.
  */
 static
-__inline__
+W2C2_INLINE
 size_t
 leb128ReadU32(
     Buffer* buffer,
@@ -56,7 +57,7 @@ leb128ReadU32(
  * Returns the number of read bytes.
  */
 static
-__inline__
+W2C2_INLINE
 size_t
 leb128ReadI32(
     Buffer* buffer,
@@ -106,7 +107,7 @@ leb128ReadI32(
  * Returns the number of read bytes.
  */
 static
-__inline__
+W2C2_INLINE
 size_t
 leb128ReadU64(
     Buffer* buffer,
@@ -142,7 +143,7 @@ leb128ReadU64(
  * Returns the number of read bytes.
  */
 static
-__inline__
+W2C2_INLINE
 size_t
 leb128ReadI64(
     Buffer* buffer,

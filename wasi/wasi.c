@@ -69,7 +69,7 @@ static WASI wasi;
 #endif
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorsEnsureCapacity(
@@ -95,7 +95,7 @@ wasiFileDescriptorsEnsureCapacity(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorsAdd(
@@ -200,7 +200,7 @@ wasiFileDescriptorClose(
 
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasiPreopensEnsureCapacity(
@@ -226,7 +226,7 @@ wasiPreopensEnsureCapacity(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasiPreopensAdd(
@@ -306,7 +306,7 @@ wasiInit(
 }
 
 static
-__inline__
+W2C2_INLINE
 U16
 wasiErrno(void) {
     switch (errno) {
@@ -680,7 +680,7 @@ wasiFDRead(
 }
 
 static
-__inline__
+W2C2_INLINE
 ssize_t
 wrapPositional(
     ssize_t f(int, const struct iovec*, int),
@@ -916,7 +916,7 @@ fdSeekImpl(
 }
 
 static
-__inline__
+W2C2_INLINE
 int
 convertPreview1Whence(
     U32 wasiWhence
@@ -974,7 +974,7 @@ wasiPreview1FDSeek(
 }
 
 static
-__inline__
+W2C2_INLINE
 int
 convertUnstableWhence(
     U32 wasiWhence
@@ -1054,7 +1054,7 @@ wasiFDTell(
 }
 
 static
-__inline__
+W2C2_INLINE
 WasiFileType
 wasiFileTypeFromMode(
     mode_t mode
@@ -1307,7 +1307,7 @@ wasiFDClose(
 #endif
 
 static
-__inline__
+W2C2_INLINE
 I64
 convertTimespec(
     struct timespec t
@@ -1322,7 +1322,7 @@ convertTimespec(
 }
 
 static
-__inline__
+W2C2_INLINE
 I64
 convertTimeval(
     struct timeval t
@@ -1332,7 +1332,7 @@ convertTimeval(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 addTimevals(
     struct timeval* tvp,
@@ -1739,7 +1739,7 @@ wasiFdPrestatDirName(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 getBigEndianPath(
     wasmMemory* memory,
@@ -1914,7 +1914,7 @@ wasiPathOpen(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 getStatTimes(
     struct stat* stat,
@@ -1951,7 +1951,7 @@ getStatTimes(
 static const size_t wasiPreview1FilestatSize = 64;
 
 static
-__inline__
+W2C2_INLINE
 void
 storePreview1Filestat(
     wasmMemory* memory,
@@ -2071,7 +2071,7 @@ wasiPreview1FDFilestatGet(
 static const size_t wasiUnstableFilestatSize = 64;
 
 static
-__inline__
+W2C2_INLINE
 void
 storeUnstableFilestat(
     wasmMemory* memory,
