@@ -76,7 +76,7 @@ typedef struct WasmModule {
 } WasmModule;
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmModuleFunctionGetLocalType(
@@ -101,7 +101,7 @@ wasmModuleFunctionGetLocalType(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmModuleGetGlobalType(
@@ -124,7 +124,7 @@ wasmModuleGetGlobalType(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmModuleGetFunctionType(

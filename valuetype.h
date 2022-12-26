@@ -3,6 +3,7 @@
 
 #include "buffer.h"
 #include "leb128.h"
+#include "w2c2_base.h"
 
 typedef enum WasmValueType {
     wasmValueTypeI32,
@@ -19,7 +20,7 @@ wasmValueTypeDescription(
 );
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmDecodeValueType(
@@ -46,7 +47,7 @@ wasmDecodeValueType(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmReadValueType(
@@ -62,7 +63,7 @@ wasmReadValueType(
 
 
 static
-__inline__
+W2C2_INLINE
 bool
 wasmReadBlockType(
     Buffer* buffer,

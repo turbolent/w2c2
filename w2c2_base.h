@@ -113,6 +113,12 @@ typedef double F64;
 #define swap64(x) (x)
 #endif
 
+#ifdef _MSC_VER
+#define W2C2_INLINE __inline
+#else
+#define W2C2_INLINE __inline__
+#endif
+
 #define GCC_VERSION (__GNUC__ * 10000 \
                      + __GNUC_MINOR__ * 100 \
                      + __GNUC_PATCHLEVEL__)
@@ -179,7 +185,7 @@ typedef enum Trap {
 } Trap;
 
 static
-__inline
+W2C2_INLINE
 const char*
 trapDescription(
     Trap trap
@@ -244,7 +250,7 @@ extern void trap(Trap) NORETURN;
 #define I32_POPCNT(x) __builtin_popcount(x)
 #else
 static
-__inline__
+W2C2_INLINE
 U32
 I32_POPCNT(
     U32 x
@@ -261,7 +267,7 @@ I32_POPCNT(
 #define I64_POPCNT(x) __builtin_popcountll(x)
 #else
 static
-__inline__
+W2C2_INLINE
 U64 I64_POPCNT(U64 x) {
     x -= ((x >> 1) & 0x5555555555555555ull);
     x = ((x >> 2) & 0x3333333333333333ull) + (x & 0x3333333333333333ull);
@@ -277,7 +283,7 @@ U64 I64_POPCNT(U64 x) {
 #else
 /* From Hacker's Delight 2nd Edition */
 static
-__inline__
+W2C2_INLINE
 U32
 I32_CLZ(
     U32 x
@@ -317,7 +323,7 @@ I32_CLZ(
 #else
 /* From Hacker's Delight 2nd Edition */
 static
-__inline__
+W2C2_INLINE
 U64
 I64_CLZ(
     U64 x
@@ -362,7 +368,7 @@ I64_CLZ(
 #else
 /* From Hacker's Delight 2nd Edition */
 static
-__inline__
+W2C2_INLINE
 U32
 I32_CTZ(
     U32 x
@@ -377,7 +383,7 @@ I32_CTZ(
 #else
 /* From Hacker's Delight 2nd Edition */
 static
-__inline__
+W2C2_INLINE
 U64
 I64_CTZ(
     U64 x
@@ -419,7 +425,7 @@ I64_CTZ(
 #define I64_TRUNC_U_F64(x) TRUNC_U(U64, F64, (F64)UINT64_MAX, x)
 
 #define DEFINE_REINTERPRET(name, t1, t2)  \
-  static __inline__ t2 name(t1 x) {       \
+  static W2C2_INLINE t2 name(t1 x) {      \
     t2 result;                            \
     memcpy(&result, &x, sizeof(result));  \
     return result;                        \
@@ -439,7 +445,7 @@ typedef struct wasmMemory {
 #define WASM_PAGE_SIZE 65536
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmMemoryAllocate(
     wasmMemory* memory,
@@ -454,7 +460,7 @@ wasmMemoryAllocate(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmMemoryFree(
     wasmMemory* memory
@@ -470,7 +476,7 @@ wasmMemoryFree(
 }
 
 static
-__inline__
+W2C2_INLINE
 U32
 wasmMemoryGrow(
     wasmMemory* memory,
@@ -511,7 +517,7 @@ wasmMemoryGrow(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmMemoryCopy(
     wasmMemory* destinationMemory,
@@ -536,7 +542,7 @@ wasmMemoryCopy(
     }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmMemoryFill(
     wasmMemory* memory,
@@ -561,7 +567,7 @@ wasmMemoryFill(
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
 static
-__inline__
+W2C2_INLINE
 void
 load_data(
     void *dest,
@@ -582,14 +588,14 @@ load_data(
     load_data(&((m).data[(m).size - (o) - (s)]), i, s)
 
 #define DEFINE_LOAD(name, t1, t2, t3)                                            \
-    static __inline__ t3 name(wasmMemory* mem, U64 addr) {                       \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {                      \
         t1 result;                                                               \
         memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1));  \
         return (t3)(t2)result;                                                   \
     }
 
 #define DEFINE_STORE(name, t1, t2)                                                \
-    static __inline__ void name(wasmMemory* mem, U64 addr, t2 value) {            \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {           \
         t1 wrapped = (t1)value;                                                   \
         memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1));  \
     }
@@ -597,7 +603,7 @@ load_data(
 #elif WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
 static
-__inline__
+W2C2_INLINE
 void
 load_data(
     void *dest,
@@ -610,15 +616,15 @@ load_data(
 #define LOAD_DATA(m, o, i, s) \
     load_data(&((m).data[o]), i, s)
 
-#define DEFINE_LOAD(name, t1, t2, t3)                       \
-    static __inline__ t3 name(wasmMemory* mem, U64 addr) {  \
-        t1 result;                                          \
-        memcpy(&result, &mem->data[addr], sizeof(t1));      \
-        return (t3)(t2)result;                              \
+#define DEFINE_LOAD(name, t1, t2, t3)                        \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
+        t1 result;                                           \
+        memcpy(&result, &mem->data[addr], sizeof(t1));       \
+        return (t3)(t2)result;                               \
     }
 
 #define DEFINE_STORE(name, t1, t2)                                       \
-    static __inline__ void name(wasmMemory* mem, U64 addr, t2 value) {   \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
         t1 wrapped = (t1)value;                                          \
         memcpy(&mem->data[addr], &wrapped, sizeof(t1));                  \
     }
@@ -657,7 +663,7 @@ typedef struct wasmTable {
 } wasmTable;
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmTableAllocate(
     wasmTable* table,
@@ -670,7 +676,7 @@ wasmTableAllocate(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmTableFree(
     wasmTable* table

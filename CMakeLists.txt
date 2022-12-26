@@ -16,7 +16,8 @@ if(PKG_CONFIG_FOUND)
     pkg_check_modules(DWARF libdwarf)
 endif()
 
-check_include_file (getopt.h HAVE_GETOPT_H)
+include(CheckIncludeFile)
+check_include_file(getopt.h HAVE_GETOPT_H)
 
 set(CMAKE_C_FLAGS_DEBUG "-g -O1")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
@@ -32,13 +33,12 @@ list(REMOVE_ITEM WASI_SOURCES ${WASI_TEST_SOURCES})
 add_executable(w2c2 ${SOURCES})
 add_library(wasi ${WASI_SOURCES})
 
-add_library(common INTERFACE)
-target_compile_options(common INTERFACE
+set(CFLAGS
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
 )
-target_link_libraries(w2c2 PRIVATE common)
-target_link_libraries(wasi PRIVATE common)
+target_compile_options(w2c2 PUBLIC ${CFLAGS})
+target_compile_options(wasi PUBLIC ${CFLAGS})
 
 if(DWARF_FOUND)
     target_compile_definitions(w2c2 PUBLIC HAS_LIBDWARF=1)
@@ -52,6 +52,14 @@ if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
     target_link_libraries(w2c2 PUBLIC Threads::Threads)
 endif()
 
-if (HAVE_GETOPT_H)
+if(HAVE_GETOPT_H)
     target_compile_definitions(w2c2 PUBLIC HAS_GETOPT=1)
+endif()
+
+if(MSVC)
+    target_compile_definitions(w2c2 PUBLIC
+        _CRT_SECURE_NO_DEPRECATE
+        NEED_BASENAME=1
+        NEED_DIRNAME=1
+    )
 endif()

@@ -29,7 +29,7 @@ typedef struct WasmLabelStack {
 static const WasmLabelStack wasmEmptyLabelStack = {{0, 0, NULL}, 0};
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmLabelStackClear(
     WasmLabelStack* labelStack
@@ -44,7 +44,7 @@ wasmLabelStackClear(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmLabelStackPush(
@@ -65,7 +65,7 @@ wasmLabelStackPush(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmLabelStackPop(
     WasmLabelStack* labelStack
@@ -78,7 +78,7 @@ wasmLabelStackPop(
 }
 
 static
-__inline__
+W2C2_INLINE
 size_t
 wasmLabelStackGetTopIndex(
     const WasmLabelStack* labelStack,

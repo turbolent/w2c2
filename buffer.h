@@ -10,7 +10,7 @@ typedef struct Buffer {
 } Buffer;
 
 static
-__inline__
+W2C2_INLINE
 void
 bufferSkipUnchecked(
     Buffer* buffer,
@@ -21,7 +21,7 @@ bufferSkipUnchecked(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadEqual(
@@ -42,7 +42,7 @@ bufferReadEqual(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadByte(
@@ -61,7 +61,7 @@ bufferReadByte(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadF32(
@@ -90,7 +90,7 @@ bufferReadF32(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadF64(
@@ -120,7 +120,7 @@ bufferReadF64(
 
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferAtEnd(
@@ -130,7 +130,7 @@ bufferAtEnd(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 bufferSkip(
     Buffer* buffer,

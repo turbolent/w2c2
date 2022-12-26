@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024

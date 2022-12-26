@@ -2,6 +2,7 @@
 #define W2C2_LOCALS_H
 
 #include "valuetype.h"
+#include "w2c2_base.h"
 
 typedef struct WasmLocalsDeclaration {
     WasmValueType type;
@@ -14,7 +15,7 @@ typedef struct WasmLocalsDeclarations {
 } WasmLocalsDeclarations;
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmLocalsDeclarationsGetType(

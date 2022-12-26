@@ -18,7 +18,7 @@ typedef struct NAME {                                         \
     TYPE* ITEMS;                                              \
 } NAME;                                                       \
                                                               \
-static __inline__ bool WARN_UNUSED_RESULT                     \
+static W2C2_INLINE bool WARN_UNUSED_RESULT                    \
 INSTANCE ## EnsureCapacity(                                   \
     NAME* INSTANCE,                                           \
     size_t length                                             \
@@ -31,7 +31,7 @@ INSTANCE ## EnsureCapacity(                                   \
     );                                                        \
 }                                                             \
                                                               \
-static __inline__ bool WARN_UNUSED_RESULT                     \
+static W2C2_INLINE bool WARN_UNUSED_RESULT                    \
 INSTANCE ## Append(                                           \
     NAME* INSTANCE,                                           \
     TYPE ITEM                                                 \
@@ -46,7 +46,7 @@ INSTANCE ## Append(                                           \
     return true;                                              \
 }                                                             \
                                                               \
-static __inline__ void                                        \
+static W2C2_INLINE void                                       \
 INSTANCE ## Free(NAME* INSTANCE) {                            \
     free(INSTANCE->ITEMS);                                    \
     INSTANCE->ITEMS = NULL;                                   \

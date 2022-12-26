@@ -17,7 +17,7 @@ ARRAY_TYPE(
 static const WasmTypeStack wasmEmptyTypeStack = {0, 0, NULL};
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmTypeStackDrop(
     WasmTypeStack* typeStack,
@@ -40,7 +40,7 @@ wasmTypeStackDrop(
 }
 
 static
-__inline__
+W2C2_INLINE
 void
 wasmTypeStackClear(
     WasmTypeStack* typeStack
@@ -54,7 +54,7 @@ wasmTypeStackClear(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmTypeStackSet(
@@ -80,7 +80,7 @@ wasmTypeStackSet(
 }
 
 static
-__inline__
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmTypeStackIsSet(
@@ -96,7 +96,7 @@ wasmTypeStackIsSet(
 }
 
 static
-__inline__
+W2C2_INLINE
 size_t
 wasmTypeStackGetTopIndex(
     const WasmTypeStack* typeStack,
