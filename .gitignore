@@ -4,3 +4,5 @@ w2c2_test
 compile_flags.txt
 .DS_Store
 .idea
+cmake-build-debug
+
