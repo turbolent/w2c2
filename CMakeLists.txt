@@ -28,6 +28,9 @@ include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
 check_symbol_exists(strndup string.h HAVE_STRNDUP)
 
+include(CheckStructHasMember)
+check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
+
 set(CMAKE_C_FLAGS_DEBUG "-g -O1")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
@@ -93,6 +96,11 @@ endif()
 if(HAVE_STRNDUP)
     target_compile_definitions(wasi PUBLIC HAS_STRNDUP=1)
 endif()
+
+if(HAVE_TIMESPEC)
+    target_compile_definitions(wasi PUBLIC HAS_TIMESPEC=1)
+endif()
+
 
 if(MSVC)
     target_compile_definitions(w2c2 PUBLIC _CRT_SECURE_NO_DEPRECATE)

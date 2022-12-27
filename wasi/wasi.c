@@ -14,6 +14,13 @@ typedef SSIZE_T ssize_t;
 #endif /* _MSC_VER */
 
 #include <time.h>
+#if !HAS_TIMESPEC
+struct timespec {
+    long tv_sec;
+    long tv_nsec;
+};
+#endif /* !HAS_TIMESPEC */
+
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
