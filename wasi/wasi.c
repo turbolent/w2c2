@@ -1142,6 +1142,7 @@ wasiFDTell(
     );
 }
 
+#ifndef _WIN32
 static
 W2C2_INLINE
 WasiFileType
@@ -1171,6 +1172,7 @@ wasiFileTypeFromMode(
 
     return WASI_FILE_TYPE_UNKNOWN;
 }
+#endif /* _WIN32 */
 
 #define WASI_DIRENT_SIZE 24
 
@@ -2682,7 +2684,6 @@ wasiPathCreateDirectory(
     char path[PATH_MAX];
 #endif
     char resolvedPath[PATH_MAX];
-    static const mode_t mode = 0755;
     int res = -1;
     WasiPreopen preopen = wasiEmptyPreopen;
 
@@ -2712,8 +2713,11 @@ wasiPathCreateDirectory(
 
     WASI_TRACE(("path_create_directory: resolvedPath=%s", resolvedPath));
 
-    res = mkdir(resolvedPath, mode);
-
+#ifdef _WIN32
+    res = _mkdir(resolvedPath);
+#else
+    res = mkdir(resolvedPath, 0755);
+#endif /* _WIN32 */
     if (res != 0) {
         WASI_TRACE(("path_create_directory: mkdir failed: %s", strerror(errno)));
         return wasiErrno();
