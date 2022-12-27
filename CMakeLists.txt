@@ -27,6 +27,7 @@ check_include_file(sys/resource.h HAVE_SYSRESOURCE_H)
 include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
 check_symbol_exists(strndup string.h HAVE_STRNDUP)
+check_symbol_exists(fcntl fcntl.h HAVE_FCNTL)
 
 include(CheckStructHasMember)
 check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
@@ -95,6 +96,10 @@ endif()
 
 if(HAVE_STRNDUP)
     target_compile_definitions(wasi PUBLIC HAS_STRNDUP=1)
+endif()
+
+if(HAVE_FCNTL)
+    target_compile_definitions(wasi PUBLIC HAS_FCNTL=1)
 endif()
 
 if(HAVE_TIMESPEC)

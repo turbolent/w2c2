@@ -16,8 +16,9 @@ CFLAGS += -std=c89 $(WARNS)
 # - sys/time.h
 # - sys/resource.h
 # - strndup
+# - fcntl
 # - timespec
-FEATURES ?= unistd sysuio systime sysresource strndup timespec
+FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
@@ -41,6 +42,10 @@ endif
 
 ifneq (,$(findstring timespec,$(FEATURES)))
 	CFLAGS += -DHAS_TIMESPEC=1
+endif
+
+ifneq (,$(findstring fcntl,$(FEATURES)))
+	CFLAGS += -DHAS_FCNTL=1
 endif
 
 

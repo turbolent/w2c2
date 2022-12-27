@@ -1856,6 +1856,7 @@ wasiFdFdstatGet(
         }
     }
 
+#if HAS_FCNTL
     /* Get flags */
     nativeFlags = fcntl(descriptor.fd, F_GETFL);
     if (nativeFlags < 0) {
@@ -1876,7 +1877,8 @@ wasiFdFdstatGet(
     if (nativeFlags & O_SYNC) {
         wasiFlags |= WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC;
     }
-#endif
+#endif /* O_SYNC */
+#endif /* HAS_FCNTL */
 
     /* Store result */
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
