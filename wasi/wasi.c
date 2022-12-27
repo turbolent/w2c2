@@ -42,6 +42,7 @@ struct timespec {
 
 #ifdef _WIN32
 #include <io.h>
+#include <direct.h>
 
 #define mode_t unsigned short
 
@@ -58,15 +59,16 @@ struct timespec {
 #define O_TRUNC  _O_TRUNC
 #define O_EXCL   _O_EXCL
 
-#define open   _open
-#define read   _read
-#define write  _write
-#define close  _close
-#define mkdir  _mkdir
-#define unlink _unlink
-#define stat   _stat
-#define fstat  _fstat
-#define lseek  _lseek
+#define open    _open
+#define read    _read
+#define write   _write
+#define close   _close
+#define mkdir   _mkdir
+#define unlink  _unlink
+#define stat    _stat
+#define fstat   _fstat
+#define lseek   _lseek
+#define isatty  _isatty
 
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
@@ -3001,7 +3003,7 @@ wasiRandomGet(
     result = read(
         fd,
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    memory->data + bufferPointer,
+        memory->data + bufferPointer,
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
         memory->data + memory->size - bufferPointer - bufferLength,
 #endif
