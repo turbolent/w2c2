@@ -21,15 +21,8 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 
 ## Compilation
 
-```sh
-make
-```
-
-To enables certain features, list them in the `FEATURES` variable passed to `make`, e.g. `make FEATURES="threads"`:
-
-- Parallel compilation requires [pthreads](https://en.wikipedia.org/wiki/Pthreads) on the host system. Add `threads` to `FEATURES`.
-- If the host system has support for [getopt](https://en.wikipedia.org/wiki/Getopt), add `getopt` to `FEATURES`.
-- Generating debug information requires `libdwarf` on the host system. Add `debugging` to `FEATURES`.
+If your system is supported by at least CMake 2.8.12, prefer using CMake to detect features.
+On systems without CMake you can also use Make.
 
 ## Usage
 

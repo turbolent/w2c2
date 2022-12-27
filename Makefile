@@ -21,6 +21,12 @@ endif
 
 CFLAGS += -std=c89 $(WARNS)
 
+# By default assume the system has
+# - pthreads
+# - getopt
+# - unistd.h
+# - libgen.h
+# - strdup
 FEATURES ?= threads getopt unistd libgen strdup
 
 ifeq ($(UNAME),Windows)

@@ -10,6 +10,10 @@ WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 CFLAGS += -std=c89 $(WARNS)
 
+# By default assume the system has
+# - unistd.h
+# - sys/uio.h
+# - strndup
 FEATURES ?= unistd sysuio strndup
 
 ifneq (,$(findstring unistd,$(FEATURES)))
