@@ -11,7 +11,8 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 - Support for older operating systems and architectures (e.g. Mac OS X on PowerPC, Haiku, etc.)
 - Support for big-endian systems (e.g. PowerPC)
 - Streaming/single-pass compilation, low memory usage
-- Parallel compilation into multiple files
+- Separate compilation into multiple files
+- Parallel compilation
 - Support for multiple modules and instances
 - WASI implementation which is able to run clang and Python
 
@@ -32,14 +33,28 @@ For example, to compile `module.wasm` to `module.c` (and `module.h`):
 ./w2c2 module.wasm module.c
 ```
 
-### Parallel Compilation
+### Separate Compilation
 
-When w2c2 was built with the `threads` feature (see above), it is possible to compile the module in parallel.
+w2c2 is able to compile a module into separate C files.
+This is recommended when compiling large modules and on hosts with limited resources.
 
 For example, to compile `module.wasm` (and `module.h`), into multiple files with 100 functions each:
 
 ```sh
 ./w2c2 -f 100 module.wasm module.c
+```
+
+### Parallel Compilation
+
+When w2c2 was built with threading support, it is able to compile a module in parallel.
+By default, w2c2 spawns as many worker threads as CPU cores are available.
+
+To manually specify the number of worker threads, pass the number using the `-t` flag.
+
+For example, to compile using 2 threads:
+
+```sh
+./w2c2 -t 2 module.wasm module.c
 ```
 
 ## Examples
