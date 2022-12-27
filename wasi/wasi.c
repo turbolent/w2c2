@@ -210,7 +210,8 @@ static WASI wasi;
 #ifndef O_DSYNC
 #ifdef O_SYNC
 #define O_DSYNC O_SYNC /* POSIX */
-#else
+#endif
+#ifdef O_FSYNC
 #define O_DSYNC O_FSYNC /* BSD */
 #endif
 #endif
@@ -1868,12 +1869,16 @@ wasiFdFdstatGet(
     if (nativeFlags & O_APPEND) {
         wasiFlags |= WASI_FDFLAGS_APPEND;
     }
+#ifdef O_DSYNC
     if (nativeFlags & O_DSYNC) {
         wasiFlags |= WASI_FDFLAGS_DSYNC;
     }
+#endif
+#ifdef O_NONBLOCK
     if (nativeFlags & O_NONBLOCK) {
         wasiFlags |= WASI_FDFLAGS_NONBLOCK;
     }
+#endif
 #ifdef O_SYNC
     if (nativeFlags & O_SYNC) {
         wasiFlags |= WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC;
@@ -2102,12 +2107,17 @@ wasiPathOpen(
     if (fdFlags & WASI_FDFLAGS_APPEND) {
         nativeFlags |= O_APPEND;
     }
+
+#ifdef O_DSYNC
     if (fdFlags & WASI_FDFLAGS_DSYNC) {
         nativeFlags |= O_DSYNC;
     }
+#endif
+#ifdef O_NONBLOCK
     if (fdFlags & WASI_FDFLAGS_NONBLOCK) {
         nativeFlags |= O_NONBLOCK;
     }
+#endif
 #ifdef O_SYNC
     if (fdFlags & WASI_FDFLAGS_SYNC) {
         nativeFlags |= O_SYNC;
