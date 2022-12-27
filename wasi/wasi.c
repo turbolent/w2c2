@@ -26,6 +26,10 @@ typedef SSIZE_T ssize_t;
 #include <sys/resource.h>
 #endif
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 #if defined(__MACH__)
 #include <mach/mach.h>
 #endif /* __MACH__*/
