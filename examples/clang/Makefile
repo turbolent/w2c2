@@ -2,7 +2,6 @@ CFLAGS += -I../..
 LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
-OBJS :=  ../../wasi/wasi.o clang.o
 MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
@@ -17,9 +16,9 @@ else
     OBJS += datasegments.o
 endif
 
-clang: $(OBJS)
+clang: clang.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(filter-out clang.o, $(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS) -o clang $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o clang $(LDFLAGS)
 
 datasegments.o: clang.c
 	ld -r -b binary -o datasegments.o datasegments

@@ -42,7 +42,7 @@ testResolvePath(
 /* Unused but expected by the WASI implementation */
 wasmMemory* wasiMemory(void* instance) {
     return NULL;
-};
+}
 
 int
 main(int argc, char* argv[]) {

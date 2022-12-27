@@ -3,13 +3,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef _MSC_VER
+#if HAS_UNISTD
 #include <unistd.h>
-#endif
+#endif /* HAS_UNISTD */
+#if HAS_SYSUIO
+#include <sys/uio.h>
+#endif /* HAS_SYSUIO */
 #include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
@@ -22,11 +24,15 @@
 
 #include "wasi.h"
 
-#if NEED_STRNDUP
-char *strndup(const char *s, size_t n) {
-    const char *p = memchr(s, 0, n);
+#if !HAS_STRNDUP
+char*
+strndup(
+    const char* s,
+    size_t n
+) {
+    const char* p = memchr(s, 0, n);
     size_t l = p ? p-s : n;
-    char *d = malloc(l + 1);
+    char* d = malloc(l + 1);
     if (!d) {
         return NULL;
     }

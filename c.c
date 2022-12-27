@@ -5,9 +5,9 @@
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif /* HAS_PTHREAD */
-#ifndef _MSC_VER
+#if HAS_UNISTD
 #include <unistd.h>
-#endif
+#endif /* HAS_UNISTD */
 #include <errno.h>
 #include <limits.h>
 #include "compat.h"

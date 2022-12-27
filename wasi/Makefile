@@ -1,5 +1,28 @@
-CFLAGS += -std=c89 -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 LDFLAGS += -lm
+
+ifeq ($(BUILD),release)
+	CFLAGS += -O3
+else
+	CFLAGS += -g -O0
+endif
+
+WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+
+CFLAGS += -std=c89 $(WARNS)
+
+FEATURES ?= unistd sysuio strndup
+
+ifneq (,$(findstring unistd,$(FEATURES)))
+	CFLAGS += -DHAS_UNISTD=1
+endif
+
+ifneq (,$(findstring sysuio,$(FEATURES)))
+	CFLAGS += -DHAS_SYSUIO=1
+endif
+
+ifneq (,$(findstring strndup,$(FEATURES)))
+	CFLAGS += -DHAS_STRNDUP=1
+endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined
@@ -21,7 +44,6 @@ OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test: CFLAGS += -g -O0
 test: $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 

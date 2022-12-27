@@ -1,13 +1,15 @@
 #include "compat.h"
 
-#if NEED_BASENAME
+#if !HAS_LIBGEN
 
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
  */
 
-char *basename(char *s)
-{
+char*
+basename(
+    char* s
+) {
 	size_t i;
 	if (!s || !*s) return ".";
 	i = strlen(s)-1;
@@ -16,16 +18,14 @@ char *basename(char *s)
 	return s+i;
 }
 
-#endif
-
-#if NEED_DIRNAME
-
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
  */
 
-char *dirname(char *s)
-{
+char*
+dirname(
+    char* s
+) {
 	size_t i;
 	if (!s || !*s) return ".";
 	i = strlen(s)-1;
@@ -36,4 +36,4 @@ char *dirname(char *s)
 	return s;
 }
 
-#endif
+#endif /* !HAS_LIBGEN */

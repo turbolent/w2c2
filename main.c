@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
-#ifndef _MSC_VER
+#if HAS_UNISTD
 #include <unistd.h>
 #endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
-#ifdef HAS_GETOPT
+#if HAS_GETOPT
   #include <getopt.h>
 #else
   #include "getopt_impl.h"

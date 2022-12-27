@@ -3,16 +3,11 @@
 
 #include <string.h>
 
-#if NEED_BASENAME
-char *basename(char *s);
-#else
+#if HAS_LIBGEN
 #include <libgen.h>
-#endif
-
-#if NEED_DIRNAME
-char *dirname(char *s);
 #else
-#include <libgen.h>
-#endif
+char* basename(char* s);
+char* dirname(char* s);
+#endif /* HAS_LIBGEN */
 
 #endif /* W2C2_COMPAT_H */

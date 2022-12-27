@@ -18,6 +18,13 @@ endif()
 
 include(CheckIncludeFile)
 check_include_file(getopt.h HAVE_GETOPT_H)
+check_include_file(libgen.h HAVE_LIBGEN_H)
+check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(sys/uio.h HAVE_SYSUIO_H)
+
+include(CheckSymbolExists)
+check_symbol_exists(strdup string.h HAVE_STRDUP)
+check_symbol_exists(strndup string.h HAVE_STRNDUP)
 
 set(CMAKE_C_FLAGS_DEBUG "-g -O1")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
@@ -52,14 +59,31 @@ if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
     target_link_libraries(w2c2 PUBLIC Threads::Threads)
 endif()
 
+if(HAVE_UNISTD_H)
+    target_compile_definitions(w2c2 PUBLIC HAS_UNISTD=1)
+    target_compile_definitions(wasi PUBLIC HAS_UNISTD=1)
+endif()
+
 if(HAVE_GETOPT_H)
     target_compile_definitions(w2c2 PUBLIC HAS_GETOPT=1)
 endif()
 
+if(HAVE_LIBGEN_H)
+    target_compile_definitions(w2c2 PUBLIC HAS_LIBGEN=1)
+endif()
+
+if(HAVE_STRDUP)
+    target_compile_definitions(w2c2 PUBLIC HAS_STRDUP=1)
+endif()
+
+if(HAVE_SYSUIO_H)
+    target_compile_definitions(wasi PUBLIC HAS_SYSUIO=1)
+endif()
+
+if(HAVE_STRNDUP)
+    target_compile_definitions(wasi PUBLIC HAS_STRNDUP=1)
+endif()
+
 if(MSVC)
-    target_compile_definitions(w2c2 PUBLIC
-        _CRT_SECURE_NO_DEPRECATE
-        NEED_BASENAME=1
-        NEED_DIRNAME=1
-    )
+    target_compile_definitions(w2c2 PUBLIC _CRT_SECURE_NO_DEPRECATE)
 endif()

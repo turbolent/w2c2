@@ -2,8 +2,8 @@ LDFLAGS += -lm
 CFLAGS += -O3
 W2C2 ?= ../../w2c2
 
-ls: ls.o main.o ../../wasi/wasi.o
-	$(CC) $^ -o ls $(LDFLAGS)
+ls: ls.o main.o
+	$(CC) $^ ../../wasi/wasi.o -o ls $(LDFLAGS)
 
 %.c: src/%.wasm
 	$(W2C2) $< $@

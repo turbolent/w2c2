@@ -2,8 +2,6 @@ CFLAGS += -I../.. -O0 -g
 LDFLAGS += -lm
 W2C2 ?= ../../w2c2
 
-OBJS := ../../wasi/wasi.o python.o
-
 MODE := gnu-ld
 
 ifeq ($(shell uname -s),Darwin)
@@ -18,9 +16,9 @@ else
     OBJS += datasegments.o
 endif
 
-python: $(OBJS)
+python: python.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(filter-out python.o, $(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS) -o python $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o python $(LDFLAGS)
 
 datasegments.o: python.c
 	ld -r -b binary -o datasegments.o datasegments

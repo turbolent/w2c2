@@ -21,6 +21,8 @@ endif
 
 CFLAGS += -std=c89 $(WARNS)
 
+FEATURES ?= threads getopt unistd libgen strdup
+
 ifeq ($(UNAME),Windows)
 	OUTPUT := w2c2.exe
 endif
@@ -35,24 +37,32 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifneq (,$(findstring threads,$(FEATURES)))
-	CFLAGS += -DHAS_PTHREAD
+	CFLAGS += -DHAS_PTHREAD=1
 endif
 
 ifneq (,$(findstring getopt,$(FEATURES)))
-	CFLAGS += -DHAS_GETOPT
+	CFLAGS += -DHAS_GETOPT=1
+endif
+
+ifneq (,$(findstring unistd,$(FEATURES)))
+	CFLAGS += -DHAS_UNISTD=1
+endif
+
+ifneq (,$(findstring libgen,$(FEATURES)))
+	CFLAGS += -DHAS_LIBGEN=1
 endif
 
 ifneq (,$(findstring strdup,$(FEATURES)))
-	CFLAGS += -DHAS_STRDUP
+	CFLAGS += -DHAS_STRDUP=1
 endif
 
 ifneq (,$(findstring debugging,$(FEATURES)))
-	CFLAGS += -DHAS_LIBDWARF
+	CFLAGS += -DHAS_LIBDWARF=1
 	LDFLAGS += -ldwarf
 endif
 
 ifneq (,$(findstring old_debugging,$(FEATURES)))
-	CFLAGS += -DHAS_OLD_LIBDWARF
+	CFLAGS += -DHAS_OLD_LIBDWARF=1
 endif
 
 ifndef OUTPUT
