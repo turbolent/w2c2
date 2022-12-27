@@ -21,6 +21,8 @@ check_include_file(getopt.h HAVE_GETOPT_H)
 check_include_file(libgen.h HAVE_LIBGEN_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/uio.h HAVE_SYSUIO_H)
+check_include_file(sys/time.h HAVE_SYSTIME_H)
+check_include_file(sys/resource.h HAVE_SYSRESOURCE_H)
 
 include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
@@ -78,6 +80,14 @@ endif()
 
 if(HAVE_SYSUIO_H)
     target_compile_definitions(wasi PUBLIC HAS_SYSUIO=1)
+endif()
+
+if(HAVE_SYSTIME_H)
+    target_compile_definitions(wasi PUBLIC HAS_SYSTIME=1)
+endif()
+
+if(HAVE_SYSRESOURCE_H)
+    target_compile_definitions(wasi PUBLIC HAS_SYSRESOURCE=1)
 endif()
 
 if(HAVE_STRNDUP)

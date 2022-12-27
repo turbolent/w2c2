@@ -6,6 +6,10 @@
 #if HAS_UNISTD
 #include <unistd.h>
 #endif /* HAS_UNISTD */
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif /* _MSC_VER */
 #if HAS_SYSUIO
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
@@ -15,8 +19,12 @@
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
+#if HAS_SYSTIME
 #include <sys/time.h>
+#endif
+#if HAS_SYSRESOURCE
 #include <sys/resource.h>
+#endif
 
 #if defined(__MACH__)
 #include <mach/mach.h>
@@ -1474,8 +1482,91 @@ wasiClockTimeGet(
 
         result = convertTimespec(timespec);
     }
+#elif _WIN32
+/*
+ * Taken from mingw-w64's winpthreads library,
+ * which has no copyright assigned and is placed in the Public Domain.
+ */
+
+#include <windows.h>
+
+#define POW10_7 10000000
+#define POW10_9 1000000000
+
+/* Number of 100ns-seconds between the beginning of the Windows epoch
+ * (Jan. 1, 1601) and the Unix epoch (Jan. 1, 1970)
+ */
+#define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
+
+    {
+        struct timespec tp;
+        uint64_t t;
+        LARGE_INTEGER pf, pc;
+        union {
+            uint64_t u64;
+            FILETIME ft;
+        }  ct, et, kt, ut;
+
+        switch (clockID) {
+            case WASI_CLOCK_REALTIME: {
+                GetSystemTimeAsFileTime(&ct.ft);
+                t = ct.u64 - DELTA_EPOCH_IN_100NS;
+                tp.tv_sec = t / POW10_7;
+                tp.tv_nsec = ((int) (t % POW10_7)) * 100;
+
+                result = convertTimespec(tp);
+                break;
+            }
+            case CLOCK_MONOTONIC: {
+                if (QueryPerformanceFrequency(&pf) == 0) {
+                    return WASI_ERRNO_INVAL;
+                }
+
+                if (QueryPerformanceCounter(&pc) == 0) {
+                    return WASI_ERRNO_INVAL;
+                }
+
+                tp.tv_sec = pc.QuadPart / pf.QuadPart;
+                tp.tv_nsec = (int) (((pc.QuadPart % pf.QuadPart) * POW10_9 + (pf.QuadPart >> 1)) / pf.QuadPart);
+                if (tp.tv_nsec >= POW10_9) {
+                    tp.tv_sec++;
+                    tp.tv_nsec -= POW10_9;
+                }
+
+                result = convertTimespec(tp);
+                break;
+            }
+            case CLOCK_PROCESS_CPUTIME_ID: {
+                if (GetProcessTimes(GetCurrentProcess(), &ct.ft, &et.ft, &kt.ft, &ut.ft) == 0) {
+                    return WASI_ERRNO_INVAL;
+                }
+                t = kt.u64 + ut.u64;
+                tp.tv_sec = t / POW10_7;
+                tp.tv_nsec = ((int) (t % POW10_7)) * 100;
+
+                result = convertTimespec(tp);
+                break;
+            }
+            case CLOCK_THREAD_CPUTIME_ID: {
+                if(GetThreadTimes(GetCurrentThread(), &ct.ft, &et.ft, &kt.ft, &ut.ft) == 0) {
+                    return WASI_ERRNO_INVAL;
+                }
+                t = kt.u64 + ut.u64;
+                tp.tv_sec = t / POW10_7;
+                tp.tv_nsec = ((int) (t % POW10_7)) * 100;
+
+                result = convertTimespec(tp);
+                break;
+            }
+            default: {
+                WASI_TRACE(("clock_time_get: invalid clock ID"));
+                return WASI_ERRNO_INVAL;
+            }
+        }
+    }
 #else
     switch (clockID) {
+#if HAS_SYSTIME
         case WASI_CLOCK_REALTIME: {
             struct timeval tv;
             if (gettimeofday(&tv, NULL) != 0) {
@@ -1485,6 +1576,7 @@ wasiClockTimeGet(
             result = convertTimeval(tv);
             break;
         }
+#endif /* HAS_SYSTIME */
 #if defined(__MACH__) && defined(CLOCK_NULL)
 #include <mach/mach_time.h>
         case WASI_CLOCK_MONOTONIC: {
@@ -1499,6 +1591,7 @@ wasiClockTimeGet(
             break;
         }
 #endif /* defined(__MACH__) && defined(CLOCK_NULL) */
+#if HAS_SYSRESOURCE
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
             struct rusage ru;
             int ret = 0;
@@ -1514,6 +1607,7 @@ wasiClockTimeGet(
             result = convertTimeval(ru.ru_utime);
             break;
         }
+#endif /* HAS_SYSRESOURCE */
         default: {
             WASI_TRACE(("clock_time_get: invalid clock ID"));
             return WASI_ERRNO_INVAL;

@@ -13,8 +13,10 @@ CFLAGS += -std=c89 $(WARNS)
 # By default assume the system has
 # - unistd.h
 # - sys/uio.h
+# - sys/time.h
+# - sys/resource.h
 # - strndup
-FEATURES ?= unistd sysuio strndup
+FEATURES ?= unistd sysuio systime sysresource strndup
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
@@ -22,6 +24,14 @@ endif
 
 ifneq (,$(findstring sysuio,$(FEATURES)))
 	CFLAGS += -DHAS_SYSUIO=1
+endif
+
+ifneq (,$(findstring systime,$(FEATURES)))
+	CFLAGS += -DHAS_SYSTIME=1
+endif
+
+ifneq (,$(findstring sysresource,$(FEATURES)))
+	CFLAGS += -DHAS_SYSRESOURCE=1
 endif
 
 ifneq (,$(findstring strndup,$(FEATURES)))

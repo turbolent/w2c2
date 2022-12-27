@@ -3,7 +3,11 @@
 
 #include "../w2c2_base.h"
 #include <sys/types.h>
+#if _WIN32
+#include "win_dirent.h"
+#else
 #include <dirent.h>
+#endif
 
 typedef struct WasiFileDescriptor {
     int fd;
