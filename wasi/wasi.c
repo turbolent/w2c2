@@ -11,6 +11,7 @@
 #ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
+#define INT64_C(val) val##i64
 #endif /* _MSC_VER */
 
 #include <time.h>
