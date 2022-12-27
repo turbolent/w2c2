@@ -42,6 +42,67 @@ strndup(
 }
 #endif
 
+#if !HAS_SYSUIO
+struct iovec {
+    void* iov_base;
+    size_t iov_len;
+};
+
+ssize_t
+readv(
+    int fd,
+    const struct iovec *iov,
+    int iovcnt
+) {
+     int i = 0;
+     ssize_t ret = 0;
+     while (i < iovcnt) {
+         ssize_t n = read(fd, iov[i].iov_base, iov[i].iov_len);
+         if (n > 0) {
+             ret += n;
+         } else if (!n) {
+             break;
+         } else if (errno == EINTR) {
+             continue;
+         } else {
+             if (ret == 0) {
+                 ret = -1;
+             }
+             break;
+         }
+         i++;
+     }
+     return ret;
+}
+
+ssize_t
+writev(
+    int fd,
+    const struct iovec *iov,
+    int iovcnt
+) {
+    int i = 0;
+    ssize_t ret = 0;
+    while (i < iovcnt) {
+        ssize_t n = write(fd, iov[i].iov_base, iov[i].iov_len);
+        if (n > 0) {
+            ret += n;
+        } else if (!n) {
+            break;
+        } else if (errno == EINTR) {
+            continue;
+        } else {
+            if (ret == 0) {
+                ret = -1;
+            }
+            break;
+        }
+        i++;
+    }
+    return ret;
+}
+#endif
+
 static
 void
 #if defined(__GNUC__) && GCC_VERSION >= 20905
@@ -444,7 +505,7 @@ wasiFDWrite(
     wasmMemory* memory = wasiMemory(instance);
 
     struct iovec* iovecs = NULL;
-    I32 total = 0;
+    I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
     U8* temporaryBuffer = NULL;
@@ -571,7 +632,7 @@ fdReadImpl(
     off_t offset
 ) {
     struct iovec* iovecs = NULL;
-    I32 total = 0;
+    I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
