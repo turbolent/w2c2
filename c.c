@@ -3399,8 +3399,7 @@ W2C2_INLINE
 void
 wasmCWriteGlobalImportType(
     FILE* file,
-    WasmGlobalImport import,
-    bool pretty
+    WasmGlobalImport import
 ) {
     fputs(valueTypeNames[import.globalType.valueType], file);
     fputc('*', file);
@@ -3420,7 +3419,7 @@ wasmCWriteGlobalImports(
         if (pretty) {
             fputs(indentation, file);
         }
-        wasmCWriteGlobalImportType(file, import, pretty);
+        wasmCWriteGlobalImportType(file, import);
         if (pretty) {
             fputc(' ', file);
         }
@@ -3638,7 +3637,7 @@ wasmCWriteInitGlobalImports(
     for (; globalIndex < globalImportCount; globalIndex++) {
         WasmGlobalImport import = module->globalImports.imports[globalIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
-        wasmCWriteGlobalImportType(file, import, pretty);
+        wasmCWriteGlobalImportType(file, import);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
