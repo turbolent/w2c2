@@ -96,4 +96,5 @@ endif()
 
 if(MSVC)
     target_compile_definitions(w2c2 PUBLIC _CRT_SECURE_NO_DEPRECATE)
+    target_compile_definitions(wasi PUBLIC _CRT_SECURE_NO_DEPRECATE)
 endif()
