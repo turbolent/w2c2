@@ -3,36 +3,50 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #if HAS_UNISTD
 #include <unistd.h>
 #endif /* HAS_UNISTD */
+
 #ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif /* _MSC_VER */
-#if HAS_SYSUIO
-#include <sys/uio.h>
-#endif /* HAS_SYSUIO */
+
 #include <time.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
+
 #if HAS_SYSTIME
 #include <sys/time.h>
-#endif
+#endif /* HAS_SYSTIME */
+
 #if HAS_SYSRESOURCE
 #include <sys/resource.h>
-#endif
+#endif /* HAS_SYSRESOURCE */
+
+#if HAS_SYSUIO
+#include <sys/uio.h>
+#endif /* HAS_SYSUIO */
+
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <io.h>
 
+#define mode_t unsigned short
+
+#define S_IFMT _S_IFMT
+#define S_IFDIR _S_IFDIR
+#define S_IFCHR _S_IFCHR
+#define S_IFREG _S_IFREG
+
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
-#endif
+#endif /* _WIN32 */
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -121,6 +135,24 @@ writev(
     }
     return ret;
 }
+#endif
+
+#ifdef S_IFMT
+#if !defined(S_ISBLK) && defined(S_IFBLK)
+#define S_ISBLK(m)      (((m) & S_IFMT) == S_IFBLK)     /* block special */
+#endif
+#if !defined(S_ISCHR) && defined(S_IFCHR)
+#define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)     /* char special */
+#endif
+#if !defined(S_ISDIR) && defined(S_IFDIR)
+#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)     /* directory */
+#endif
+#if !defined(S_ISREG) && defined(S_IFREG)
+#define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)     /* regular file */
+#endif
+#if !defined(S_ISLNK) && defined(S_IFLNK)
+#define S_ISLNK(m)      (((m) & S_IFMT) == S_IFLNK)     /* symbolic link */
+#endif
 #endif
 
 static
@@ -1142,16 +1174,12 @@ wasiFDTell(
     );
 }
 
-#ifndef _WIN32
 static
 W2C2_INLINE
 WasiFileType
 wasiFileTypeFromMode(
     mode_t mode
 ) {
-    if (S_ISBLK(mode)) {
-        return WASI_FILE_TYPE_BLOCK_DEVICE;
-    }
     if (S_ISCHR(mode)) {
         return WASI_FILE_TYPE_CHARACTER_DEVICE;
     }
@@ -1161,9 +1189,11 @@ wasiFileTypeFromMode(
     if (S_ISREG(mode)) {
         return WASI_FILE_TYPE_REGULAR_FILE;
     }
+#ifdef S_ISLNK
     if (S_ISLNK(mode)) {
         return WASI_FILE_TYPE_SYMBOLIC_LINK;
     }
+#endif /* S_ISLNK */
 #ifdef S_ISBLK
     if (S_ISBLK(mode)) {
         return WASI_FILE_TYPE_BLOCK_DEVICE;
@@ -1172,7 +1202,6 @@ wasiFileTypeFromMode(
 
     return WASI_FILE_TYPE_UNKNOWN;
 }
-#endif /* _WIN32 */
 
 #define WASI_DIRENT_SIZE 24
 
