@@ -1236,9 +1236,11 @@ wasiFDReaddir(
         }
     }
 
+#ifndef _WIN32
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
+#endif /* _WIN32 */
 
     i32_store(
         memory,
@@ -1264,11 +1266,14 @@ wasiFDReaddir(
             break;
         }
 
+#ifndef _WIN32
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
         }
+#endif /* _WIN32 */
+
         next = (U64)tell;
         inode = entry->d_ino;
         name = entry->d_name;
