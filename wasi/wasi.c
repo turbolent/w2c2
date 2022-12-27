@@ -1517,7 +1517,7 @@ wasiClockTimeGet(
                 result = convertTimespec(tp);
                 break;
             }
-            case CLOCK_MONOTONIC: {
+            case WASI_CLOCK_MONOTONIC: {
                 if (QueryPerformanceFrequency(&pf) == 0) {
                     return WASI_ERRNO_INVAL;
                 }
@@ -1536,7 +1536,7 @@ wasiClockTimeGet(
                 result = convertTimespec(tp);
                 break;
             }
-            case CLOCK_PROCESS_CPUTIME_ID: {
+            case WASI_CLOCK_PROCESS_CPUTIME_ID: {
                 if (GetProcessTimes(GetCurrentProcess(), &ct.ft, &et.ft, &kt.ft, &ut.ft) == 0) {
                     return WASI_ERRNO_INVAL;
                 }
@@ -1547,7 +1547,7 @@ wasiClockTimeGet(
                 result = convertTimespec(tp);
                 break;
             }
-            case CLOCK_THREAD_CPUTIME_ID: {
+            case WASI_CLOCK_THREAD_CPUTIME_ID: {
                 if(GetThreadTimes(GetCurrentThread(), &ct.ft, &et.ft, &kt.ft, &ut.ft) == 0) {
                     return WASI_ERRNO_INVAL;
                 }
