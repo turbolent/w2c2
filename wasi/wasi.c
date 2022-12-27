@@ -445,8 +445,10 @@ wasiErrno(void) {
         return WASI_ERRNO_MFILE;
     case ENOTTY:
         return WASI_ERRNO_NOTTY;
+#ifdef ETXTBSY
     case ETXTBSY:
         return WASI_ERRNO_TXTBSY;
+#endif
     case EFBIG:
         return WASI_ERRNO_FBIG;
     case ENOSPC:
