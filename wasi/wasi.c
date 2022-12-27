@@ -65,6 +65,7 @@ struct timespec {
 #define write   _write
 #define close   _close
 #define mkdir   _mkdir
+#define rmdir   _rmdir
 #define unlink  _unlink
 #define stat    _stat
 #define fstat   _fstat
