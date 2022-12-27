@@ -28,6 +28,14 @@ typedef SSIZE_T ssize_t;
 
 #ifdef _WIN32
 #include <io.h>
+
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
 #endif
 
 #if defined(__MACH__)
