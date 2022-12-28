@@ -1,9 +1,9 @@
 W2C2 ?= ../../w2c2
-LDFLAGS += -lm
+LDFLAGS += -lm -L../../wasi -lwasi
 
 swift-wasi: swiftwasi.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.a -o swift-wasi $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o swift-wasi $(LDFLAGS)
 
 swiftwasi.o: CFLAGS += -O0
 

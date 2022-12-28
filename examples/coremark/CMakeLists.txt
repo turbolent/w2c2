@@ -28,4 +28,5 @@ target_include_directories(coremark PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../.. .)
 
 target_compile_options(coremark PUBLIC ${CFLAGS})
 
-target_link_libraries(coremark PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/wasi${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_link_directories(coremark PUBLIC ../../wasi)
+target_link_libraries(coremark PUBLIC wasi)

@@ -73,7 +73,7 @@ OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-wasi.a: $(OBJECTS)
+libwasi.a: $(OBJECTS)
 	$(AR) rcu $@ $^
 	ranlib $@
 
@@ -81,5 +81,5 @@ test: $(OBJECTS) test.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
-	-rm -f *.o
+	-rm -f *.o *.a
 	-rm -f test

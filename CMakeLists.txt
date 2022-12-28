@@ -45,7 +45,7 @@ FILE(GLOB WASI_TEST_SOURCES wasi/test.c wasi/*_test.c)
 list(REMOVE_ITEM WASI_SOURCES ${WASI_TEST_SOURCES})
 
 add_executable(w2c2 ${SOURCES})
-add_library(wasi ${WASI_SOURCES})
+add_library(wasi STATIC ${WASI_SOURCES})
 
 set(CFLAGS
     $<$<CXX_COMPILER_ID:MSVC>:/W4>

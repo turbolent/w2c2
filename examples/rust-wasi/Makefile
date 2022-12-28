@@ -1,9 +1,9 @@
 W2C2 ?= ../../w2c2
-LDFLAGS += -lm
+LDFLAGS += -lm -L../../wasi -lwasi
 CFLAGS += -O3
 
 rust-wasi: target/wasm32-wasi/debug/rust-wasi.o main.o
-	$(CC) $(CFLAGS) $^ ../../wasi/wasi.a -o rust-wasi $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o rust-wasi $(LDFLAGS)
 
 %.c: %.wasm
 	$(W2C2) $< $@
