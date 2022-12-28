@@ -7,6 +7,9 @@
 #ifndef _WIN32_DIRENT_H
 #define _WIN32_DIRENT_H
 
+#include <windows.h>
+#include <errno.h>
+
 struct dirent
 {
     long		d_ino;
