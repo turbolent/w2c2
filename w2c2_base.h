@@ -439,6 +439,12 @@ I64_CTZ(
 #define I32_TRUNC_U_F64(x) TRUNC_U(U32, F64, 4294967296., x)
 #define I64_TRUNC_U_F64(x) TRUNC_U(U64, F64, (F64)UINT64_MAX, x)
 
+#ifdef _WIN32
+#include <float.h>
+#define copysignf _copysignf
+#define copysign _copysign
+#endif
+
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static W2C2_INLINE t2 name(t1 x) {      \
     t2 result;                            \
