@@ -3,7 +3,7 @@ LDFLAGS += -lm
 
 swift-wasi: swiftwasi.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o swift-wasi $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.a -o swift-wasi $(LDFLAGS)
 
 swiftwasi.o: CFLAGS += -O0
 

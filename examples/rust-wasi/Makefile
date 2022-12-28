@@ -3,7 +3,7 @@ LDFLAGS += -lm
 CFLAGS += -O3
 
 rust-wasi: target/wasm32-wasi/debug/rust-wasi.o main.o
-	$(CC) $(CFLAGS) $^ ../../wasi/wasi.o -o rust-wasi $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ ../../wasi/wasi.a -o rust-wasi $(LDFLAGS)
 
 %.c: %.wasm
 	$(W2C2) $< $@

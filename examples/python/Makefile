@@ -18,7 +18,7 @@ endif
 
 python: python.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o python $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.a -o python $(LDFLAGS)
 
 datasegments.o: python.c
 	ld -r -b binary -o datasegments.o datasegments

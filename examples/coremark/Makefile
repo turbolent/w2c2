@@ -3,7 +3,7 @@ CFLAGS += -O3
 W2C2 ?= ../../w2c2
 
 coremark: coremark.o main.o
-	$(CC) $^ ../../wasi/wasi.o -o coremark $(LDFLAGS)
+	$(CC) $^ ../../wasi/wasi.a -o coremark $(LDFLAGS)
 
 %.c: %.wasm
 	$(W2C2) $< $@

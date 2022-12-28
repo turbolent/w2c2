@@ -3,8 +3,8 @@
 
 #include "../w2c2_base.h"
 #include <sys/types.h>
-#if _WIN32
-#include "win_dirent.h"
+#ifdef _WIN32
+#include "win32.h"
 #else
 #include <dirent.h>
 #endif

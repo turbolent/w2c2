@@ -68,12 +68,16 @@ endif
 
 .PHONY: clean
 
-OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
+OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test: $(OBJECTS)
+wasi.a: $(OBJECTS)
+	$(AR) rcu $@ $^
+	ranlib $@
+
+test: $(OBJECTS) test.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:

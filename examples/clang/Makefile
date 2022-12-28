@@ -18,7 +18,7 @@ endif
 
 clang: clang.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o clang $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.a -o clang $(LDFLAGS)
 
 datasegments.o: clang.c
 	ld -r -b binary -o datasegments.o datasegments
