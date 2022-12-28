@@ -20,13 +20,22 @@ set(CFLAGS
 
 add_custom_command(
     OUTPUT coremark.c
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2 ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm coremark.c
+    COMMAND
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
+        ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
+        coremark.c
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
 )
 
-target_include_directories(coremark PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../.. .)
+target_include_directories(coremark PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_BINARY_DIR}/.
+)
 
 target_compile_options(coremark PUBLIC ${CFLAGS})
 
-target_link_directories(coremark PUBLIC ../../wasi)
-target_link_libraries(coremark PUBLIC wasi)
+find_library(WASI
+    NAMES wasi
+    PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../build
+)
+target_link_libraries(coremark PUBLIC ${WASI})
