@@ -2836,6 +2836,12 @@ wasiPathSymlink(
         newPathLength
     ));
 
+#ifdef _WIN32
+    /* TODO: */
+    WASI_TRACE(("path_symlink: not supported on Win32"));
+    return WASI_ERRNO_NOSYS;
+#else
+
     if (!wasiPreopenGet(dirFD, &preopen)) {
         WASI_TRACE(("path_symlink: bad FD"));
         return WASI_ERRNO_BADF;
@@ -2879,6 +2885,7 @@ wasiPathSymlink(
     }
 
     return WASI_ERRNO_SUCCESS;
+#endif /* _WIN32 */
 }
 
 U32
@@ -2919,6 +2926,11 @@ wasiPathReadlink(
         lengthPointer
     ));
 
+#ifdef _WIN32
+    /* TODO: */
+    WASI_TRACE(("path_readlink: not supported on Win32"));
+    return WASI_ERRNO_NOSYS;
+#else
     if (!wasiPreopenGet(dirFD, &preopen)) {
         WASI_TRACE(("path_readlink: bad FD"));
         return WASI_ERRNO_BADF;
@@ -2967,6 +2979,7 @@ wasiPathReadlink(
     i32_store(memory, lengthPointer, length);
 
     return WASI_ERRNO_SUCCESS;
+#endif /* _WIN32 */
 }
 
 U32
