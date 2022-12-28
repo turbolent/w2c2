@@ -569,7 +569,7 @@ resolvePath(
 
 void
 wasiProcExit(
-    void* instance,
+    void* UNUSED(instance),
     U32 code
 ) {
     WASI_TRACE(("proc_exit(code=%d)", code));
@@ -1445,7 +1445,7 @@ wasiFDReaddir(
 
 U32
 wasiFDClose(
-    void* instance,
+    void* UNUSED(instance),
     U32 wasiFD
 ) {
     WASI_TRACE(("fd_close(wasiFD=%d)", wasiFD));
@@ -2013,7 +2013,7 @@ U32
 wasiPathOpen(
     void* instance,
     U32 wasiDirFD,
-    U32 dirFlags,
+    U32 UNUSED(dirFlags),
     U32 pathPointer,
     U32 pathLength,
     U32 oflags,
@@ -2425,7 +2425,7 @@ U32
 pathFilestatGetImpl(
     wasmMemory* memory,
     U32 wasiFD,
-    U32 lookupFlags,
+    U32 UNUSED(lookupFlags),
     U32 pathPointer,
     U32 pathLength,
     struct stat* st
@@ -2985,9 +2985,9 @@ wasiPathReadlink(
 
 U32
 wasiFDFdstatSetFlags(
-    void* instance,
-    U32 fd,
-    U32 flags
+    void* UNUSED(instance),
+    U32 UNUSED(fd),
+    U32 UNUSED(flags)
 ) {
     /* TODO: */
     WASI_TRACE(("fd_fdstat_set_flags: unimplemented function"));
@@ -2996,11 +2996,11 @@ wasiFDFdstatSetFlags(
 
 U32
 wasiPollOneoff(
-    void* instance,
-    U32 inPointer,
-    U32 outPointer,
-    U32 subscriptionCount,
-    U32 eventCount
+    void* UNUSED(instance),
+    U32 UNUSED(inPointer),
+    U32 UNUSED(outPointer),
+    U32 UNUSED(subscriptionCount),
+    U32 UNUSED(eventCount)
 ) {
     /* TODO: */
     WASI_TRACE(("poll_oneoff: unimplemented function"));
