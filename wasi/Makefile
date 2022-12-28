@@ -18,7 +18,8 @@ CFLAGS += -std=c89 $(WARNS)
 # - strndup
 # - fcntl
 # - timespec
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec
+# - lstat
+FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
@@ -48,6 +49,9 @@ ifneq (,$(findstring fcntl,$(FEATURES)))
 	CFLAGS += -DHAS_FCNTL=1
 endif
 
+ifneq (,$(findstring lstat,$(FEATURES)))
+	CFLAGS += -DHAS_LSTAT=1
+endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined

@@ -28,6 +28,7 @@ include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
 check_symbol_exists(strndup string.h HAVE_STRNDUP)
 check_symbol_exists(fcntl fcntl.h HAVE_FCNTL)
+check_symbol_exists(lstat "sys/stat.h" HAVE_LSTAT)
 
 include(CheckStructHasMember)
 check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
@@ -100,6 +101,10 @@ endif()
 
 if(HAVE_FCNTL)
     target_compile_definitions(wasi PUBLIC HAS_FCNTL=1)
+endif()
+
+if(HAVE_LSTAT)
+    target_compile_definitions(wasi PUBLIC HAS_LSTAT=1)
 endif()
 
 if(HAVE_TIMESPEC)

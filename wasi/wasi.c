@@ -42,6 +42,7 @@ struct timespec {
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#include <windows.h>
 #include <io.h>
 #include <direct.h>
 
@@ -1350,6 +1351,7 @@ wasiFDReaddir(
         fileType = WASI_FILE_TYPE_UNKNOWN;
 #endif
 
+#if HAS_LSTAT
         if (fileType == WASI_FILE_TYPE_UNKNOWN) {
             struct stat entryStat;
 
@@ -1366,6 +1368,7 @@ wasiFDReaddir(
 
             fileType = wasiFileTypeFromMode(entryStat.st_mode);
         }
+#endif
 
         WASI_TRACE(("fd_readdir: name=%s, fileType=%d, inode=%llu", name, fileType, inode));
 
@@ -1567,8 +1570,6 @@ wasiClockTimeGet(
  * Taken from mingw-w64's winpthreads library,
  * which has no copyright assigned and is placed in the Public Domain.
  */
-
-#include <windows.h>
 
 #define POW10_7 10000000
 #define POW10_9 1000000000
