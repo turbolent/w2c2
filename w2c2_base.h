@@ -173,6 +173,21 @@ typedef double F64;
 #define UINT64_MAX 18446744073709551615ULL
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+
+/* disable warning C4756: overflow in constant arithmetic */
+#pragma warning(disable:4756 4056)
+
+#ifndef _HUGE_ENUF
+#define _HUGE_ENUF  1e+300  // _HUGE_ENUF*_HUGE_ENUF must overflow
+#endif
+
+#define INFINITY   ((float)(_HUGE_ENUF * _HUGE_ENUF))
+#define HUGE_VALF  ((float)INFINITY)
+#define HUGE_VALL  ((long double)INFINITY)
+#define NAN        ((float)(INFINITY * 0.0F))
+#endif
+
 #ifndef INFINITY
 #define INFINITY (1.0/0.0)
 #endif
