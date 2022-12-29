@@ -36,6 +36,6 @@ target_compile_options(python PUBLIC ${CFLAGS})
 
 find_library(WASI
     NAMES wasi
-    PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../build
+    PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(python PUBLIC ${WASI})
