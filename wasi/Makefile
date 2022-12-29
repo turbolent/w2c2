@@ -19,7 +19,8 @@ CFLAGS += -std=c89 $(WARNS)
 # - fcntl
 # - timespec
 # - lstat
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat
+# - getentropy
+FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
@@ -51,6 +52,10 @@ endif
 
 ifneq (,$(findstring lstat,$(FEATURES)))
 	CFLAGS += -DHAS_LSTAT=1
+endif
+
+ifneq (,$(findstring getentropy,$(FEATURES)))
+	CFLAGS += -DHAS_GETENTROPY=1
 endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))

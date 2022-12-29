@@ -18,6 +18,7 @@ include(CheckSymbolExists)
 check_symbol_exists(strndup string.h HAVE_STRNDUP)
 check_symbol_exists(fcntl fcntl.h HAVE_FCNTL)
 check_symbol_exists(lstat "sys/stat.h" HAVE_LSTAT)
+check_symbol_exists(getentropy unistd.h HAVE_GETENTROPY)
 
 include(CheckStructHasMember)
 check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
@@ -62,6 +63,10 @@ endif()
 
 if(HAVE_LSTAT)
     target_compile_definitions(wasi PUBLIC HAS_LSTAT=1)
+endif()
+
+if(HAVE_GETENTROPY)
+    target_compile_definitions(wasi PUBLIC HAS_GETENTROPY=1)
 endif()
 
 if(HAVE_TIMESPEC)

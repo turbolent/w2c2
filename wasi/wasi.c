@@ -3016,20 +3016,51 @@ wasiRandomGet(
     wasmMemory* memory = wasiMemory(instance);
 
     ssize_t result = 0;
-    int fd = -1;
 
     WASI_TRACE((
         "random_get(bufferPointer=0x%x, bufferLength=%d)",
         bufferPointer, bufferLength
     ));
 
-    fd = open("/dev/urandom", O_RDONLY);
-    if (fd < 0) {
-        WASI_TRACE(("random_get: open failed: %s", strerror(errno)));
-        return wasiErrno();
+#ifdef _WIN32
+#include <wincrypt.h>
+    {
+        HCRYPTPROV provider;
+        bool success;
+
+        if (bufferLength > 256) {
+            return WASI_ERRNO_IO;
+        }
+
+        if (!CryptAcquireContext(
+            &provider,
+            NULL,
+            NULL,
+            PROV_RSA_FULL,
+            CRYPT_VERIFYCONTEXT|CRYPT_SILENT
+        )) {
+            return WASI_ERRNO_IO;
+        }
+
+        success = CryptGenRandom(
+            provider,
+            bufferLength,
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+            memory->data + bufferPointer
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+            memory->data + memory->size - bufferPointer - bufferLength
+#endif
+        );
+
+        CryptReleaseContext(provider, 0);
+
+        if (!success) {
+            return WASI_ERRNO_IO;
+        }
     }
-    result = read(
-        fd,
+#else
+#if HAS_GETENTROPY
+    result = getentropy(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memory->data + bufferPointer,
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
@@ -3037,14 +3068,39 @@ wasiRandomGet(
 #endif
         bufferLength
     );
-    if (result < 0) {
-        WASI_TRACE(("random_get: read failed: %s", strerror(errno)));
+    if (result != 0 && result != ENOSYS) {
+        WASI_TRACE(("random_get: getentropy failed: %s", strerror(errno)));
         return wasiErrno();
     }
-    if (close(fd) != 0) {
-        WASI_TRACE(("random_get: close failed: %s", strerror(errno)));
-        return wasiErrno();
+    if (result == ENOSYS)
+#endif
+    {
+        int fd = -1;
+
+        fd = open("/dev/random", O_RDONLY);
+        if (fd < 0) {
+            WASI_TRACE(("random_get: open failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+        result = read(
+            fd,
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+            memory->data + bufferPointer,
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+            memory->data + memory->size - bufferPointer - bufferLength,
+#endif
+            bufferLength
+        );
+        if (result < 0) {
+            WASI_TRACE(("random_get: read failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+        if (close(fd) != 0) {
+            WASI_TRACE(("random_get: close failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
     }
+#endif /* _WIN32 */
 
     return WASI_ERRNO_SUCCESS;
 }
