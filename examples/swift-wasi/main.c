@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include "../../w2c2_base.h"
 #include "../../wasi/wasi.h"
 #include "swiftwasi.h"
