@@ -16,17 +16,17 @@ else
     OBJS += datasegments.o
 endif
 
-swift-wasi: swift-wasi.o
+swift-wasi: swiftwasi.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
 	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o swift-wasi $(LDFLAGS)
 
-datasegments.o: swift-wasi.c
+datasegments.o: swiftwasi.c
 	ld -r -b binary -o datasegments.o datasegments
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@
 
-swift-wasi.c: swift-wasi.wasm
+swiftwasi.c: swift-wasi.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .build/wasm32-unknown-wasi/release/swift-wasi.wasm:
@@ -37,4 +37,4 @@ swift-wasi.wasm: .build/wasm32-unknown-wasi/release/swift-wasi.wasm
 
 .PHONY: clean
 clean:
-	rm -f swift-wasi swift-wasi.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f swift-wasi swiftwasi.h $(filter-out main.c,$(wildcard *.c)) *.o
