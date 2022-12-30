@@ -3041,7 +3041,7 @@ wasiRandomGet(
             PROV_RSA_FULL,
             CRYPT_VERIFYCONTEXT|CRYPT_SILENT
         )) {
-            WASI_TRACE(("random_get: CryptAcquireContext failed");
+            WASI_TRACE(("random_get: CryptAcquireContext failed"));
             return WASI_ERRNO_IO;
         }
 
@@ -3058,7 +3058,7 @@ wasiRandomGet(
         CryptReleaseContext(provider, 0);
 
         if (!success) {
-            WASI_TRACE(("random_get: CryptGenRandom failed");
+            WASI_TRACE(("random_get: CryptGenRandom failed"));
             return WASI_ERRNO_IO;
         }
     }
