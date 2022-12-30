@@ -4742,26 +4742,6 @@ wasmCImplementationWriterThread(
 #endif /* HAS_PTHREAD */
 
 static
-U32
-roundUp(
-    U32 n,
-    U32 multiple
-) {
-    if (multiple == 0) {
-        return n;
-    }
-
-    {
-        U32 remainder = n % multiple;
-        if (remainder == 0) {
-            return n;
-        }
-
-        return n + multiple - remainder;
-    }
-}
-
-static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModuleImplementationFiles(
@@ -4773,10 +4753,7 @@ wasmCWriteModuleImplementationFiles(
 ) {
     U32 functionCount = module->functions.count;
     U32 functionsPerFile = options.functionsPerFile;
-    U32 fileCount = roundUp(
-        functionCount / functionsPerFile,
-        1
-    );
+    U32 fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
     WasmDebugLines debugLines = module->debugLines;
 
