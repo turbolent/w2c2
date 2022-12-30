@@ -1,5 +1,5 @@
 CFLAGS += -I../.. -O0 -g
-LDFLAGS += -lm
+LDFLAGS += -lm -L../../wasi -lwasi
 W2C2 ?= ../../w2c2
 
 MODE := gnu-ld
@@ -18,7 +18,7 @@ endif
 
 python: python.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o python $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o python $(LDFLAGS)
 
 datasegments.o: python.c
 	ld -r -b binary -o datasegments.o datasegments

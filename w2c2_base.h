@@ -173,6 +173,21 @@ typedef double F64;
 #define UINT64_MAX 18446744073709551615ULL
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+
+/* disable warning C4756: overflow in constant arithmetic */
+#pragma warning(disable:4756 4056)
+
+#ifndef _HUGE_ENUF
+#define _HUGE_ENUF  1e+300  // _HUGE_ENUF*_HUGE_ENUF must overflow
+#endif
+
+#define INFINITY   ((float)(_HUGE_ENUF * _HUGE_ENUF))
+#define HUGE_VALF  ((float)INFINITY)
+#define HUGE_VALL  ((long double)INFINITY)
+#define NAN        ((float)(INFINITY * 0.0F))
+#endif
+
 #ifndef INFINITY
 #define INFINITY (1.0/0.0)
 #endif
@@ -423,6 +438,12 @@ I64_CTZ(
 #define I64_TRUNC_U_F32(x) TRUNC_U(U64, F32, (F32)UINT64_MAX, x)
 #define I32_TRUNC_U_F64(x) TRUNC_U(U32, F64, 4294967296., x)
 #define I64_TRUNC_U_F64(x) TRUNC_U(U64, F64, (F64)UINT64_MAX, x)
+
+#ifdef _WIN32
+#include <float.h>
+#define copysignf _copysignf
+#define copysign _copysign
+#endif
 
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static W2C2_INLINE t2 name(t1 x) {      \

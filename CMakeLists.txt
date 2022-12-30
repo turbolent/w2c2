@@ -20,11 +20,9 @@ include(CheckIncludeFile)
 check_include_file(getopt.h HAVE_GETOPT_H)
 check_include_file(libgen.h HAVE_LIBGEN_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
-check_include_file(sys/uio.h HAVE_SYSUIO_H)
 
 include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
-check_symbol_exists(strndup string.h HAVE_STRNDUP)
 
 set(CMAKE_C_FLAGS_DEBUG "-g -O1")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
@@ -33,19 +31,12 @@ FILE(GLOB SOURCES *.c)
 FILE(GLOB TEST_SOURCES test.c *_test.c)
 list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 
-FILE(GLOB WASI_SOURCES wasi/*.c)
-FILE(GLOB WASI_TEST_SOURCES wasi/test.c wasi/*_test.c)
-list(REMOVE_ITEM WASI_SOURCES ${WASI_TEST_SOURCES})
-
 add_executable(w2c2 ${SOURCES})
-add_library(wasi ${WASI_SOURCES})
 
-set(CFLAGS
+target_compile_options(w2c2 PUBLIC
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
 )
-target_compile_options(w2c2 PUBLIC ${CFLAGS})
-target_compile_options(wasi PUBLIC ${CFLAGS})
 
 if(DWARF_FOUND)
     target_compile_definitions(w2c2 PUBLIC HAS_LIBDWARF=1)
@@ -61,7 +52,6 @@ endif()
 
 if(HAVE_UNISTD_H)
     target_compile_definitions(w2c2 PUBLIC HAS_UNISTD=1)
-    target_compile_definitions(wasi PUBLIC HAS_UNISTD=1)
 endif()
 
 if(HAVE_GETOPT_H)
@@ -74,14 +64,6 @@ endif()
 
 if(HAVE_STRDUP)
     target_compile_definitions(w2c2 PUBLIC HAS_STRDUP=1)
-endif()
-
-if(HAVE_SYSUIO_H)
-    target_compile_definitions(wasi PUBLIC HAS_SYSUIO=1)
-endif()
-
-if(HAVE_STRNDUP)
-    target_compile_definitions(wasi PUBLIC HAS_STRNDUP=1)
 endif()
 
 if(MSVC)

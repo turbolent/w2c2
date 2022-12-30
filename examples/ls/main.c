@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "w2c2_base.h"
 #include "../../wasi/wasi.h"
@@ -35,22 +33,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    {
-        static char* rootPath = "/";
-        int rootFD = open(rootPath, O_RDONLY);
-        if (rootFD < 0) {
-            fprintf(stderr, "failed to open root path\n");
-            return 1;
-        }
-        {
-            WasiPreopen preopen = {rootPath, rootFD};
-            if (!wasiPreopenAdd(preopen, NULL)) {
-                fprintf(stderr, "failed to add preopen\n");
-                close(rootFD);
-                return 1;
-            }
-        }
+    if (!wasiFileDescriptorAdd(-1, "/", NULL)) {
+        fprintf(stderr, "failed to add preopen\n");
+        return 1;
     }
+
 
     ls_X5Fstart(&instance);
 

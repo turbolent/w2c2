@@ -1,5 +1,6 @@
+CFLAGS += -I../.. -O0 -g
+LDFLAGS += -lm -L../../wasi -lwasi
 W2C2 ?= ../../w2c2
-LDFLAGS += -lm
 
 MODE := gnu-ld
 
@@ -14,15 +15,16 @@ ifeq ($(shell uname -s),Darwin)
 else
     OBJS += datasegments.o
 endif
+
 swift-wasi: swiftwasi.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) ../../wasi/wasi.o -o swift-wasi $(LDFLAGS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o swift-wasi $(LDFLAGS)
 
 datasegments.o: swiftwasi.c
 	ld -r -b binary -o datasegments.o datasegments
 
 %.o: %.c
-	$(CC) -I../.. -O3 $(CFLAGS) -c $< -o $@
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
 
 swiftwasi.c: swift-wasi.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@

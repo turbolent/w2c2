@@ -3,7 +3,11 @@
 
 #include "../w2c2_base.h"
 #include <sys/types.h>
+#ifdef _WIN32
+#include "win32.h"
+#else
 #include <dirent.h>
+#endif
 
 typedef struct WasiFileDescriptor {
     int fd;
@@ -19,26 +23,12 @@ typedef struct WasiFileDescriptors {
     size_t capacity;
 } WasiFileDescriptors;
 
-typedef struct WasiPreopen {
-    char* path;
-    int fd;
-} WasiPreopen;
-
-static const WasiPreopen wasiEmptyPreopen = {NULL, -1};
-
-typedef struct WasiPreopens {
-    WasiPreopen* preopens;
-    size_t length;
-    size_t capacity;
-} WasiPreopens;
-
 typedef struct WASI {
     int envc;
     char** envp;
     int argc;
     char** argv;
     WasiFileDescriptors fds;
-    WasiPreopens preopens;
 } WASI;
 
 bool
@@ -53,8 +43,8 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
     int nativeFD,
-    U32* wasiFD,
-    char* path
+    char* path,
+    U32* wasiFD
 );
 
 bool
@@ -75,20 +65,6 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorClose(
     U32 wasiFD
-);
-
-bool
-WARN_UNUSED_RESULT
-wasiPreopenAdd(
-    WasiPreopen preopen,
-    U32* wasiFD
-);
-
-bool
-WARN_UNUSED_RESULT
-wasiPreopenGet(
-    U32 wasiFD,
-    WasiPreopen* preopen
 );
 
 typedef U8 WasiPreopenType;
