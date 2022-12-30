@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "../../w2c2_base.h"
 #include "../../wasi/wasi.h"
-#include "target/wasm32-wasi/debug/rustwasi.h"
+#include "rustwasi.h"
 
 void
 trap(
