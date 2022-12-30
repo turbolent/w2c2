@@ -31,21 +31,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    {
-        static char* tmpPath = "/tmp";
-        int rootFD = open(tmpPath, O_RDONLY);
-        if (rootFD < 0) {
-            fprintf(stderr, "failed to open root path\n");
-            return 1;
-        }
-        {
-            WasiPreopen preopen = {tmpPath, rootFD};
-            if (!wasiPreopenAdd(preopen, NULL)) {
-                fprintf(stderr, "failed to add preopen\n");
-                close(rootFD);
-                return 1;
-            }
-        }
+    if (!wasiFileDescriptorAdd(-1, "/tmp", NULL)) {
+        fprintf(stderr, "failed to add preopen\n");
+        return 1;
     }
 
     {

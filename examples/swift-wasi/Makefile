@@ -1,17 +1,33 @@
-W2C2 ?= ../../w2c2
+CFLAGS += -I../.. -O0 -g
 LDFLAGS += -lm -L../../wasi -lwasi
+W2C2 ?= ../../w2c2
 
-swift-wasi: swiftwasi.o
+MODE := gnu-ld
+
+ifeq ($(shell uname -s),Darwin)
+    # at least Darwin 11 / Mac OS X 10.7 ?
+    ifeq ($(shell test `uname -r | egrep -o "^[0-9]+"` -gt 10; echo $$?),0)
+    MODE = sectcreate1
+    else
+    MODE = sectcreate2
+    endif
+    LDFLAGS += -sectcreate __DATA __datasegments datasegments
+else
+    OBJS += datasegments.o
+endif
+
+swift-wasi: swift-wasi.o
 	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
 	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o swift-wasi $(LDFLAGS)
 
-swiftwasi.o: CFLAGS += -O0
+datasegments.o: swift-wasi.c
+	ld -r -b binary -o datasegments.o datasegments
 
 %.o: %.c
-	$(CC) -I../.. -O3 $(CFLAGS) -c $< -o $@
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
 
-swiftwasi.c: swift-wasi.wasm
-	$(W2C2) -f 100 $^ $@
+swift-wasi.c: swift-wasi.wasm
+	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .build/wasm32-unknown-wasi/release/swift-wasi.wasm:
 	swift build -Xswiftc -Osize -c release --triple wasm32-unknown-wasi
@@ -21,4 +37,4 @@ swift-wasi.wasm: .build/wasm32-unknown-wasi/release/swift-wasi.wasm
 
 .PHONY: clean
 clean:
-	rm -f $(filter-out main.c,$(wildcard *.c)) *.o swiftwasi.h swift-wasi swift-wasi.wasm
+	rm -f swift-wasi swift-wasi.h $(filter-out main.c,$(wildcard *.c)) *.o
