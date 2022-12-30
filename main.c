@@ -1,3 +1,4 @@
+#include "path.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
@@ -61,10 +62,16 @@ getPathModuleName(
     int j = 0;
     size_t ext;
     size_t i = strlen(modulePath)-1;
-    while (i && modulePath[i] == '/') i--;
-    while (i && modulePath[i] != '.' && modulePath[i] != '/') i--;
+    while (i && modulePath[i] == PATH_SEPARATOR) {
+        i--;
+    }
+    while (i && modulePath[i] != '.' && modulePath[i] != PATH_SEPARATOR) {
+        i--;
+    }
     ext = i;
-    while (i && modulePath[i-1] != '/') i--;
+    while (i && modulePath[i-1] != PATH_SEPARATOR) {
+        i--;
+    }
 
     for (; i < ext; i++) {
         if (!isalnum(modulePath[i])) {
