@@ -179,7 +179,7 @@ typedef double F64;
 #pragma warning(disable:4756 4056)
 
 #ifndef _HUGE_ENUF
-#define _HUGE_ENUF  1e+300  // _HUGE_ENUF*_HUGE_ENUF must overflow
+#define _HUGE_ENUF  1e+300  /* _HUGE_ENUF*_HUGE_ENUF must overflow */
 #endif
 
 #define INFINITY   ((float)(_HUGE_ENUF * _HUGE_ENUF))

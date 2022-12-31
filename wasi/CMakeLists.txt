@@ -7,6 +7,7 @@ endif()
 project(wasi)
 
 set(CMAKE_C_STANDARD 90)
+set(SHARED_LIB 0 CACHE BOOL "Build as a shared library")
 
 include(CheckIncludeFile)
 check_include_file(unistd.h HAVE_UNISTD_H)
@@ -30,7 +31,11 @@ FILE(GLOB SOURCES *.c)
 FILE(GLOB TEST_SOURCES test.c *_test.c)
 list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 
-add_library(wasi STATIC ${SOURCES})
+if (${SHARED_LIB})
+	add_library(wasi SHARED ${SOURCES})
+else()
+	add_library(wasi STATIC ${SOURCES})
+endif()
 
 target_compile_options(wasi PUBLIC
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
