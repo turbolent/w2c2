@@ -2264,9 +2264,17 @@ wasiPathOpen(
     /* Open the file */
     nativeFD = open(nativeResolvedPath, nativeFlags, mode);
 
+    WASI_TRACE((
+        "path_open: "
+        "nativeFD=%d, "
+        "errno=%d",
+        nativeFD,
+        errno
+    ));
+
     success = nativeFD >= 0;
 
-#ifndef _WIN32
+#ifdef _WIN32
     /*
      * Windows does not support opening directories.
      * Check if the opened path is an existing directory.
@@ -2297,12 +2305,6 @@ wasiPathOpen(
             return WASI_ERRNO_NOTDIR;
         }
     }
-
-    WASI_TRACE((
-        "path_open: "
-        "nativeFD=%d",
-        nativeFD
-    ));
 
     /* Register the WASI file descriptor */
     if (!wasiFileDescriptorAdd(nativeFD, resolvedPath, &wasiFD)) {
