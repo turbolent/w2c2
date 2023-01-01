@@ -1979,6 +1979,18 @@ wasiFdFdstatGet(
     );
 #endif
 
+    WASI_TRACE((
+        "fd_fdstat_get: "
+        "fileType=%u, "
+        "wasiFlags=%u, "
+        "baseRights=%llu, "
+        "inheritingRights=%llu",
+        fileType,
+        wasiFlags,
+        baseRights,
+        inheritingRights
+    ));
+
     i32_store8(memory, resultPointer, fileType);
     i32_store16(memory, resultPointer + 2, wasiFlags);
     i64_store(memory, resultPointer + 8, baseRights);
