@@ -41,6 +41,8 @@ struct timespec {
 
 #include <sys/stat.h>
 
+#define HAS_NONPOSIXPATH 0
+
 #define PATH_SEPARATOR '/'
 #define PATH_SEPARATOR_STRING "/"
 
@@ -80,7 +82,7 @@ struct timespec {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-#define HAS_NONPOSIXPATH
+#define HAS_NONPOSIXPATH 1
 
 #define PATH_SEPARATOR '\\'
 #define PATH_SEPARATOR_STRING "\\"
