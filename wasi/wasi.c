@@ -2139,6 +2139,7 @@ wasiPathOpen(
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
     U32 wasiFD = 0;
     char* preopenPath = NULL;
+    bool success = false;
 
     bool isRead = fsRightsBase & (WASI_RIGHTS_FD_READ
                                   | WASI_RIGHTS_FD_READDIR);
@@ -2250,7 +2251,7 @@ wasiPathOpen(
     /* wasiFdflagsRsync is ignored, as O_RSYNC is often not implemented */
 
     strcpy(nativeResolvedPath, resolvedPath);
-#ifdef _WIN32
+#if HAS_NONPOSIXPATH
     toNativePath(nativeResolvedPath);
 #endif
 
@@ -2263,13 +2264,28 @@ wasiPathOpen(
     /* Open the file */
     nativeFD = open(nativeResolvedPath, nativeFlags, mode);
 
-    if (nativeFD < 0) {
+    success = nativeFD >= 0;
+
+#ifndef _WIN32
+    /*
+     * Windows does not support opening directories.
+     * Check if the opened path is an existing directory.
+     */
+    if (!success && errno == EACCES) {
+        struct stat st;
+        if (stat(nativeResolvedPath, &st) == 0) {
+            success = S_ISDIR(st.st_mode);
+        }
+    }
+#endif
+
+    if (!success) {
         WASI_TRACE(("path_open: open failed: %s", strerror(errno)));
         return wasiErrno();
     }
 
     /* Not all platforms support O_DIRECTORY, so emulate it */
-    if (oflags & WASI_OFLAGS_DIRECTORY) {
+    if (nativeFD >= 0 && oflags & WASI_OFLAGS_DIRECTORY) {
         struct stat st;
 
         if (fstat(nativeFD, &st) < 0) {
