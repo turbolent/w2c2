@@ -1278,6 +1278,12 @@ wasiFDReaddir(
             return WASI_ERRNO_BADF;
         }
 
+        WASI_TRACE((
+            "fd_readdir: "
+            "opendir(%s)",
+            nativePath
+        ));
+
         descriptor.dir = opendir(nativePath);
 
         if (descriptor.dir == NULL) {
@@ -1355,6 +1361,12 @@ wasiFDReaddir(
 #if HAS_NONPOSIXPATH
             toNativePath(nativePath);
 #endif
+
+            WASI_TRACE((
+                "fd_readdir: "
+                "lstat(%s)",
+                nativePath
+            ));
 
             strcat(nativePath, PATH_SEPARATOR_STRING);
             strcat(nativePath, name);
@@ -1880,6 +1892,12 @@ wasiFdFdstatGet(
 #if HAS_NONPOSIXPATH
         toNativePath(nativePath);
 #endif
+        WASI_TRACE((
+            "fd_fdstat_get: "
+            "stat(%s)",
+            nativePath
+        ));
+
         if (stat(nativePath, &st) != 0) {
             WASI_TRACE(("fd_fdstat_get: stat failed: %s", strerror(errno)));
             return wasiErrno();
@@ -2236,6 +2254,12 @@ wasiPathOpen(
     toNativePath(nativeResolvedPath);
 #endif
 
+    WASI_TRACE((
+        "path_open: "
+        "open(%s)",
+        nativeResolvedPath
+    ));
+
     /* Open the file */
     nativeFD = open(nativeResolvedPath, nativeFlags, mode);
 
@@ -2412,6 +2436,12 @@ fdFilestatGetImpl(
 #if HAS_NONPOSIXPATH
         toNativePath(nativePath);
 #endif
+        WASI_TRACE((
+            "fd_filestat_get: "
+            "stat(%s)",
+            nativePath
+        ));
+
         if (stat(nativePath, st) != 0) {
             WASI_TRACE(("fd_filestat_get: stat failed: %s", strerror(errno)));
             return wasiErrno();
@@ -2618,6 +2648,12 @@ pathFilestatGetImpl(
 #if HAS_NONPOSIXPATH
     toNativePath(nativeResolvedPath);
 #endif
+
+    WASI_TRACE((
+        "path_filestat_get: "
+        "stat(%s)",
+        nativeResolvedPath
+    ));
 
     /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
     res = stat(nativeResolvedPath, st);
@@ -2830,6 +2866,13 @@ wasiPathRename(
     toNativePath(nativeNewResolvedPath);
 #endif
 
+    WASI_TRACE((
+        "path_rename: "
+        "rename(%s, %s)",
+        nativeOldResolvedPath,
+        nativeNewResolvedPath
+    ));
+
     res = rename(
         nativeOldResolvedPath,
         nativeNewResolvedPath
@@ -2915,6 +2958,12 @@ wasiPathUnlinkFile(
     toNativePath(nativeResolvedPath);
 #endif
 
+    WASI_TRACE((
+        "path_unlink_file: "
+        "unlink(%s)",
+        nativeResolvedPath
+    ));
+
     res = unlink(nativeResolvedPath);
 
     if (res != 0) {
@@ -2996,6 +3045,13 @@ wasiPathRemoveDirectory(
 #if HAS_NONPOSIXPATH
     toNativePath(nativeResolvedPath);
 #endif
+
+    WASI_TRACE((
+        "path_remove_directory: "
+        "rmdir(%s)",
+        nativeResolvedPath
+    ));
+
     res = rmdir(nativeResolvedPath);
 
     if (res != 0) {
@@ -3073,6 +3129,12 @@ wasiPathCreateDirectory(
 #if HAS_NONPOSIXPATH
     toNativePath(nativeResolvedPath);
 #endif
+
+    WASI_TRACE((
+        "path_create_directory: "
+        "mkdir(%s)",
+        nativeResolvedPath
+    ));
 
 #ifdef _WIN32
     res = _mkdir(nativeResolvedPath);
@@ -3191,6 +3253,13 @@ wasiPathSymlink(
     toNativePath(nativeNewResolvedPath);
 #endif
 
+    WASI_TRACE((
+        "path_symlink: "
+        "symlink(%s, %s)",
+        nativeOldResolvedPath,
+        nativeNewResolvedPath
+    ));
+
     res = symlink(
         nativeOldResolvedPath,
         nativeNewResolvedPath
@@ -3297,6 +3366,12 @@ wasiPathReadlink(
 #if HAS_NONPOSIXPATH
     toNativePath(nativeResolvedPath);
 #endif
+
+    WASI_TRACE((
+        "path_readlink: "
+        "readlink(%s)",
+        nativeResolvedPath,
+    ));
 
     length = readlink(
         nativeResolvedPath,
