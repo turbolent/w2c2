@@ -41,6 +41,9 @@ struct timespec {
 
 #include <sys/stat.h>
 
+#define PATH_SEPARATOR '/'
+#define PATH_SEPARATOR_STRING "/"
+
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
