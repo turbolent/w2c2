@@ -34,8 +34,8 @@ target_include_directories(coremark PUBLIC
 
 target_compile_options(coremark PUBLIC ${CFLAGS})
 
-find_library(WASI
-    NAMES wasi
+find_library(CWASI
+    NAMES cwasi
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../build
 )
-target_link_libraries(coremark PUBLIC ${WASI})
+target_link_libraries(coremark PUBLIC ${CWASI})

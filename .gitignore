@@ -5,4 +5,4 @@ compile_flags.txt
 .DS_Store
 .idea
 cmake-build-debug
-
+*.a

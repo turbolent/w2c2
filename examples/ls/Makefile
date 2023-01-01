@@ -1,4 +1,4 @@
-LDFLAGS += -lm -L../../wasi -lwasi
+LDFLAGS += -lm -L../../wasi -lcwasi
 CFLAGS += -O3
 W2C2 ?= ../../w2c2
 

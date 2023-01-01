@@ -4,7 +4,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-project(wasi)
+project(cwasi)
 
 set(CMAKE_C_STANDARD 90)
 set(SHARED_LIB 0 CACHE BOOL "Build as a shared library")
@@ -32,52 +32,52 @@ FILE(GLOB TEST_SOURCES test.c *_test.c)
 list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 
 if (${SHARED_LIB})
-	add_library(wasi SHARED ${SOURCES})
+	add_library(cwasi SHARED ${SOURCES})
 else()
-	add_library(wasi STATIC ${SOURCES})
+	add_library(cwasi STATIC ${SOURCES})
 endif()
 
-target_compile_options(wasi PUBLIC
+target_compile_options(cwasi PUBLIC
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
 )
 
 if(HAVE_UNISTD_H)
-    target_compile_definitions(wasi PUBLIC HAS_UNISTD=1)
+    target_compile_definitions(cwasi PUBLIC HAS_UNISTD=1)
 endif()
 
 if(HAVE_SYSUIO_H)
-    target_compile_definitions(wasi PUBLIC HAS_SYSUIO=1)
+    target_compile_definitions(cwasi PUBLIC HAS_SYSUIO=1)
 endif()
 
 if(HAVE_SYSTIME_H)
-    target_compile_definitions(wasi PUBLIC HAS_SYSTIME=1)
+    target_compile_definitions(cwasi PUBLIC HAS_SYSTIME=1)
 endif()
 
 if(HAVE_SYSRESOURCE_H)
-    target_compile_definitions(wasi PUBLIC HAS_SYSRESOURCE=1)
+    target_compile_definitions(cwasi PUBLIC HAS_SYSRESOURCE=1)
 endif()
 
 if(HAVE_STRNDUP)
-    target_compile_definitions(wasi PUBLIC HAS_STRNDUP=1)
+    target_compile_definitions(cwasi PUBLIC HAS_STRNDUP=1)
 endif()
 
 if(HAVE_FCNTL)
-    target_compile_definitions(wasi PUBLIC HAS_FCNTL=1)
+    target_compile_definitions(cwasi PUBLIC HAS_FCNTL=1)
 endif()
 
 if(HAVE_LSTAT)
-    target_compile_definitions(wasi PUBLIC HAS_LSTAT=1)
+    target_compile_definitions(cwasi PUBLIC HAS_LSTAT=1)
 endif()
 
 if(HAVE_GETENTROPY)
-    target_compile_definitions(wasi PUBLIC HAS_GETENTROPY=1)
+    target_compile_definitions(cwasi PUBLIC HAS_GETENTROPY=1)
 endif()
 
 if(HAVE_TIMESPEC)
-    target_compile_definitions(wasi PUBLIC HAS_TIMESPEC=1)
+    target_compile_definitions(cwasi PUBLIC HAS_TIMESPEC=1)
 endif()
 
 if(MSVC)
-    target_compile_definitions(wasi PUBLIC _CRT_SECURE_NO_DEPRECATE)
+    target_compile_definitions(cwasi PUBLIC _CRT_SECURE_NO_DEPRECATE)
 endif()

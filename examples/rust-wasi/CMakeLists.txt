@@ -34,8 +34,8 @@ target_include_directories(rust-wasi PUBLIC
 
 target_compile_options(rust-wasi PUBLIC ${CFLAGS})
 
-find_library(WASI
-    NAMES wasi
+find_library(CWASI
+    NAMES cwasi
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
-target_link_libraries(rust-wasi PUBLIC ${WASI})
+target_link_libraries(rust-wasi PUBLIC ${CWASI})

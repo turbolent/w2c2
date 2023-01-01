@@ -1,5 +1,5 @@
 CFLAGS += -I../.. -O0 -g
-LDFLAGS += -lm -L../../wasi -lwasi
+LDFLAGS += -lm -L../../wasi -lcwasi
 W2C2 ?= ../../w2c2
 
 MODE := gnu-ld
@@ -35,4 +35,4 @@ target/wasm32-wasi/debug/rust-wasi.wasm:
 
 .PHONY: clean
 clean:
-	rm -f rust-wasi rustwasi.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f rust-wasi rustwasi.h $(filter-out main.c,$(wildcard *.c)) *.o datasegments

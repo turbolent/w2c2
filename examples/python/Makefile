@@ -1,5 +1,5 @@
 CFLAGS += -I../.. -O0 -g
-LDFLAGS += -lm -L../../wasi -lwasi
+LDFLAGS += -lm -L../../wasi -lcwasi
 W2C2 ?= ../../w2c2
 
 MODE := gnu-ld

@@ -34,8 +34,8 @@ target_include_directories(python PUBLIC
 
 target_compile_options(python PUBLIC ${CFLAGS})
 
-find_library(WASI
-    NAMES wasi
+find_library(CWASI
+    NAMES cwasi
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
-target_link_libraries(python PUBLIC ${WASI})
+target_link_libraries(python PUBLIC ${CWASI})
