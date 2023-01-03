@@ -3926,7 +3926,21 @@ wasmCWriteDataSegmentsAsSection(
             break;
         }
         case wasmDataSegmentModeSectcreate2: {
-            fputs("#include <mach-o/getsect.h>\n\n", file);
+            /*
+             * On Rhapsody, mach-o/getsect.h was added.
+             * On OPENSTEP, libc.h is needed.
+             */
+            fputs(
+                "#include <mach/mach.h>\n"
+                "#ifdef __MACH30__\n"
+                "#include <mach-o/getsect.h>\n"
+                "#define SECT_DATA_SIZE_TYPE unsigned long\n"
+                "#else\n"
+                "#include <libc.h>\n"
+                "#define SECT_DATA_SIZE_TYPE int\n"
+                "#endif\n",
+                file
+            );
             break;
         }
         default: {
@@ -4074,7 +4088,7 @@ wasmCWriteInitMemories(
             }
             case wasmDataSegmentModeSectcreate2: {
                 fputs(
-                    "unsigned long len = 0;\n"
+                    "SECT_DATA_SIZE_TYPE len = 0;\n"
                     "char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
                     file
                 );
