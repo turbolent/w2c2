@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #ifdef _WIN32
 #include "win32.h"
+#elif defined(_NEXT_SOURCE)
+#include <sys/dir.h>
 #else
 #include <dirent.h>
 #endif

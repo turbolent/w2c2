@@ -14,12 +14,26 @@ typedef SSIZE_T ssize_t;
 #define INT64_C(val) val##i64
 #endif /* _MSC_VER */
 
+#ifdef _NEXT_SOURCE
+typedef unsigned short mode_t;
+typedef long ssize_t;
+
+#define dirent direct
+#endif /* _NEXT_SOURCE */
+
 #include <time.h>
 #if !HAS_TIMESPEC
+#ifdef _NEXT_SOURCE
+struct timespec {
+    long ts_sec;
+    long ts_nsec;
+};
+#else
 struct timespec {
     long tv_sec;
     long tv_nsec;
 };
+#endif /* _NEXT_SOURCE */
 #endif /* !HAS_TIMESPEC */
 
 #include <fcntl.h>
@@ -78,6 +92,7 @@ struct timespec {
 #define lseek   _lseek
 #define isatty  _isatty
 
+/* TODO: could be redirected, use _fileno */
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
