@@ -9,7 +9,7 @@ isatty: isatty.o main.o
 	$(W2C2) $< $@
 
 %.o: %.c
-	$(CC) -I../.. -c $(CFLAGS) $< -o $@
+	$(CC) -I../../w2c2 -c $(CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:

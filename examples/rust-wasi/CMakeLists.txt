@@ -7,7 +7,7 @@ endif()
 project(rust-wasi)
 
 execute_process(COMMAND
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
     -f 100
     ${CMAKE_CURRENT_SOURCE_DIR}/target/wasm32-wasi/debug/rust-wasi.wasm
     rustwasi.c
@@ -28,7 +28,7 @@ set(CFLAGS
 )
 
 target_include_directories(rust-wasi PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2
     ${CMAKE_CURRENT_BINARY_DIR}/.
 )
 

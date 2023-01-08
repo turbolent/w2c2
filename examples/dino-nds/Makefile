@@ -24,7 +24,7 @@ dino.elf: dino.o main.o
 	$(W2C2) $< $@
 
 %.o: %.c
-	$(CC) -I../.. $(CFLAGS) -c $< -o $@
+	$(CC) -I../../w2c2 $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
