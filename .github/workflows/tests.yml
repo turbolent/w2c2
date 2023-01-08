@@ -180,7 +180,7 @@ jobs:
 
   windows-msvc:
     runs-on: windows-latest
-    name: "Windows (MSVC), ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
+    name: "Windows (MSVC), ${{ matrix.arch }} ${{ matrix.version }}"
 
     strategy:
       fail-fast: false
@@ -193,7 +193,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
-          version:  ${{ matrix.version }}
+          vsversion:  ${{ matrix.version }}
       - uses: dorny/paths-filter@v2
         id: changes
         with:
