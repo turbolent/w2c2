@@ -122,8 +122,6 @@ jobs:
           ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
-        env:
-          CC: ${{ matrix.system.cc }}
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }}
 
