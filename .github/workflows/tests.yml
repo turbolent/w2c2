@@ -185,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x32]
+        arch: [x64, x86]
         version: [2013, 2019]
 
     steps:
