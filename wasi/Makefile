@@ -78,7 +78,7 @@ OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-libwasi.a: $(OBJECTS)
+libw2c2wasi.a: $(OBJECTS)
 	$(AR) rcu $@ $^
 	ranlib $@
 
