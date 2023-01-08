@@ -123,7 +123,7 @@ jobs:
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }}
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat"
 
   windows:
     runs-on: windows-latest
