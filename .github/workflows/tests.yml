@@ -59,13 +59,23 @@ jobs:
         if: ${{ matrix.system.toolchain }}
         run: |
           sudo apt install ${{ matrix.system.toolchain }}
-      - name: Build
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            w2c2:
+              - 'w2c2/**'
+            wasi:
+              - 'wasi/**'
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Build w2c2
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
-      - name: Run tests
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Run w2c2 tests
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
@@ -73,6 +83,12 @@ jobs:
         run: |
           make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
+      - if: steps.changes.outputs.wasi == 'true'
+        name: Build wasi
+        env:
+          CC: ${{ matrix.system.cc }}
+        working-directory: ./wasi
+        run: make BUILD=${{ matrix.build }}
 
   macos:
     runs-on: macos-latest
@@ -86,14 +102,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Build
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            w2c2:
+              - 'w2c2/**'
+            wasi:
+              - 'wasi/**'
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Build
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
-      - name: Run tests
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Run tests
         working-directory: ./tests
         run: |
           make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
+      - if: steps.changes.outputs.wasi == 'true'
+        name: Build wasi
+        working-directory: ./wasi
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat"
 
   windows:
     runs-on: windows-latest
@@ -120,14 +150,30 @@ jobs:
           install: >-
             make
             gcc
-      - name: Build
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            w2c2:
+              - 'w2c2/**'
+            wasi:
+              - 'wasi/**'
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Build
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
-      - name: Run tests
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Run tests
         working-directory: ./tests
         run: |
           make run-tests 2>&1 | tee results
           ! grep -q "^FAIL: " results
+      - if: steps.changes.outputs.wasi == 'true'
+        name: Build wasi
+        env:
+          CC: ${{ matrix.system.cc }}
+        working-directory: ./wasi
+        run: make BUILD=${{ matrix.build }}

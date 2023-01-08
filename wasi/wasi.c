@@ -780,7 +780,7 @@ readvWrapper(
     int fd,
     const struct iovec* iovecs,
     int count,
-    off_t offset
+    off_t UNUSED(offset)
 ) {
     return readv(fd, iovecs, count);
 }
