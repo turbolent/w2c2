@@ -1,4 +1,4 @@
-W2C2 ?= ../../w2c2
+W2C2 ?= ../../w2c2/w2c2
 LDFLAGS += -lm $(shell sdl-config --libs)
 CFLAGS += $(shell sdl-config --cflags)
 

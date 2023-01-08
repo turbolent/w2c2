@@ -1,7 +1,7 @@
 #import <appkit/appkit.h>
 #include <stdio.h>
 
-#include "../../../w2c2_base.h"
+#include "../../../w2c2/w2c2_base.h"
 
 #define MEM(o) e_mem->data[e_mem->size - (o) - 1]
 

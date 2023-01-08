@@ -1,4 +1,4 @@
-W2C2 ?= ../../w2c2
+W2C2 ?= ../../w2c2/w2c2
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment")

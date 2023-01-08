@@ -1,7 +1,7 @@
 #ifndef W2C2_WASI_H
 #define W2C2_WASI_H
 
-#include "../w2c2_base.h"
+#include "../w2c2/w2c2_base.h"
 #include <sys/types.h>
 #ifdef _WIN32
 #include "win32.h"

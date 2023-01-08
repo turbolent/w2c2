@@ -1,6 +1,6 @@
 LDFLAGS += -lm -L../../wasi -lwasi
 CFLAGS += -O3
-W2C2 ?= ../../w2c2
+W2C2 ?= ../../w2c2/w2c2
 
 ls: ls.o main.o
 	$(CC) $^ -o ls $(LDFLAGS)
