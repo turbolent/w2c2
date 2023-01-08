@@ -2,7 +2,7 @@
 
 #include <SDL.h>
 
-#include "../../w2c2_base.h"
+#include "../../w2c2/w2c2_base.h"
 #include "dino.h"
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN

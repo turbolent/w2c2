@@ -63,6 +63,7 @@ jobs:
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
+        working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
       - name: Run tests
         env:
@@ -86,6 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build
+        working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
       - name: Run tests
         working-directory: ./tests
@@ -95,7 +97,7 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    name: "Windows, ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
+    name: "Windows (mingw), ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
 
     strategy:
       fail-fast: false
@@ -122,6 +124,7 @@ jobs:
         env:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
+        working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
       - name: Run tests
         working-directory: ./tests

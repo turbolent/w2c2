@@ -5,7 +5,7 @@ include_directories(../..)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dino.c
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2 ${CMAKE_CURRENT_SOURCE_DIR}/dino.wasm ${CMAKE_CURRENT_SOURCE_DIR}/dino.c
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/w2c2 ${CMAKE_CURRENT_SOURCE_DIR}/dino.wasm ${CMAKE_CURRENT_SOURCE_DIR}/dino.c
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dino.wasm
     VERBATIM
 )

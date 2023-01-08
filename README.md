@@ -25,6 +25,22 @@ Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c
 If your system is supported by at least CMake 2.8.12, prefer using CMake to detect features.
 On systems without CMake you can also use Make.
 
+### w2c2
+
+```sh
+cd w2c2
+cmake -B build
+cmake --build build
+```
+
+### wasi
+
+```sh
+cd wasi
+cmake -B build
+cmake --build build
+```
+
 ## Usage
 
 For example, to compile `module.wasm` to `module.c` (and `module.h`):

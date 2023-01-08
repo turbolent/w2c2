@@ -1,6 +1,6 @@
 LDFLAGS += -lm
 CFLAGS += -O3
-W2C2 ?= ../../w2c2
+W2C2 ?= ../../w2c2/w2c2
 
 fac: fac.o main.o
 	$(CC) $^ -o fac $(LDFLAGS)
@@ -9,7 +9,7 @@ fac: fac.o main.o
 	$(W2C2) $< $@
 
 %.o: %.c
-	$(CC) -I../.. -c $(CFLAGS) $< -o $@
+	$(CC) -I../../w2c2 -c $(CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:
