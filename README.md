@@ -3,6 +3,15 @@
 Translates WebAssembly modules to C.
 Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c).
 
+Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.github.io/talks/2020/universal.html#/):
+
+```
+                                          ↗ different
+  source code     →  WebAssembly  →  C89  → OSes,
+(C++, Rust, ...)                          ↘ CPUs
+```
+
+
 ## Features
 
 - Implements the WebAssembly Core Specification 1.0
