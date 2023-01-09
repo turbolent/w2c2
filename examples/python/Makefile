@@ -17,8 +17,8 @@ else
 endif
 
 python: python.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o python $(LDFLAGS)
+	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o python $(LDFLAGS)
 
 datasegments.o: python.c
 	ld -r -b binary -o datasegments.o datasegments
@@ -31,4 +31,4 @@ python.c: python.wasm
 
 .PHONY: clean
 clean:
-	rm -f python python.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f python python.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o

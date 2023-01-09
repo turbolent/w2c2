@@ -17,8 +17,8 @@ else
 endif
 
 clang: clang.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o clang $(LDFLAGS)
+	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o clang $(LDFLAGS)
 
 datasegments.o: clang.c
 	ld -r -b binary -o datasegments.o datasegments
@@ -33,4 +33,4 @@ clang.c: clang.wasm
 
 .PHONY: clean
 clean:
-	rm -f clang datasegments clang.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f clang clang.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o

@@ -17,8 +17,8 @@ else
 endif
 
 swift-wasi: swiftwasi.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o swift-wasi $(LDFLAGS)
+	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o swift-wasi $(LDFLAGS)
 
 datasegments.o: swiftwasi.c
 	ld -r -b binary -o datasegments.o datasegments
@@ -37,4 +37,4 @@ swift-wasi.wasm: .build/wasm32-unknown-wasi/release/swift-wasi.wasm
 
 .PHONY: clean
 clean:
-	rm -f swift-wasi swiftwasi.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f swift-wasi swiftwasi.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o

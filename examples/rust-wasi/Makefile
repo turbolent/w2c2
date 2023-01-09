@@ -17,8 +17,8 @@ else
 endif
 
 rust-wasi: rustwasi.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c))
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) -o rust-wasi $(LDFLAGS)
+	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
+	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o rust-wasi $(LDFLAGS)
 
 datasegments.o: rustwasi.c
 	ld -r -b binary -o datasegments.o datasegments
@@ -35,4 +35,4 @@ target/wasm32-wasi/debug/rust-wasi.wasm:
 
 .PHONY: clean
 clean:
-	rm -f rust-wasi rustwasi.h $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f rust-wasi rustwasi.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
