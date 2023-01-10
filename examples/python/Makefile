@@ -20,7 +20,7 @@ python: python.c
 	$(MAKE) -fSubmake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
 python.c: python.wasm
-	$(W2C2) -d $(MODE) -f 50 $^ python.c
+	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .PHONY: clean
 clean:
