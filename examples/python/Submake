@@ -1,0 +1,13 @@
+#OBJLIST:=$(sort $(filter-out python.o,$(patsubst %.c,%.o,$(wildcard *.c)))) $(OBJS)
+OBJLIST:=$(patsubst %.c,%.o,$(wildcard 0*.c)) main.o $(OBJS)
+
+
+python: python.o $(OBJS)
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) -o python $(LDFLAGS)
+
+datasegments.o: python.c
+	ld -r -b binary -o datasegments.o datasegments
+
+%.o: %.c python.c
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
