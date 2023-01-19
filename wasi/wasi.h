@@ -2,7 +2,14 @@
 #define W2C2_WASI_H
 
 #include "../w2c2/w2c2_base.h"
+
+#ifdef __MSL__
+#include <stat.h>
+typedef long ssize_t;
+#else
 #include <sys/types.h>
+#endif
+
 #ifdef _WIN32
 #include "win32.h"
 #elif defined(_NEXT_SOURCE)

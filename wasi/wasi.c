@@ -53,7 +53,9 @@ struct timespec {
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
 
+#ifndef __MSL__
 #include <sys/stat.h>
+#endif
 
 #define HAS_NONPOSIXPATH 0
 
@@ -104,8 +106,21 @@ struct timespec {
 
 #endif /* _WIN32 */
 
+#ifdef __MSL__
+#include <utime.h>
+
+/* TODO: use fileno */
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX 1024
+#endif
+
+#ifdef macintosh
+unsigned int TickCount(void);
 #endif
 
 #if defined(__MACH__)
@@ -174,7 +189,23 @@ writev(
     int i = 0;
     ssize_t ret = 0;
     while (i < iovcnt) {
-        ssize_t n = write(fd, iov[i].iov_base, iov[i].iov_len);
+        ssize_t n = 0;
+#ifdef __MSL__
+/*
+ * For whatever reason, writing to SIOUX ends up overwriting
+ * previous lines. Writing the individual characters however works
+ */
+        if (fd == 1) {
+            int j = 0;
+            for (j = 0; j < iov[i].iov_len; j++) {
+                putchar(((char*)iov[i].iov_base)[j]);
+            }
+            n = iov[i].iov_len;
+        } else
+#endif
+        {
+            n = write(fd, iov[i].iov_base, iov[i].iov_len);
+        }
         if (n > 0) {
             ret += n;
         } else if (!n) {
@@ -1312,11 +1343,11 @@ wasiFDReaddir(
         }
     }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(macintosh)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
-#endif /* _WIN32 */
+#endif
 
     i32_store(
         memory,
@@ -1342,16 +1373,20 @@ wasiFDReaddir(
             break;
         }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(macintosh)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
         }
-#endif /* _WIN32 */
+#endif
 
         next = (U64)tell;
+#if defined(__MWERKS__) && defined(macintosh)
+        inode = 0;
+#else
         inode = entry->d_ino;
+#endif
         name = entry->d_name;
         nameLength = strlen(name);
 
@@ -1707,6 +1742,46 @@ wasiClockTimeGet(
             break;
         }
 #endif /* HAS_SYSTIME */
+#if defined(__MWERKS__) && defined(macintosh)
+#include <DateTimeUtils.h>
+        case WASI_CLOCK_REALTIME: {
+            static unsigned long savedTicks = 0, savedSecs = 0;
+
+            struct timeval tv;
+            unsigned long secs;
+            unsigned long ticks;
+            GetDateTime(&secs);
+            ticks = TickCount();
+
+            if (!savedSecs) {
+                savedTicks = ticks;
+                savedSecs = secs;
+            } else {
+                unsigned long elapsedTicks = ticks - savedTicks;
+                unsigned long elapsedSecs = secs - savedSecs;
+                unsigned long expectedTicks = elapsedSecs * 60 + elapsedSecs * 3 / 20;
+
+                if (expectedTicks > elapsedTicks)
+                    savedTicks = ticks;
+                else
+                    savedTicks += expectedTicks;
+                savedSecs = secs;
+            }
+
+            {
+                const int epochDifferenceInYears = 1970 - 1904;
+                const int epochDifferenceInDays =
+                    365 * epochDifferenceInYears
+                    + (epochDifferenceInYears + 3)/ 4;  /* round up for leap years */
+
+                tv.tv_sec = secs - 86400 * epochDifferenceInDays;
+                tv.tv_usec = (ticks - savedTicks) * 20000000 / 2003;
+
+                result = convertTimeval(tv);
+            }
+            break;
+        }
+#endif
 #if defined(__MACH__) && defined(CLOCK_NULL)
 #include <mach/mach_time.h>
         case WASI_CLOCK_MONOTONIC: {
@@ -1721,8 +1796,8 @@ wasiClockTimeGet(
             break;
         }
 #endif /* defined(__MACH__) && defined(CLOCK_NULL) */
-#if HAS_SYSRESOURCE
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
+#if HAS_SYSRESOURCE
             struct rusage ru;
             int ret = 0;
 
@@ -1735,9 +1810,12 @@ wasiClockTimeGet(
             }
             addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
             result = convertTimeval(ru.ru_utime);
+#else
+#include <time.h>
+            result = (clock() / CLOCKS_PER_SEC) * 1e9;
+#endif /* HAS_SYSRESOURCE */
             break;
         }
-#endif /* HAS_SYSRESOURCE */
         default: {
             WASI_TRACE(("clock_time_get: invalid clock ID"));
             return WASI_ERRNO_INVAL;
@@ -3237,6 +3315,10 @@ wasiPathSymlink(
     /* TODO: */
     WASI_TRACE(("path_symlink: not supported on Win32"));
     return WASI_ERRNO_NOSYS;
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* TODO: */
+    WASI_TRACE(("path_symlink: not supported on Macintosh"));
+    return WASI_ERRNO_NOSYS;
 #else
 
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
@@ -3364,6 +3446,10 @@ wasiPathReadlink(
     /* TODO: */
     WASI_TRACE(("path_readlink: not supported on Win32"));
     return WASI_ERRNO_NOSYS;
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* TODO: */
+    WASI_TRACE(("path_readlink: not supported in Macintosh"));
+    return WASI_ERRNO_NOSYS;
 #else
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
@@ -3415,7 +3501,7 @@ wasiPathReadlink(
     WASI_TRACE((
         "path_readlink: "
         "readlink(%s)",
-        nativeResolvedPath,
+        nativeResolvedPath
     ));
 
     length = readlink(
@@ -3529,7 +3615,6 @@ wasiRandomGet(
             return WASI_ERRNO_IO;
         }
     }
-#else
 #if HAS_GETENTROPY
     result = getentropy(
         bufferStart,
@@ -3565,6 +3650,17 @@ wasiRandomGet(
         }
     }
 
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* Fall back to rand */
+    {
+        U32 i = 0;
+        srand(time(NULL));
+
+        for (; i < bufferLength; i++) {
+            bufferStart[i] = rand();
+        }
+    }
+#else
     /* Fall back to random */
     {
         U32 i = 0;
@@ -3574,7 +3670,7 @@ wasiRandomGet(
             bufferStart[i] = random();
         }
     }
-#endif /* _WIN32 */
+#endif
 
     return WASI_ERRNO_SUCCESS;
 }
