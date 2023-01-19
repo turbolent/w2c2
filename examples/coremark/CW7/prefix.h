@@ -1,0 +1,1 @@
+#define HAS_UNISTD 1#define WASI_TRACE_ENABLED 0

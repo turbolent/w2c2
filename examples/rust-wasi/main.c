@@ -2,6 +2,9 @@
 #include "../../w2c2/w2c2_base.h"
 #include "../../wasi/wasi.h"
 #include "rustwasi.h"
+#ifdef __MSL__
+#include <SIOUX.h>
+#endif
 
 void
 trap(
@@ -18,7 +21,11 @@ wasiMemory(
     return rustwasi_memory((rustwasiInstance*)instance);
 }
 
+#if defined(__MSL__) && defined(macintosh)
+char** environ = NULL;
+#else
 extern char** environ;
+#endif
 
 /* Main */
 
@@ -33,6 +40,10 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "failed to add preopen\n");
         return 1;
     }
+
+#ifdef __MSL__
+    SIOUXSetTitle("\pRust");
+#endif
 
     {
         rustwasiInstance instance;

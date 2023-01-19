@@ -1,1 +1,9 @@
 target
+rustwasi.h
+rustwasi.c
+rustwasi
+CW7/*\ Debug
+CW7/*\ Release
+CW7/*\ Data
+CW7/*.stg
+CW7/*.xSYM
