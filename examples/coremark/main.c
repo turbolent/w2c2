@@ -1,3 +1,9 @@
+#if defined(__MWERKS__) && defined(macintosh)
+#include <MacMemory.h>
+#define __bool_true_false_are_defined
+typedef char bool;
+#endif
+
 #include <stdio.h>
 #include "../../w2c2/w2c2_base.h"
 #include "../../wasi/wasi.h"
@@ -32,12 +38,19 @@ extern char** environ;
 /* Main */
 
 int main(int argc, char* argv[]) {
-
     coremarkInstance instance;
+
+#if defined(__MWERKS__) && defined(macintosh)
+    MaxApplZone();
+    MoreMasters();
+    MoreMasters();
+#endif
+
     coremarkInstantiate(&instance, wasiResolveImport);
 
 #ifdef __MSL__
     SIOUXSetTitle("\pCoreMark");
+    printf("Benchmarking ...\n");
 #endif
 
     if (!wasiInit(argc, argv, environ)) {

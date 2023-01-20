@@ -1,7 +1,14 @@
+#if defined(__MWERKS__) && defined(macintosh)
+#include <MacMemory.h>
+#define __bool_true_false_are_defined
+typedef char bool;
+#endif
+
 #include <stdio.h>
 #include "../../w2c2/w2c2_base.h"
 #include "../../wasi/wasi.h"
 #include "rustwasi.h"
+
 #ifdef __MSL__
 #include <SIOUX.h>
 #endif
@@ -30,6 +37,12 @@ extern char** environ;
 /* Main */
 
 int main(int argc, char* argv[]) {
+#if defined(__MWERKS__) && defined(macintosh)
+    MaxApplZone();
+    MoreMasters();
+    MoreMasters();
+#endif
+
     /* Initialize WASI */
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to init WASI\n");
