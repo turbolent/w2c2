@@ -37,47 +37,51 @@ else()
 	add_library(w2c2wasi STATIC ${SOURCES})
 endif()
 
-target_compile_options(w2c2wasi PUBLIC
-    $<$<CXX_COMPILER_ID:MSVC>:/W4>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
-)
+add_executable(test ${TEST_SOURCES} ${SOURCES})
 
-if(HAVE_UNISTD_H)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_UNISTD=1)
-endif()
+foreach(TARGET w2c2wasi test)
+    target_compile_options(${TARGET} PUBLIC
+        $<$<CXX_COMPILER_ID:MSVC>:/W4>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
+    )
 
-if(HAVE_SYSUIO_H)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_SYSUIO=1)
-endif()
+    if(HAVE_UNISTD_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_UNISTD=1)
+    endif()
 
-if(HAVE_SYSTIME_H)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_SYSTIME=1)
-endif()
+    if(HAVE_SYSUIO_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_SYSUIO=1)
+    endif()
 
-if(HAVE_SYSRESOURCE_H)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_SYSRESOURCE=1)
-endif()
+    if(HAVE_SYSTIME_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_SYSTIME=1)
+    endif()
 
-if(HAVE_STRNDUP)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_STRNDUP=1)
-endif()
+    if(HAVE_SYSRESOURCE_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_SYSRESOURCE=1)
+    endif()
 
-if(HAVE_FCNTL)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_FCNTL=1)
-endif()
+    if(HAVE_STRNDUP)
+        target_compile_definitions(${TARGET} PUBLIC HAS_STRNDUP=1)
+    endif()
 
-if(HAVE_LSTAT)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_LSTAT=1)
-endif()
+    if(HAVE_FCNTL)
+        target_compile_definitions(${TARGET} PUBLIC HAS_FCNTL=1)
+    endif()
 
-if(HAVE_GETENTROPY)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_GETENTROPY=1)
-endif()
+    if(HAVE_LSTAT)
+        target_compile_definitions(${TARGET} PUBLIC HAS_LSTAT=1)
+    endif()
 
-if(HAVE_TIMESPEC)
-    target_compile_definitions(w2c2wasi PUBLIC HAS_TIMESPEC=1)
-endif()
+    if(HAVE_GETENTROPY)
+        target_compile_definitions(${TARGET} PUBLIC HAS_GETENTROPY=1)
+    endif()
 
-if(MSVC)
-    target_compile_definitions(w2c2wasi PUBLIC _CRT_SECURE_NO_DEPRECATE)
-endif()
+    if(HAVE_TIMESPEC)
+        target_compile_definitions(${TARGET} PUBLIC HAS_TIMESPEC=1)
+    endif()
+
+    if(MSVC)
+        target_compile_definitions(${TARGET} PUBLIC _CRT_SECURE_NO_DEPRECATE)
+    endif()
+endforeach()
