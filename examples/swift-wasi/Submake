@@ -1,0 +1,11 @@
+OBJLIST=$(filter-out swiftwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+swift-wasi: swiftwasi.o
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) swiftwasi.o -o swift-wasi $(LDFLAGS)
+
+datasegments.o: swiftwasi.c
+	ld -r -b binary -o datasegments.o datasegments
+
+%.o: %.c
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
