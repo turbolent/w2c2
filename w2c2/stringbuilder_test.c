@@ -65,15 +65,15 @@ testStringBuilder(void) {
 
     if (!(
         stringBuilderAppend(&builder, ". max U32: ")
-        && stringBuilderAppendU32(&builder, ULONG_MAX)
+        && stringBuilderAppendU32(&builder, UINT_MAX)
         && stringBuilderAppend(&builder, ". max I32: ")
-        && stringBuilderAppendI32(&builder, LONG_MAX)
+        && stringBuilderAppendI32(&builder, INT_MAX)
         && stringBuilderAppend(&builder, ". min I32 + 1: ")
-        && stringBuilderAppendI32(&builder, LONG_MIN + 1)
+        && stringBuilderAppendI32(&builder, INT_MIN + 1)
         && stringBuilderAppend(&builder, ". min I32: ")
-        && stringBuilderAppendI32(&builder, LONG_MIN)
+        && stringBuilderAppendI32(&builder, INT_MIN)
         && stringBuilderAppend(&builder, ". max U32 hex: ")
-        && stringBuilderAppendU32Hex(&builder, ULONG_MAX)
+        && stringBuilderAppendU32Hex(&builder, UINT_MAX)
 
         && stringBuilderAppend(&builder, ". max U64: ")
         && stringBuilderAppendU64(&builder, ULLONG_MAX)
@@ -98,7 +98,7 @@ testStringBuilder(void) {
             "max I32: 2147483647. "
             "min I32 + 1: -2147483647. "
             "min I32: -2147483648. "
-            "max U32 hex: FFFFFFFF"
+            "max U32 hex: FFFFFFFF. "
 
             "max U64: 18446744073709551615. "
             "max I64: 9223372036854775807. "
