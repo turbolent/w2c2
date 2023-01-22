@@ -45,11 +45,10 @@ testMacToPosixPath(
     char* path,
     char* expected
 ) {
-    char* result = NULL;
-    char tmp[PATH_MAX];
-    strcpy(tmp, path);
+    char result[PATH_MAX];
+    strcpy(result, path);
 
-    result = macToPosixPath(tmp);
+    macToPosixPath(result);
 
     if (strcmp(result, expected) != 0) {
         fprintf(stderr, "FAIL: macToPosixPath(%s): %s != %s\n", path, result, expected);
@@ -64,11 +63,10 @@ testPosixToMacPath(
     char* path,
     char* expected
 ) {
-    char* result = NULL;
-    char tmp[PATH_MAX];
-    strcpy(tmp, path);
+    char result[PATH_MAX];
+    strcpy(result, path);
 
-    result = posixToMacPath(tmp);
+    posixToMacPath(result);
 
     if (strcmp(result, expected) != 0) {
         fprintf(stderr, "FAIL: posixToMacPath(%s): %s != %s\n", path, result, expected);
