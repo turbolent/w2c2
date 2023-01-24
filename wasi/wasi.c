@@ -2467,6 +2467,18 @@ wasiPathOpen(
         }
     }
 #endif
+#if defined(__MSL__) && defined(macintosh)
+    /*
+     * Macintosh does not support opening directories.
+     * Check if the opened path is an existing directory.
+     */
+    if (!success && errno == EMACOSERR && __MacOSErrNo == errFSForkNotFound) {
+        struct stat st;
+        if (stat(nativeResolvedPath, &st) == 0) {
+            success = S_ISDIR(st.st_mode);
+        }
+    }
+#endif
 
     if (!success) {
         WASI_TRACE(("path_open: open failed: %s", strerror(errno)));
