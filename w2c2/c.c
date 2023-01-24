@@ -2921,6 +2921,26 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, *opcode, "nearbyint"))
                         break;
                     }
+                    case wasmOpcodeI32Extend8S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(U32)(I8)(U8)"));
+                        break;
+                    }
+                    case wasmOpcodeI32Extend16S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(I32)(I16)(U16)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend8S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I8)(U8)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend16S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I16)(U16)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend32S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I32)(U32)"));
+                        break;
+                    }
                     case wasmOpcodeI32Shl:
                     case wasmOpcodeI64Shl: {
                         MUST (wasmCWriteShiftLeftExpr(writer, *opcode))
@@ -3637,7 +3657,9 @@ wasmCWriteInitGlobalImports(
     for (; globalIndex < globalImportCount; globalIndex++) {
         WasmGlobalImport import = module->globalImports.imports[globalIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteGlobalImportType(file, import);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3664,7 +3686,9 @@ wasmCWriteInitMemoryImports(
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteMemoryType(file);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3691,7 +3715,9 @@ wasmCWriteInitTableImports(
     for (; tableIndex < tableImportCount; tableIndex++) {
         WasmTableImport import = module->tableImports.imports[tableIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteTableType(file);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3796,6 +3822,9 @@ wasmCWriteMemoryExport(
     bool pretty
 ) {
     wasmCWriteMemoryType(file);
+    if (pretty) {
+        fputc(' ', file);
+    }
     wasmCWriteExportName(file, moduleName, export.name);
     fprintf(file, "(%sInstance* i)", moduleName);
     if (writeBody) {

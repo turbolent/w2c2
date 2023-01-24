@@ -208,8 +208,7 @@ def gen(paths):
         json_path = gen_dir / Path(wast_path).with_suffix('.json').name
         wast2json_opts.extend(['-o', str(json_path)])
 
-        if not json_path.exists():
-            subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
+        subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
 
         generate_test_files(json_path)
 

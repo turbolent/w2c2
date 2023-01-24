@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "opcode.h"
 
 const char*
@@ -349,6 +350,16 @@ wasmOpcodeDescription(
             return "f32.reinterpret_i32";
         case wasmOpcodeF64ReinterpretI64:
             return "f64.reinterpret_i64";
+        case wasmOpcodeI32Extend8S:
+            return "i32.extend8_s";
+        case wasmOpcodeI32Extend16S:
+            return "i32.extend16_s";
+        case wasmOpcodeI64Extend8S:
+            return "i64.extend8_s";
+        case wasmOpcodeI64Extend16S:
+            return "i64.extend16_s";
+        case wasmOpcodeI64Extend32S:
+            return "i64.extend32_s";
         default:
             return "unknown";
     }
@@ -539,8 +550,22 @@ wasmOpcodeResultType(
         case wasmOpcodeF64ReinterpretI64:
             return wasmValueTypeF64;
 
-        default:
-            return 0;
+        case wasmOpcodeI32Extend8S:
+        case wasmOpcodeI32Extend16S:
+            return wasmValueTypeI32;
+        case wasmOpcodeI64Extend8S:
+        case wasmOpcodeI64Extend16S:
+        case wasmOpcodeI64Extend32S:
+            return wasmValueTypeI64;
+
+        default: {
+            fprintf(
+                stderr,
+                "w2c2: BUG: missing return type for opcode %s\n",
+                wasmOpcodeDescription(opcode)
+            );
+            abort();
+        }
     }
 }
 
@@ -740,8 +765,14 @@ wasmOpcodeParameter1Type(
         case wasmOpcodeF64ReinterpretI64:
             return wasmValueTypeI64;
 
-        default:
-            return 0;
+        default: {
+            fprintf(
+                stderr,
+                "w2c2: BUG: missing parameter 1 type for opcode %s\n",
+                wasmOpcodeDescription(opcode)
+            );
+            abort();
+        }
     }
 }
 
