@@ -211,7 +211,7 @@ writev(
  * For whatever reason, writing to SIOUX ends up overwriting
  * previous lines. Writing the individual characters however works
  */
-        if (fd == 1) {
+        if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
             int j = 0;
             for (j = 0; j < iov[i].iov_len; j++) {
                 putchar(((char*)iov[i].iov_base)[j]);
