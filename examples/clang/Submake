@@ -1,0 +1,13 @@
+OBJLIST=$(filter-out clang.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+clang: clang.o
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) clang.o -o clang $(LDFLAGS)
+
+datasegments.o: clang.c
+	ld -r -b binary -o datasegments.o datasegments
+
+clang.o: CFLAGS += -O0
+
+%.o: %.c
+	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@

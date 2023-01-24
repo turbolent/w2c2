@@ -17,14 +17,7 @@ else
 endif
 
 rust-wasi: rustwasi.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o rust-wasi $(LDFLAGS)
-
-datasegments.o: rustwasi.c
-	ld -r -b binary -o datasegments.o datasegments
-
-%.o: %.c
-	$(CC) -I.. $(CFLAGS) -c $< -o $@
+	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
 rustwasi.c: target/wasm32-wasi/debug/rust-wasi.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@

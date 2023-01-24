@@ -5,7 +5,6 @@
 ## Build
 
 ```sh
-make clang.c
 make -j12
 ```
 
