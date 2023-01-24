@@ -1,7 +1,7 @@
-W2C2 ?= ../w2c2
+W2C2 ?= ../w2c2/w2c2
 PYTHON3 ?= python3
 
-CFLAGS ?= -O0 -g
+CFLAGS ?= -I../w2c2 -O0 -g
 
 EXE =
 
@@ -53,7 +53,7 @@ test_%.c: gen/%.wasm
 	cat $(patsubst test_%.c,gen/assert_%.c,$@) >> $@
 
 %.o: %.c
-	$(CC) -I.. $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 gen:
 	$(PYTHON3) gen.py
