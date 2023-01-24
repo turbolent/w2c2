@@ -178,6 +178,11 @@ typedef enum WasmOpcode {
     wasmOpcodeI64ReinterpretF64  = 0xBD,
     wasmOpcodeF32ReinterpretI32  = 0xBE,
     wasmOpcodeF64ReinterpretI64  = 0xBF,
+    wasmOpcodeI32Extend8S        = 0xC0,
+    wasmOpcodeI32Extend16S       = 0xC1,
+    wasmOpcodeI64Extend8S        = 0xC2,
+    wasmOpcodeI64Extend16S       = 0xC3,
+    wasmOpcodeI64Extend32S       = 0xC4,
     wasmOpcodeMiscPrefix         = 0xFC
 } WasmOpcode;
 

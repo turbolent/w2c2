@@ -1,0 +1,11 @@
+OBJLIST:=$(filter-out python.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+python: python.o $(OBJS)
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) python.o -o python $(LDFLAGS)
+
+datasegments.o: python.c
+	ld -r -b binary -o datasegments.o datasegments
+
+%.o: %.c python.c
+	$(CC) -I.. $(CFLAGS) -c $< -o $@

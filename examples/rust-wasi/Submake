@@ -1,0 +1,11 @@
+OBJLIST=$(filter-out rustwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+swift-wasi: rustwasi.o
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) rustwasi.o -o swift-wasi $(LDFLAGS)
+
+datasegments.o: rustwasi.c
+	ld -r -b binary -o datasegments.o datasegments
+
+%.o: %.c
+	$(CC) -I.. $(CFLAGS) -c $< -o $@

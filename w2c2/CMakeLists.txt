@@ -33,39 +33,45 @@ list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 
 add_executable(w2c2 ${SOURCES})
 
-target_compile_options(w2c2 PUBLIC
-    $<$<CXX_COMPILER_ID:MSVC>:/W4>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
-)
+list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/main.c)
+add_executable(test ${TEST_SOURCES} ${SOURCES})
 
-if(DWARF_FOUND)
-    target_compile_definitions(w2c2 PUBLIC HAS_LIBDWARF=1)
-    target_include_directories(w2c2 PUBLIC ${DWARF_INCLUDE_DIRS})
-    target_link_directories(w2c2 PUBLIC ${DWARF_LIBRARY_DIRS})
-    target_link_libraries(w2c2 PUBLIC ${DWARF_LIBRARIES})
-endif()
+foreach(TARGET w2c2 test)
 
-if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
-    target_compile_definitions(w2c2 PUBLIC HAS_PTHREAD=1)
-    target_link_libraries(w2c2 PUBLIC Threads::Threads)
-endif()
+    target_compile_options(${TARGET} PUBLIC
+        $<$<CXX_COMPILER_ID:MSVC>:/W4>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
+    )
 
-if(HAVE_UNISTD_H)
-    target_compile_definitions(w2c2 PUBLIC HAS_UNISTD=1)
-endif()
+    if(DWARF_FOUND)
+        target_compile_definitions(${TARGET} PUBLIC HAS_LIBDWARF=1)
+        target_include_directories(${TARGET} PUBLIC ${DWARF_INCLUDE_DIRS})
+        target_link_directories(${TARGET} PUBLIC ${DWARF_LIBRARY_DIRS})
+        target_link_libraries(${TARGET} PUBLIC ${DWARF_LIBRARIES})
+    endif()
 
-if(HAVE_GETOPT_H)
-    target_compile_definitions(w2c2 PUBLIC HAS_GETOPT=1)
-endif()
+    if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
+        target_compile_definitions(${TARGET} PUBLIC HAS_PTHREAD=1)
+        target_link_libraries(${TARGET} PUBLIC Threads::Threads)
+    endif()
 
-if(HAVE_LIBGEN_H)
-    target_compile_definitions(w2c2 PUBLIC HAS_LIBGEN=1)
-endif()
+    if(HAVE_UNISTD_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_UNISTD=1)
+    endif()
 
-if(HAVE_STRDUP)
-    target_compile_definitions(w2c2 PUBLIC HAS_STRDUP=1)
-endif()
+    if(HAVE_GETOPT_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_GETOPT=1)
+    endif()
 
-if(MSVC)
-    target_compile_definitions(w2c2 PUBLIC _CRT_SECURE_NO_DEPRECATE)
-endif()
+    if(HAVE_LIBGEN_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_LIBGEN=1)
+    endif()
+
+    if(HAVE_STRDUP)
+        target_compile_definitions(${TARGET} PUBLIC HAS_STRDUP=1)
+    endif()
+
+    if(MSVC)
+        target_compile_definitions(${TARGET} PUBLIC _CRT_SECURE_NO_DEPRECATE)
+    endif()
+endforeach()

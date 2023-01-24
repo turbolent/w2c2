@@ -17,16 +17,7 @@ else
 endif
 
 clang: clang.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o clang $(LDFLAGS)
-
-datasegments.o: clang.c
-	ld -r -b binary -o datasegments.o datasegments
-
-clang.o: CFLAGS += -O0
-
-%.o: %.c
-	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
+	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
 clang.c: clang.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@

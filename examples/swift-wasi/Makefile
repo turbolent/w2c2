@@ -17,14 +17,7 @@ else
 endif
 
 swift-wasi: swiftwasi.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o swift-wasi $(LDFLAGS)
-
-datasegments.o: swiftwasi.c
-	ld -r -b binary -o datasegments.o datasegments
-
-%.o: %.c
-	$(CC) -I.. $(CFLAGS) -c $< -o $@
+	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
 swiftwasi.c: swift-wasi.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@

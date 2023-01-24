@@ -1034,6 +1034,76 @@ void test() {
         "popcnt(3735928559u)"
     );
     assertEqualU32(
+        i320_extend8X5Fs(&instance, 0u),
+        0u,
+        "extend8_s(0u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 127u),
+        127u,
+        "extend8_s(127u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 128u),
+        4294967168u,
+        "extend8_s(128u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 255u),
+        4294967295u,
+        "extend8_s(255u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 19088640u),
+        0u,
+        "extend8_s(19088640u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 4275878528u),
+        4294967168u,
+        "extend8_s(4275878528u)"
+    );
+    assertEqualU32(
+        i320_extend8X5Fs(&instance, 4294967295u),
+        4294967295u,
+        "extend8_s(4294967295u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 0u),
+        0u,
+        "extend16_s(0u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 32767u),
+        32767u,
+        "extend16_s(32767u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 32768u),
+        4294934528u,
+        "extend16_s(32768u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 65535u),
+        4294967295u,
+        "extend16_s(65535u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 19070976u),
+        0u,
+        "extend16_s(19070976u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 4275863552u),
+        4294934528u,
+        "extend16_s(4275863552u)"
+    );
+    assertEqualU32(
+        i320_extend16X5Fs(&instance, 4294967295u),
+        4294967295u,
+        "extend16_s(4294967295u)"
+    );
+    assertEqualU32(
         i320_eqz(&instance, 0u),
         1u,
         "eqz(0u)"
