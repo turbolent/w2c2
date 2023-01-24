@@ -3657,7 +3657,9 @@ wasmCWriteInitGlobalImports(
     for (; globalIndex < globalImportCount; globalIndex++) {
         WasmGlobalImport import = module->globalImports.imports[globalIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteGlobalImportType(file, import);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3684,7 +3686,9 @@ wasmCWriteInitMemoryImports(
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteMemoryType(file);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3711,7 +3715,9 @@ wasmCWriteInitTableImports(
     for (; tableIndex < tableImportCount; tableIndex++) {
         WasmTableImport import = module->tableImports.imports[tableIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        fputc('(', file);
         wasmCWriteTableType(file);
+        fputc(')', file);
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -3816,6 +3822,9 @@ wasmCWriteMemoryExport(
     bool pretty
 ) {
     wasmCWriteMemoryType(file);
+    if (pretty) {
+        fputc(' ', file);
+    }
     wasmCWriteExportName(file, moduleName, export.name);
     fprintf(file, "(%sInstance* i)", moduleName);
     if (writeBody) {
