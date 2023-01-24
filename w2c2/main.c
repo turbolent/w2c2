@@ -153,25 +153,28 @@ main(
                 break;
             }
             case 'h': {
-                fprintf(stderr, "w2c2\n");
-                fprintf(stderr, "  Compiles a WebAssembly module in binary format to a C source file and header\n");
-                fprintf(stderr, "\n");
-                fprintf(stderr, "usage:\n");
-                fprintf(stderr, "  w2c2 [options] MODULE OUTPUT\n");
-                fprintf(stderr, "\n");
-                fprintf(stderr, "arguments:\n");
-                fprintf(stderr, "  MODULE: Path of binary WebAssembly module\n");
-                fprintf(stderr, "  OUTPUT: Path of output file(s)\n");
-                fprintf(stderr, "\n");
-                fprintf(stderr, "options:\n");
-                fprintf(stderr, "  -h         Print this help message\n");
+                fprintf(
+                    stderr,
+                    "w2c2\n"
+                    "  Compiles a WebAssembly module in binary format to a C source file and header\n"
+                    "\n"
+                    "usage:\n"
+                    "  w2c2 [options] MODULE OUTPUT\n"
+                    "\n"
+                    "arguments:\n"
+                    "  MODULE: Path of binary WebAssembly module\n"
+                    "  OUTPUT: Path of output file(s)\n"
+                    "\n"
+                    "options:\n"
+                    "  -h         Print this help message\n"
 #if HAS_PTHREAD
-                fprintf(stderr, "  -t N       Number of threads\n");
+                    "  -t N       Number of threads\n"
 #endif /* HAS_PTHREAD */
-                fprintf(stderr, "  -f N       Number of functions per file. 0 (default) writes all functions into one file\n");
-                fprintf(stderr, "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n");
-                fprintf(stderr, "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n");
-                fprintf(stderr, "  -p         Generate pretty code\n");
+                    "  -f N       Number of functions per file. 0 (default) writes all functions into one file\n"
+                    "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n"
+                    "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
+                    "  -p         Generate pretty code\n"
+                );
                 return 0;
             }
             case '?': {
@@ -196,8 +199,7 @@ main(
 #ifdef _SC_NPROCESSORS_ONLN
         threadCount = sysconf(_SC_NPROCESSORS_ONLN);
 #else
-        fprintf(stderr, "w2c2: expected thread count >= 1, got %d\n", threadCount);
-        return 1;
+        threadCount = 1;
 #endif
     }
 #endif /* HAS_PTHREAD */

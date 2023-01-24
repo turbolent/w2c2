@@ -19,15 +19,8 @@ ifeq ($(MODE),gnu-ld)
     OBJS += datasegments.o
 endif
 
-python: python.o
-	$(MAKE) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS)
-	$(CC) $(CFLAGS) $(patsubst %.c,%.o,$(wildcard *.c)) $(OBJS) -o python $(LDFLAGS)
-
-datasegments.o: python.c
-	ld -r -b binary -o datasegments.o datasegments
-
-%.o: %.c
-	$(CC) -I.. $(CFLAGS) -c $< -o $@
+python: python.c
+	$(MAKE) -fSubmake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
 python.c: python.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@
