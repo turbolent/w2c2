@@ -509,6 +509,17 @@ wasiErrno(void) {
         return WASI_ERRNO_DOM;
     case ERANGE:
         return WASI_ERRNO_RANGE;
+#if defined(__MSL__) && defined(macintosh)
+    case EMACOSERR:
+        /* TODO: add support for more error codes */
+        switch ( __MacOSErrNo) {
+        case fnfErr:
+            return WASI_ERRNO_NOENT;
+        default:
+            WASI_TRACE(("unknown Mac OS error: %d", __MacOSErrNo));
+            return WASI_ERRNO_INVAL;
+        }
+#endif
     default:
         WASI_TRACE(("unknown errno: %d", errno));
         return WASI_ERRNO_INVAL;
