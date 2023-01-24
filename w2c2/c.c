@@ -2921,6 +2921,26 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, *opcode, "nearbyint"))
                         break;
                     }
+                    case wasmOpcodeI32Extend8S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(U32)(I8)(U8)"));
+                        break;
+                    }
+                    case wasmOpcodeI32Extend16S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(I32)(I16)(U16)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend8S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I8)(U8)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend16S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I16)(U16)"));
+                        break;
+                    }
+                    case wasmOpcodeI64Extend32S: {
+                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I32)(U32)"));
+                        break;
+                    }
                     case wasmOpcodeI32Shl:
                     case wasmOpcodeI64Shl: {
                         MUST (wasmCWriteShiftLeftExpr(writer, *opcode))
