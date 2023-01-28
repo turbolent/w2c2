@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if HAS_UNISTD
 #include <unistd.h>
@@ -53,7 +54,9 @@ struct timespec {
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
 
+#ifndef __MSL__
 #include <sys/stat.h>
+#endif
 
 #define HAS_NONPOSIXPATH 0
 
@@ -97,15 +100,43 @@ struct timespec {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
+#undef HAS_NONPOSIXPATH
 #define HAS_NONPOSIXPATH 1
 
+#undef PATH_SEPARATOR
 #define PATH_SEPARATOR '\\'
+#undef PATH_SEPARATOR_STRING
 #define PATH_SEPARATOR_STRING "\\"
 
 #endif /* _WIN32 */
 
+#ifdef __MSL__
+#include <utime.h>
+
+/* TODO: use fileno */
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX 1024
+#endif
+
+#ifdef macintosh
+#include <Files.h>
+#define __bool_true_false_are_defined
+typedef char bool;
+
+#undef HAS_NONPOSIXPATH
+#define HAS_NONPOSIXPATH 1
+
+#undef PATH_SEPARATOR
+#define PATH_SEPARATOR ':'
+#undef PATH_SEPARATOR_STRING
+#define PATH_SEPARATOR_STRING ":"
+
+#include "mac.h"
 #endif
 
 #if defined(__MACH__)
@@ -174,7 +205,23 @@ writev(
     int i = 0;
     ssize_t ret = 0;
     while (i < iovcnt) {
-        ssize_t n = write(fd, iov[i].iov_base, iov[i].iov_len);
+        ssize_t n = 0;
+#ifdef __MSL__
+/*
+ * For whatever reason, writing to SIOUX ends up overwriting
+ * previous lines. Writing the individual characters however works
+ */
+        if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
+            int j = 0;
+            for (j = 0; j < iov[i].iov_len; j++) {
+                putchar(((char*)iov[i].iov_base)[j]);
+            }
+            n = iov[i].iov_len;
+        } else
+#endif
+        {
+            n = write(fd, iov[i].iov_base, iov[i].iov_len);
+        }
         if (n > 0) {
             ret += n;
         } else if (!n) {
@@ -211,16 +258,65 @@ writev(
 #endif
 #endif
 
-static
-W2C2_INLINE
 void
-toNativePath(
+wasiToNativePath(
     char *path
 ) {
+#ifdef macintosh
+    bool isAbsolute = path[0] == '/';
+    posixToMacPath(path);
+    /* Prefix with volume name */
+    if (isAbsolute) {
+        size_t pathLength = strlen(path);
+        char *volumeName = NULL;
+        size_t volumeNameLength = 0;
+
+        Str255 pVolName;
+        short vRefNum;
+        long dirID;
+        if (HGetVol(pVolName, &vRefNum, &dirID) == noErr) {
+            /* Convert Pascal to C string */
+            volumeNameLength = pVolName[0];
+            pVolName[1 + volumeNameLength] = '\0';
+            volumeName = (char*)(pVolName + 1);
+        }
+
+        memmove(path + volumeNameLength + 1, path, pathLength);
+        strcpy(path, volumeName);
+        path[volumeNameLength] = ':';
+        pathLength += volumeNameLength + 1;
+        path[pathLength] = '\0';
+    }
+#else
     char *pos = path;
     while ((pos = strchr(pos, '/'))) {
         *pos = PATH_SEPARATOR;
     }
+#endif
+}
+
+void
+wasiFromNativePath(
+    char *path
+) {
+#ifdef macintosh
+    macToPosixPath(path);
+
+    if (path[0] == '/') {
+        /* Remove volume name */
+        char* slashPos = strchr(path + 1, '/');
+        if (slashPos) {
+            size_t len = strlen(path) - (slashPos - path);
+            memmove(path, slashPos, len);
+            path[len] = '\0';
+        }
+    }
+#else
+    char *pos = path;
+    while ((pos = strchr(pos, PATH_SEPARATOR))) {
+        *pos = '/';
+    }
+#endif
 }
 
 static
@@ -478,6 +574,17 @@ wasiErrno(void) {
         return WASI_ERRNO_DOM;
     case ERANGE:
         return WASI_ERRNO_RANGE;
+#if defined(__MSL__) && defined(macintosh)
+    case EMACOSERR:
+        /* TODO: add support for more error codes */
+        switch ( __MacOSErrNo) {
+        case fnfErr:
+            return WASI_ERRNO_NOENT;
+        default:
+            WASI_TRACE(("unknown Mac OS error: %d", __MacOSErrNo));
+            return WASI_ERRNO_INVAL;
+        }
+#endif
     default:
         WASI_TRACE(("unknown errno: %d", errno));
         return WASI_ERRNO_INVAL;
@@ -1285,7 +1392,7 @@ wasiFDReaddir(
         char nativePath[PATH_MAX];
         strcpy(nativePath, descriptor.path);
 #if HAS_NONPOSIXPATH
-        toNativePath(nativePath);
+        wasiToNativePath(nativePath);
 #endif
 
         if (cookie != WASI_DIRCOOKIE_START) {
@@ -1312,11 +1419,11 @@ wasiFDReaddir(
         }
     }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(macintosh)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
-#endif /* _WIN32 */
+#endif
 
     i32_store(
         memory,
@@ -1342,16 +1449,20 @@ wasiFDReaddir(
             break;
         }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(macintosh)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
         }
-#endif /* _WIN32 */
+#endif
 
         next = (U64)tell;
+#if defined(__MWERKS__) && defined(macintosh)
+        inode = 0;
+#else
         inode = entry->d_ino;
+#endif
         name = entry->d_name;
         nameLength = strlen(name);
 
@@ -1374,7 +1485,7 @@ wasiFDReaddir(
             char nativePath[PATH_MAX];
             strcpy(nativePath, descriptor.path);
 #if HAS_NONPOSIXPATH
-            toNativePath(nativePath);
+            wasiToNativePath(nativePath);
 #endif
 
             WASI_TRACE((
@@ -1707,6 +1818,46 @@ wasiClockTimeGet(
             break;
         }
 #endif /* HAS_SYSTIME */
+#if defined(__MWERKS__) && defined(macintosh)
+#include <DateTimeUtils.h>
+        case WASI_CLOCK_REALTIME: {
+            static unsigned long savedTicks = 0, savedSecs = 0;
+
+            struct timeval tv;
+            unsigned long secs;
+            unsigned long ticks;
+            GetDateTime(&secs);
+            ticks = TickCount();
+
+            if (!savedSecs) {
+                savedTicks = ticks;
+                savedSecs = secs;
+            } else {
+                unsigned long elapsedTicks = ticks - savedTicks;
+                unsigned long elapsedSecs = secs - savedSecs;
+                unsigned long expectedTicks = elapsedSecs * 60 + elapsedSecs * 3 / 20;
+
+                if (expectedTicks > elapsedTicks)
+                    savedTicks = ticks;
+                else
+                    savedTicks += expectedTicks;
+                savedSecs = secs;
+            }
+
+            {
+                const int epochDifferenceInYears = 1970 - 1904;
+                const int epochDifferenceInDays =
+                    365 * epochDifferenceInYears
+                    + (epochDifferenceInYears + 3)/ 4;  /* round up for leap years */
+
+                tv.tv_sec = secs - 86400 * epochDifferenceInDays;
+                tv.tv_usec = (ticks - savedTicks) * 20000000 / 2003;
+
+                result = convertTimeval(tv);
+            }
+            break;
+        }
+#endif
 #if defined(__MACH__) && defined(CLOCK_NULL)
 #include <mach/mach_time.h>
         case WASI_CLOCK_MONOTONIC: {
@@ -1721,8 +1872,8 @@ wasiClockTimeGet(
             break;
         }
 #endif /* defined(__MACH__) && defined(CLOCK_NULL) */
-#if HAS_SYSRESOURCE
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
+#if HAS_SYSRESOURCE
             struct rusage ru;
             int ret = 0;
 
@@ -1735,9 +1886,12 @@ wasiClockTimeGet(
             }
             addTimevals(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
             result = convertTimeval(ru.ru_utime);
+#else
+#include <time.h>
+            result = (clock() / CLOCKS_PER_SEC) * 1e9;
+#endif /* HAS_SYSRESOURCE */
             break;
         }
-#endif /* HAS_SYSRESOURCE */
         default: {
             WASI_TRACE(("clock_time_get: invalid clock ID"));
             return WASI_ERRNO_INVAL;
@@ -1905,7 +2059,7 @@ wasiFdFdstatGet(
         char nativePath[PATH_MAX];
         strcpy(nativePath, descriptor.path);
 #if HAS_NONPOSIXPATH
-        toNativePath(nativePath);
+        wasiToNativePath(nativePath);
 #endif
         WASI_TRACE((
             "fd_fdstat_get: "
@@ -2279,7 +2433,7 @@ wasiPathOpen(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -2307,6 +2461,18 @@ wasiPathOpen(
      * Check if the opened path is an existing directory.
      */
     if (!success && errno == EACCES) {
+        struct stat st;
+        if (stat(nativeResolvedPath, &st) == 0) {
+            success = S_ISDIR(st.st_mode);
+        }
+    }
+#endif
+#if defined(__MSL__) && defined(macintosh)
+    /*
+     * Macintosh does not support opening directories.
+     * Check if the opened path is an existing directory.
+     */
+    if (!success && errno == EMACOSERR && __MacOSErrNo == errFSForkNotFound) {
         struct stat st;
         if (stat(nativeResolvedPath, &st) == 0) {
             success = S_ISDIR(st.st_mode);
@@ -2479,7 +2645,7 @@ fdFilestatGetImpl(
         char nativePath[PATH_MAX];
         strcpy(nativePath, descriptor.path);
 #if HAS_NONPOSIXPATH
-        toNativePath(nativePath);
+        wasiToNativePath(nativePath);
 #endif
         WASI_TRACE((
             "fd_filestat_get: "
@@ -2691,7 +2857,7 @@ pathFilestatGetImpl(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -2907,8 +3073,8 @@ wasiPathRename(
     strcpy(nativeOldResolvedPath, oldResolvedPath);
     strcpy(nativeNewResolvedPath, newResolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeOldResolvedPath);
-    toNativePath(nativeNewResolvedPath);
+    wasiToNativePath(nativeOldResolvedPath);
+    wasiToNativePath(nativeNewResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -3000,7 +3166,7 @@ wasiPathUnlinkFile(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -3088,7 +3254,7 @@ wasiPathRemoveDirectory(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -3172,7 +3338,7 @@ wasiPathCreateDirectory(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -3237,6 +3403,10 @@ wasiPathSymlink(
     /* TODO: */
     WASI_TRACE(("path_symlink: not supported on Win32"));
     return WASI_ERRNO_NOSYS;
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* TODO: */
+    WASI_TRACE(("path_symlink: not supported on Macintosh"));
+    return WASI_ERRNO_NOSYS;
 #else
 
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
@@ -3294,8 +3464,8 @@ wasiPathSymlink(
     strcpy(nativeOldResolvedPath, oldResolvedPath);
     strcpy(nativeNewResolvedPath, newResolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeOldResolvedPath);
-    toNativePath(nativeNewResolvedPath);
+    wasiToNativePath(nativeOldResolvedPath);
+    wasiToNativePath(nativeNewResolvedPath);
 #endif
 
     WASI_TRACE((
@@ -3364,6 +3534,10 @@ wasiPathReadlink(
     /* TODO: */
     WASI_TRACE(("path_readlink: not supported on Win32"));
     return WASI_ERRNO_NOSYS;
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* TODO: */
+    WASI_TRACE(("path_readlink: not supported on Macintosh"));
+    return WASI_ERRNO_NOSYS;
 #else
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
@@ -3409,13 +3583,13 @@ wasiPathReadlink(
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
-    toNativePath(nativeResolvedPath);
+    wasiToNativePath(nativeResolvedPath);
 #endif
 
     WASI_TRACE((
         "path_readlink: "
         "readlink(%s)",
-        nativeResolvedPath,
+        nativeResolvedPath
     ));
 
     length = readlink(
@@ -3529,7 +3703,6 @@ wasiRandomGet(
             return WASI_ERRNO_IO;
         }
     }
-#else
 #if HAS_GETENTROPY
     result = getentropy(
         bufferStart,
@@ -3565,6 +3738,17 @@ wasiRandomGet(
         }
     }
 
+#elif defined(__MWERKS__) && defined(macintosh)
+    /* Fall back to rand */
+    {
+        U32 i = 0;
+        srand(time(NULL));
+
+        for (; i < bufferLength; i++) {
+            bufferStart[i] = rand();
+        }
+    }
+#else
     /* Fall back to random */
     {
         U32 i = 0;
@@ -3574,7 +3758,7 @@ wasiRandomGet(
             bufferStart[i] = random();
         }
     }
-#endif /* _WIN32 */
+#endif
 
     return WASI_ERRNO_SUCCESS;
 }

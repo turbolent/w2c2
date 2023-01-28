@@ -2,7 +2,20 @@
 #define W2C2_WASI_H
 
 #include "../w2c2/w2c2_base.h"
+
+#ifdef __MSL__
+#include <stat.h>
+typedef long ssize_t;
+#else
 #include <sys/types.h>
+#endif
+
+#include <limits.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
 #ifdef _WIN32
 #include "win32.h"
 #elif defined(_NEXT_SOURCE)
@@ -887,6 +900,16 @@ void*
 wasiResolveImport(
     const char* module,
     const char* name
+);
+
+void
+wasiToNativePath(
+    char *path
+);
+
+void
+wasiFromNativePath(
+    char *path
 );
 
 #endif /* W2C2_WASI_H */

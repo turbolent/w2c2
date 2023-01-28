@@ -5,10 +5,12 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifndef __bool_true_false_are_defined
 typedef enum bool {
-    false, true
+    false = 0,
+    true = 1
 } bool;
 #endif
 

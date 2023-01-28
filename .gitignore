@@ -1,7 +1,8 @@
 *.o
+*.a
 compile_flags.txt
 .DS_Store
 .idea
 cmake-build-debug
 build
-
+w2c2/w2c2
