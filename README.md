@@ -14,11 +14,13 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 ## Features
 
-- Implements the WebAssembly Core Specification 1.0, and bulk memory operations
+- Implements the WebAssembly Core Specification 1.0, as well as
+  - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
+  - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
 - Written in C89 and generates C89
 - Support for older operating systems and architectures
-  (e.g. Mac OS X on PowerPC, Haiku, Rhapsody, OPENSTEP, Windows XP, etc.)
+  (e.g. Mac OS X on PowerPC, Mac OS 9, Haiku, Rhapsody, OPENSTEP, Windows XP, etc.)
 - Support for big-endian systems (e.g. PowerPC)
 - Streaming/single-pass compilation, low memory usage
 - Separate compilation into multiple files
