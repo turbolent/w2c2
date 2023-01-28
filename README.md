@@ -14,7 +14,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 ## Features
 
-- Implements the WebAssembly Core Specification 1.0, as well as
+- Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/), as well as
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
