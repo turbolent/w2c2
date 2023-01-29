@@ -39,6 +39,33 @@ char** environ = {NULL};
 extern char** environ;
 #endif
 
+/* Systems like OPENSTEP do not provide getcwd, but have getwd */
+#if HAS_GETWD
+#include <sys/param.h>
+#include <errno.h>
+
+extern char* getwd();
+
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
+
+char* getcwd(
+    char* buf,
+    int len
+) {
+    char tmp[MAXPATHLEN];
+    char* result = getwd(tmp);
+    if (result) {
+        if (strlen(tmp) >= len) {
+            return NULL;
+        }
+        strcpy(buf, tmp);
+    }
+    return buf;
+}
+#endif
+
 #define PYTHONHOME_VAR "PYTHONHOME="
 
 bool
@@ -46,7 +73,8 @@ hasPrefix(
     const char* string,
     const char* prefix
 ) {
-    char cs, cp;
+    char cs = 0;
+    char cp = 0;
 
     while ((cp = *prefix++)) {
         cs = *string++;
@@ -57,6 +85,7 @@ hasPrefix(
             break;
         }
     }
+
     return true;
 }
 
@@ -99,7 +128,7 @@ int main(int argc, char* argv[]) {
 
             fprintf(stderr, "(Automatically setting PYTHONHOME to %s)\n", cwd);
 
-            // 2: new entry + NULL
+            /* 2: new entry + NULL */
             newEnviron = calloc(sizeof(char*) * (count + 2), 1);
             memcpy(newEnviron, environ, count * sizeof(char*));
 
