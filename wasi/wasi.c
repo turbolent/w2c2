@@ -262,6 +262,7 @@ void
 wasiToNativePath(
     char *path
 ) {
+#if HAS_NONPOSIXPATH
 #ifdef macintosh
     bool isAbsolute = path[0] == '/';
     posixToMacPath(path);
@@ -292,6 +293,7 @@ wasiToNativePath(
     while ((pos = strchr(pos, '/'))) {
         *pos = PATH_SEPARATOR;
     }
+#endif
 #endif
 }
 
