@@ -1489,15 +1489,14 @@ wasiFDReaddir(
 #if HAS_NONPOSIXPATH
             wasiToNativePath(nativePath);
 #endif
+            strcat(nativePath, PATH_SEPARATOR_STRING);
+            strcat(nativePath, name);
 
             WASI_TRACE((
                 "fd_readdir: "
                 "lstat(%s)",
                 nativePath
             ));
-
-            strcat(nativePath, PATH_SEPARATOR_STRING);
-            strcat(nativePath, name);
 
             if (lstat(nativePath, &entryStat)) {
                 WASI_TRACE(("fd_readdir: lstat failed: %s", strerror(errno)));
@@ -1516,7 +1515,7 @@ wasiFDReaddir(
             name,
             fileType,
             inode
-       ));
+        ));
 
         /* Only write entry if it fits */
         if (bufferRemaining < WASI_DIRENT_SIZE) {
