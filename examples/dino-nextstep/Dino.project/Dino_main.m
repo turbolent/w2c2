@@ -2,14 +2,32 @@
 #include <stdio.h>
 
 #include "../../../w2c2/w2c2_base.h"
+#include "dino.h"
 
-#define MEM(o) e_mem->data[e_mem->size - (o) - 1]
+#define MEM(o) mem->data[mem->size - (o) - 1]
 
 /* Imports */
 
-WASM_IMPORT(F32, Math_random, (), {
+static
+F32
+Math_random() {
     return (F32)rand()/(F32)(RAND_MAX);
-})
+}
+
+static
+void*
+resolveImport(
+    const char* module,
+    const char* name
+) {
+    if (strcmp(module, "Math") == 0
+        && strcmp(name, "random") == 0
+        ) {
+        return (void*)Math_random;
+    }
+
+    return NULL;
+}
 
 void
 trap(
@@ -21,11 +39,8 @@ trap(
 
 /* Exports */
 
-extern wasmMemory (*e_mem);
-
-extern void (*e_run)(void);
-
-extern void init(void);
+static wasmMemory* mem = NULL;
+static dinoInstance instance;
 
 /* Config */
 
@@ -101,7 +116,7 @@ void step(DPSTimedEntry timedEntry, double now, void *view) {
         MEM(0) &= ~2;
     }
 
-    (*e_run)();
+    dino_run(&instance);
 
     for (y = 0; y < height; y++) {       
         for (x = 0; x < width; x++) {
@@ -160,13 +175,14 @@ void main(int argc, char *argv[]) {
     DinoView *dinoView;
     NXRect bounds;
 
-    init();
+    dinoInstantiate(&instance, resolveImport);
+    mem = dino_mem(&instance);
 
     framebufferSize = width * 4 * height;
     bitmap = malloc(width * height);
-    framebuffer = e_mem->data + e_mem->size - framebufferOffset - framebufferSize;
+    framebuffer = mem->data + mem->size - framebufferOffset - framebufferSize;
 
-    (*e_run)();
+    dino_run(&instance);
 
     [Application new];
 
