@@ -58,6 +58,10 @@ ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
 endif
 
+ifneq (,$(findstring tracing,$(FEATURES)))
+	CFLAGS += -DWASI_TRACE_ENABLED=1
+endif
+
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined
 endif

@@ -110,6 +110,21 @@ struct timespec {
 
 #endif /* _WIN32 */
 
+#ifdef __MSDOS__
+
+#include <dos.h>
+#include <ctype.h>
+
+#undef HAS_NONPOSIXPATH
+#define HAS_NONPOSIXPATH 1
+
+#undef PATH_SEPARATOR
+#define PATH_SEPARATOR '\\'
+#undef PATH_SEPARATOR_STRING
+#define PATH_SEPARATOR_STRING "\\"
+
+#endif /* __MSDOS__ */
+
 #ifdef __MSL__
 #include <utime.h>
 
@@ -270,7 +285,7 @@ wasiToNativePath(
     char *path
 ) {
 #if HAS_NONPOSIXPATH
-#ifdef macintosh
+#if defined(macintosh)
     bool isAbsolute = path[0] == '/';
     posixToMacPath(path);
     /* Prefix with volume name */
@@ -295,20 +310,41 @@ wasiToNativePath(
         pathLength += volumeNameLength + 1;
         path[pathLength] = '\0';
     }
+#elif defined(__MSDOS__)
+    bool isAbsolute = path[0] == '/';
+
+    char *pos = path;
+    while ((pos = strchr(pos, '/'))) {
+        *pos = PATH_SEPARATOR;
+    }
+
+    /* Prefix with volume name */
+    if (isAbsolute) {
+        size_t pathLength = strlen(path);
+        unsigned int drive;
+        _dos_getdrive(&drive);
+
+        memmove(path + 2, path, pathLength);
+        path[0] = 'A' + drive - 1;
+        path[1] = ':';
+        pathLength += 2;
+        path[pathLength] = '\0';
+    }
 #else
     char *pos = path;
     while ((pos = strchr(pos, '/'))) {
         *pos = PATH_SEPARATOR;
     }
 #endif
-#endif
+#endif /* HAS_NONPOSIXPATH */
 }
 
 void
 wasiFromNativePath(
     char *path
 ) {
-#ifdef macintosh
+#if HAS_NONPOSIXPATH
+#if defined(macintosh)
     macToPosixPath(path);
 
     if (path[0] == '/') {
@@ -320,12 +356,27 @@ wasiFromNativePath(
             path[len] = '\0';
         }
     }
+#elif defined(__MSDOS__)
+    size_t pathLength = strlen(path);
+
+    char *pos = path;
+    while ((pos = strchr(pos, PATH_SEPARATOR))) {
+        *pos = '/';
+    }
+
+    if (pathLength > 1 && isalpha(path[0]) && path[1] == ':') {
+        /* Remove volume name */
+        pathLength -= 2;
+        memmove(path, path + 2, pathLength);
+        path[pathLength] = '\0';
+    }
 #else
     char *pos = path;
     while ((pos = strchr(pos, PATH_SEPARATOR))) {
         *pos = '/';
     }
 #endif
+#endif /* HAS_NONPOSIXPATH */
 }
 
 static
@@ -1467,7 +1518,7 @@ wasiFDReaddir(
 #endif
 
         next = (U64)tell;
-#if defined(__MWERKS__) && defined(macintosh)
+#if (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
         inode = 0;
 #else
         inode = entry->d_ino;
