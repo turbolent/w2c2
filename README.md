@@ -19,9 +19,8 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
 - Written in C89 and generates C89
-- Support for older operating systems
-  (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, Windows XP, etc.)
-  and architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
+- Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
+- Support for many architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
 - Support for big-endian systems (e.g. PowerPC, SPARC, PA-RISC, etc.)
 - Streaming/single-pass compilation, low memory usage
 - Separate compilation into multiple files
