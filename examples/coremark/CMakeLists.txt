@@ -21,7 +21,7 @@ set(CFLAGS
 add_custom_command(
     OUTPUT coremark.c
     COMMAND
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${HOST_EXECUTABLE_SUFFIX}
         ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
         coremark.c
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
