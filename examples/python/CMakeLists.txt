@@ -7,7 +7,7 @@ endif()
 project(python)
 
 execute_process(COMMAND
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${HOST_EXECUTABLE_SUFFIX}
     -f 100
     ${CMAKE_CURRENT_SOURCE_DIR}/python.wasm
     python.c
@@ -39,3 +39,10 @@ find_library(W2C2WASI
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(python PUBLIC ${W2C2WASI})
+
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoWii")
+    target_link_libraries(python PUBLIC fat)
+
+    ogc_create_dol(python)
+endif()

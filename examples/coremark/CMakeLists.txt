@@ -21,7 +21,7 @@ set(CFLAGS
 add_custom_command(
     OUTPUT coremark.c
     COMMAND
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${CMAKE_EXECUTABLE_SUFFIX}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${HOST_EXECUTABLE_SUFFIX}
         ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
         coremark.c
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/coremark.wasm
@@ -39,3 +39,7 @@ find_library(WASI
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(coremark PUBLIC ${WASI})
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoWii")
+    ogc_create_dol(coremark)
+endif()

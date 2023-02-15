@@ -14,6 +14,12 @@ typedef char bool;
 #include <console.h>
 #endif
 
+#ifdef __wii__
+#include <gccore.h>
+#include <wiiuse/wpad.h>
+#include <fat.h>
+#endif
+
 #include "../../w2c2/w2c2_base.h"
 #include "../../wasi/wasi.h"
 #include "python.h"
@@ -23,6 +29,9 @@ trap(
     Trap trap
 ) {
     fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
+#ifdef __wii__
+    VIDEO_WaitVSync();
+#endif
     abort();
 }
 
@@ -37,6 +46,30 @@ wasiMemory(
 char** environ = {NULL};
 #else
 extern char** environ;
+#endif
+
+#ifdef __wii__
+static void *xfb = NULL;
+static GXRModeObj *rmode = NULL;
+
+void
+wiiInitVideo() {
+	VIDEO_Init();
+	WPAD_Init();
+	rmode = VIDEO_GetPreferredMode(NULL);
+	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
+
+	console_init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+
+	VIDEO_Configure(rmode);
+	VIDEO_SetNextFramebuffer(xfb);
+	VIDEO_SetBlack(FALSE);
+	VIDEO_Flush();
+	VIDEO_WaitVSync();
+	if (rmode->viTVMode & VI_NON_INTERLACE) {
+        VIDEO_WaitVSync();
+    }
+}
 #endif
 
 /* Systems like OPENSTEP do not provide getcwd, but have getwd */
@@ -89,6 +122,20 @@ hasPrefix(
     return true;
 }
 
+U32 exitCode = 0;
+
+void
+procExit(
+    struct pythonInstance* UNUSED(instance),
+    U32 code
+) {
+#ifdef __wii__
+    VIDEO_WaitVSync();
+#endif
+    fprintf(stderr, "EXIT: %d\n", code);
+    exitCode = code;
+}
+
 /* Main */
 
 int main(int argc, char* argv[]) {
@@ -102,6 +149,15 @@ int main(int argc, char* argv[]) {
     MoreMasters();
 
     argc = ccommand(&argv);
+#endif
+
+#ifdef __wii__
+    /* TODO: get interactive console working */
+    argc = 3;
+    argv = (char*[]){"python", "-c", "print(); print(\"Python 3.11 on the Wii!\\n\"); import sys; print(sys.version)", NULL};
+
+    wiiInitVideo();
+    fatInitDefault();
 #endif
 
     /*
@@ -120,11 +176,15 @@ int main(int argc, char* argv[]) {
         }
 
         if (!hasPythonHome) {
+#ifdef __wii__
+            strcpy(cwd, "/");
+#else
             if (getcwd(cwd, PATH_MAX) == NULL) {
                 fprintf(stderr, "failed to get current working directory: %s\n", strerror(errno));
                 return 1;
             }
             wasiFromNativePath(cwd);
+#endif /* __wii__ */
 
             fprintf(stderr, "(Automatically setting PYTHONHOME to %s)\n", cwd);
 
@@ -160,9 +220,24 @@ int main(int argc, char* argv[]) {
     {
         pythonInstance instance;
         pythonInstantiate(&instance, wasiResolveImport);
+
+        instance.wasiX5FsnapshotX5Fpreview1_procX5Fexit = procExit;
+
         python_X5Fstart(&instance);
         pythonFreeInstance(&instance);
     }
+
+#ifdef __wii__
+	while(1) {
+        u32 pressed = 0;
+		VIDEO_WaitVSync();
+		WPAD_ScanPads();
+	    pressed = WPAD_ButtonsDown(0);
+		if (pressed & WPAD_BUTTON_HOME) {
+			exit(0);
+		}
+	}
+#endif
 
     if (newEnviron) {
         free(newEnviron);
@@ -171,5 +246,5 @@ int main(int argc, char* argv[]) {
         free(pythonHomeVar);
     }
 
-    return 0;
+    return exitCode;
 }
