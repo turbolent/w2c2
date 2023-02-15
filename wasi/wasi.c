@@ -1735,7 +1735,7 @@ wasiClockTimeGet(
         resultPointer
     ));
 
-#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !WASI_FALLBACK_TIMERS_ENABLED && !defined(__wii__)
 
     {
         struct timespec timespec;
@@ -1932,7 +1932,7 @@ wasiClockTimeGet(
         }
 #endif /* defined(__MACH__) && defined(CLOCK_NULL) */
         case WASI_CLOCK_PROCESS_CPUTIME_ID: {
-#if HAS_SYSRESOURCE
+#if HAS_SYSRESOURCE && !defined(__wii__)
             struct rusage ru;
             int ret = 0;
 
@@ -1992,7 +1992,7 @@ wasiClockResGet(
         resultPointer
     ));
 
-#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !defined(WASI_FALLBACK_TIMERS_ENABLED)
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !WASI_FALLBACK_TIMERS_ENABLED && !defined(__wii__)
 
     {
         struct timespec timespec;
@@ -3466,6 +3466,10 @@ wasiPathSymlink(
     /* TODO: */
     WASI_TRACE(("path_symlink: not supported on Macintosh"));
     return WASI_ERRNO_NOSYS;
+#elif defined(__wii__)
+    /* TODO: */
+    WASI_TRACE(("path_symlink: not supported on Wii"));
+    return WASI_ERRNO_NOSYS;
 #else
 
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
@@ -3596,6 +3600,10 @@ wasiPathReadlink(
 #elif defined(__MWERKS__) && defined(macintosh)
     /* TODO: */
     WASI_TRACE(("path_readlink: not supported on Macintosh"));
+    return WASI_ERRNO_NOSYS;
+#elif defined(__wii__)
+    /* TODO: */
+    WASI_TRACE(("path_readlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
