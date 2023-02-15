@@ -3762,6 +3762,7 @@ wasiRandomGet(
             return WASI_ERRNO_IO;
         }
     }
+#else
 #if HAS_GETENTROPY
     result = getentropy(
         bufferStart,
@@ -3796,8 +3797,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-
-#elif defined(__MWERKS__) && defined(macintosh)
+#if defined(__MWERKS__) && defined(macintosh)
     /* Fall back to rand */
     {
         U32 i = 0;
@@ -3818,7 +3818,7 @@ wasiRandomGet(
         }
     }
 #endif
-
+#endif
     return WASI_ERRNO_SUCCESS;
 }
 
