@@ -39,3 +39,10 @@ find_library(W2C2WASI
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(python PUBLIC ${W2C2WASI})
+
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoWii")
+    target_link_libraries(python PUBLIC fat)
+
+    ogc_create_dol(python)
+endif()

@@ -39,3 +39,7 @@ find_library(WASI
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(coremark PUBLIC ${WASI})
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoWii")
+    ogc_create_dol(coremark)
+endif()
