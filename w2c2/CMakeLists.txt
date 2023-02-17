@@ -11,9 +11,11 @@ set(CMAKE_C_STANDARD 90)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
-find_package(PkgConfig)
-if(PKG_CONFIG_FOUND)
-    pkg_check_modules(DWARF libdwarf)
+if(NOT DWARF_FOUND)
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(DWARF libdwarf)
+    endif()
 endif()
 
 include(CheckIncludeFile)
@@ -33,7 +35,7 @@ list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 
 add_executable(w2c2 ${SOURCES})
 
-list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/main.c)
+list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.c)
 add_executable(test ${TEST_SOURCES} ${SOURCES})
 
 foreach(TARGET w2c2 test)
