@@ -179,21 +179,11 @@ jobs:
         run: make BUILD=${{ matrix.build }}
 
   windows-msvc:
-    runs-on: windows-latest
-    name: "Windows (MSVC), ${{ matrix.arch }} ${{ matrix.version }}"
-
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64, x86]
-        version: [2013, 2019]
+    runs-on: windows-2019
+    name: "Windows (MSVC)"
 
     steps:
       - uses: actions/checkout@v3
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.arch }}
-          vsversion:  ${{ matrix.version }}
       - uses: dorny/paths-filter@v2
         id: changes
         with:
@@ -204,14 +194,12 @@ jobs:
               - 'wasi/**'
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
-        working-directory: ./w2c2/build
         run: |
-          cmake -G "NMake Makefiles" ..
-          nmake
+          cmake -Bbuild
+          cmake --build build
       # TODO: run tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
-        working-directory: ./wasi/build
         run: |
-          cmake -G "NMake Makefiles" ..
-          nmake
+          cmake -Bbuild
+          cmake --build build
