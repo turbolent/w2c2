@@ -5,7 +5,9 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef __NeXT__
 #include <stdint.h>
+#endif
 
 #ifndef __bool_true_false_are_defined
 typedef enum bool {
