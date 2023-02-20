@@ -192,13 +192,13 @@ jobs:
               - 'w2c2/**'
             wasi:
               - 'wasi/**'
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - # if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         run: |
           cmake -Bbuild
           cmake --build build
       # TODO: run tests
-      - if: steps.changes.outputs.wasi == 'true'
+      - # if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         run: |
           cmake -Bbuild
