@@ -1,6 +1,20 @@
 #ifdef _WIN32
 #include "win32.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+void __cdecl _dosmaperr(unsigned long);
+
+static void SetErrno() {
+    _dosmaperr(GetLastError());
+}
+#else
+void __cdecl __acrt_errno_map_os_error(unsigned long const oserrno);
+
+static void SetErrno() {
+    __acrt_errno_map_os_error(GetLastError());
+}
+#endif
+
 /*
  * Taken from PostgreSQL.
  * Portions Copyright (c) 1996-2022, PostgreSQL Global Development Group
@@ -72,7 +86,7 @@ readdir(DIR *d)
             if (GetLastError() == ERROR_FILE_NOT_FOUND)
                 errno = 0;
             else
-                _dosmaperr(GetLastError());
+                SetErrno();
             return NULL;
         }
     }
@@ -84,7 +98,7 @@ readdir(DIR *d)
             if (GetLastError() == ERROR_NO_MORE_FILES)
                 errno = 0;
             else
-                _dosmaperr(GetLastError());
+                SetErrno();
             return NULL;
         }
     }
