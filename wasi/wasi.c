@@ -768,7 +768,7 @@ wasiFDWrite(
                 ));
             }
 
-            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_base = (char *) memory->data + bufferPointer;
             iovecs[ciovecIndex].iov_len = length;
         }
     }
@@ -804,7 +804,7 @@ wasiFDWrite(
                 temporaryBuffer[totalLength + i] = bufferStart[-i];
             }
 
-            iovecs[ciovecIndex].iov_base = temporaryBuffer + totalLength;
+            iovecs[ciovecIndex].iov_base = (char *) temporaryBuffer + totalLength;
 
             totalLength += length;
             if (wasiFD > 2) {
@@ -900,9 +900,9 @@ fdReadImpl(
             U32 length = i32_load(memory, iovecPointer + 4);
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
+            iovecs[iovecIndex].iov_base = (char *) (memory->data + bufferPointer);
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-            iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - length;
+            iovecs[iovecIndex].iov_base = (char *) (memoryStart - bufferPointer - length);
 #endif
             iovecs[iovecIndex].iov_len = length;
         }
@@ -922,7 +922,7 @@ fdReadImpl(
     {
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U8* base = iovecs[iovecIndex].iov_base;
+            U8* base = (U8 *) iovecs[iovecIndex].iov_base;
             U32 length = iovecs[iovecIndex].iov_len;
             int i = 0;
             for (; i < length / 2; i++) {
@@ -1017,7 +1017,7 @@ preadvFallback(
     int count,
     off_t offset
 ) {
-    return wrapPositional(readv, fd, iovecs, count, offset);
+    return wrapPositional((void *) readv, fd, iovecs, count, offset);
 }
 
 U32
@@ -1479,7 +1479,7 @@ wasiFDReaddir(
         }
     }
 
-#if !defined(_WIN32) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
@@ -1509,7 +1509,7 @@ wasiFDReaddir(
             break;
         }
 
-#if !defined(_WIN32) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
@@ -1518,7 +1518,7 @@ wasiFDReaddir(
 #endif
 
         next = (U64)tell;
-#if (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
         inode = 0;
 #else
         inode = entry->d_ino;
@@ -3805,7 +3805,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-#if defined(__MWERKS__) && defined(macintosh)
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh))
     /* Fall back to rand */
     {
         U32 i = 0;

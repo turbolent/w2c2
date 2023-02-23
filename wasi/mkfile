@@ -1,0 +1,14 @@
+</$objtype/mkfile
+
+CFLAGS = -D_POSIX_SOURCE -D_BSD_EXTENSION -DPLAN9 \
+	-DHAS_UNISTD -DHAS_SYSTIME -DHAS_STRDUP -DRUNTIME \
+	-DWASM_ENDIAN=WASM_LITTLE_ENDIAN -DHAS_TIMESPEC \
+	-DHAS_SYSUIO
+
+default:V: wasi.$O
+
+wasi.$O: wasi.c
+	pcc $CFLAGS -c wasi.c -o $target
+
+clean:V:
+	rm -f *.$O

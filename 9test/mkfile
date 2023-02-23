@@ -1,0 +1,14 @@
+</$objtype/mkfile
+
+ls: ls.$O main.$O
+	$LD $ls.$O main.$O -o ls
+
+%.c: src/%.wasm
+	../w2c2/w2c2 src/$stem.wasm ls.c
+
+%.$O: ls.c
+	$(CC) -I../w2c2 -c ls.c -o ls.$O
+
+.PHONY: clean
+clean:
+	rm -f *.$O ls ls.c ls.h
