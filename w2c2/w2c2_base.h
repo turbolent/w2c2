@@ -36,12 +36,6 @@ typedef double F64;
 #define WASM_LITTLE_ENDIAN  0
 #define WASM_BIG_ENDIAN     1
 
-#ifdef PLAN9
-#ifndef RUNTIME
-#define WASM_ENDIAN WASM_BIG_ENDIAN
-#endif
-#endif
-
 /*
  * Endianness detection courtesy of RapidJSON,
  * extended for more architectures and operating systems
