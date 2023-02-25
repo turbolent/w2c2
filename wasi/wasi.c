@@ -768,7 +768,7 @@ wasiFDWrite(
                 ));
             }
 
-            iovecs[ciovecIndex].iov_base = (char *) memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[ciovecIndex].iov_len = length;
         }
     }
@@ -804,7 +804,7 @@ wasiFDWrite(
                 temporaryBuffer[totalLength + i] = bufferStart[-i];
             }
 
-            iovecs[ciovecIndex].iov_base = (char *) temporaryBuffer + totalLength;
+            iovecs[ciovecIndex].iov_base = (void*)(temporaryBuffer + totalLength);
 
             totalLength += length;
             if (wasiFD > 2) {
@@ -900,9 +900,9 @@ fdReadImpl(
             U32 length = i32_load(memory, iovecPointer + 4);
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-            iovecs[iovecIndex].iov_base = (char *) (memory->data + bufferPointer);
+            iovecs[iovecIndex].iov_base = (void*)(memory->data + bufferPointer);
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
-            iovecs[iovecIndex].iov_base = (char *) (memoryStart - bufferPointer - length);
+            iovecs[iovecIndex].iov_base = (void*)(memoryStart - bufferPointer - length);
 #endif
             iovecs[iovecIndex].iov_len = length;
         }
@@ -922,7 +922,7 @@ fdReadImpl(
     {
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U8* base = (U8 *) iovecs[iovecIndex].iov_base;
+            U8* base = (U8*)iovecs[iovecIndex].iov_base;
             U32 length = iovecs[iovecIndex].iov_len;
             int i = 0;
             for (; i < length / 2; i++) {
