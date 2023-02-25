@@ -117,14 +117,12 @@ typedef double F64;
 #define swap64(x) (x)
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #define W2C2_INLINE __inline
-#else
-#ifdef PLAN9
+#elif defined(PLAN9)
 #define W2C2_INLINE inline
 #else
 #define W2C2_INLINE __inline__
-#endif
 #endif
 
 #define GCC_VERSION (__GNUC__ * 10000 \
