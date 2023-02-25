@@ -975,10 +975,8 @@ wasiFDRead(
 }
 
 static
-W2C2_INLINE
 ssize_t
-wrapPositional(
-    ssize_t f(int, const struct iovec*, int),
+preadvFallback(
     int fd,
     const struct iovec* iovecs,
     int count,
@@ -995,7 +993,7 @@ wrapPositional(
         return -1;
     }
 
-    res = f(fd, iovecs, count);
+    res = readv(fd, iovecs, count);
 
     currentErrno = errno;
     if (lseek(fd, origLoc, SEEK_SET) == (off_t)-1) {
@@ -1007,17 +1005,6 @@ wrapPositional(
     errno = currentErrno;
 
     return res;
-}
-
-static
-ssize_t
-preadvFallback(
-    int fd,
-    const struct iovec* iovecs,
-    int count,
-    off_t offset
-) {
-    return wrapPositional((void *) readv, fd, iovecs, count, offset);
 }
 
 U32
