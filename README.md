@@ -1,6 +1,6 @@
 # w2c2
 
-Translates WebAssembly modules to C.
+Translates WebAssembly modules to portable C.
 Inspired by [wabt's wasm2c](https://github.com/WebAssembly/wabt/tree/main/wasm2c).
 
 Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.github.io/talks/2020/universal.html#/):
