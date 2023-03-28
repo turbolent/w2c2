@@ -4794,13 +4794,15 @@ wasmCWriteModuleImplementationFiles(
     FILE* mainFile,
     WasmCWriteModuleOptions options
 ) {
-    U32 functionCount = module->functions.count;
-    U32 functionsPerFile = options.functionsPerFile;
-    U32 fileCount = 1 + (functionCount - 1) / functionsPerFile;
-
     WasmDebugLines debugLines = module->debugLines;
 
     U32 fileIndex = 0;
+    U32 functionCount = module->functions.count;
+    U32 functionsPerFile = options.functionsPerFile;
+    U32 fileCount = 0;
+    if (functionCount > 0) {
+        fileCount = 1 + (functionCount - 1) / functionsPerFile;
+    }
 
     MUST (wasmCWriteImplementationFile(
         module,
