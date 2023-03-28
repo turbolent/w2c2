@@ -17,6 +17,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/), as well as
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
+  - [Non-trapping Float-to-int Conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
 - Written in C89 and generates C89
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)

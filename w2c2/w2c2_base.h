@@ -443,6 +443,36 @@ I64_CTZ(
 #define I32_TRUNC_U_F64(x) TRUNC_U(U32, F64, 4294967296., x)
 #define I64_TRUNC_U_F64(x) TRUNC_U(U64, F64, (F64)UINT64_MAX, x)
 
+#define TRUNC_SAT_S(ut, st, ft, min, smin, minop, max, smax, x) \
+   (((x) != (x)) ? 0                                            \
+  : (!((x)minop(min))) ? smin                                   \
+  : (!((x) < (max))) ? smax                                     \
+  : (ut)(st)(x))
+
+#define I32_TRUNC_SAT_S_F32(x) \
+  TRUNC_SAT_S(U32, I32, f32, (F32)INT32_MIN, INT32_MIN, >=, 2147483648.f, INT32_MAX, x)
+#define I64_TRUNC_SAT_S_F32(x) \
+  TRUNC_SAT_S(U64, I64, F32, (F32)INT64_MIN, INT64_MIN, >=, (F32)INT64_MAX, INT64_MAX, x)
+#define I32_TRUNC_SAT_S_F64(x) \
+  TRUNC_SAT_S(U32, I32, F64, -2147483649., INT32_MIN, >, 2147483648., INT32_MAX, x)
+#define I64_TRUNC_SAT_S_F64(x) \
+  TRUNC_SAT_S(U64, I64, F64, (F64)INT64_MIN, INT64_MIN, >=, (F64)INT64_MAX, INT64_MAX, x)
+
+#define TRUNC_SAT_U(ut, ft, max, smax, x) \
+   (((x) != (x)) ? 0                      \
+  : (!((x) > (ft)-1)) ? 0                 \
+  : (!((x) < (max))) ? smax               \
+  : (ut)(x))
+
+#define I32_TRUNC_SAT_U_F32(x) \
+  TRUNC_SAT_U(U32, F32, 4294967296.f, UINT32_MAX, x)
+#define I64_TRUNC_SAT_U_F32(x) \
+  TRUNC_SAT_U(U64, F32, (F32)UINT64_MAX, UINT64_MAX, x)
+#define I32_TRUNC_SAT_U_F64(x) \
+  TRUNC_SAT_U(U32, F64, 4294967296., UINT32_MAX, x)
+#define I64_TRUNC_SAT_U_F64(x) \
+  TRUNC_SAT_U(U64, F64, (F64)UINT64_MAX, UINT64_MAX, x)
+
 #ifdef _WIN32
 #include <float.h>
 #define copysignf _copysignf
