@@ -713,6 +713,746 @@ void test() {
         9223372036854775808ull,
         "i64.trunc_f64_u(9.223372036854776e+18)"
     );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 0.0),
+        0u,
+        "i32.trunc_sat_f32_s(0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -0.0),
+        0u,
+        "i32.trunc_sat_f32_s(-0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        0u,
+        "i32.trunc_sat_f32_s(1.401298464324817e-45)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        0u,
+        "i32.trunc_sat_f32_s(-1.401298464324817e-45)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.0),
+        1u,
+        "i32.trunc_sat_f32_s(1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.100000023841858),
+        1u,
+        "i32.trunc_sat_f32_s(1.100000023841858)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.5),
+        1u,
+        "i32.trunc_sat_f32_s(1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.0),
+        4294967295u,
+        "i32.trunc_sat_f32_s(-1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.100000023841858),
+        4294967295u,
+        "i32.trunc_sat_f32_s(-1.100000023841858)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.5),
+        4294967295u,
+        "i32.trunc_sat_f32_s(-1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.899999976158142),
+        4294967295u,
+        "i32.trunc_sat_f32_s(-1.899999976158142)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2.0),
+        4294967294u,
+        "i32.trunc_sat_f32_s(-2.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 2147483520.0),
+        2147483520u,
+        "i32.trunc_sat_f32_s(2147483520.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2147483648.0),
+        2147483648u,
+        "i32.trunc_sat_f32_s(-2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 2147483648.0),
+        2147483647u,
+        "i32.trunc_sat_f32_s(2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2147483904.0),
+        2147483648u,
+        "i32.trunc_sat_f32_s(-2147483904.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, INFINITY),
+        2147483647u,
+        "i32.trunc_sat_f32_s(INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -INFINITY),
+        2147483648u,
+        "i32.trunc_sat_f32_s(-INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 0.0),
+        0u,
+        "i32.trunc_sat_f32_u(0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.0),
+        0u,
+        "i32.trunc_sat_f32_u(-0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        0u,
+        "i32.trunc_sat_f32_u(1.401298464324817e-45)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        0u,
+        "i32.trunc_sat_f32_u(-1.401298464324817e-45)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.0),
+        1u,
+        "i32.trunc_sat_f32_u(1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.100000023841858),
+        1u,
+        "i32.trunc_sat_f32_u(1.100000023841858)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.5),
+        1u,
+        "i32.trunc_sat_f32_u(1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.899999976158142),
+        1u,
+        "i32.trunc_sat_f32_u(1.899999976158142)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 2.0),
+        2u,
+        "i32.trunc_sat_f32_u(2.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 2147483648.0),
+        2147483648u,
+        "i32.trunc_sat_f32_u(2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967040.0),
+        4294967040u,
+        "i32.trunc_sat_f32_u(4294967040.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.8999999761581421),
+        0u,
+        "i32.trunc_sat_f32_u(-0.8999999761581421)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.9999999403953552),
+        0u,
+        "i32.trunc_sat_f32_u(-0.9999999403953552)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967296.0),
+        4294967295u,
+        "i32.trunc_sat_f32_u(4294967296.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.0),
+        0u,
+        "i32.trunc_sat_f32_u(-1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, INFINITY),
+        4294967295u,
+        "i32.trunc_sat_f32_u(INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -INFINITY),
+        0u,
+        "i32.trunc_sat_f32_u(-INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 0.0),
+        0u,
+        "i32.trunc_sat_f64_s(0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -0.0),
+        0u,
+        "i32.trunc_sat_f64_s(-0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 5e-324),
+        0u,
+        "i32.trunc_sat_f64_s(5e-324)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -5e-324),
+        0u,
+        "i32.trunc_sat_f64_s(-5e-324)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.0),
+        1u,
+        "i32.trunc_sat_f64_s(1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.1),
+        1u,
+        "i32.trunc_sat_f64_s(1.1)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.5),
+        1u,
+        "i32.trunc_sat_f64_s(1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.0),
+        4294967295u,
+        "i32.trunc_sat_f64_s(-1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.1),
+        4294967295u,
+        "i32.trunc_sat_f64_s(-1.1)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.5),
+        4294967295u,
+        "i32.trunc_sat_f64_s(-1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.9),
+        4294967295u,
+        "i32.trunc_sat_f64_s(-1.9)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2.0),
+        4294967294u,
+        "i32.trunc_sat_f64_s(-2.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 2147483647.0),
+        2147483647u,
+        "i32.trunc_sat_f64_s(2147483647.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2147483648.0),
+        2147483648u,
+        "i32.trunc_sat_f64_s(-2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 2147483648.0),
+        2147483647u,
+        "i32.trunc_sat_f64_s(2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2147483649.0),
+        2147483648u,
+        "i32.trunc_sat_f64_s(-2147483649.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, INFINITY),
+        2147483647u,
+        "i32.trunc_sat_f64_s(INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -INFINITY),
+        2147483648u,
+        "i32.trunc_sat_f64_s(-INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 0.0),
+        0u,
+        "i32.trunc_sat_f64_u(0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.0),
+        0u,
+        "i32.trunc_sat_f64_u(-0.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 5e-324),
+        0u,
+        "i32.trunc_sat_f64_u(5e-324)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -5e-324),
+        0u,
+        "i32.trunc_sat_f64_u(-5e-324)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.0),
+        1u,
+        "i32.trunc_sat_f64_u(1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.1),
+        1u,
+        "i32.trunc_sat_f64_u(1.1)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.5),
+        1u,
+        "i32.trunc_sat_f64_u(1.5)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.9),
+        1u,
+        "i32.trunc_sat_f64_u(1.9)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 2.0),
+        2u,
+        "i32.trunc_sat_f64_u(2.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 2147483648.0),
+        2147483648u,
+        "i32.trunc_sat_f64_u(2147483648.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967295.0),
+        4294967295u,
+        "i32.trunc_sat_f64_u(4294967295.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9),
+        0u,
+        "i32.trunc_sat_f64_u(-0.9)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9999999999999999),
+        0u,
+        "i32.trunc_sat_f64_u(-0.9999999999999999)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 100000000.0),
+        100000000u,
+        "i32.trunc_sat_f64_u(100000000.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967296.0),
+        4294967295u,
+        "i32.trunc_sat_f64_u(4294967296.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -1.0),
+        0u,
+        "i32.trunc_sat_f64_u(-1.0)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+16),
+        4294967295u,
+        "i32.trunc_sat_f64_u(1e+16)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+30),
+        4294967295u,
+        "i32.trunc_sat_f64_u(1e+30)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 9.223372036854776e+18),
+        4294967295u,
+        "i32.trunc_sat_f64_u(9.223372036854776e+18)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, INFINITY),
+        4294967295u,
+        "i32.trunc_sat_f64_u(INFINITY)"
+    );
+    assertEqualU32(
+        conversions0_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -INFINITY),
+        0u,
+        "i32.trunc_sat_f64_u(-INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 0.0),
+        0ull,
+        "i64.trunc_sat_f32_s(0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -0.0),
+        0ull,
+        "i64.trunc_sat_f32_s(-0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        0ull,
+        "i64.trunc_sat_f32_s(1.401298464324817e-45)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        0ull,
+        "i64.trunc_sat_f32_s(-1.401298464324817e-45)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.0),
+        1ull,
+        "i64.trunc_sat_f32_s(1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.100000023841858),
+        1ull,
+        "i64.trunc_sat_f32_s(1.100000023841858)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.5),
+        1ull,
+        "i64.trunc_sat_f32_s(1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.0),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_s(-1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.100000023841858),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_s(-1.100000023841858)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.5),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_s(-1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.899999976158142),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_s(-1.899999976158142)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -2.0),
+        18446744073709551614ull,
+        "i64.trunc_sat_f32_s(-2.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 4294967296.0),
+        4294967296ull,
+        "i64.trunc_sat_f32_s(4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -4294967296.0),
+        18446744069414584320ull,
+        "i64.trunc_sat_f32_s(-4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 9.223371487098962e+18),
+        9223371487098961920ull,
+        "i64.trunc_sat_f32_s(9.223371487098962e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -9.223372036854776e+18),
+        9223372036854775808ull,
+        "i64.trunc_sat_f32_s(-9.223372036854776e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 9.223372036854776e+18),
+        9223372036854775807ull,
+        "i64.trunc_sat_f32_s(9.223372036854776e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -9.223373136366404e+18),
+        9223372036854775808ull,
+        "i64.trunc_sat_f32_s(-9.223373136366404e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, INFINITY),
+        9223372036854775807ull,
+        "i64.trunc_sat_f32_s(INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -INFINITY),
+        9223372036854775808ull,
+        "i64.trunc_sat_f32_s(-INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 0.0),
+        0ull,
+        "i64.trunc_sat_f32_u(0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.0),
+        0ull,
+        "i64.trunc_sat_f32_u(-0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        0ull,
+        "i64.trunc_sat_f32_u(1.401298464324817e-45)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        0ull,
+        "i64.trunc_sat_f32_u(-1.401298464324817e-45)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.0),
+        1ull,
+        "i64.trunc_sat_f32_u(1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.100000023841858),
+        1ull,
+        "i64.trunc_sat_f32_u(1.100000023841858)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.5),
+        1ull,
+        "i64.trunc_sat_f32_u(1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967296.0),
+        4294967296ull,
+        "i64.trunc_sat_f32_u(4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.8446742974197924e+19),
+        18446742974197923840ull,
+        "i64.trunc_sat_f32_u(1.8446742974197924e+19)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.8999999761581421),
+        0ull,
+        "i64.trunc_sat_f32_u(-0.8999999761581421)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.9999999403953552),
+        0ull,
+        "i64.trunc_sat_f32_u(-0.9999999403953552)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.8446744073709552e+19),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_u(1.8446744073709552e+19)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.0),
+        0ull,
+        "i64.trunc_sat_f32_u(-1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, INFINITY),
+        18446744073709551615ull,
+        "i64.trunc_sat_f32_u(INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -INFINITY),
+        0ull,
+        "i64.trunc_sat_f32_u(-INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 0.0),
+        0ull,
+        "i64.trunc_sat_f64_s(0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -0.0),
+        0ull,
+        "i64.trunc_sat_f64_s(-0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 5e-324),
+        0ull,
+        "i64.trunc_sat_f64_s(5e-324)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -5e-324),
+        0ull,
+        "i64.trunc_sat_f64_s(-5e-324)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.0),
+        1ull,
+        "i64.trunc_sat_f64_s(1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.1),
+        1ull,
+        "i64.trunc_sat_f64_s(1.1)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.5),
+        1ull,
+        "i64.trunc_sat_f64_s(1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.0),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_s(-1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.1),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_s(-1.1)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.5),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_s(-1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.9),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_s(-1.9)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -2.0),
+        18446744073709551614ull,
+        "i64.trunc_sat_f64_s(-2.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 4294967296.0),
+        4294967296ull,
+        "i64.trunc_sat_f64_s(4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -4294967296.0),
+        18446744069414584320ull,
+        "i64.trunc_sat_f64_s(-4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 9.223372036854775e+18),
+        9223372036854774784ull,
+        "i64.trunc_sat_f64_s(9.223372036854775e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -9.223372036854776e+18),
+        9223372036854775808ull,
+        "i64.trunc_sat_f64_s(-9.223372036854776e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 9.223372036854776e+18),
+        9223372036854775807ull,
+        "i64.trunc_sat_f64_s(9.223372036854776e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -9.223372036854778e+18),
+        9223372036854775808ull,
+        "i64.trunc_sat_f64_s(-9.223372036854778e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, INFINITY),
+        9223372036854775807ull,
+        "i64.trunc_sat_f64_s(INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -INFINITY),
+        9223372036854775808ull,
+        "i64.trunc_sat_f64_s(-INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 0.0),
+        0ull,
+        "i64.trunc_sat_f64_u(0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.0),
+        0ull,
+        "i64.trunc_sat_f64_u(-0.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 5e-324),
+        0ull,
+        "i64.trunc_sat_f64_u(5e-324)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -5e-324),
+        0ull,
+        "i64.trunc_sat_f64_u(-5e-324)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.0),
+        1ull,
+        "i64.trunc_sat_f64_u(1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.1),
+        1ull,
+        "i64.trunc_sat_f64_u(1.1)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.5),
+        1ull,
+        "i64.trunc_sat_f64_u(1.5)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967295.0),
+        4294967295ull,
+        "i64.trunc_sat_f64_u(4294967295.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967296.0),
+        4294967296ull,
+        "i64.trunc_sat_f64_u(4294967296.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.844674407370955e+19),
+        18446744073709549568ull,
+        "i64.trunc_sat_f64_u(1.844674407370955e+19)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9),
+        0ull,
+        "i64.trunc_sat_f64_u(-0.9)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9999999999999999),
+        0ull,
+        "i64.trunc_sat_f64_u(-0.9999999999999999)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 100000000.0),
+        100000000ull,
+        "i64.trunc_sat_f64_u(100000000.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+16),
+        10000000000000000ull,
+        "i64.trunc_sat_f64_u(1e+16)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 9.223372036854776e+18),
+        9223372036854775808ull,
+        "i64.trunc_sat_f64_u(9.223372036854776e+18)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.8446744073709552e+19),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_u(1.8446744073709552e+19)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -1.0),
+        0ull,
+        "i64.trunc_sat_f64_u(-1.0)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, INFINITY),
+        18446744073709551615ull,
+        "i64.trunc_sat_f64_u(INFINITY)"
+    );
+    assertEqualU64(
+        conversions0_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -INFINITY),
+        0ull,
+        "i64.trunc_sat_f64_u(-INFINITY)"
+    );
     assertEqualF32(
         conversions0_f32X2EconvertX5Fi32X5Fs(&instance, 1u),
         1.0,

@@ -1576,10 +1576,9 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteUnaryExpr(
     WasmCFunctionWriter* writer,
-    const WasmOpcode opcode,
+    const WasmValueType resultType,
     const char* operator
 ) {
-    const WasmValueType resultType = wasmOpcodeResultType(opcode);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
@@ -2647,40 +2646,47 @@ wasmCWriteFunctionCode(
                 if (!writer->ignore) {
                     switch (miscOpcode) {
                         case wasmMiscOpcodeI32TruncSatF32S: {
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF32U: {
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64S: {
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64U: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F32"))
                             break;
                         }
                         case wasmMiscOpcodeI64TruncSatF32S: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F32"))
                             break;
                         }
-                        case wasmMiscOpcodeI64TruncSatF32U: {
+                        case wasmMiscOpcodeI32TruncSatF64S: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F64"))
                             break;
                         }
                         case wasmMiscOpcodeI64TruncSatF64S: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F64"))
+                            break;
+                        }
+                        case wasmMiscOpcodeI32TruncSatF32U: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F32"))
+                            break;
+                        }
+                        case wasmMiscOpcodeI64TruncSatF32U: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F32"))
+                            break;
+                        }
+                        case wasmMiscOpcodeI32TruncSatF64U: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F64"))
                             break;
                         }
                         case wasmMiscOpcodeI64TruncSatF64U: {
+                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F64"))
                             break;
                         }
-                        default:
-                            break;
+                        default: {
+                            fprintf(
+                                stderr,
+                                "w2c2: unsupported misc opcode: %s\n",
+                                wasmMiscOpcodeDescription(miscOpcode)
+                            );
+                            return false;
+                        }
                     }
                 }
-
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported misc opcode: %s\n",
-                    wasmMiscOpcodeDescription(miscOpcode)
-                );
-
                 break;
             }
             default: {
@@ -2813,7 +2819,7 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32Eqz:
                     case wasmOpcodeI64Eqz: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "!"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "!"))
                         break;
                     }
                     case wasmOpcodeI32And:
@@ -2845,100 +2851,103 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmOpcodeI32Clz: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_CLZ"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_CLZ"))
                         break;
                     }
                     case wasmOpcodeI64Clz: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_CLZ"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_CLZ"))
                         break;
                     }
                     case wasmOpcodeI32Ctz: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_CTZ"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_CTZ"))
                         break;
                     }
                     case wasmOpcodeI64Ctz: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_CTZ"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_CTZ"))
                         break;
                     }
                     case wasmOpcodeI32PopCnt: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_POPCNT"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_POPCNT"))
                         break;
                     }
                     case wasmOpcodeI64PopCnt: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_POPCNT"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_POPCNT"))
                         break;
                     }
-                    case wasmOpcodeF32Neg:
+                    case wasmOpcodeF32Neg:{
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "-"))
+                        break;
+                    }
                     case wasmOpcodeF64Neg: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "-"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "-"))
                         break;
                     }
                     case wasmOpcodeF32Abs: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "fabsf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "fabsf"))
                         break;
                     }
                     case wasmOpcodeF64Abs: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "fabs"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "fabs"))
                         break;
                     }
                     case wasmOpcodeF32Sqrt: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "sqrtf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "sqrtf"))
                         break;
                     }
                     case wasmOpcodeF64Sqrt: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "sqrt"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "sqrt"))
                         break;
                     }
                     case wasmOpcodeF32Ceil: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "ceilf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "ceilf"))
                         break;
                     }
                     case wasmOpcodeF64Ceil: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "ceil"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "ceil"))
                         break;
                     }
                     case wasmOpcodeF32Floor: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "floorf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "floorf"))
                         break;
                     }
                     case wasmOpcodeF64Floor: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "floor"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "floor"))
                         break;
                     }
                     case wasmOpcodeF32Trunc: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "truncf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "truncf"))
                         break;
                     }
                     case wasmOpcodeF64Trunc: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "trunc"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "trunc"))
                         break;
                     }
                     case wasmOpcodeF32Nearest: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "nearbyintf"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "nearbyintf"))
                         break;
                     }
                     case wasmOpcodeF64Nearest: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "nearbyint"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "nearbyint"))
                         break;
                     }
                     case wasmOpcodeI32Extend8S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(U32)(I8)(U8)"));
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "(U32)(U32)(I8)(U8)"));
                         break;
                     }
                     case wasmOpcodeI32Extend16S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)(I32)(I16)(U16)"));
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "(U32)(I32)(I16)(U16)"));
                         break;
                     }
                     case wasmOpcodeI64Extend8S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I8)(U8)"));
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "(U64)(I64)(I8)(U8)"));
                         break;
                     }
                     case wasmOpcodeI64Extend16S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I16)(U16)"));
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "(U64)(I64)(I16)(U16)"));
                         break;
                     }
                     case wasmOpcodeI64Extend32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I32)(U32)"));
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "(U64)(I64)(I32)(U32)"));
                         break;
                     }
                     case wasmOpcodeI32Shl:
@@ -2991,99 +3000,99 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmOpcodeI64ExtendI32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)(I64)(I32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "(U64)(I64)(I32)"))
                         break;
                     }
                     case wasmOpcodeI64ExtendI32U: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U64)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "(U64)"))
                         break;
                     }
                     case wasmOpcodeI32WrapI64: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(U32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "(U32)"))
                         break;
                     }
                     case wasmOpcodeI32TruncF32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_TRUNC_S_F32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_S_F32"))
                         break;
                     }
                     case wasmOpcodeI64TruncF32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_TRUNC_S_F32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_S_F32"))
                         break;
                     }
                     case wasmOpcodeI32TruncF64S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_TRUNC_S_F64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_S_F64"))
                         break;
                     }
                     case wasmOpcodeI64TruncF64S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_TRUNC_S_F64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_S_F64"))
                         break;
                     }
                     case wasmOpcodeI32TruncF32U: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_TRUNC_U_F32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_U_F32"))
                         break;
                     }
                     case wasmOpcodeI64TruncF32U: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_TRUNC_U_F32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_U_F32"))
                         break;
                     }
                     case wasmOpcodeI32TruncF64U: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I32_TRUNC_U_F64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_U_F64"))
                         break;
                     }
                     case wasmOpcodeI64TruncF64U: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "I64_TRUNC_U_F64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_U_F64"))
                         break;
                     }
                     case wasmOpcodeF32ConvertI32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F32)(I32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)(I32)"))
                         break;
                     }
                     case wasmOpcodeF32ConvertI64S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F32)(I64)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)(I64)"))
                         break;
                     }
                     case wasmOpcodeF32ConvertI32U:
                     case wasmOpcodeF32DemoteF64: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)"))
                         break;
                     }
                     case wasmOpcodeF32ConvertI64U: {
                         /* TODO */
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)"))
                         break;
                     }
                     case wasmOpcodeF64ConvertI32S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F64)(I32)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)(I32)"))
                         break;
                     }
                     case wasmOpcodeF64ConvertI64S: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F64)(I64)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)(I64)"))
                         break;
                     }
                     case wasmOpcodeF64ConvertI32U:
                     case wasmOpcodeF64PromoteF32: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F64)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)"))
                         break;
                     }
                     case wasmOpcodeF64ConvertI64U: {
                         /* TODO */
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "(F64)"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)"))
                         break;
                     }
                     case wasmOpcodeF32ReinterpretI32: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "f32_reinterpret_i32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "f32_reinterpret_i32"))
                         break;
                     }
                     case wasmOpcodeI32ReinterpretF32: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "i32_reinterpret_f32"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "i32_reinterpret_f32"))
                         break;
                     }
                     case wasmOpcodeF64ReinterpretI64: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "f64_reinterpret_i64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "f64_reinterpret_i64"))
                         break;
                     }
                     case wasmOpcodeI64ReinterpretF64: {
-                        MUST (wasmCWriteUnaryExpr(writer, *opcode, "i64_reinterpret_f64"))
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "i64_reinterpret_f64"))
                         break;
                     }
                     default: {
