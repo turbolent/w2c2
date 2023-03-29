@@ -14,7 +14,7 @@ arrayEnsureCapacity(
         return true;
     }
 
-    newCapacity = length + (*capacity >> 1u);
+    newCapacity = length + (*capacity >> 1U);
     if (*items == NULL) {
         newItems = calloc(newCapacity * itemSize, 1);
     } else {
