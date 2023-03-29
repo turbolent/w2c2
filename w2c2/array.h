@@ -27,7 +27,7 @@ INSTANCE ## EnsureCapacity(                                   \
         (void**)&INSTANCE->ITEMS,                             \
         length,                                               \
         &INSTANCE->capacity,                                  \
-        sizeof(NAME)                                          \
+        sizeof(TYPE)                                          \
     );                                                        \
 }                                                             \
                                                               \

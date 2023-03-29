@@ -243,6 +243,9 @@ main(
         if (functionsPerFile == 0) {
             functionsPerFile = reader.module->functions.count;
         }
+        if (functionsPerFile == 0) {
+            functionsPerFile = 1;
+        }
 
         writeOptions.outputPath = outputPath;
         writeOptions.threadCount = threadCount;

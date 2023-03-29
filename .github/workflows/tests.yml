@@ -80,9 +80,9 @@ jobs:
           CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./tests
+        shell: bash
         run: |
-          make run-tests 2>&1 | tee results
-          ! grep -q "^FAIL: " results
+          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         env:
@@ -117,9 +117,9 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run tests
         working-directory: ./tests
+        shell: bash
         run: |
-          make run-tests 2>&1 | tee results
-          ! grep -q "^FAIL: " results
+          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -168,9 +168,9 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run tests
         working-directory: ./tests
+        shell: bash
         run: |
-          make run-tests 2>&1 | tee results
-          ! grep -q "^FAIL: " results
+          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         env:
