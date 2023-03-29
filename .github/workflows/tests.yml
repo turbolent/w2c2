@@ -59,10 +59,6 @@ jobs:
         if: ${{ matrix.system.toolchain }}
         run: |
           sudo apt install ${{ matrix.system.toolchain }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
       - uses: dorny/paths-filter@v2
         id: changes
         with:
