@@ -10,11 +10,12 @@ typedef struct WasmCWriteModuleOptions {
     U32 functionsPerFile;
     bool pretty;
     bool debug;
+    bool linkImports;
     WasmDataSegmentMode dataSegmentMode;
 } WasmCWriteModuleOptions;
 
 static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
-    NULL, 0, 0, false, false, wasmDataSegmentModeArrays
+    NULL, 0, 0, false, false, false, wasmDataSegmentModeArrays
 };
 
 bool
