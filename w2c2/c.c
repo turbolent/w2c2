@@ -1121,68 +1121,83 @@ wasmCWriteLoadExpr(
     const WasmOpcode opcode
 ) {
     WasmLoadStoreInstruction instruction;
+    WasmValueType resultType = 0;
+
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(stderr, "w2c2: invalid load instruction encoding\n");
         return false;
     }
 
     if (!writer->ignore) {
-
         const char* functionName = NULL;
         switch (opcode) {
             case wasmOpcodeI32Load: {
+                resultType = wasmValueTypeI32;
                 functionName = "i32_load";
                 break;
             }
             case wasmOpcodeI64Load: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load";
                 break;
             }
             case wasmOpcodeF32Load: {
+                resultType = wasmValueTypeF32;
                 functionName = "f32_load";
                 break;
             }
             case wasmOpcodeF64Load: {
+                resultType = wasmValueTypeF64;
                 functionName = "f64_load";
                 break;
             }
             case wasmOpcodeI32Load8S: {
+                resultType = wasmValueTypeI32;
                 functionName = "i32_load8_s";
                 break;
             }
             case wasmOpcodeI64Load8S: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load8_s";
                 break;
             }
             case wasmOpcodeI32Load8U: {
+                resultType = wasmValueTypeI32;
                 functionName = "i32_load8_u";
                 break;
             }
             case wasmOpcodeI64Load8U: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load8_u";
                 break;
             }
             case wasmOpcodeI32Load16S: {
+                resultType = wasmValueTypeI32;
                 functionName = "i32_load16_s";
                 break;
             }
             case wasmOpcodeI64Load16S: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load16_s";
                 break;
             }
             case wasmOpcodeI32Load16U: {
+                resultType = wasmValueTypeI32;
                 functionName = "i32_load16_u";
                 break;
             }
             case wasmOpcodeI64Load16U: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load16_u";
                 break;
             }
             case wasmOpcodeI64Load32S: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load32_s";
                 break;
             }
             case wasmOpcodeI64Load32U: {
+                resultType = wasmValueTypeI64;
                 functionName = "i64_load32_u";
                 break;
             }
@@ -1197,7 +1212,6 @@ wasmCWriteLoadExpr(
         }
 
         {
-            const WasmValueType resultType = wasmOpcodeResultType(opcode);
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
             MUST (wasmCWriteIndent(writer))
@@ -1622,12 +1636,10 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteInfixBinaryExpr(
     WasmCFunctionWriter* writer,
-    const WasmOpcode opcode,
+    const WasmValueType resultType,
     const char* operator,
     bool assignmentAllowed
 ) {
-    const WasmValueType resultType = wasmOpcodeResultType(opcode);
-
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
@@ -1731,11 +1743,9 @@ bool
 WARN_UNUSED_RESULT
 wasmCWritePrefixBinaryExpr(
     WasmCFunctionWriter* writer,
-    const WasmOpcode opcode,
+    const WasmValueType resultType,
     const char* operator
 ) {
-    const WasmValueType resultType = wasmOpcodeResultType(opcode);
-
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
@@ -2734,14 +2744,14 @@ wasmCWriteFunctionCode(
                     case wasmOpcodeI64Eq:
                     case wasmOpcodeF32Eq:
                     case wasmOpcodeF64Eq: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "==", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "==", false))
                         break;
                     }
                     case wasmOpcodeI32Ne:
                     case wasmOpcodeI64Ne:
                     case wasmOpcodeF32Ne:
                     case wasmOpcodeF64Ne: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "!=", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "!=", false))
                         break;
                     }
                     case wasmOpcodeI32LtS:
@@ -2753,7 +2763,7 @@ wasmCWriteFunctionCode(
                     case wasmOpcodeI64LtU:
                     case wasmOpcodeF32Lt:
                     case wasmOpcodeF64Lt: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "<", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "<", false))
                         break;
                     }
                     case wasmOpcodeI32LeS:
@@ -2765,7 +2775,7 @@ wasmCWriteFunctionCode(
                     case wasmOpcodeI64LeU:
                     case wasmOpcodeF32Le:
                     case wasmOpcodeF64Le: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "<=", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "<=", false))
                         break;
                     }
                     case wasmOpcodeI32GtS:
@@ -2777,7 +2787,7 @@ wasmCWriteFunctionCode(
                     case wasmOpcodeI64GtU:
                     case wasmOpcodeF32Gt:
                     case wasmOpcodeF64Gt: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, ">", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, ">", false))
                         break;
                     }
                     case wasmOpcodeI32GeS:
@@ -2789,48 +2799,79 @@ wasmCWriteFunctionCode(
                     case wasmOpcodeI64GeU:
                     case wasmOpcodeF32Ge:
                     case wasmOpcodeF64Ge: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, ">=", false))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, ">=", false))
                         break;
                     }
-                    case wasmOpcodeI32Add:
-                    case wasmOpcodeI64Add:
-                    case wasmOpcodeF32Add:
+                    case wasmOpcodeI32Add: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "+", true))
+                        break;
+                    }
+                    case wasmOpcodeI64Add: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "+", true))
+                        break;
+                    }
+                    case wasmOpcodeF32Add: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF32, "+", true))
+                        break;
+                    }
                     case wasmOpcodeF64Add: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "+", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF64, "+", true))
                         break;
                     }
-                    case wasmOpcodeI32Sub:
-                    case wasmOpcodeI64Sub:
-                    case wasmOpcodeF32Sub:
+                    case wasmOpcodeI32Sub: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "-", true))
+                        break;
+                    }
+                    case wasmOpcodeI64Sub: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "-", true))
+                        break;
+                    }
+                    case wasmOpcodeF32Sub: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF32, "-", true))
+                        break;
+                    }
                     case wasmOpcodeF64Sub: {
-                        if (!writer->ignore) {
-                            MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "-", true))
-                        }
+                       MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF64, "-", true))
                         break;
                     }
-                    case wasmOpcodeI32Mul:
-                    case wasmOpcodeI64Mul:
-                    case wasmOpcodeF32Mul:
+                    case wasmOpcodeI32Mul: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "*", true))
+                        break;
+                    }
+                    case wasmOpcodeI64Mul: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "*", true))
+                        break;
+                    }
+                    case wasmOpcodeF32Mul: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF32, "*", true))
+                        break;
+                    }
                     case wasmOpcodeF64Mul: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "*", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF64, "*", true))
                         break;
                     }
                     case wasmOpcodeI32DivS: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I32_DIV_S"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "I32_DIV_S"))
                         break;
                     }
                     case wasmOpcodeI64DivS: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I64_DIV_S"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "I64_DIV_S"))
                         break;
                     }
-                    case wasmOpcodeI32DivU:
+                    case wasmOpcodeI32DivU: {
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "DIV_U"))
+                        break;
+                    }
                     case wasmOpcodeI64DivU: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "DIV_U"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "DIV_U"))
                         break;
                     }
-                    case wasmOpcodeF32Div:
+                    case wasmOpcodeF32Div: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF32, "/", true))
+                        break;
+                    }
                     case wasmOpcodeF64Div: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "/", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeF64, "/", true))
                         break;
                     }
                     case wasmOpcodeI32Eqz:
@@ -2838,32 +2879,44 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "!"))
                         break;
                     }
-                    case wasmOpcodeI32And:
+                    case wasmOpcodeI32And: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "&", true))
+                        break;
+                    }
                     case wasmOpcodeI64And: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "&", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "&", true))
                         break;
                     }
-                    case wasmOpcodeI32Or:
+                    case wasmOpcodeI32Or: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "|", true))
+                        break;
+                    }
                     case wasmOpcodeI64Or: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "|", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "|", true))
                         break;
                     }
-                    case wasmOpcodeI32Xor:
+                    case wasmOpcodeI32Xor: {
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI32, "^", true))
+                        break;
+                    }
                     case wasmOpcodeI64Xor: {
-                        MUST (wasmCWriteInfixBinaryExpr(writer, *opcode, "^", true))
+                        MUST (wasmCWriteInfixBinaryExpr(writer, wasmValueTypeI64, "^", true))
                         break;
                     }
                     case wasmOpcodeI32RemS: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I32_REM_S"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "I32_REM_S"))
                         break;
                     }
                     case wasmOpcodeI64RemS: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I64_REM_S"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "I64_REM_S"))
                         break;
                     }
-                    case wasmOpcodeI32RemU:
+                    case wasmOpcodeI32RemU: {
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "REM_U"))
+                        break;
+                    }
                     case wasmOpcodeI64RemU: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "REM_U"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "REM_U"))
                         break;
                     }
                     case wasmOpcodeI32Clz: {
@@ -2890,7 +2943,7 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_POPCNT"))
                         break;
                     }
-                    case wasmOpcodeF32Neg:{
+                    case wasmOpcodeF32Neg: {
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "-"))
                         break;
                     }
@@ -2982,37 +3035,43 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     case wasmOpcodeI32Rotl: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I32_ROTL"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "I32_ROTL"))
                         break;
                     }
                     case wasmOpcodeI64Rotl: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I64_ROTL"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "I64_ROTL"))
                         break;
                     }
                     case wasmOpcodeI32Rotr: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I32_ROTR"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI32, "I32_ROTR"))
                         break;
                     }
                     case wasmOpcodeI64Rotr: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "I64_ROTR"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeI64, "I64_ROTR"))
                         break;
                     }
-                    case wasmOpcodeF32Min:
+                    case wasmOpcodeF32Min: {
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeF32, "FMIN"))
+                        break;
+                    }
                     case wasmOpcodeF64Min: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "FMIN"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeF64, "FMIN"))
                         break;
                     }
-                    case wasmOpcodeF32Max:
+                    case wasmOpcodeF32Max: {
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeF32, "FMAX"))
+                        break;
+                    }
                     case wasmOpcodeF64Max: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "FMAX"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeF64, "FMAX"))
                         break;
                     }
                     case wasmOpcodeF32CopySign: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "copysignf"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer, wasmValueTypeF32, "copysignf"))
                         break;
                     }
                     case wasmOpcodeF64CopySign: {
-                        MUST (wasmCWritePrefixBinaryExpr(writer, *opcode, "copysign"))
+                        MUST (wasmCWritePrefixBinaryExpr(writer,  wasmValueTypeF64, "copysign"))
                         break;
                     }
                     case wasmOpcodeI64ExtendI32S: {
