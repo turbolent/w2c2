@@ -4950,7 +4950,8 @@ wasmCWriteModuleImplementationFiles(
                 NULL,
                 startFunctionIndex,
                 options.pretty,
-                options.debug
+                options.debug,
+                options.linkImports
             ))
 #endif /* HAS_PTHREAD */
         }
