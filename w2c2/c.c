@@ -4495,11 +4495,11 @@ wasmCWriteModuleDeclarations(
     bool debug,
     bool linkImports
 ) {
+    wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty, linkImports);
     /* If linkImports is true, then the function imports are not part of the instance struct */
     if (linkImports) {
         wasmCWriteFunctionImports(file, module, moduleName, pretty, true);
     }
-    wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty, linkImports);
     wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug);
     wasmCWriteExports(file, module, moduleName, false, pretty, linkImports);
 }
