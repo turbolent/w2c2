@@ -185,7 +185,7 @@ main(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -l         Link against imported functions rather than resolving them at runtime\n"
-                    "  -a         Pass alsignment hints to the load and store macros. You'll need a custom w2c2_base.h to use this\n"
+                    "  -a         Pass alignment hints to the load and store macros. You'll need a custom w2c2_base.h to use this\n"
                 );
                 return 0;
             }
