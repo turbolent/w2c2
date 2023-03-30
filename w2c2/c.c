@@ -5032,7 +5032,8 @@ wasmCWriteModuleImplementationFiles(
                 startFunctionIndex,
                 options.pretty,
                 options.debug,
-                options.linkImports
+                options.linkImports,
+                options.writeAlignment
             ))
 #endif /* HAS_PTHREAD */
         }
