@@ -560,6 +560,7 @@ typedef struct WasmCFunctionWriter {
     bool pretty;
     bool debug;
     bool linkImports;
+    bool writeAlignment;
     WasmDebugLines* debugLines;
 } WasmCFunctionWriter;
 
@@ -1232,6 +1233,10 @@ wasmCWriteLoadExpr(
                 MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
                 MUST (wasmCWrite(writer, "U"))
             }
+            if (writer->writeAlignment) {
+                MUST (wasmCWriteComma(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.align))
+            }
             MUST (wasmCWrite(writer, ");\n"))
 
             wasmTypeStackDrop(writer->typeStack, 1);
@@ -1332,6 +1337,10 @@ wasmCWriteStoreExpr(
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
+            if (writer->writeAlignment) {
+                MUST (wasmCWriteComma(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.align))
+            }
             MUST (wasmCWrite(writer, ");\n"))
 
             wasmTypeStackDrop(writer->typeStack, 2);
@@ -3278,7 +3287,8 @@ wasmCWriteFunctionBody(
     WasmDebugLines* debugLines,
     bool pretty,
     bool debug,
-    bool linkImports
+    bool linkImports,
+    bool writeAlignment
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -3317,6 +3327,7 @@ wasmCWriteFunctionBody(
         writer.pretty = pretty;
         writer.debug = debug;
         writer.linkImports = linkImports;
+        writer.writeAlignment = writeAlignment;
         writer.debugLines = debugLines;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
@@ -3446,7 +3457,8 @@ wasmCWriteFunctionImplementations(
     U32 endIndex,
     bool pretty,
     bool debug,
-    bool linkImports
+    bool linkImports,
+    bool writeAlignment
 ) {
     const size_t functionImportCount = module->functionImports.length;
 
@@ -3490,7 +3502,8 @@ wasmCWriteFunctionImplementations(
             debugLines,
             pretty,
             debug,
-            linkImports
+            linkImports,
+            writeAlignment
         ))
         fputs("\n", file);
     }
@@ -4732,7 +4745,8 @@ wasmCWriteImplementationFile(
     U32 startFunctionIndex,
     bool pretty,
     bool debug,
-    bool linkImports
+    bool linkImports,
+    bool writeAlignment
 ) {
     char filename[13];
     U32 functionCount = module->functions.count;
@@ -4773,7 +4787,8 @@ wasmCWriteImplementationFile(
             endFunctionIndex,
             pretty,
             debug,
-            linkImports
+            linkImports,
+            writeAlignment
         ))
     }
 
@@ -4804,6 +4819,7 @@ typedef struct WasmCImplementationWriterTask {
     bool pretty;
     bool debug;
     bool linkImports;
+    bool writeAlignment;
     bool result;
 } WasmCImplementationWriterTask;
 
@@ -4874,6 +4890,7 @@ wasmCImplementationWriterThread(
             bool pretty = task->pretty;
             bool debug = task->debug;
             bool linkImports = task->linkImports;
+            bool writeAlignment = task->writeAlignment;
 
             writer->task = NULL;
 
@@ -4891,7 +4908,8 @@ wasmCImplementationWriterThread(
                     startFunctionIndex,
                     pretty,
                     debug,
-                    linkImports
+                    linkImports,
+                    writeAlignment
                 );
                 if (!result) {
                     fprintf(
@@ -4942,7 +4960,8 @@ wasmCWriteModuleImplementationFiles(
         0,
         options.pretty,
         options.debug,
-        options.linkImports
+        options.linkImports,
+        options.writeAlignment
     ))
 
     {
@@ -4961,6 +4980,7 @@ wasmCWriteModuleImplementationFiles(
         task.pretty = options.pretty;
         task.debug = options.debug;
         task.linkImports = options.linkImports;
+        task.writeAlignment = options.writeAlignment;
 
         for (; jobIndex < threadCount; jobIndex++) {
             int err = pthread_create(

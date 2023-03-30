@@ -22,9 +22,9 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:pglh";
+static char* const optString = "t:f:d:pglah";
 #else
-static char* const optString = "f:d:pglh";
+static char* const optString = "f:d:pglah";
 #endif /* HAS_PTHREAD */
 
 static
@@ -94,6 +94,7 @@ main(
     bool pretty = false;
     bool debug = false;
     bool linkImports = false;
+    bool writeAlignment = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
     char moduleName[PATH_MAX];
 
@@ -124,6 +125,10 @@ main(
             }
             case 'l': {
                 linkImports = true;
+                break;
+            }
+            case 'a': {
+                writeAlignment = true;
                 break;
             }
             case 'd': {
@@ -180,6 +185,7 @@ main(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -l         Link against imported functions rather than resolving them at runtime\n"
+                    "  -a         Pass alsignment hints to the load and store macros. You'll need a custom w2c2_base.h to use this\n"
                 );
                 return 0;
             }
@@ -259,6 +265,7 @@ main(
         writeOptions.pretty = pretty;
         writeOptions.debug = debug;
         writeOptions.linkImports = linkImports;
+        writeOptions.writeAlignment = writeAlignment;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
         if (!wasmCWriteModule(reader.module, moduleName, writeOptions)) {
