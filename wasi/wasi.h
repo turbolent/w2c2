@@ -10,7 +10,9 @@ typedef long ssize_t;
 #include <sys/types.h>
 #endif
 
+#ifndef PLAN9
 #include <limits.h>
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024

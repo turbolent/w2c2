@@ -31,7 +31,7 @@ typedef signed long long int I64;
 typedef float F32;
 typedef double F64;
 
-#define MUST(_) { if (!(_)) { return false; }; }
+#define MUST(x) { if (!(x)) { return false; }; }
 
 #define WASM_LITTLE_ENDIAN  0
 #define WASM_BIG_ENDIAN     1
@@ -117,8 +117,10 @@ typedef double F64;
 #define swap64(x) (x)
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #define W2C2_INLINE __inline
+#elif defined(PLAN9)
+#define W2C2_INLINE inline
 #else
 #define W2C2_INLINE __inline__
 #endif

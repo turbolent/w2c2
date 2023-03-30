@@ -512,6 +512,7 @@ wasmCGetReturnType(
             /* TODO: add support for multiple result values */
             fprintf(stderr, "w2c2: unsupported function with multiple result values\n");
             abort();
+			return NULL;
     }
 }
 
@@ -2600,7 +2601,7 @@ wasmCWriteFunctionCode(
             }
             case wasmOpcodeMiscPrefix: {
                 WasmMiscOpcode miscOpcode = 0;
-                MUST (leb128ReadU32(writer->code, &miscOpcode) > 0)
+                MUST (leb128ReadU32(writer->code, (U32*)&miscOpcode) > 0)
 
                 switch (miscOpcode) {
                     case wasmMiscOpcodeMemoryInit: {
