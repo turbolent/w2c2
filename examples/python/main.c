@@ -219,11 +219,11 @@ int main(int argc, char* argv[]) {
 
     {
         pythonInstance instance;
-        pythonInstantiate(&instance, wasiResolveImport);
+        pythonInstantiate(&instance, NULL);
 
-        instance.wasiX5FsnapshotX5Fpreview1_procX5Fexit = procExit;
+        // TODO: set procExit
 
-        python_X5Fstart(&instance);
+        python__start(&instance);
         pythonFreeInstance(&instance);
     }
 

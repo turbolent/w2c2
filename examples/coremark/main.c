@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     initWii();
 #endif
 
-    coremarkInstantiate(&instance, wasiResolveImport);
+    coremarkInstantiate(&instance, NULL);
 
 #ifdef __MSL__
     SIOUXSetTitle("\pCoreMark");
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    coremark_X5Fstart(&instance);
+    coremark__start(&instance);
 
 #ifdef __wii__
 	while(1) {
