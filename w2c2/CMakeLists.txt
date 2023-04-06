@@ -36,9 +36,9 @@ list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 add_executable(w2c2 ${SOURCES})
 
 list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.c)
-add_executable(test ${TEST_SOURCES} ${SOURCES})
+add_executable(w2c2_test ${TEST_SOURCES} ${SOURCES})
 
-foreach(TARGET w2c2 test)
+foreach(TARGET w2c2 w2c2_test)
 
     target_compile_options(${TARGET} PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
