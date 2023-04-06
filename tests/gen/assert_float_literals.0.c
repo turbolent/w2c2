@@ -14,42 +14,42 @@ void test() {
         "f32.nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EpositiveX5Fnan(&instance),
+        floatliterals0_f32X2Epositive_nan(&instance),
         2143289344u,
         "f32.positive_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EnegativeX5Fnan(&instance),
+        floatliterals0_f32X2Enegative_nan(&instance),
         4290772992u,
         "f32.negative_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EplainX5Fnan(&instance),
+        floatliterals0_f32X2Eplain_nan(&instance),
         2143289344u,
         "f32.plain_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EinformallyX5FknownX5FasX5FplainX5Fsnan(&instance),
+        floatliterals0_f32X2Einformally_known_as_plain_snan(&instance),
         2141192192u,
         "f32.informally_known_as_plain_snan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EallX5FonesX5Fnan(&instance),
+        floatliterals0_f32X2Eall_ones_nan(&instance),
         4294967295u,
         "f32.all_ones_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EmiscX5Fnan(&instance),
+        floatliterals0_f32X2Emisc_nan(&instance),
         2139169605u,
         "f32.misc_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EmiscX5FpositiveX5Fnan(&instance),
+        floatliterals0_f32X2Emisc_positive_nan(&instance),
         2142257232u,
         "f32.misc_positive_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EmiscX5FnegativeX5Fnan(&instance),
+        floatliterals0_f32X2Emisc_negative_nan(&instance),
         4289379550u,
         "f32.misc_negative_nan()"
     );
@@ -59,12 +59,12 @@ void test() {
         "f32.infinity()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EpositiveX5Finfinity(&instance),
+        floatliterals0_f32X2Epositive_infinity(&instance),
         2139095040u,
         "f32.positive_infinity()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EnegativeX5Finfinity(&instance),
+        floatliterals0_f32X2Enegative_infinity(&instance),
         4286578688u,
         "f32.negative_infinity()"
     );
@@ -74,12 +74,12 @@ void test() {
         "f32.zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EpositiveX5Fzero(&instance),
+        floatliterals0_f32X2Epositive_zero(&instance),
         0u,
         "f32.positive_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EnegativeX5Fzero(&instance),
+        floatliterals0_f32X2Enegative_zero(&instance),
         2147483648u,
         "f32.negative_zero()"
     );
@@ -89,97 +89,97 @@ void test() {
         "f32.misc()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EminX5Fpositive(&instance),
+        floatliterals0_f32X2Emin_positive(&instance),
         1u,
         "f32.min_positive()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EminX5Fnormal(&instance),
+        floatliterals0_f32X2Emin_normal(&instance),
         8388608u,
         "f32.min_normal()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EmaxX5Fsubnormal(&instance),
+        floatliterals0_f32X2Emax_subnormal(&instance),
         8388607u,
         "f32.max_subnormal()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EmaxX5Ffinite(&instance),
+        floatliterals0_f32X2Emax_finite(&instance),
         2139095039u,
         "f32.max_finite()"
     );
     assertEqualU32(
-        floatliterals0_f32X2EtrailingX5Fdot(&instance),
+        floatliterals0_f32X2Etrailing_dot(&instance),
         1149239296u,
         "f32.trailing_dot()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2Ezero(&instance),
+        floatliterals0_f32_decX2Ezero(&instance),
         0u,
         "f32_dec.zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EpositiveX5Fzero(&instance),
+        floatliterals0_f32_decX2Epositive_zero(&instance),
         0u,
         "f32_dec.positive_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EnegativeX5Fzero(&instance),
+        floatliterals0_f32_decX2Enegative_zero(&instance),
         2147483648u,
         "f32_dec.negative_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2Emisc(&instance),
+        floatliterals0_f32_decX2Emisc(&instance),
         1086918619u,
         "f32_dec.misc()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EminX5Fpositive(&instance),
+        floatliterals0_f32_decX2Emin_positive(&instance),
         1u,
         "f32_dec.min_positive()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EminX5Fnormal(&instance),
+        floatliterals0_f32_decX2Emin_normal(&instance),
         8388608u,
         "f32_dec.min_normal()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EmaxX5Fsubnormal(&instance),
+        floatliterals0_f32_decX2Emax_subnormal(&instance),
         8388607u,
         "f32_dec.max_subnormal()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EmaxX5Ffinite(&instance),
+        floatliterals0_f32_decX2Emax_finite(&instance),
         2139095039u,
         "f32_dec.max_finite()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2EtrailingX5Fdot(&instance),
+        floatliterals0_f32_decX2Etrailing_dot(&instance),
         1343554297u,
         "f32_dec.trailing_dot()"
     );
     assertEqualU32(
-        floatliterals0_f32X5FdecX2ErootX5FbeerX5Ffloat(&instance),
+        floatliterals0_f32_decX2Eroot_beer_float(&instance),
         1065353217u,
         "f32_dec.root_beer_float()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EallX5FonesX5Fnan(&instance),
+        floatliterals0_f64X2Eall_ones_nan(&instance),
         18446744073709551615ull,
         "f64.all_ones_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EmiscX5Fnan(&instance),
+        floatliterals0_f64X2Emisc_nan(&instance),
         9218888453225749180ull,
         "f64.misc_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EmiscX5FpositiveX5Fnan(&instance),
+        floatliterals0_f64X2Emisc_positive_nan(&instance),
         9219717281780008969ull,
         "f64.misc_positive_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EmiscX5FnegativeX5Fnan(&instance),
+        floatliterals0_f64X2Emisc_negative_nan(&instance),
         18442992325002076997ull,
         "f64.misc_negative_nan()"
     );
@@ -189,12 +189,12 @@ void test() {
         "f64.infinity()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EpositiveX5Finfinity(&instance),
+        floatliterals0_f64X2Epositive_infinity(&instance),
         9218868437227405312ull,
         "f64.positive_infinity()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EnegativeX5Finfinity(&instance),
+        floatliterals0_f64X2Enegative_infinity(&instance),
         18442240474082181120ull,
         "f64.negative_infinity()"
     );
@@ -204,12 +204,12 @@ void test() {
         "f64.zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EpositiveX5Fzero(&instance),
+        floatliterals0_f64X2Epositive_zero(&instance),
         0ull,
         "f64.positive_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EnegativeX5Fzero(&instance),
+        floatliterals0_f64X2Enegative_zero(&instance),
         9223372036854775808ull,
         "f64.negative_zero()"
     );
@@ -219,77 +219,77 @@ void test() {
         "f64.misc()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EminX5Fpositive(&instance),
+        floatliterals0_f64X2Emin_positive(&instance),
         1ull,
         "f64.min_positive()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EminX5Fnormal(&instance),
+        floatliterals0_f64X2Emin_normal(&instance),
         4503599627370496ull,
         "f64.min_normal()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EmaxX5Fsubnormal(&instance),
+        floatliterals0_f64X2Emax_subnormal(&instance),
         4503599627370495ull,
         "f64.max_subnormal()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EmaxX5Ffinite(&instance),
+        floatliterals0_f64X2Emax_finite(&instance),
         9218868437227405311ull,
         "f64.max_finite()"
     );
     assertEqualU64(
-        floatliterals0_f64X2EtrailingX5Fdot(&instance),
+        floatliterals0_f64X2Etrailing_dot(&instance),
         5057542381537067008ull,
         "f64.trailing_dot()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2Ezero(&instance),
+        floatliterals0_f64_decX2Ezero(&instance),
         0ull,
         "f64_dec.zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EpositiveX5Fzero(&instance),
+        floatliterals0_f64_decX2Epositive_zero(&instance),
         0ull,
         "f64_dec.positive_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EnegativeX5Fzero(&instance),
+        floatliterals0_f64_decX2Enegative_zero(&instance),
         9223372036854775808ull,
         "f64_dec.negative_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2Emisc(&instance),
+        floatliterals0_f64_decX2Emisc(&instance),
         4618760256179416344ull,
         "f64_dec.misc()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EminX5Fpositive(&instance),
+        floatliterals0_f64_decX2Emin_positive(&instance),
         1ull,
         "f64_dec.min_positive()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EminX5Fnormal(&instance),
+        floatliterals0_f64_decX2Emin_normal(&instance),
         4503599627370496ull,
         "f64_dec.min_normal()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EmaxX5Fsubnormal(&instance),
+        floatliterals0_f64_decX2Emax_subnormal(&instance),
         4503599627370495ull,
         "f64_dec.max_subnormal()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EmaxX5Ffinite(&instance),
+        floatliterals0_f64_decX2Emax_finite(&instance),
         9218868437227405311ull,
         "f64_dec.max_finite()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2EtrailingX5Fdot(&instance),
+        floatliterals0_f64_decX2Etrailing_dot(&instance),
         6103021453049119613ull,
         "f64_dec.trailing_dot()"
     );
     assertEqualU64(
-        floatliterals0_f64X5FdecX2ErootX5FbeerX5Ffloat(&instance),
+        floatliterals0_f64_decX2Eroot_beer_float(&instance),
         4607182419335945764ull,
         "f64_dec.root_beer_float()"
     );

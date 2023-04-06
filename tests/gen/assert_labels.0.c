@@ -99,22 +99,22 @@ void test() {
         "return(2u)"
     );
     assertEqualU32(
-        labels0_brX5Fif0(&instance),
+        labels0_br_if0(&instance),
         29u,
         "br_if0()"
     );
     assertEqualU32(
-        labels0_brX5Fif1(&instance),
+        labels0_br_if1(&instance),
         1u,
         "br_if1()"
     );
     assertEqualU32(
-        labels0_brX5Fif2(&instance),
+        labels0_br_if2(&instance),
         1u,
         "br_if2()"
     );
     assertEqualU32(
-        labels0_brX5Fif3(&instance),
+        labels0_br_if3(&instance),
         2u,
         "br_if3()"
     );

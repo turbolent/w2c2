@@ -83,25 +83,25 @@ void test() {
         9u,
         "as-br-value(0u)"
     );
-    localtee0_asX2DbrX5FifX2Dcond(&instance, 0u);
+    localtee0_asX2Dbr_ifX2Dcond(&instance, 0u);
     assertEqualU32(
-        localtee0_asX2DbrX5FifX2Dvalue(&instance, 0u),
+        localtee0_asX2Dbr_ifX2Dvalue(&instance, 0u),
         8u,
         "as-br_if-value(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DbrX5FifX2DvalueX2Dcond(&instance, 0u),
+        localtee0_asX2Dbr_ifX2DvalueX2Dcond(&instance, 0u),
         6u,
         "as-br_if-value-cond(0u)"
     );
-    localtee0_asX2DbrX5FtableX2Dindex(&instance, 0u);
+    localtee0_asX2Dbr_tableX2Dindex(&instance, 0u);
     assertEqualU32(
-        localtee0_asX2DbrX5FtableX2Dvalue(&instance, 0u),
+        localtee0_asX2Dbr_tableX2Dvalue(&instance, 0u),
         10u,
         "as-br_table-value(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DbrX5FtableX2DvalueX2Dindex(&instance, 0u),
+        localtee0_asX2Dbr_tableX2DvalueX2Dindex(&instance, 0u),
         6u,
         "as-br_table-value-index(0u)"
     );
@@ -156,22 +156,22 @@ void test() {
         "as-call-last(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DcallX5FindirectX2Dfirst(&instance, 0u),
+        localtee0_asX2Dcall_indirectX2Dfirst(&instance, 0u),
         4294967295u,
         "as-call_indirect-first(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DcallX5FindirectX2Dmid(&instance, 0u),
+        localtee0_asX2Dcall_indirectX2Dmid(&instance, 0u),
         4294967295u,
         "as-call_indirect-mid(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DcallX5FindirectX2Dlast(&instance, 0u),
+        localtee0_asX2Dcall_indirectX2Dlast(&instance, 0u),
         4294967295u,
         "as-call_indirect-last(0u)"
     );
     assertEqualU32(
-        localtee0_asX2DcallX5FindirectX2Dindex(&instance, 0u),
+        localtee0_asX2Dcall_indirectX2Dindex(&instance, 0u),
         4294967295u,
         "as-call_indirect-index(0u)"
     );
