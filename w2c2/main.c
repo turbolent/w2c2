@@ -22,9 +22,9 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:pglh";
+static char* const optString = "t:f:d:pgmh";
 #else
-static char* const optString = "f:d:pglh";
+static char* const optString = "f:d:pgmh";
 #endif /* HAS_PTHREAD */
 
 static
@@ -93,7 +93,7 @@ main(
     U32 functionsPerFile = 0;
     bool pretty = false;
     bool debug = false;
-    bool linkImports = false;
+    bool multipleModules = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
     char moduleName[PATH_MAX];
 
@@ -122,8 +122,8 @@ main(
                 debug = true;
                 break;
             }
-            case 'l': {
-                linkImports = true;
+            case 'm': {
+                multipleModules = true;
                 break;
             }
             case 'd': {
@@ -179,7 +179,7 @@ main(
                     "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n"
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
-                    "  -l         Link against imported functions rather than resolving them at runtime\n"
+                    "  -m         Support multiple modules (prefixes function names)\n"
                 );
                 return 0;
             }
@@ -258,7 +258,7 @@ main(
         writeOptions.functionsPerFile = functionsPerFile;
         writeOptions.pretty = pretty;
         writeOptions.debug = debug;
-        writeOptions.linkImports = linkImports;
+        writeOptions.multipleModules = multipleModules;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
         if (!wasmCWriteModule(reader.module, moduleName, writeOptions)) {
