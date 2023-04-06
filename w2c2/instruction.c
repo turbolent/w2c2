@@ -1,5 +1,4 @@
 #include "instruction.h"
-#include <stdio.h>
 
 /* WasmLocalInstruction */
 
