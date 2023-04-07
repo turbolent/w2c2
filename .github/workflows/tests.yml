@@ -135,12 +135,15 @@ jobs:
         build: [release, debug]
         threads: [true, false]
         system:
-          - { target: mingw64, env: x86_64, cc: gcc }
-          - { target: mingw32, env: i686,   cc: gcc }
+          - { target: mingw64, env: x86_64 }
+          - { target: mingw32, env: i686   }
 
     defaults:
       run:
         shell: msys2 {0}
+
+    env:
+      CC: gcc
 
     steps:
       - uses: actions/checkout@v3
@@ -161,7 +164,6 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         env:
-          CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
@@ -173,8 +175,6 @@ jobs:
           make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
-        env:
-          CC: ${{ matrix.system.cc }}
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }}
 
