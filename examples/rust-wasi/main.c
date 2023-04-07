@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
 
     {
         rustwasiInstance instance;
-        rustwasiInstantiate(&instance, wasiResolveImport);
-        rustwasi_X5Fstart(&instance);
+        rustwasiInstantiate(&instance, NULL);
+        rustwasi__start(&instance);
         rustwasiFreeInstance(&instance);
     }
 

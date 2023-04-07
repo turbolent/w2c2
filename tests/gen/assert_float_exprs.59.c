@@ -8,7 +8,7 @@ void test() {
     floatexprs59Instance instance;
     floatexprs59Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.59.wasm");
-    floatexprs59_f32X2EsimpleX5Fx4X5Fsum(&instance, 0u, 16u, 32u);
+    floatexprs59_f32X2Esimple_x4_sum(&instance, 0u, 16u, 32u);
     assertEqualF32(
         floatexprs59_f32X2Eload(&instance, 32u),
         2.802596928649634e-45,

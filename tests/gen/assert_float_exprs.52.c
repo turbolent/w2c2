@@ -9,7 +9,7 @@ void test() {
     floatexprs52Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.52.wasm");
     assertEqualF32(
-        floatexprs52_llvmX5Fpr27036(&instance, 4269932491u, 14942208u),
+        floatexprs52_llvm_pr27036(&instance, 4269932491u, 14942208u),
         -10092596.0,
         "llvm_pr27036(4269932491u, 14942208u)"
     );

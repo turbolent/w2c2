@@ -10,7 +10,7 @@ typedef struct WasmCWriteModuleOptions {
     U32 functionsPerFile;
     bool pretty;
     bool debug;
-    bool linkImports;
+    bool multipleModules;
     WasmDataSegmentMode dataSegmentMode;
 } WasmCWriteModuleOptions;
 

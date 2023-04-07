@@ -129,312 +129,312 @@ void test() {
         "mul(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 1ull, 1ull),
+        i640_div_s(&instance, 1ull, 1ull),
         1ull,
         "div_s(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 0ull, 1ull),
+        i640_div_s(&instance, 0ull, 1ull),
         0ull,
         "div_s(0ull, 1ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 0ull, 18446744073709551615ull),
+        i640_div_s(&instance, 0ull, 18446744073709551615ull),
         0ull,
         "div_s(0ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_div_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1ull,
         "div_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 9223372036854775808ull, 2ull),
+        i640_div_s(&instance, 9223372036854775808ull, 2ull),
         13835058055282163712ull,
         "div_s(9223372036854775808ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 9223372036854775809ull, 1000ull),
+        i640_div_s(&instance, 9223372036854775809ull, 1000ull),
         18437520701672696841ull,
         "div_s(9223372036854775809ull, 1000ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 5ull, 2ull),
+        i640_div_s(&instance, 5ull, 2ull),
         2ull,
         "div_s(5ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 18446744073709551611ull, 2ull),
+        i640_div_s(&instance, 18446744073709551611ull, 2ull),
         18446744073709551614ull,
         "div_s(18446744073709551611ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 5ull, 18446744073709551614ull),
+        i640_div_s(&instance, 5ull, 18446744073709551614ull),
         18446744073709551614ull,
         "div_s(5ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 18446744073709551611ull, 18446744073709551614ull),
+        i640_div_s(&instance, 18446744073709551611ull, 18446744073709551614ull),
         2ull,
         "div_s(18446744073709551611ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 7ull, 3ull),
+        i640_div_s(&instance, 7ull, 3ull),
         2ull,
         "div_s(7ull, 3ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 18446744073709551609ull, 3ull),
+        i640_div_s(&instance, 18446744073709551609ull, 3ull),
         18446744073709551614ull,
         "div_s(18446744073709551609ull, 3ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 7ull, 18446744073709551613ull),
+        i640_div_s(&instance, 7ull, 18446744073709551613ull),
         18446744073709551614ull,
         "div_s(7ull, 18446744073709551613ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 18446744073709551609ull, 18446744073709551613ull),
+        i640_div_s(&instance, 18446744073709551609ull, 18446744073709551613ull),
         2ull,
         "div_s(18446744073709551609ull, 18446744073709551613ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 11ull, 5ull),
+        i640_div_s(&instance, 11ull, 5ull),
         2ull,
         "div_s(11ull, 5ull)"
     );
     assertEqualU64(
-        i640_divX5Fs(&instance, 17ull, 7ull),
+        i640_div_s(&instance, 17ull, 7ull),
         2ull,
         "div_s(17ull, 7ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 1ull, 1ull),
+        i640_div_u(&instance, 1ull, 1ull),
         1ull,
         "div_u(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 0ull, 1ull),
+        i640_div_u(&instance, 0ull, 1ull),
         0ull,
         "div_u(0ull, 1ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_div_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1ull,
         "div_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_div_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0ull,
         "div_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 9223372036854775808ull, 2ull),
+        i640_div_u(&instance, 9223372036854775808ull, 2ull),
         4611686018427387904ull,
         "div_u(9223372036854775808ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 10371807465568210928ull, 4294967297ull),
+        i640_div_u(&instance, 10371807465568210928ull, 4294967297ull),
         2414874607ull,
         "div_u(10371807465568210928ull, 4294967297ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 9223372036854775809ull, 1000ull),
+        i640_div_u(&instance, 9223372036854775809ull, 1000ull),
         9223372036854775ull,
         "div_u(9223372036854775809ull, 1000ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 5ull, 2ull),
+        i640_div_u(&instance, 5ull, 2ull),
         2ull,
         "div_u(5ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 18446744073709551611ull, 2ull),
+        i640_div_u(&instance, 18446744073709551611ull, 2ull),
         9223372036854775805ull,
         "div_u(18446744073709551611ull, 2ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 5ull, 18446744073709551614ull),
+        i640_div_u(&instance, 5ull, 18446744073709551614ull),
         0ull,
         "div_u(5ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 18446744073709551611ull, 18446744073709551614ull),
+        i640_div_u(&instance, 18446744073709551611ull, 18446744073709551614ull),
         0ull,
         "div_u(18446744073709551611ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 7ull, 3ull),
+        i640_div_u(&instance, 7ull, 3ull),
         2ull,
         "div_u(7ull, 3ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 11ull, 5ull),
+        i640_div_u(&instance, 11ull, 5ull),
         2ull,
         "div_u(11ull, 5ull)"
     );
     assertEqualU64(
-        i640_divX5Fu(&instance, 17ull, 7ull),
+        i640_div_u(&instance, 17ull, 7ull),
         2ull,
         "div_u(17ull, 7ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 9223372036854775807ull, 18446744073709551615ull),
+        i640_rem_s(&instance, 9223372036854775807ull, 18446744073709551615ull),
         0ull,
         "rem_s(9223372036854775807ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 1ull, 1ull),
+        i640_rem_s(&instance, 1ull, 1ull),
         0ull,
         "rem_s(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 0ull, 1ull),
+        i640_rem_s(&instance, 0ull, 1ull),
         0ull,
         "rem_s(0ull, 1ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 0ull, 18446744073709551615ull),
+        i640_rem_s(&instance, 0ull, 18446744073709551615ull),
         0ull,
         "rem_s(0ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_rem_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0ull,
         "rem_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_rem_s(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0ull,
         "rem_s(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 9223372036854775808ull, 2ull),
+        i640_rem_s(&instance, 9223372036854775808ull, 2ull),
         0ull,
         "rem_s(9223372036854775808ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 9223372036854775809ull, 1000ull),
+        i640_rem_s(&instance, 9223372036854775809ull, 1000ull),
         18446744073709550809ull,
         "rem_s(9223372036854775809ull, 1000ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 5ull, 2ull),
+        i640_rem_s(&instance, 5ull, 2ull),
         1ull,
         "rem_s(5ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 18446744073709551611ull, 2ull),
+        i640_rem_s(&instance, 18446744073709551611ull, 2ull),
         18446744073709551615ull,
         "rem_s(18446744073709551611ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 5ull, 18446744073709551614ull),
+        i640_rem_s(&instance, 5ull, 18446744073709551614ull),
         1ull,
         "rem_s(5ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 18446744073709551611ull, 18446744073709551614ull),
+        i640_rem_s(&instance, 18446744073709551611ull, 18446744073709551614ull),
         18446744073709551615ull,
         "rem_s(18446744073709551611ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 7ull, 3ull),
+        i640_rem_s(&instance, 7ull, 3ull),
         1ull,
         "rem_s(7ull, 3ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 18446744073709551609ull, 3ull),
+        i640_rem_s(&instance, 18446744073709551609ull, 3ull),
         18446744073709551615ull,
         "rem_s(18446744073709551609ull, 3ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 7ull, 18446744073709551613ull),
+        i640_rem_s(&instance, 7ull, 18446744073709551613ull),
         1ull,
         "rem_s(7ull, 18446744073709551613ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 18446744073709551609ull, 18446744073709551613ull),
+        i640_rem_s(&instance, 18446744073709551609ull, 18446744073709551613ull),
         18446744073709551615ull,
         "rem_s(18446744073709551609ull, 18446744073709551613ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 11ull, 5ull),
+        i640_rem_s(&instance, 11ull, 5ull),
         1ull,
         "rem_s(11ull, 5ull)"
     );
     assertEqualU64(
-        i640_remX5Fs(&instance, 17ull, 7ull),
+        i640_rem_s(&instance, 17ull, 7ull),
         3ull,
         "rem_s(17ull, 7ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 1ull, 1ull),
+        i640_rem_u(&instance, 1ull, 1ull),
         0ull,
         "rem_u(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 0ull, 1ull),
+        i640_rem_u(&instance, 0ull, 1ull),
         0ull,
         "rem_u(0ull, 1ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_rem_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0ull,
         "rem_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_rem_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         9223372036854775808ull,
         "rem_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 9223372036854775808ull, 2ull),
+        i640_rem_u(&instance, 9223372036854775808ull, 2ull),
         0ull,
         "rem_u(9223372036854775808ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 10371807465568210928ull, 4294967297ull),
+        i640_rem_u(&instance, 10371807465568210928ull, 4294967297ull),
         2147483649ull,
         "rem_u(10371807465568210928ull, 4294967297ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 9223372036854775809ull, 1000ull),
+        i640_rem_u(&instance, 9223372036854775809ull, 1000ull),
         809ull,
         "rem_u(9223372036854775809ull, 1000ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 5ull, 2ull),
+        i640_rem_u(&instance, 5ull, 2ull),
         1ull,
         "rem_u(5ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 18446744073709551611ull, 2ull),
+        i640_rem_u(&instance, 18446744073709551611ull, 2ull),
         1ull,
         "rem_u(18446744073709551611ull, 2ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 5ull, 18446744073709551614ull),
+        i640_rem_u(&instance, 5ull, 18446744073709551614ull),
         5ull,
         "rem_u(5ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 18446744073709551611ull, 18446744073709551614ull),
+        i640_rem_u(&instance, 18446744073709551611ull, 18446744073709551614ull),
         18446744073709551611ull,
         "rem_u(18446744073709551611ull, 18446744073709551614ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 7ull, 3ull),
+        i640_rem_u(&instance, 7ull, 3ull),
         1ull,
         "rem_u(7ull, 3ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 11ull, 5ull),
+        i640_rem_u(&instance, 11ull, 5ull),
         1ull,
         "rem_u(11ull, 5ull)"
     );
     assertEqualU64(
-        i640_remX5Fu(&instance, 17ull, 7ull),
+        i640_rem_u(&instance, 17ull, 7ull),
         3ull,
         "rem_u(17ull, 7ull)"
     );
@@ -624,172 +624,172 @@ void test() {
         "shl(1ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 1ull),
+        i640_shr_s(&instance, 1ull, 1ull),
         0ull,
         "shr_s(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 0ull),
+        i640_shr_s(&instance, 1ull, 0ull),
         1ull,
         "shr_s(1ull, 0ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 1ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 1ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 9223372036854775807ull, 1ull),
+        i640_shr_s(&instance, 9223372036854775807ull, 1ull),
         4611686018427387903ull,
         "shr_s(9223372036854775807ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 9223372036854775808ull, 1ull),
+        i640_shr_s(&instance, 9223372036854775808ull, 1ull),
         13835058055282163712ull,
         "shr_s(9223372036854775808ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 4611686018427387904ull, 1ull),
+        i640_shr_s(&instance, 4611686018427387904ull, 1ull),
         2305843009213693952ull,
         "shr_s(4611686018427387904ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 64ull),
+        i640_shr_s(&instance, 1ull, 64ull),
         1ull,
         "shr_s(1ull, 64ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 65ull),
+        i640_shr_s(&instance, 1ull, 65ull),
         0ull,
         "shr_s(1ull, 65ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 18446744073709551615ull),
+        i640_shr_s(&instance, 1ull, 18446744073709551615ull),
         0ull,
         "shr_s(1ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 9223372036854775807ull),
+        i640_shr_s(&instance, 1ull, 9223372036854775807ull),
         0ull,
         "shr_s(1ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 1ull, 9223372036854775808ull),
+        i640_shr_s(&instance, 1ull, 9223372036854775808ull),
         1ull,
         "shr_s(1ull, 9223372036854775808ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 9223372036854775808ull, 63ull),
+        i640_shr_s(&instance, 9223372036854775808ull, 63ull),
         18446744073709551615ull,
         "shr_s(9223372036854775808ull, 63ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 64ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 64ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 64ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 65ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 65ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 65ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 9223372036854775807ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 9223372036854775807ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_shrX5Fs(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_shr_s(&instance, 18446744073709551615ull, 9223372036854775808ull),
         18446744073709551615ull,
         "shr_s(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 1ull),
+        i640_shr_u(&instance, 1ull, 1ull),
         0ull,
         "shr_u(1ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 0ull),
+        i640_shr_u(&instance, 1ull, 0ull),
         1ull,
         "shr_u(1ull, 0ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 1ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 1ull),
         9223372036854775807ull,
         "shr_u(18446744073709551615ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 9223372036854775807ull, 1ull),
+        i640_shr_u(&instance, 9223372036854775807ull, 1ull),
         4611686018427387903ull,
         "shr_u(9223372036854775807ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 9223372036854775808ull, 1ull),
+        i640_shr_u(&instance, 9223372036854775808ull, 1ull),
         4611686018427387904ull,
         "shr_u(9223372036854775808ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 4611686018427387904ull, 1ull),
+        i640_shr_u(&instance, 4611686018427387904ull, 1ull),
         2305843009213693952ull,
         "shr_u(4611686018427387904ull, 1ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 64ull),
+        i640_shr_u(&instance, 1ull, 64ull),
         1ull,
         "shr_u(1ull, 64ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 65ull),
+        i640_shr_u(&instance, 1ull, 65ull),
         0ull,
         "shr_u(1ull, 65ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 18446744073709551615ull),
+        i640_shr_u(&instance, 1ull, 18446744073709551615ull),
         0ull,
         "shr_u(1ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 9223372036854775807ull),
+        i640_shr_u(&instance, 1ull, 9223372036854775807ull),
         0ull,
         "shr_u(1ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 1ull, 9223372036854775808ull),
+        i640_shr_u(&instance, 1ull, 9223372036854775808ull),
         1ull,
         "shr_u(1ull, 9223372036854775808ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 9223372036854775808ull, 63ull),
+        i640_shr_u(&instance, 9223372036854775808ull, 63ull),
         1ull,
         "shr_u(9223372036854775808ull, 63ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 64ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 64ull),
         18446744073709551615ull,
         "shr_u(18446744073709551615ull, 64ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 65ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 65ull),
         9223372036854775807ull,
         "shr_u(18446744073709551615ull, 65ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1ull,
         "shr_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 9223372036854775807ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 9223372036854775807ull),
         1ull,
         "shr_u(18446744073709551615ull, 9223372036854775807ull)"
     );
     assertEqualU64(
-        i640_shrX5Fu(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_shr_u(&instance, 18446744073709551615ull, 9223372036854775808ull),
         18446744073709551615ull,
         "shr_u(18446744073709551615ull, 9223372036854775808ull)"
     );
@@ -1034,122 +1034,122 @@ void test() {
         "popcnt(16045690984833335023ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 0ull),
+        i640_extend8_s(&instance, 0ull),
         0ull,
         "extend8_s(0ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 127ull),
+        i640_extend8_s(&instance, 127ull),
         127ull,
         "extend8_s(127ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 128ull),
+        i640_extend8_s(&instance, 128ull),
         18446744073709551488ull,
         "extend8_s(128ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 255ull),
+        i640_extend8_s(&instance, 255ull),
         18446744073709551615ull,
         "extend8_s(255ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 81985529216486656ull),
+        i640_extend8_s(&instance, 81985529216486656ull),
         0ull,
         "extend8_s(81985529216486656ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 18364758544493064832ull),
+        i640_extend8_s(&instance, 18364758544493064832ull),
         18446744073709551488ull,
         "extend8_s(18364758544493064832ull)"
     );
     assertEqualU64(
-        i640_extend8X5Fs(&instance, 18446744073709551615ull),
+        i640_extend8_s(&instance, 18446744073709551615ull),
         18446744073709551615ull,
         "extend8_s(18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 0ull),
+        i640_extend16_s(&instance, 0ull),
         0ull,
         "extend16_s(0ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 32767ull),
+        i640_extend16_s(&instance, 32767ull),
         32767ull,
         "extend16_s(32767ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 32768ull),
+        i640_extend16_s(&instance, 32768ull),
         18446744073709518848ull,
         "extend16_s(32768ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 65535ull),
+        i640_extend16_s(&instance, 65535ull),
         18446744073709551615ull,
         "extend16_s(65535ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 1311768467463733248ull),
+        i640_extend16_s(&instance, 1311768467463733248ull),
         0ull,
         "extend16_s(1311768467463733248ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 18364758544493084672ull),
+        i640_extend16_s(&instance, 18364758544493084672ull),
         18446744073709518848ull,
         "extend16_s(18364758544493084672ull)"
     );
     assertEqualU64(
-        i640_extend16X5Fs(&instance, 18446744073709551615ull),
+        i640_extend16_s(&instance, 18446744073709551615ull),
         18446744073709551615ull,
         "extend16_s(18446744073709551615ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 0ull),
+        i640_extend32_s(&instance, 0ull),
         0ull,
         "extend32_s(0ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 32767ull),
+        i640_extend32_s(&instance, 32767ull),
         32767ull,
         "extend32_s(32767ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 32768ull),
+        i640_extend32_s(&instance, 32768ull),
         32768ull,
         "extend32_s(32768ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 65535ull),
+        i640_extend32_s(&instance, 65535ull),
         65535ull,
         "extend32_s(65535ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 2147483647ull),
+        i640_extend32_s(&instance, 2147483647ull),
         2147483647ull,
         "extend32_s(2147483647ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 2147483648ull),
+        i640_extend32_s(&instance, 2147483648ull),
         18446744071562067968ull,
         "extend32_s(2147483648ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 4294967295ull),
+        i640_extend32_s(&instance, 4294967295ull),
         18446744073709551615ull,
         "extend32_s(4294967295ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 81985526906748928ull),
+        i640_extend32_s(&instance, 81985526906748928ull),
         0ull,
         "extend32_s(81985526906748928ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 18364758544655319040ull),
+        i640_extend32_s(&instance, 18364758544655319040ull),
         18446744071562067968ull,
         "extend32_s(18364758544655319040ull)"
     );
     assertEqualU64(
-        i640_extend32X5Fs(&instance, 18446744073709551615ull),
+        i640_extend32_s(&instance, 18446744073709551615ull),
         18446744073709551615ull,
         "extend32_s(18446744073709551615ull)"
     );
@@ -1319,562 +1319,562 @@ void test() {
         "ne(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 0ull, 0ull),
+        i640_lt_s(&instance, 0ull, 0ull),
         0u,
         "lt_s(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 1ull, 1ull),
+        i640_lt_s(&instance, 1ull, 1ull),
         0u,
         "lt_s(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 18446744073709551615ull, 1ull),
+        i640_lt_s(&instance, 18446744073709551615ull, 1ull),
         1u,
         "lt_s(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_lt_s(&instance, 9223372036854775808ull, 9223372036854775808ull),
         0u,
         "lt_s(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_lt_s(&instance, 9223372036854775807ull, 9223372036854775807ull),
         0u,
         "lt_s(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_lt_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0u,
         "lt_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 1ull, 0ull),
+        i640_lt_s(&instance, 1ull, 0ull),
         0u,
         "lt_s(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 0ull, 1ull),
+        i640_lt_s(&instance, 0ull, 1ull),
         1u,
         "lt_s(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775808ull, 0ull),
+        i640_lt_s(&instance, 9223372036854775808ull, 0ull),
         1u,
         "lt_s(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 0ull, 9223372036854775808ull),
+        i640_lt_s(&instance, 0ull, 9223372036854775808ull),
         0u,
         "lt_s(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_lt_s(&instance, 9223372036854775808ull, 18446744073709551615ull),
         1u,
         "lt_s(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_lt_s(&instance, 18446744073709551615ull, 9223372036854775808ull),
         0u,
         "lt_s(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_lt_s(&instance, 9223372036854775808ull, 9223372036854775807ull),
         1u,
         "lt_s(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_ltX5Fs(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_lt_s(&instance, 9223372036854775807ull, 9223372036854775808ull),
         0u,
         "lt_s(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 0ull, 0ull),
+        i640_lt_u(&instance, 0ull, 0ull),
         0u,
         "lt_u(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 1ull, 1ull),
+        i640_lt_u(&instance, 1ull, 1ull),
         0u,
         "lt_u(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 18446744073709551615ull, 1ull),
+        i640_lt_u(&instance, 18446744073709551615ull, 1ull),
         0u,
         "lt_u(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_lt_u(&instance, 9223372036854775808ull, 9223372036854775808ull),
         0u,
         "lt_u(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_lt_u(&instance, 9223372036854775807ull, 9223372036854775807ull),
         0u,
         "lt_u(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_lt_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0u,
         "lt_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 1ull, 0ull),
+        i640_lt_u(&instance, 1ull, 0ull),
         0u,
         "lt_u(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 0ull, 1ull),
+        i640_lt_u(&instance, 0ull, 1ull),
         1u,
         "lt_u(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775808ull, 0ull),
+        i640_lt_u(&instance, 9223372036854775808ull, 0ull),
         0u,
         "lt_u(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 0ull, 9223372036854775808ull),
+        i640_lt_u(&instance, 0ull, 9223372036854775808ull),
         1u,
         "lt_u(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_lt_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         1u,
         "lt_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_lt_u(&instance, 18446744073709551615ull, 9223372036854775808ull),
         0u,
         "lt_u(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_lt_u(&instance, 9223372036854775808ull, 9223372036854775807ull),
         0u,
         "lt_u(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_ltX5Fu(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_lt_u(&instance, 9223372036854775807ull, 9223372036854775808ull),
         1u,
         "lt_u(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 0ull, 0ull),
+        i640_le_s(&instance, 0ull, 0ull),
         1u,
         "le_s(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 1ull, 1ull),
+        i640_le_s(&instance, 1ull, 1ull),
         1u,
         "le_s(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 18446744073709551615ull, 1ull),
+        i640_le_s(&instance, 18446744073709551615ull, 1ull),
         1u,
         "le_s(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_le_s(&instance, 9223372036854775808ull, 9223372036854775808ull),
         1u,
         "le_s(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_le_s(&instance, 9223372036854775807ull, 9223372036854775807ull),
         1u,
         "le_s(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_le_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1u,
         "le_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 1ull, 0ull),
+        i640_le_s(&instance, 1ull, 0ull),
         0u,
         "le_s(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 0ull, 1ull),
+        i640_le_s(&instance, 0ull, 1ull),
         1u,
         "le_s(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775808ull, 0ull),
+        i640_le_s(&instance, 9223372036854775808ull, 0ull),
         1u,
         "le_s(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 0ull, 9223372036854775808ull),
+        i640_le_s(&instance, 0ull, 9223372036854775808ull),
         0u,
         "le_s(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_le_s(&instance, 9223372036854775808ull, 18446744073709551615ull),
         1u,
         "le_s(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_le_s(&instance, 18446744073709551615ull, 9223372036854775808ull),
         0u,
         "le_s(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_le_s(&instance, 9223372036854775808ull, 9223372036854775807ull),
         1u,
         "le_s(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_leX5Fs(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_le_s(&instance, 9223372036854775807ull, 9223372036854775808ull),
         0u,
         "le_s(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 0ull, 0ull),
+        i640_le_u(&instance, 0ull, 0ull),
         1u,
         "le_u(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 1ull, 1ull),
+        i640_le_u(&instance, 1ull, 1ull),
         1u,
         "le_u(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 18446744073709551615ull, 1ull),
+        i640_le_u(&instance, 18446744073709551615ull, 1ull),
         0u,
         "le_u(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_le_u(&instance, 9223372036854775808ull, 9223372036854775808ull),
         1u,
         "le_u(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_le_u(&instance, 9223372036854775807ull, 9223372036854775807ull),
         1u,
         "le_u(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_le_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1u,
         "le_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 1ull, 0ull),
+        i640_le_u(&instance, 1ull, 0ull),
         0u,
         "le_u(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 0ull, 1ull),
+        i640_le_u(&instance, 0ull, 1ull),
         1u,
         "le_u(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775808ull, 0ull),
+        i640_le_u(&instance, 9223372036854775808ull, 0ull),
         0u,
         "le_u(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 0ull, 9223372036854775808ull),
+        i640_le_u(&instance, 0ull, 9223372036854775808ull),
         1u,
         "le_u(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_le_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         1u,
         "le_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_le_u(&instance, 18446744073709551615ull, 9223372036854775808ull),
         0u,
         "le_u(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_le_u(&instance, 9223372036854775808ull, 9223372036854775807ull),
         0u,
         "le_u(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_leX5Fu(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_le_u(&instance, 9223372036854775807ull, 9223372036854775808ull),
         1u,
         "le_u(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 0ull, 0ull),
+        i640_gt_s(&instance, 0ull, 0ull),
         0u,
         "gt_s(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 1ull, 1ull),
+        i640_gt_s(&instance, 1ull, 1ull),
         0u,
         "gt_s(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 18446744073709551615ull, 1ull),
+        i640_gt_s(&instance, 18446744073709551615ull, 1ull),
         0u,
         "gt_s(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_gt_s(&instance, 9223372036854775808ull, 9223372036854775808ull),
         0u,
         "gt_s(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_gt_s(&instance, 9223372036854775807ull, 9223372036854775807ull),
         0u,
         "gt_s(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_gt_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0u,
         "gt_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 1ull, 0ull),
+        i640_gt_s(&instance, 1ull, 0ull),
         1u,
         "gt_s(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 0ull, 1ull),
+        i640_gt_s(&instance, 0ull, 1ull),
         0u,
         "gt_s(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775808ull, 0ull),
+        i640_gt_s(&instance, 9223372036854775808ull, 0ull),
         0u,
         "gt_s(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 0ull, 9223372036854775808ull),
+        i640_gt_s(&instance, 0ull, 9223372036854775808ull),
         1u,
         "gt_s(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_gt_s(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0u,
         "gt_s(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_gt_s(&instance, 18446744073709551615ull, 9223372036854775808ull),
         1u,
         "gt_s(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_gt_s(&instance, 9223372036854775808ull, 9223372036854775807ull),
         0u,
         "gt_s(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_gtX5Fs(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_gt_s(&instance, 9223372036854775807ull, 9223372036854775808ull),
         1u,
         "gt_s(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 0ull, 0ull),
+        i640_gt_u(&instance, 0ull, 0ull),
         0u,
         "gt_u(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 1ull, 1ull),
+        i640_gt_u(&instance, 1ull, 1ull),
         0u,
         "gt_u(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 18446744073709551615ull, 1ull),
+        i640_gt_u(&instance, 18446744073709551615ull, 1ull),
         1u,
         "gt_u(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_gt_u(&instance, 9223372036854775808ull, 9223372036854775808ull),
         0u,
         "gt_u(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_gt_u(&instance, 9223372036854775807ull, 9223372036854775807ull),
         0u,
         "gt_u(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_gt_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         0u,
         "gt_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 1ull, 0ull),
+        i640_gt_u(&instance, 1ull, 0ull),
         1u,
         "gt_u(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 0ull, 1ull),
+        i640_gt_u(&instance, 0ull, 1ull),
         0u,
         "gt_u(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775808ull, 0ull),
+        i640_gt_u(&instance, 9223372036854775808ull, 0ull),
         1u,
         "gt_u(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 0ull, 9223372036854775808ull),
+        i640_gt_u(&instance, 0ull, 9223372036854775808ull),
         0u,
         "gt_u(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_gt_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0u,
         "gt_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_gt_u(&instance, 18446744073709551615ull, 9223372036854775808ull),
         1u,
         "gt_u(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_gt_u(&instance, 9223372036854775808ull, 9223372036854775807ull),
         1u,
         "gt_u(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_gtX5Fu(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_gt_u(&instance, 9223372036854775807ull, 9223372036854775808ull),
         0u,
         "gt_u(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 0ull, 0ull),
+        i640_ge_s(&instance, 0ull, 0ull),
         1u,
         "ge_s(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 1ull, 1ull),
+        i640_ge_s(&instance, 1ull, 1ull),
         1u,
         "ge_s(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 18446744073709551615ull, 1ull),
+        i640_ge_s(&instance, 18446744073709551615ull, 1ull),
         0u,
         "ge_s(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_ge_s(&instance, 9223372036854775808ull, 9223372036854775808ull),
         1u,
         "ge_s(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_ge_s(&instance, 9223372036854775807ull, 9223372036854775807ull),
         1u,
         "ge_s(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_ge_s(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1u,
         "ge_s(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 1ull, 0ull),
+        i640_ge_s(&instance, 1ull, 0ull),
         1u,
         "ge_s(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 0ull, 1ull),
+        i640_ge_s(&instance, 0ull, 1ull),
         0u,
         "ge_s(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775808ull, 0ull),
+        i640_ge_s(&instance, 9223372036854775808ull, 0ull),
         0u,
         "ge_s(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 0ull, 9223372036854775808ull),
+        i640_ge_s(&instance, 0ull, 9223372036854775808ull),
         1u,
         "ge_s(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_ge_s(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0u,
         "ge_s(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_ge_s(&instance, 18446744073709551615ull, 9223372036854775808ull),
         1u,
         "ge_s(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_ge_s(&instance, 9223372036854775808ull, 9223372036854775807ull),
         0u,
         "ge_s(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_geX5Fs(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_ge_s(&instance, 9223372036854775807ull, 9223372036854775808ull),
         1u,
         "ge_s(9223372036854775807ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 0ull, 0ull),
+        i640_ge_u(&instance, 0ull, 0ull),
         1u,
         "ge_u(0ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 1ull, 1ull),
+        i640_ge_u(&instance, 1ull, 1ull),
         1u,
         "ge_u(1ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 18446744073709551615ull, 1ull),
+        i640_ge_u(&instance, 18446744073709551615ull, 1ull),
         1u,
         "ge_u(18446744073709551615ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775808ull, 9223372036854775808ull),
+        i640_ge_u(&instance, 9223372036854775808ull, 9223372036854775808ull),
         1u,
         "ge_u(9223372036854775808ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775807ull, 9223372036854775807ull),
+        i640_ge_u(&instance, 9223372036854775807ull, 9223372036854775807ull),
         1u,
         "ge_u(9223372036854775807ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 18446744073709551615ull, 18446744073709551615ull),
+        i640_ge_u(&instance, 18446744073709551615ull, 18446744073709551615ull),
         1u,
         "ge_u(18446744073709551615ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 1ull, 0ull),
+        i640_ge_u(&instance, 1ull, 0ull),
         1u,
         "ge_u(1ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 0ull, 1ull),
+        i640_ge_u(&instance, 0ull, 1ull),
         0u,
         "ge_u(0ull, 1ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775808ull, 0ull),
+        i640_ge_u(&instance, 9223372036854775808ull, 0ull),
         1u,
         "ge_u(9223372036854775808ull, 0ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 0ull, 9223372036854775808ull),
+        i640_ge_u(&instance, 0ull, 9223372036854775808ull),
         0u,
         "ge_u(0ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775808ull, 18446744073709551615ull),
+        i640_ge_u(&instance, 9223372036854775808ull, 18446744073709551615ull),
         0u,
         "ge_u(9223372036854775808ull, 18446744073709551615ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 18446744073709551615ull, 9223372036854775808ull),
+        i640_ge_u(&instance, 18446744073709551615ull, 9223372036854775808ull),
         1u,
         "ge_u(18446744073709551615ull, 9223372036854775808ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775808ull, 9223372036854775807ull),
+        i640_ge_u(&instance, 9223372036854775808ull, 9223372036854775807ull),
         1u,
         "ge_u(9223372036854775808ull, 9223372036854775807ull)"
     );
     assertEqualU32(
-        i640_geX5Fu(&instance, 9223372036854775807ull, 9223372036854775808ull),
+        i640_ge_u(&instance, 9223372036854775807ull, 9223372036854775808ull),
         0u,
         "ge_u(9223372036854775807ull, 9223372036854775808ull)"
     );

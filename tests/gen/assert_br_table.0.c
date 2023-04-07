@@ -320,25 +320,25 @@ void test() {
         9u,
         "as-br-value()"
     );
-    brtable0_asX2DbrX5FifX2Dcond(&instance);
+    brtable0_asX2Dbr_ifX2Dcond(&instance);
     assertEqualU32(
-        brtable0_asX2DbrX5FifX2Dvalue(&instance),
+        brtable0_asX2Dbr_ifX2Dvalue(&instance),
         8u,
         "as-br_if-value()"
     );
     assertEqualU32(
-        brtable0_asX2DbrX5FifX2DvalueX2Dcond(&instance),
+        brtable0_asX2Dbr_ifX2DvalueX2Dcond(&instance),
         9u,
         "as-br_if-value-cond()"
     );
-    brtable0_asX2DbrX5FtableX2Dindex(&instance);
+    brtable0_asX2Dbr_tableX2Dindex(&instance);
     assertEqualU32(
-        brtable0_asX2DbrX5FtableX2Dvalue(&instance),
+        brtable0_asX2Dbr_tableX2Dvalue(&instance),
         10u,
         "as-br_table-value()"
     );
     assertEqualU32(
-        brtable0_asX2DbrX5FtableX2DvalueX2Dindex(&instance),
+        brtable0_asX2Dbr_tableX2DvalueX2Dindex(&instance),
         11u,
         "as-br_table-value-index()"
     );
@@ -413,22 +413,22 @@ void test() {
         "as-call-last()"
     );
     assertEqualU32(
-        brtable0_asX2DcallX5FindirectX2Dfirst(&instance),
+        brtable0_asX2Dcall_indirectX2Dfirst(&instance),
         20u,
         "as-call_indirect-first()"
     );
     assertEqualU32(
-        brtable0_asX2DcallX5FindirectX2Dmid(&instance),
+        brtable0_asX2Dcall_indirectX2Dmid(&instance),
         21u,
         "as-call_indirect-mid()"
     );
     assertEqualU32(
-        brtable0_asX2DcallX5FindirectX2Dlast(&instance),
+        brtable0_asX2Dcall_indirectX2Dlast(&instance),
         22u,
         "as-call_indirect-last()"
     );
     assertEqualU32(
-        brtable0_asX2DcallX5FindirectX2Dfunc(&instance),
+        brtable0_asX2Dcall_indirectX2Dfunc(&instance),
         23u,
         "as-call_indirect-func()"
     );
@@ -578,127 +578,127 @@ void test() {
         "nested-br-value(10213210u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 0u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 0u),
         17u,
         "nested-br_if-value(0u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 1u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 1u),
         9u,
         "nested-br_if-value(1u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 2u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 2u),
         8u,
         "nested-br_if-value(2u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 9u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 9u),
         8u,
         "nested-br_if-value(9u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 4294967287u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 4294967287u),
         8u,
         "nested-br_if-value(4294967287u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2Dvalue(&instance, 999999u),
+        brtable0_nestedX2Dbr_ifX2Dvalue(&instance, 999999u),
         8u,
         "nested-br_if-value(999999u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 0u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 0u),
         9u,
         "nested-br_if-value-cond(0u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 1u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 1u),
         8u,
         "nested-br_if-value-cond(1u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 2u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 2u),
         9u,
         "nested-br_if-value-cond(2u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 3u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 3u),
         9u,
         "nested-br_if-value-cond(3u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 4293967296u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 4293967296u),
         9u,
         "nested-br_if-value-cond(4293967296u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FifX2DvalueX2Dcond(&instance, 9423975u),
+        brtable0_nestedX2Dbr_ifX2DvalueX2Dcond(&instance, 9423975u),
         9u,
         "nested-br_if-value-cond(9423975u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 0u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 0u),
         17u,
         "nested-br_table-value(0u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 1u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 1u),
         9u,
         "nested-br_table-value(1u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 2u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 2u),
         8u,
         "nested-br_table-value(2u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 9u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 9u),
         8u,
         "nested-br_table-value(9u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 4294967287u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 4294967287u),
         8u,
         "nested-br_table-value(4294967287u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2Dvalue(&instance, 999999u),
+        brtable0_nestedX2Dbr_tableX2Dvalue(&instance, 999999u),
         8u,
         "nested-br_table-value(999999u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 0u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 0u),
         9u,
         "nested-br_table-value-index(0u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 1u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 1u),
         8u,
         "nested-br_table-value-index(1u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 2u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 2u),
         9u,
         "nested-br_table-value-index(2u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 3u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 3u),
         9u,
         "nested-br_table-value-index(3u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 4293967296u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 4293967296u),
         9u,
         "nested-br_table-value-index(4293967296u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DvalueX2Dindex(&instance, 9423975u),
+        brtable0_nestedX2Dbr_tableX2DvalueX2Dindex(&instance, 9423975u),
         9u,
         "nested-br_table-value-index(9423975u)"
     );
     assertEqualU32(
-        brtable0_nestedX2DbrX5FtableX2DloopX2Dblock(&instance, 1u),
+        brtable0_nestedX2Dbr_tableX2DloopX2Dblock(&instance, 1u),
         3u,
         "nested-br_table-loop-block(1u)"
     );

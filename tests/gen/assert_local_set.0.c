@@ -19,9 +19,9 @@ void test() {
     localset0_asX2DblockX2Dvalue(&instance, 0u);
     localset0_asX2DloopX2Dvalue(&instance, 0u);
     localset0_asX2DbrX2Dvalue(&instance, 0u);
-    localset0_asX2DbrX5FifX2Dvalue(&instance, 0u);
-    localset0_asX2DbrX5FifX2DvalueX2Dcond(&instance, 0u);
-    localset0_asX2DbrX5FtableX2Dvalue(&instance, 0u);
+    localset0_asX2Dbr_ifX2Dvalue(&instance, 0u);
+    localset0_asX2Dbr_ifX2DvalueX2Dcond(&instance, 0u);
+    localset0_asX2Dbr_tableX2Dvalue(&instance, 0u);
     localset0_asX2DreturnX2Dvalue(&instance, 0u);
     localset0_asX2DifX2Dthen(&instance, 1u);
     localset0_asX2DifX2Delse(&instance, 0u);

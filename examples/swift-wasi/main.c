@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 
     {
         swiftwasiInstance instance;
-        swiftwasiInstantiate(&instance, wasiResolveImport);
-        swiftwasi_X5Fstart(&instance);
+        swiftwasiInstantiate(&instance, NULL);
+        swiftwasi__start(&instance);
         swiftwasiFreeInstance(&instance);
     }
 

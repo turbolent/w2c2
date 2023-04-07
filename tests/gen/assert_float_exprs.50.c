@@ -9,7 +9,7 @@ void test() {
     floatexprs50Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.50.wasm");
     assertEqualF32(
-        floatexprs50_llvmX5Fpr26746(&instance, -0.0),
+        floatexprs50_llvm_pr26746(&instance, -0.0),
         0.0,
         "llvm_pr26746(-0.0)"
     );

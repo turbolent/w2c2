@@ -419,22 +419,22 @@ void test() {
         "as-if-condition()"
     );
     assertEqualU64(
-        callindirect0_asX2DbrX5FifX2Dfirst(&instance),
+        callindirect0_asX2Dbr_ifX2Dfirst(&instance),
         356ull,
         "as-br_if-first()"
     );
     assertEqualU32(
-        callindirect0_asX2DbrX5FifX2Dlast(&instance),
+        callindirect0_asX2Dbr_ifX2Dlast(&instance),
         2u,
         "as-br_if-last()"
     );
     assertEqualF32(
-        callindirect0_asX2DbrX5FtableX2Dfirst(&instance),
+        callindirect0_asX2Dbr_tableX2Dfirst(&instance),
         3890.0,
         "as-br_table-first()"
     );
     assertEqualU32(
-        callindirect0_asX2DbrX5FtableX2Dlast(&instance),
+        callindirect0_asX2Dbr_tableX2Dlast(&instance),
         2u,
         "as-br_table-last()"
     );

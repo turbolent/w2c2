@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 
     {
         clangInstance instance;
-        clangInstantiate(&instance, wasiResolveImport);
-        clang_X5Fstart(&instance);
+        clangInstantiate(&instance, NULL);
+        clang__start(&instance);
         clangFreeInstance(&instance);
     }
 

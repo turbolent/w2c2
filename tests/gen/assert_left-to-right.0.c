@@ -9,477 +9,477 @@ void test() {
     lefttoright0Instantiate(&instance, resolveTestImports);
     printStart("left-to-right.0.wasm");
     assertEqualU32(
-        lefttoright0_i32X5Fadd(&instance),
+        lefttoright0_i32_add(&instance),
         258u,
         "i32_add()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fadd(&instance),
+        lefttoright0_i64_add(&instance),
         258u,
         "i64_add()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fsub(&instance),
+        lefttoright0_i32_sub(&instance),
         258u,
         "i32_sub()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fsub(&instance),
+        lefttoright0_i64_sub(&instance),
         258u,
         "i64_sub()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fmul(&instance),
+        lefttoright0_i32_mul(&instance),
         258u,
         "i32_mul()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fmul(&instance),
+        lefttoright0_i64_mul(&instance),
         258u,
         "i64_mul()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FdivX5Fs(&instance),
+        lefttoright0_i32_div_s(&instance),
         258u,
         "i32_div_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FdivX5Fs(&instance),
+        lefttoright0_i64_div_s(&instance),
         258u,
         "i64_div_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FdivX5Fu(&instance),
+        lefttoright0_i32_div_u(&instance),
         258u,
         "i32_div_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FdivX5Fu(&instance),
+        lefttoright0_i64_div_u(&instance),
         258u,
         "i64_div_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FremX5Fs(&instance),
+        lefttoright0_i32_rem_s(&instance),
         258u,
         "i32_rem_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FremX5Fs(&instance),
+        lefttoright0_i64_rem_s(&instance),
         258u,
         "i64_rem_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FremX5Fu(&instance),
+        lefttoright0_i32_rem_u(&instance),
         258u,
         "i32_rem_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FremX5Fu(&instance),
+        lefttoright0_i64_rem_u(&instance),
         258u,
         "i64_rem_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fand(&instance),
+        lefttoright0_i32_and(&instance),
         258u,
         "i32_and()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fand(&instance),
+        lefttoright0_i64_and(&instance),
         258u,
         "i64_and()"
     );
     assertEqualU32(
-        lefttoright0_i32X5For(&instance),
+        lefttoright0_i32_or(&instance),
         258u,
         "i32_or()"
     );
     assertEqualU32(
-        lefttoright0_i64X5For(&instance),
+        lefttoright0_i64_or(&instance),
         258u,
         "i64_or()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fxor(&instance),
+        lefttoright0_i32_xor(&instance),
         258u,
         "i32_xor()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fxor(&instance),
+        lefttoright0_i64_xor(&instance),
         258u,
         "i64_xor()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fshl(&instance),
+        lefttoright0_i32_shl(&instance),
         258u,
         "i32_shl()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fshl(&instance),
+        lefttoright0_i64_shl(&instance),
         258u,
         "i64_shl()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FshrX5Fu(&instance),
+        lefttoright0_i32_shr_u(&instance),
         258u,
         "i32_shr_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FshrX5Fu(&instance),
+        lefttoright0_i64_shr_u(&instance),
         258u,
         "i64_shr_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FshrX5Fs(&instance),
+        lefttoright0_i32_shr_s(&instance),
         258u,
         "i32_shr_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FshrX5Fs(&instance),
+        lefttoright0_i64_shr_s(&instance),
         258u,
         "i64_shr_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Feq(&instance),
+        lefttoright0_i32_eq(&instance),
         258u,
         "i32_eq()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Feq(&instance),
+        lefttoright0_i64_eq(&instance),
         258u,
         "i64_eq()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fne(&instance),
+        lefttoright0_i32_ne(&instance),
         258u,
         "i32_ne()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fne(&instance),
+        lefttoright0_i64_ne(&instance),
         258u,
         "i64_ne()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FltX5Fs(&instance),
+        lefttoright0_i32_lt_s(&instance),
         258u,
         "i32_lt_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FltX5Fs(&instance),
+        lefttoright0_i64_lt_s(&instance),
         258u,
         "i64_lt_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FleX5Fs(&instance),
+        lefttoright0_i32_le_s(&instance),
         258u,
         "i32_le_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FleX5Fs(&instance),
+        lefttoright0_i64_le_s(&instance),
         258u,
         "i64_le_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FltX5Fu(&instance),
+        lefttoright0_i32_lt_u(&instance),
         258u,
         "i32_lt_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FltX5Fu(&instance),
+        lefttoright0_i64_lt_u(&instance),
         258u,
         "i64_lt_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FleX5Fu(&instance),
+        lefttoright0_i32_le_u(&instance),
         258u,
         "i32_le_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FleX5Fu(&instance),
+        lefttoright0_i64_le_u(&instance),
         258u,
         "i64_le_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FgtX5Fs(&instance),
+        lefttoright0_i32_gt_s(&instance),
         258u,
         "i32_gt_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FgtX5Fs(&instance),
+        lefttoright0_i64_gt_s(&instance),
         258u,
         "i64_gt_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FgeX5Fs(&instance),
+        lefttoright0_i32_ge_s(&instance),
         258u,
         "i32_ge_s()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FgeX5Fs(&instance),
+        lefttoright0_i64_ge_s(&instance),
         258u,
         "i64_ge_s()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FgtX5Fu(&instance),
+        lefttoright0_i32_gt_u(&instance),
         258u,
         "i32_gt_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FgtX5Fu(&instance),
+        lefttoright0_i64_gt_u(&instance),
         258u,
         "i64_gt_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FgeX5Fu(&instance),
+        lefttoright0_i32_ge_u(&instance),
         258u,
         "i32_ge_u()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FgeX5Fu(&instance),
+        lefttoright0_i64_ge_u(&instance),
         258u,
         "i64_ge_u()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fstore(&instance),
+        lefttoright0_i32_store(&instance),
         258u,
         "i32_store()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fstore(&instance),
+        lefttoright0_i64_store(&instance),
         258u,
         "i64_store()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fstore8(&instance),
+        lefttoright0_i32_store8(&instance),
         258u,
         "i32_store8()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fstore8(&instance),
+        lefttoright0_i64_store8(&instance),
         258u,
         "i64_store8()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fstore16(&instance),
+        lefttoright0_i32_store16(&instance),
         258u,
         "i32_store16()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fstore16(&instance),
+        lefttoright0_i64_store16(&instance),
         258u,
         "i64_store16()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fstore32(&instance),
+        lefttoright0_i64_store32(&instance),
         258u,
         "i64_store32()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fcall(&instance),
+        lefttoright0_i32_call(&instance),
         258u,
         "i32_call()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fcall(&instance),
+        lefttoright0_i64_call(&instance),
         258u,
         "i64_call()"
     );
     assertEqualU32(
-        lefttoright0_i32X5FcallX5Findirect(&instance),
+        lefttoright0_i32_call_indirect(&instance),
         66052u,
         "i32_call_indirect()"
     );
     assertEqualU32(
-        lefttoright0_i64X5FcallX5Findirect(&instance),
+        lefttoright0_i64_call_indirect(&instance),
         66052u,
         "i64_call_indirect()"
     );
     assertEqualU32(
-        lefttoright0_i32X5Fselect(&instance),
+        lefttoright0_i32_select(&instance),
         66053u,
         "i32_select()"
     );
     assertEqualU32(
-        lefttoright0_i64X5Fselect(&instance),
+        lefttoright0_i64_select(&instance),
         66053u,
         "i64_select()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fadd(&instance),
+        lefttoright0_f32_add(&instance),
         258u,
         "f32_add()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fadd(&instance),
+        lefttoright0_f64_add(&instance),
         258u,
         "f64_add()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fsub(&instance),
+        lefttoright0_f32_sub(&instance),
         258u,
         "f32_sub()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fsub(&instance),
+        lefttoright0_f64_sub(&instance),
         258u,
         "f64_sub()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fmul(&instance),
+        lefttoright0_f32_mul(&instance),
         258u,
         "f32_mul()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fmul(&instance),
+        lefttoright0_f64_mul(&instance),
         258u,
         "f64_mul()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fdiv(&instance),
+        lefttoright0_f32_div(&instance),
         258u,
         "f32_div()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fdiv(&instance),
+        lefttoright0_f64_div(&instance),
         258u,
         "f64_div()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fcopysign(&instance),
+        lefttoright0_f32_copysign(&instance),
         258u,
         "f32_copysign()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fcopysign(&instance),
+        lefttoright0_f64_copysign(&instance),
         258u,
         "f64_copysign()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Feq(&instance),
+        lefttoright0_f32_eq(&instance),
         258u,
         "f32_eq()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Feq(&instance),
+        lefttoright0_f64_eq(&instance),
         258u,
         "f64_eq()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fne(&instance),
+        lefttoright0_f32_ne(&instance),
         258u,
         "f32_ne()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fne(&instance),
+        lefttoright0_f64_ne(&instance),
         258u,
         "f64_ne()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Flt(&instance),
+        lefttoright0_f32_lt(&instance),
         258u,
         "f32_lt()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Flt(&instance),
+        lefttoright0_f64_lt(&instance),
         258u,
         "f64_lt()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fle(&instance),
+        lefttoright0_f32_le(&instance),
         258u,
         "f32_le()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fle(&instance),
+        lefttoright0_f64_le(&instance),
         258u,
         "f64_le()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fgt(&instance),
+        lefttoright0_f32_gt(&instance),
         258u,
         "f32_gt()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fgt(&instance),
+        lefttoright0_f64_gt(&instance),
         258u,
         "f64_gt()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fge(&instance),
+        lefttoright0_f32_ge(&instance),
         258u,
         "f32_ge()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fge(&instance),
+        lefttoright0_f64_ge(&instance),
         258u,
         "f64_ge()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fmin(&instance),
+        lefttoright0_f32_min(&instance),
         258u,
         "f32_min()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fmin(&instance),
+        lefttoright0_f64_min(&instance),
         258u,
         "f64_min()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fmax(&instance),
+        lefttoright0_f32_max(&instance),
         258u,
         "f32_max()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fmax(&instance),
+        lefttoright0_f64_max(&instance),
         258u,
         "f64_max()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fstore(&instance),
+        lefttoright0_f32_store(&instance),
         258u,
         "f32_store()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fstore(&instance),
+        lefttoright0_f64_store(&instance),
         258u,
         "f64_store()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fcall(&instance),
+        lefttoright0_f32_call(&instance),
         258u,
         "f32_call()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fcall(&instance),
+        lefttoright0_f64_call(&instance),
         258u,
         "f64_call()"
     );
     assertEqualU32(
-        lefttoright0_f32X5FcallX5Findirect(&instance),
+        lefttoright0_f32_call_indirect(&instance),
         66052u,
         "f32_call_indirect()"
     );
     assertEqualU32(
-        lefttoright0_f64X5FcallX5Findirect(&instance),
+        lefttoright0_f64_call_indirect(&instance),
         66052u,
         "f64_call_indirect()"
     );
     assertEqualU32(
-        lefttoright0_f32X5Fselect(&instance),
+        lefttoright0_f32_select(&instance),
         66053u,
         "f32_select()"
     );
     assertEqualU32(
-        lefttoright0_f64X5Fselect(&instance),
+        lefttoright0_f64_select(&instance),
         66053u,
         "f64_select()"
     );
     assertEqualU32(
-        lefttoright0_brX5Fif(&instance),
+        lefttoright0_br_if(&instance),
         258u,
         "br_if()"
     );
     assertEqualU32(
-        lefttoright0_brX5Ftable(&instance),
+        lefttoright0_br_table(&instance),
         258u,
         "br_table()"
     );

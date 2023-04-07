@@ -24,12 +24,12 @@ extern char** environ;
 
 int main(int argc, char* argv[]) {
     isattyInstance instance;
-    isattyInstantiate(&instance, wasiResolveImport);
+    isattyInstantiate(&instance, NULL);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;
     }
 
-    isatty_X5Fstart(&instance);
+    isatty__start(&instance);
 }

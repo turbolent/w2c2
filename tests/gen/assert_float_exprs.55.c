@@ -9,12 +9,12 @@ void test() {
     floatexprs55Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.55.wasm");
     assertEqualF32(
-        floatexprs55_f32X5FsqrtX5FminusX5F2(&instance, 4.0),
+        floatexprs55_f32_sqrt_minus_2(&instance, 4.0),
         0.0,
         "f32_sqrt_minus_2(4.0)"
     );
     assertEqualF64(
-        floatexprs55_f64X5FsqrtX5FminusX5F2(&instance, 4.0),
+        floatexprs55_f64_sqrt_minus_2(&instance, 4.0),
         0.0,
         "f64_sqrt_minus_2(4.0)"
     );

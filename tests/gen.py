@@ -25,8 +25,13 @@ def compare_versions(a, b):
 def export_name(name):
     escape_char = 'X'
     res = ""
-    for c in name:
-        if c.isalnum() and c != escape_char:
+    for i, c in enumerate(name):
+        if c == '_':
+            if i > 0 and name[i-1] == '_':
+                res += "__"
+            else:
+                res += c
+        elif c != escape_char and c.isalnum():
             res += c
         else:
             res += escape_char + "{:02X}".format(ord(c))

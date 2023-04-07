@@ -9,42 +9,42 @@ void test() {
     floatexprs24Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.24.wasm");
     assertEqualF32(
-        floatexprs24_f32X2EnoX5FfoldX5FdivX5Fneg0(&instance, 1.0),
+        floatexprs24_f32X2Eno_fold_div_neg0(&instance, 1.0),
         -INFINITY,
         "f32.no_fold_div_neg0(1.0)"
     );
     assertEqualF32(
-        floatexprs24_f32X2EnoX5FfoldX5FdivX5Fneg0(&instance, -1.0),
+        floatexprs24_f32X2Eno_fold_div_neg0(&instance, -1.0),
         INFINITY,
         "f32.no_fold_div_neg0(-1.0)"
     );
     assertEqualF32(
-        floatexprs24_f32X2EnoX5FfoldX5FdivX5Fneg0(&instance, INFINITY),
+        floatexprs24_f32X2Eno_fold_div_neg0(&instance, INFINITY),
         -INFINITY,
         "f32.no_fold_div_neg0(INFINITY)"
     );
     assertEqualF32(
-        floatexprs24_f32X2EnoX5FfoldX5FdivX5Fneg0(&instance, -INFINITY),
+        floatexprs24_f32X2Eno_fold_div_neg0(&instance, -INFINITY),
         INFINITY,
         "f32.no_fold_div_neg0(-INFINITY)"
     );
     assertEqualF64(
-        floatexprs24_f64X2EnoX5FfoldX5FdivX5Fneg0(&instance, 1.0),
+        floatexprs24_f64X2Eno_fold_div_neg0(&instance, 1.0),
         -INFINITY,
         "f64.no_fold_div_neg0(1.0)"
     );
     assertEqualF64(
-        floatexprs24_f64X2EnoX5FfoldX5FdivX5Fneg0(&instance, -1.0),
+        floatexprs24_f64X2Eno_fold_div_neg0(&instance, -1.0),
         INFINITY,
         "f64.no_fold_div_neg0(-1.0)"
     );
     assertEqualF64(
-        floatexprs24_f64X2EnoX5FfoldX5FdivX5Fneg0(&instance, INFINITY),
+        floatexprs24_f64X2Eno_fold_div_neg0(&instance, INFINITY),
         -INFINITY,
         "f64.no_fold_div_neg0(INFINITY)"
     );
     assertEqualF64(
-        floatexprs24_f64X2EnoX5FfoldX5FdivX5Fneg0(&instance, -INFINITY),
+        floatexprs24_f64X2Eno_fold_div_neg0(&instance, -INFINITY),
         INFINITY,
         "f64.no_fold_div_neg0(-INFINITY)"
     );
