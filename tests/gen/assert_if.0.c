@@ -163,67 +163,67 @@ void test() {
         "as-if-condition(1u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FifX2Dfirst(&instance, 0u),
+        if0_asX2Dbr_ifX2Dfirst(&instance, 0u),
         0u,
         "as-br_if-first(0u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FifX2Dfirst(&instance, 1u),
+        if0_asX2Dbr_ifX2Dfirst(&instance, 1u),
         1u,
         "as-br_if-first(1u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FifX2Dlast(&instance, 0u),
+        if0_asX2Dbr_ifX2Dlast(&instance, 0u),
         3u,
         "as-br_if-last(0u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FifX2Dlast(&instance, 1u),
+        if0_asX2Dbr_ifX2Dlast(&instance, 1u),
         2u,
         "as-br_if-last(1u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FtableX2Dfirst(&instance, 0u),
+        if0_asX2Dbr_tableX2Dfirst(&instance, 0u),
         0u,
         "as-br_table-first(0u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FtableX2Dfirst(&instance, 1u),
+        if0_asX2Dbr_tableX2Dfirst(&instance, 1u),
         1u,
         "as-br_table-first(1u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FtableX2Dlast(&instance, 0u),
+        if0_asX2Dbr_tableX2Dlast(&instance, 0u),
         2u,
         "as-br_table-last(0u)"
     );
     assertEqualU32(
-        if0_asX2DbrX5FtableX2Dlast(&instance, 1u),
+        if0_asX2Dbr_tableX2Dlast(&instance, 1u),
         2u,
         "as-br_table-last(1u)"
     );
     assertEqualU32(
-        if0_asX2DcallX5FindirectX2Dfirst(&instance, 0u),
+        if0_asX2Dcall_indirectX2Dfirst(&instance, 0u),
         0u,
         "as-call_indirect-first(0u)"
     );
     assertEqualU32(
-        if0_asX2DcallX5FindirectX2Dfirst(&instance, 1u),
+        if0_asX2Dcall_indirectX2Dfirst(&instance, 1u),
         1u,
         "as-call_indirect-first(1u)"
     );
     assertEqualU32(
-        if0_asX2DcallX5FindirectX2Dmid(&instance, 0u),
+        if0_asX2Dcall_indirectX2Dmid(&instance, 0u),
         2u,
         "as-call_indirect-mid(0u)"
     );
     assertEqualU32(
-        if0_asX2DcallX5FindirectX2Dmid(&instance, 1u),
+        if0_asX2Dcall_indirectX2Dmid(&instance, 1u),
         2u,
         "as-call_indirect-mid(1u)"
     );
     assertEqualU32(
-        if0_asX2DcallX5FindirectX2Dlast(&instance, 0u),
+        if0_asX2Dcall_indirectX2Dlast(&instance, 0u),
         2u,
         "as-call_indirect-last(0u)"
     );

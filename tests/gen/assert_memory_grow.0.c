@@ -24,13 +24,13 @@ void test() {
         "size()"
     );
     assertEqualU32(
-        memorygrow0_loadX5FatX5Fzero(&instance),
+        memorygrow0_load_at_zero(&instance),
         0u,
         "load_at_zero()"
     );
-    memorygrow0_storeX5FatX5Fzero(&instance);
+    memorygrow0_store_at_zero(&instance);
     assertEqualU32(
-        memorygrow0_loadX5FatX5Fzero(&instance),
+        memorygrow0_load_at_zero(&instance),
         2u,
         "load_at_zero()"
     );
@@ -45,24 +45,24 @@ void test() {
         "size()"
     );
     assertEqualU32(
-        memorygrow0_loadX5FatX5Fzero(&instance),
+        memorygrow0_load_at_zero(&instance),
         2u,
         "load_at_zero()"
     );
-    memorygrow0_storeX5FatX5Fzero(&instance);
+    memorygrow0_store_at_zero(&instance);
     assertEqualU32(
-        memorygrow0_loadX5FatX5Fzero(&instance),
+        memorygrow0_load_at_zero(&instance),
         2u,
         "load_at_zero()"
     );
     assertEqualU32(
-        memorygrow0_loadX5FatX5FpageX5Fsize(&instance),
+        memorygrow0_load_at_page_size(&instance),
         0u,
         "load_at_page_size()"
     );
-    memorygrow0_storeX5FatX5FpageX5Fsize(&instance);
+    memorygrow0_store_at_page_size(&instance);
     assertEqualU32(
-        memorygrow0_loadX5FatX5FpageX5Fsize(&instance),
+        memorygrow0_load_at_page_size(&instance),
         3u,
         "load_at_page_size()"
     );

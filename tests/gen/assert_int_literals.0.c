@@ -24,7 +24,7 @@ void test() {
         "i32.smax()"
     );
     assertEqualU32(
-        intliterals0_i32X2EnegX5Fsmax(&instance),
+        intliterals0_i32X2Eneg_smax(&instance),
         2147483649u,
         "i32.neg_smax()"
     );
@@ -34,32 +34,32 @@ void test() {
         "i32.smin()"
     );
     assertEqualU32(
-        intliterals0_i32X2EaltX5Fsmin(&instance),
+        intliterals0_i32X2Ealt_smin(&instance),
         2147483648u,
         "i32.alt_smin()"
     );
     assertEqualU32(
-        intliterals0_i32X2EincX5Fsmin(&instance),
+        intliterals0_i32X2Einc_smin(&instance),
         2147483649u,
         "i32.inc_smin()"
     );
     assertEqualU32(
-        intliterals0_i32X2EnegX5Fzero(&instance),
+        intliterals0_i32X2Eneg_zero(&instance),
         0u,
         "i32.neg_zero()"
     );
     assertEqualU32(
-        intliterals0_i32X2EnotX5Foctal(&instance),
+        intliterals0_i32X2Enot_octal(&instance),
         10u,
         "i32.not_octal()"
     );
     assertEqualU32(
-        intliterals0_i32X2EunsignedX5Fdecimal(&instance),
+        intliterals0_i32X2Eunsigned_decimal(&instance),
         4294967295u,
         "i32.unsigned_decimal()"
     );
     assertEqualU32(
-        intliterals0_i32X2EplusX5Fsign(&instance),
+        intliterals0_i32X2Eplus_sign(&instance),
         42u,
         "i32.plus_sign()"
     );
@@ -79,7 +79,7 @@ void test() {
         "i64.smax()"
     );
     assertEqualU64(
-        intliterals0_i64X2EnegX5Fsmax(&instance),
+        intliterals0_i64X2Eneg_smax(&instance),
         9223372036854775809ull,
         "i64.neg_smax()"
     );
@@ -89,32 +89,32 @@ void test() {
         "i64.smin()"
     );
     assertEqualU64(
-        intliterals0_i64X2EaltX5Fsmin(&instance),
+        intliterals0_i64X2Ealt_smin(&instance),
         9223372036854775808ull,
         "i64.alt_smin()"
     );
     assertEqualU64(
-        intliterals0_i64X2EincX5Fsmin(&instance),
+        intliterals0_i64X2Einc_smin(&instance),
         9223372036854775809ull,
         "i64.inc_smin()"
     );
     assertEqualU64(
-        intliterals0_i64X2EnegX5Fzero(&instance),
+        intliterals0_i64X2Eneg_zero(&instance),
         0ull,
         "i64.neg_zero()"
     );
     assertEqualU64(
-        intliterals0_i64X2EnotX5Foctal(&instance),
+        intliterals0_i64X2Enot_octal(&instance),
         10ull,
         "i64.not_octal()"
     );
     assertEqualU64(
-        intliterals0_i64X2EunsignedX5Fdecimal(&instance),
+        intliterals0_i64X2Eunsigned_decimal(&instance),
         18446744073709551615ull,
         "i64.unsigned_decimal()"
     );
     assertEqualU64(
-        intliterals0_i64X2EplusX5Fsign(&instance),
+        intliterals0_i64X2Eplus_sign(&instance),
         42ull,
         "i64.plus_sign()"
     );

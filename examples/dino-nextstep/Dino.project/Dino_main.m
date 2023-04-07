@@ -8,25 +8,9 @@
 
 /* Imports */
 
-static
 F32
-Math_random() {
+Math__random() {
     return (F32)rand()/(F32)(RAND_MAX);
-}
-
-static
-void*
-resolveImport(
-    const char* module,
-    const char* name
-) {
-    if (strcmp(module, "Math") == 0
-        && strcmp(name, "random") == 0
-        ) {
-        return (void*)Math_random;
-    }
-
-    return NULL;
 }
 
 void
@@ -175,7 +159,7 @@ void main(int argc, char *argv[]) {
     DinoView *dinoView;
     NXRect bounds;
 
-    dinoInstantiate(&instance, resolveImport);
+    dinoInstantiate(&instance, NULL);
     mem = dino_mem(&instance);
 
     framebufferSize = width * 4 * height;

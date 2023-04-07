@@ -71,37 +71,37 @@ void test() {
         "as-if-else()"
     );
     assertEqualU32(
-        block0_asX2DbrX5FifX2Dfirst(&instance),
+        block0_asX2Dbr_ifX2Dfirst(&instance),
         1u,
         "as-br_if-first()"
     );
     assertEqualU32(
-        block0_asX2DbrX5FifX2Dlast(&instance),
+        block0_asX2Dbr_ifX2Dlast(&instance),
         2u,
         "as-br_if-last()"
     );
     assertEqualU32(
-        block0_asX2DbrX5FtableX2Dfirst(&instance),
+        block0_asX2Dbr_tableX2Dfirst(&instance),
         1u,
         "as-br_table-first()"
     );
     assertEqualU32(
-        block0_asX2DbrX5FtableX2Dlast(&instance),
+        block0_asX2Dbr_tableX2Dlast(&instance),
         2u,
         "as-br_table-last()"
     );
     assertEqualU32(
-        block0_asX2DcallX5FindirectX2Dfirst(&instance),
+        block0_asX2Dcall_indirectX2Dfirst(&instance),
         1u,
         "as-call_indirect-first()"
     );
     assertEqualU32(
-        block0_asX2DcallX5FindirectX2Dmid(&instance),
+        block0_asX2Dcall_indirectX2Dmid(&instance),
         2u,
         "as-call_indirect-mid()"
     );
     assertEqualU32(
-        block0_asX2DcallX5FindirectX2Dlast(&instance),
+        block0_asX2Dcall_indirectX2Dlast(&instance),
         1u,
         "as-call_indirect-last()"
     );

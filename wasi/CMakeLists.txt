@@ -37,9 +37,9 @@ else()
 	add_library(w2c2wasi STATIC ${SOURCES})
 endif()
 
-add_executable(test ${TEST_SOURCES} ${SOURCES})
+add_executable(w2c2wasi_test ${TEST_SOURCES} ${SOURCES})
 
-foreach(TARGET w2c2wasi test)
+foreach(TARGET w2c2wasi w2c2wasi_test)
     target_compile_options(${TARGET} PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
