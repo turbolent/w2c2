@@ -48,6 +48,10 @@ jobs:
           # fails on f32_bitwise.0 copysign tests
           # - { target: m68k,     toolchain: gcc-m68k-linux-gnu,          cc: m68k-linux-gnu-gcc,          qemu: qemu-m68k-static     }
           - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
+
+    env:
+      CC: ${{ matrix.system.cc }}
+
     steps:
       - uses: actions/checkout@v3
       - name: Install QEMU
@@ -70,14 +74,12 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         env:
-          CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run w2c2 tests
         env:
-          CC: ${{ matrix.system.cc }}
           LDFLAGS: -static
         working-directory: ./tests
         shell: bash
@@ -85,8 +87,6 @@ jobs:
           make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
-        env:
-          CC: ${{ matrix.system.cc }}
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }}
 
