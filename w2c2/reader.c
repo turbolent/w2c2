@@ -402,7 +402,9 @@ wasmReadNameSection(
 
         /* Read function names */
         if (subsectionID == wasmNameSubsectionIDFunctionNames) {
-            const U32 functionCount = reader->module->functions.count;
+            const U32 functionCount = 
+                reader->module->functionImports.length 
+                + reader->module->functions.count;
 
             U32 functionNameIndex = 0;
 
