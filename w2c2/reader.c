@@ -372,10 +372,12 @@ static
 void
 wasmReadNameSection(
     WasmModuleReader* reader,
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
-    U32 subsectionIndex = 0;
-    for (; subsectionIndex < wasmNameSubsection_count; subsectionIndex++) {
+    U8* end = reader->buffer.data + sectionSize;
+
+    while (reader->buffer.data < end) {
         U8 subsectionID = 0;
         U32 subsectionSize = 0;
         U32 functionNameCount = 0;
@@ -457,8 +459,16 @@ wasmReadNameSection(
 
             /* Remove duplicates */
             wasmFunctionNamesRemoveDuplicates(&reader->module->functionNames, error);
+            if (*error != NULL) {
+                return;
+            }
         } else {
-            fprintf(stderr, "w2c2: skipping unsupported name section subsection %d\n", subsectionID);
+            fprintf(
+                stderr,
+                "w2c2: skipping unsupported %s (size %d)\n",
+                wasmNameSubsectionIDDescription(subsectionID),
+                subsectionSize
+            );
             bufferSkip(&reader->buffer, subsectionSize);
         }
     }
@@ -505,7 +515,10 @@ wasmReadCustomSection(
         bufferSkip(&reader->buffer, sectionSize);
 
     } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
-        wasmReadNameSection(reader, error);
+        wasmReadNameSection(reader, sectionSize, error);
+        if (*error != NULL) {
+            return;
+        }
     } else {
         fprintf(stderr, "w2c2: skipping custom section '%s' (size %u)\n", name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
@@ -727,6 +740,9 @@ wasmReadMemoryType(
     WasmModuleReaderError** error
 ) {
     wasmReadLimits(reader, min, max, error);
+    if (*error != NULL) {
+        return;
+    }
     if (*max == 0) {
         *max = UINT32_MAX / WASM_PAGE_SIZE;
     }
