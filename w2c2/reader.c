@@ -447,6 +447,14 @@ wasmReadNameSection(
                     return;
                 }
 
+                if (functionIndex >= functionCount) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidNameSectionFunctionIndex
+                    };
+                    *error = &wasmModuleReaderError;
+                    return;
+                }
+
                 /* Read function name */
                 if (!wasmReadName(&reader->buffer, &functionName)) {
                     static WasmModuleReaderError wasmModuleReaderError = {
