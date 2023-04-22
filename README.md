@@ -27,6 +27,10 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Separate compilation into multiple files
 - Parallel compilation
 - Support for multiple modules and instances
+- Support for generating debug information:
+  - Function names, if function names are provided in the [`names` custom section](https://webassembly.github.io/spec/core/appendix/custom.html#function-names) 
+  - Source line mapping, if DWARF line information is provided in the [`.debug_line` custom section](https://yurydelendik.github.io/webassembly-dwarf/).
+    Requires [libdwarf](https://github.com/davea42/libdwarf-code) to be installed. See instructions below.
 - WASI implementation which is able to run clang and Python
 
 ## Performance
@@ -162,3 +166,25 @@ To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e
 - `clang` enables Clang-specific sanitizers
 - `thread` enables the [Thread Sanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
 - `address` enables the [Address Sanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
+
+## Installing libdwarf (required for source line mapping)
+
+- On Linux, try installing a package named like `libdwarf-dev`
+- On macOS, you can use [Homebrew](https://brew.sh/) and install `libdwarf` (not `dwarf`!)
+- w2c2 currently defaults to using the libdwarf API of >=v0.4.2. v0.6.0 has been tested to work successfully too.
+- If using a version <0.4.2, try passing `-DDWARF_OLD=1` to CMake. Version 20200114 is known to work.
+- Since version 0.1.1, libdwarf ships with a pkg-config file, which CMake should be able to detect automatically.
+  
+  If libdwarf cannot be automatically found by CMake, you get the following message:
+  
+  ```
+  -- Checking for module 'libdwarf'
+  --   No package 'libdwarf' found
+  ```
+  
+  In that case you can still provide the necessary information manually by passing a variation of the following options:
+  
+  ```
+  -DDWARF_FOUND=1 -DDWARF_LIBRARIES=-ldwarf -DDWARF_LIBRARY_DIRS=/usr/lib -DDWARF_INCLUDE_DIRS=/usr/include/libdwarf
+  ```
+  
