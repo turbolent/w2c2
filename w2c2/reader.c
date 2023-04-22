@@ -402,7 +402,9 @@ wasmReadNameSection(
 
         /* Read function names */
         if (subsectionID == wasmNameSubsectionIDFunctionNames) {
-            const U32 functionCount = reader->module->functions.count;
+            const U32 functionCount = 
+                reader->module->functionImports.length 
+                + reader->module->functions.count;
 
             U32 functionNameIndex = 0;
 
@@ -438,6 +440,14 @@ wasmReadNameSection(
 
                 /* Read function index */
                 if (leb128ReadU32(&reader->buffer, &functionIndex) == 0) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidNameSectionFunctionIndex
+                    };
+                    *error = &wasmModuleReaderError;
+                    return;
+                }
+
+                if (functionIndex >= functionCount) {
                     static WasmModuleReaderError wasmModuleReaderError = {
                         wasmModuleReaderInvalidNameSectionFunctionIndex
                     };
