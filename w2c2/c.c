@@ -3644,7 +3644,7 @@ wasmCWriteInitGlobals(
                 if (pretty) {
                     fputs(" = ", file);
                 } else {
-                    fputs("=", file);
+                    fputc('=', file);
                 }
                 {
                     Buffer code = global.init;
