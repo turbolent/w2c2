@@ -53,20 +53,12 @@ stringBuilderAppend(
     );
 }
 
-static
-W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 stringBuilderAppendChar(
     StringBuilder* stringBuilder,
     char c
-) {
-    return stringBuilderAppendSized(
-        stringBuilder,
-        &c,
-        1
-    );
-}
+);
 
 bool
 WARN_UNUSED_RESULT

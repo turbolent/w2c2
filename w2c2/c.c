@@ -585,6 +585,18 @@ wasmCWrite(
     return stringBuilderAppend(writer->builder, string);
 }
 
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmCWriteChar(
+    WasmCFunctionWriter* writer,
+    char c
+) {
+    return stringBuilderAppendChar(writer->builder, c);
+}
+
 static
 W2C2_INLINE
 bool
@@ -592,10 +604,11 @@ WARN_UNUSED_RESULT
 wasmCWriteAssign(
     WasmCFunctionWriter* writer
 ) {
-    return wasmCWrite(
-        writer,
-        writer->pretty ? " = " : "="
-    );
+    if (writer->pretty) {
+        return wasmCWrite(writer, " = ");
+    } else {
+        return wasmCWriteChar(writer, '=');
+    }
 }
 
 static
@@ -605,10 +618,11 @@ WARN_UNUSED_RESULT
 wasmCWriteComma(
     WasmCFunctionWriter* writer
 ) {
-    return wasmCWrite(
-        writer,
-        writer->pretty ? ", " : ","
-    );
+    if (writer->pretty) {
+        return wasmCWrite(writer, ", ");
+    } else {
+        return wasmCWriteChar(writer, ',');
+    }
 }
 
 static
@@ -618,10 +632,11 @@ WARN_UNUSED_RESULT
 wasmCWritePlus(
     WasmCFunctionWriter* writer
 ) {
-    return wasmCWrite(
-        writer,
-        writer->pretty ? " + " : "+"
-    );
+    if (writer->pretty) {
+        return wasmCWrite(writer, " + ");
+    } else {
+        return wasmCWriteChar(writer, '+');
+    }
 }
 
 static
@@ -712,7 +727,7 @@ wasmCWriteParameters(
     WasmCFunctionWriter* writer,
     WasmFunctionType functionType
 ) {
-    MUST (wasmCWrite(writer, "("))
+    MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWrite(writer, writer->moduleName))
     MUST (wasmCWrite(writer, "Instance*"))
     {
@@ -723,7 +738,7 @@ wasmCWriteParameters(
             MUST (wasmCWrite(writer, valueTypeNames[parameterType]))
         }
     }
-    MUST (wasmCWrite(writer, ")"))
+    MUST (wasmCWriteChar(writer, ')'))
 
     return true;
 }
@@ -1211,7 +1226,7 @@ wasmCWriteLoadExpr(
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
-            MUST (wasmCWrite(writer, "("))
+            MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWrite(writer, "(U64)"))
@@ -1223,7 +1238,7 @@ wasmCWriteLoadExpr(
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
-                MUST (wasmCWrite(writer, "U"))
+                MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWrite(writer, ");\n"))
 
@@ -1305,7 +1320,7 @@ wasmCWriteStoreExpr(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWrite(writer, functionName))
-            MUST (wasmCWrite(writer, "("))
+            MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWrite(writer, "(U64)"))
@@ -1317,7 +1332,7 @@ wasmCWriteStoreExpr(
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
                 MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
-                MUST (wasmCWrite(writer, "U"))
+                MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStringStackName(
@@ -1610,7 +1625,7 @@ wasmCWriteUnaryExpr(
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
-    MUST (wasmCWrite(writer, "("))
+    MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
@@ -1643,12 +1658,12 @@ wasmCWriteInfixBinaryExpr(
 
     if (assignmentAllowed) {
         if (writer->pretty) {
-            MUST (wasmCWrite(writer, " "))
+            MUST (wasmCWriteChar(writer, ' '))
         }
         MUST (wasmCWrite(writer, operator))
-        MUST (wasmCWrite(writer, "="))
+        MUST (wasmCWriteChar(writer, '='))
         if (writer->pretty) {
-            MUST (wasmCWrite(writer, " "))
+            MUST (wasmCWriteChar(writer, ' '))
         }
     } else {
         MUST (wasmCWriteAssign(writer))
@@ -1657,9 +1672,9 @@ wasmCWriteInfixBinaryExpr(
             stackIndex1,
             writer->typeStack->valueTypes[stackIndex1]
         ))
-        MUST (wasmCWrite(writer, " "))
+        MUST (wasmCWriteChar(writer, ' '))
         MUST (wasmCWrite(writer, operator))
-        MUST (wasmCWrite(writer, " "))
+        MUST (wasmCWriteChar(writer, ' '))
     }
     MUST (wasmCWriteStringStackName(
         writer->builder,
@@ -1701,23 +1716,23 @@ wasmCWriteSignedInfixBinaryExpr(
     MUST (wasmCWrite(writer, valueTypeNames[parameter1Type]))
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
-    MUST (wasmCWrite(writer, ")"))
+    MUST (wasmCWriteChar(writer, ')'))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
     if (writer->pretty) {
-        MUST (wasmCWrite(writer, " "))
+        MUST (wasmCWriteChar(writer, ' '))
     }
     MUST (wasmCWrite(writer, operator))
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " ("))
     } else {
-        MUST (wasmCWrite(writer, "("))
+        MUST (wasmCWriteChar(writer, '('))
     }
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
-    MUST (wasmCWrite(writer, ")"))
+    MUST (wasmCWriteChar(writer, ')'))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
@@ -1748,7 +1763,7 @@ wasmCWritePrefixBinaryExpr(
     MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
-    MUST (wasmCWrite(writer, "("))
+    MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex1,
@@ -1800,7 +1815,7 @@ wasmCWriteSignedShiftRightExpr(
     MUST (wasmCWrite(writer, valueTypeNames[resultType]))
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[resultType]))
-    MUST (wasmCWrite(writer, ")"))
+    MUST (wasmCWriteChar(writer, ')'))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex1,
@@ -1819,7 +1834,7 @@ wasmCWriteSignedShiftRightExpr(
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " & "))
     } else {
-        MUST (wasmCWrite(writer, "&"))
+        MUST (wasmCWriteChar(writer, '&'))
     }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, "));\n"))
@@ -1866,7 +1881,7 @@ wasmCWriteUnsignedShiftRightExpr(
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " & "))
     } else {
-        MUST (wasmCWrite(writer, "&"))
+        MUST (wasmCWriteChar(writer, '&'))
     }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, ");\n"))
@@ -1913,7 +1928,7 @@ wasmCWriteShiftLeftExpr(
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " & "))
     } else {
-        MUST (wasmCWrite(writer, "&"))
+        MUST (wasmCWriteChar(writer, '&'))
     }
     MUST (wasmCWrite(writer, shiftMaskStrings[resultType]))
     MUST (wasmCWrite(writer, ");\n"))
@@ -1999,7 +2014,7 @@ wasmCWriteIfExpr(
         writer->indent--;
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "}"))
+        MUST (wasmCWriteChar(writer, '}'))
     }
 
     if (*opcode == wasmOpcodeElse) {
@@ -2023,7 +2038,7 @@ wasmCWriteIfExpr(
             writer->indent--;
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWrite(writer, "}"))
+            MUST (wasmCWriteChar(writer, '}'))
         }
     }
 
@@ -2197,7 +2212,7 @@ wasmCWriteGoto(
             if (writer->pretty) {
                 MUST (wasmCWrite(writer, "; "))
             } else {
-                MUST (wasmCWrite(writer, ";"))
+                MUST (wasmCWriteChar(writer, ';'))
             }
         }
     }
@@ -2238,7 +2253,7 @@ wasmCWriteSelectExpr(
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " ? "))
     } else {
-        MUST (wasmCWrite(writer, "?"))
+        MUST (wasmCWriteChar(writer, '?'))
     }
     MUST (wasmCWriteStringStackName(
         writer->builder,
@@ -2248,7 +2263,7 @@ wasmCWriteSelectExpr(
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " : "))
     } else {
-        MUST (wasmCWrite(writer, ":"))
+        MUST (wasmCWriteChar(writer, ':'))
     }
     MUST (wasmCWriteStringStackName(
         writer->builder,
