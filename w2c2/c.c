@@ -23,13 +23,13 @@
 #include "typestack.h"
 #include "labelstack.h"
 
-static const char* const localNamePrefix = "l";
-static const char* const globalNamePrefix = "g";
-static const char* const memoryNamePrefix = "m";
-static const char* const dataSegmentNamePrefix = "d";
-static const char* const tableNamePrefix = "t";
-static const char* const stackNamePrefix = "s";
-static const char* const labelNamePrefix = "L";
+static const char localNamePrefix = 'l';
+static const char globalNamePrefix = 'g';
+static const char memoryNamePrefix = 'm';
+static const char dataSegmentNamePrefix = 'd';
+static const char tableNamePrefix = 't';
+static const char stackNamePrefix = 's';
+static const char labelNamePrefix = 'L';
 
 static const char* const valueTypeNames[wasmValueType_count] = {
     "U32", "U64", "F32", "F64"
@@ -43,8 +43,8 @@ static const char* const shiftMaskStrings[2] = {
     "31", "63"
 };
 
-static const char* const valueTypeStackNames[wasmValueType_count] = {
-    "i", "j", "f", "d"
+static const char valueTypeStackNames[wasmValueType_count] = {
+    'i', 'j', 'f', 'd'
 };
 
 static const char* const indentation = "  ";
@@ -56,7 +56,7 @@ wasmCWriteFileLocalName(
     FILE* file,
     const U32 localIndex
 ) {
-    fprintf(file, "%s%u", localNamePrefix, localIndex);
+    fprintf(file, "%c%u", localNamePrefix, localIndex);
 }
 
 static
@@ -131,7 +131,7 @@ wasmCWriteFileGlobalNonImportName(
     FILE* file,
     U32 globalIndex
 ) {
-    fputs(globalNamePrefix, file);
+    fputc(globalNamePrefix, file);
     fprintf(file, "%u", globalIndex);
 }
 
@@ -203,7 +203,7 @@ wasmCWriteStringGlobalUse(
             MUST (stringBuilderAppendChar(builder, '&'))
         }
         MUST (stringBuilderAppend(builder, "i->"))
-        MUST (stringBuilderAppend(builder, globalNamePrefix))
+        MUST (stringBuilderAppendChar(builder, globalNamePrefix))
         MUST (stringBuilderAppendU32(builder, globalIndex))
     }
     return true;
@@ -216,7 +216,7 @@ wasmCWriteFileMemoryNonImportName(
     FILE* file,
     U32 memoryIndex
 ) {
-    fputs(memoryNamePrefix, file);
+    fputc(memoryNamePrefix, file);
     fprintf(file, "%u", memoryIndex);
 }
 
@@ -275,7 +275,7 @@ wasmCWriteStringMemoryUse(
             MUST (stringBuilderAppendChar(builder, '&'))
         }
         MUST (stringBuilderAppend(builder, "i->"))
-        MUST (stringBuilderAppend(builder, memoryNamePrefix))
+        MUST (stringBuilderAppendChar(builder, memoryNamePrefix))
         MUST (stringBuilderAppendU32(builder, memoryIndex))
     }
     return true;
@@ -287,7 +287,7 @@ wasmCWriteFileTableNonImportName(
     FILE* file,
     U32 tableIndex
 ) {
-    fputs(tableNamePrefix, file);
+    fputc(tableNamePrefix, file);
     fprintf(file, "%u", tableIndex);
 }
 
@@ -346,7 +346,7 @@ wasmCWriteStringTableUse(
             MUST (stringBuilderAppendChar(builder, '&'))
         }
         MUST (stringBuilderAppend(builder, "i->"))
-        MUST (stringBuilderAppend(builder, tableNamePrefix))
+        MUST (stringBuilderAppendChar(builder, tableNamePrefix))
         MUST (stringBuilderAppendU32(builder, tableIndex))
     }
     return true;
@@ -359,7 +359,7 @@ wasmCWriteFileDataSegmentName(
     FILE* file,
     const U32 dataSegmentIndex
 ) {
-    fputs(dataSegmentNamePrefix, file);
+    fputc(dataSegmentNamePrefix, file);
     fprintf(file, "%u", dataSegmentIndex);
 }
 
@@ -440,7 +440,7 @@ wasmCWriteFileStackName(
 ) {
     fprintf(
         file,
-        "%s%s%u",
+        "%c%c%u",
         stackNamePrefix,
         valueTypeStackNames[valueType],
         stackIndex
@@ -456,8 +456,8 @@ wasmCWriteStringStackName(
     const U32 stackIndex,
     const WasmValueType localType
 ) {
-    MUST (stringBuilderAppend(builder, stackNamePrefix))
-    MUST (stringBuilderAppend(builder, valueTypeStackNames[localType]))
+    MUST (stringBuilderAppendChar(builder, stackNamePrefix))
+    MUST (stringBuilderAppendChar(builder, valueTypeStackNames[localType]))
     MUST (stringBuilderAppendU32(builder, stackIndex))
     return true;
 }
@@ -470,7 +470,7 @@ wasmCWriteStringLocalName(
     StringBuilder* builder,
     const U32 localIndex
 ) {
-    MUST (stringBuilderAppend(builder, localNamePrefix))
+    MUST (stringBuilderAppendChar(builder, localNamePrefix))
     MUST (stringBuilderAppendU32(builder, localIndex))
     return true;
 }
@@ -483,7 +483,7 @@ wasmCWriteStringLabelName(
     StringBuilder* builder,
     const U32 labelIndex
 ) {
-    MUST (stringBuilderAppend(builder, labelNamePrefix))
+    MUST (stringBuilderAppendChar(builder, labelNamePrefix))
     MUST (stringBuilderAppendU32(builder, labelIndex))
     return true;
 }
