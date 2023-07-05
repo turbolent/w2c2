@@ -424,7 +424,7 @@ wasmCWriteStringFunctionUse(
         MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
         MUST (wasmCWriteStringEscaped(builder, import.name))
     } else {
-        MUST (stringBuilderAppend(builder, "f"))
+        MUST (stringBuilderAppendChar(builder, 'f'))
         MUST (stringBuilderAppendU32(builder, functionIndex))
     }
     return true;
@@ -1035,7 +1035,7 @@ wasmCWriteLiteral(
     switch (valueType) {
         case wasmValueTypeI32: {
             MUST (stringBuilderAppendI32(builder, value.i32))
-            MUST (stringBuilderAppend(builder, "U"))
+            MUST (stringBuilderAppendChar(builder, 'U'))
             break;
         }
         case wasmValueTypeI64: {
@@ -1054,7 +1054,7 @@ wasmCWriteLiteral(
                 } else {
                     MUST (stringBuilderAppend(builder, "f32_reinterpret_i32(0x"))
                     MUST (stringBuilderAppendU32Hex(builder, bits))
-                    MUST (stringBuilderAppend(builder, ")"))
+                    MUST (stringBuilderAppendChar(builder, ')'))
                 }
             } else if (bits == 0x80000000U) {
                 MUST (stringBuilderAppend(builder, "-0.f"))
@@ -1074,7 +1074,7 @@ wasmCWriteLiteral(
                 } else {
                     MUST (stringBuilderAppend(builder, "f64_reinterpret_i64(0x"))
                     MUST (stringBuilderAppendU64Hex(builder, bits))
-                    MUST (stringBuilderAppend(builder, ")"))
+                    MUST (stringBuilderAppendChar(builder, ')'))
                 }
             } else if (bits == 0x8000000000000000ULL) {
                 MUST (stringBuilderAppend(builder, "-0.f"))
