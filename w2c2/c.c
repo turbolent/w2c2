@@ -1046,10 +1046,10 @@ wasmCWriteLiteral(
         case wasmValueTypeF32: {
             U32 bits = (U32) value.i32;
             if ((bits & 0x7f800000U) == 0x7f800000U) {
-                bool is_negative = (bits & 0x80000000U);
+                bool isNegative = (bits & 0x80000000U) != 0;
                 U32 significand = bits & 0x7fffffU;
                 if (significand == 0) {
-                    if (is_negative) {
+                    if (isNegative) {
                         MUST (stringBuilderAppendChar(builder, '-'))
                     }
                     MUST (stringBuilderAppend(builder, "INFINITY"))
@@ -1068,10 +1068,10 @@ wasmCWriteLiteral(
         case wasmValueTypeF64: {
             U64 bits = (U64) value.i64;
             if ((bits & 0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) {
-                bool is_negative = (bits & 0x8000000000000000ULL);
+                bool isNegative = (bits & 0x8000000000000000ULL) != 0;
                 U64 significand = bits & 0x7fffffULL;
                 if (significand == 0) {
-                    if (is_negative) {
+                    if (isNegative) {
                         MUST (stringBuilderAppendChar(builder, '-'))
                     }
                     MUST (stringBuilderAppend(builder, "INFINITY"))
