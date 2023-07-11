@@ -72,6 +72,22 @@ stringBuilderFree(
 
 bool
 WARN_UNUSED_RESULT
+stringBuilderAppendChar(
+    StringBuilder* stringBuilder,
+    char c
+) {
+    size_t newLength = stringBuilder->length + 1;
+    MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
+
+    stringBuilder->string[stringBuilder->length++] = c;
+
+    stringBuilder->string[stringBuilder->length] = '\0';
+
+    return true;
+}
+
+bool
+WARN_UNUSED_RESULT
 stringBuilderAppendSized(
     StringBuilder* stringBuilder,
     const char* string,

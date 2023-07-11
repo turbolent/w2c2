@@ -1,7 +1,8 @@
+#include <assert.h>
 #include "array.h"
 
 bool
-arrayEnsureCapacity(
+arrayEnsureCapacitySlowPath(
     void** items,
     size_t length,
     size_t* capacity,
@@ -10,9 +11,7 @@ arrayEnsureCapacity(
     size_t newCapacity = 0;
     void* newItems = NULL;
 
-    if (length <= *capacity) {
-        return true;
-    }
+    assert(length > *capacity);
 
     newCapacity = length + (*capacity >> 1U);
     if (*items == NULL) {
