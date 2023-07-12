@@ -19,7 +19,7 @@ readFile(
     }
     fseek(file, 0, SEEK_END);
 
-    size = ftell(file);
+    size = (size_t) ftell(file);
     rewind(file);
 
     data = malloc(size);

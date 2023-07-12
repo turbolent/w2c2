@@ -79,12 +79,12 @@ wasmLabelStackPop(
 
 static
 W2C2_INLINE
-size_t
+U32
 wasmLabelStackGetTopIndex(
     const WasmLabelStack* labelStack,
     const U32 index
 ) {
-    return labelStack->labels.length - 1 - index;
+    return assertSizeU32(labelStack->labels.length - 1 - index);
 }
 
 #endif /* W2C2_LABELSTACK_H */
