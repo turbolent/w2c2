@@ -2,6 +2,7 @@
 #define W2C2_TYPESTACK_H
 
 #include <stdio.h>
+#include <assert.h>
 #include "w2c2_base.h"
 #include "valuetype.h"
 #include "array.h"
@@ -30,7 +31,7 @@ wasmTypeStackDrop(
     {
         size_t newLength = typeStack->length - count;
 
-        U32 index = newLength;
+        size_t index = newLength;
         for (; index < typeStack->length; index++) {
             typeStack->valueTypes[index] = 0;
         }
@@ -66,7 +67,7 @@ wasmTypeStackSet(
     const size_t newLength = index + 1;
 
     if (currentLength < newLength) {
-        U32 newIndex = currentLength;
+        size_t newIndex = currentLength;
         MUST (wasmTypeStackEnsureCapacity(typeStack, newLength))
         for (; newIndex < newLength; newIndex++) {
             typeStack->valueTypes[newIndex] = 0;
@@ -97,12 +98,12 @@ wasmTypeStackIsSet(
 
 static
 W2C2_INLINE
-size_t
+U32
 wasmTypeStackGetTopIndex(
     const WasmTypeStack* typeStack,
     const U32 index
 ) {
-    return typeStack->length - 1 - index;
+    return assertSizeU32(typeStack->length - 1 - index);
 }
 
 #endif /* W2C2_TYPESTACK_H */

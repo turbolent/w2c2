@@ -11,7 +11,7 @@ ifndef UNAME
 	UNAME := $(shell uname -s)
 endif
 
-WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+WARNS ?= -Wunused-result -Wall -Wpedantic -Werror=conversion -Wno-long-long -Wno-unused-function
 
 ifeq ($(BUILD),release)
 	CFLAGS += -O3

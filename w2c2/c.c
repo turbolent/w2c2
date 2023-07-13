@@ -118,7 +118,7 @@ wasmCWriteStringEscaped(
             MUST (stringBuilderAppendChar(builder, c))
         } else {
             MUST (stringBuilderAppendChar(builder, escapeChar))
-            MUST (stringBuilderAppendU8Hex(builder, c))
+            MUST (stringBuilderAppendCharHex(builder, c))
         }
     }
     return true;
@@ -672,7 +672,7 @@ wasmCWriteCallExpr(
                 /* TODO: add support for multiple result values */
                 const WasmValueType resultType = functionType.resultTypes[0];
 
-                U32 resultStackIndex = writer->typeStack->length;
+                U32 resultStackIndex = assertSizeU32(writer->typeStack->length);
                 if (parameterCount > 0) {
                     resultStackIndex -= parameterCount;
                 }
@@ -767,7 +767,7 @@ wasmCWriteCallIndirectExpr(
             /* TODO: add support for multiple result values */
             const WasmValueType resultType = functionType.resultTypes[0];
 
-            U32 resultStackIndex = writer->typeStack->length - 1;
+            U32 resultStackIndex = assertSizeU32(writer->typeStack->length - 1);
             if (parameterCount > 0) {
                 resultStackIndex -= parameterCount;
             }
@@ -2200,7 +2200,7 @@ wasmCWriteGoto(
         WasmValueType resultType = *label.type;
 
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-        const U32 destinationStackIndex = label.typeStackLength;
+        const U32 destinationStackIndex = assertSizeU32(label.typeStackLength);
 
         if (destinationStackIndex != stackIndex0) {
 
@@ -2439,7 +2439,7 @@ wasmCWriteDebugLine(
 
 ) {
     MUST (stringBuilderAppend(builder, "#line "))
-    MUST (stringBuilderAppendU32(builder, debugLine->number))
+    MUST (stringBuilderAppendU64(builder, debugLine->number))
     MUST (stringBuilderAppend(builder, " \""))
     MUST (stringBuilderAppend(builder, debugLine->path))
     MUST (stringBuilderAppend(builder, "\"\n"))
@@ -3438,7 +3438,7 @@ wasmCWriteFunctionDeclarations(
             module,
             moduleName,
             function,
-            functionImportCount + functionIndex,
+            assertSizeU32(functionImportCount) + functionIndex,
             false,
             pretty,
             multipleModules
@@ -3493,7 +3493,7 @@ wasmCWriteFunctionImplementations(
             module,
             moduleName,
             function,
-            functionImportCount + functionIndex,
+            assertSizeU32(functionImportCount) + functionIndex,
             true,
             pretty,
             multipleModules
@@ -3574,7 +3574,7 @@ wasmCWriteGlobals(
         }
         fputs(valueTypeNames[global.type.valueType], file);
         fputc(' ', file);
-        wasmCWriteFileGlobalNonImportName(file, globalImportCount + globalIndex);
+        wasmCWriteFileGlobalNonImportName(file, assertSizeU32(globalImportCount) + globalIndex);
         fputs(";\n", file);
     }
 }
@@ -3644,7 +3644,7 @@ wasmCWriteInitGlobals(
                 if (pretty) {
                     fputs(indentation, file);
                 }
-                wasmCWriteFileGlobalUse(file, module, globalImportCount + globalIndex, false);
+                wasmCWriteFileGlobalUse(file, module, assertSizeU32(globalImportCount) + globalIndex, false);
                 if (pretty) {
                     fputs(" = ", file);
                 } else {
@@ -3746,7 +3746,7 @@ wasmCWriteInitFunctionImports(
     bool pretty,
     bool multipleModules
 ) {
-    const U32 functionImportCount = module->functionImports.length;
+    const size_t functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
     for (; functionIndex < functionImportCount; functionIndex++) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
@@ -4197,7 +4197,7 @@ wasmCWriteMemories(
             fputs(indentation, file);
         }
         fputs("wasmMemory ", file);
-        wasmCWriteFileMemoryNonImportName(file, memoryImportCount + memoryIndex);
+        wasmCWriteFileMemoryNonImportName(file, assertSizeU32(memoryImportCount) + memoryIndex);
         fputs(";\n", file);
     }
 }
@@ -4251,7 +4251,7 @@ wasmCWriteInitMemories(
                     fputs(indentation, file);
                 }
                 fputs("wasmMemoryAllocate(", file);
-                wasmCWriteFileMemoryUse(file, module, memoryImportCount + memoryIndex, true);
+                wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
                 fprintf(file, ", %u, %u);\n", memory.min, memory.max);
             }
         }
@@ -4327,7 +4327,7 @@ wasmCWriteFreeMemories(
             fputs(indentation, file);
         }
         fputs("wasmMemoryFree(", file);
-        wasmCWriteFileMemoryUse(file, module, memoryImportCount + memoryIndex, true);
+        wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
         fputs(");\n", file);
     }
 }
@@ -4372,7 +4372,7 @@ wasmCWriteTables(
             fputs(indentation, file);
         }
         fputs("wasmTable ", file);
-        wasmCWriteFileTableNonImportName(file, tableImportCount + tableIndex);
+        wasmCWriteFileTableNonImportName(file, assertSizeU32(tableImportCount) + tableIndex);
         fputs(";\n", file);
     }
 }
@@ -4412,7 +4412,7 @@ wasmCWriteInitTables(
                     fputs(indentation, file);
                 }
                 fputs("wasmTableAllocate(", file);
-                wasmCWriteFileTableUse(file, module, tableImportCount + tableIndex, true);
+                wasmCWriteFileTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
                 fprintf(file, ", %u, %u);\n", table.min, table.max);
             }
         }
@@ -4479,7 +4479,7 @@ wasmCWriteFreeTables(
             fputs(indentation, file);
         }
         fputs("wasmTableFree(", file);
-        wasmCWriteFileTableUse(file, module, tableImportCount + tableIndex, true);
+        wasmCWriteFileTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
         fputs(");\n", file);
     }
 }
@@ -4493,7 +4493,7 @@ wasmCWriteFunctionImports(
     bool pretty,
     bool multipleModules
 ) {
-    const U32 functionImportCount = module->functionImports.length;
+    const size_t functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
     for (; functionIndex < functionImportCount; functionIndex++) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];

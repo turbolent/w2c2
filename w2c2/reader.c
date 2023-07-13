@@ -402,9 +402,8 @@ wasmReadNameSection(
 
         /* Read function names */
         if (subsectionID == wasmNameSubsectionIDFunctionNames) {
-            const U32 functionCount = 
-                reader->module->functionImports.length 
-                + reader->module->functions.count;
+            const size_t functionImportCount = reader->module->functionImports.length;
+            const U32 functionCount = assertSizeU32(functionImportCount) + reader->module->functions.count;
 
             U32 functionNameIndex = 0;
 
@@ -506,7 +505,7 @@ wasmReadCustomSection(
 
     end = reader->buffer.data;
 
-    sectionSize -= end - start;
+    sectionSize -= (U32) (end - start);
 
     if (strncmp(name, wasmDebugSectionNamePrefix, strlen(wasmDebugSectionNamePrefix)) == 0) {
         WasmDebugSection section;
@@ -1380,7 +1379,7 @@ wasmReadCodeSection(
 
             function->start = reader->module->length - reader->buffer.length - codeStart;
             function->code.data = reader->buffer.data;
-            codeSize -= reader->buffer.data - localsDeclarationsOffset;
+            codeSize -= (U32) (reader->buffer.data - localsDeclarationsOffset);
             function->code.length = codeSize;
 
             /* Skip unchecked, as buffer length was already checked above */

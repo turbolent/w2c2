@@ -109,11 +109,12 @@ wasmModuleGetGlobalType(
     U32 globalIndex,
     WasmValueType* result
 ) {
-    if (globalIndex < module->globalImports.length) {
+    const U32 globalImportCount = assertSizeU32(module->globalImports.length);
+    if (globalIndex < globalImportCount) {
         WasmGlobalImport import = module->globalImports.imports[globalIndex];
         *result = import.globalType.valueType;
     } else {
-        globalIndex -= module->globalImports.length;
+        globalIndex -= globalImportCount;
         MUST (globalIndex < module->globals.count)
         {
             WasmGlobal global = module->globals.globals[globalIndex];
@@ -132,11 +133,12 @@ wasmModuleGetFunctionType(
     U32 functionIndex,
     WasmFunctionType* result
 ) {
-    if (functionIndex < module->functionImports.length) {
+    const U32 functionImportCount = assertSizeU32(module->functionImports.length);
+    if (functionIndex < functionImportCount) {
         WasmFunctionImport import = module->functionImports.imports[functionIndex];
         *result = module->functionTypes.functionTypes[import.functionTypeIndex];
     } else {
-        functionIndex -= module->functionImports.length;
+        functionIndex -= functionImportCount;
         MUST (functionIndex < module->functions.count)
         {
             const WasmFunction function = module->functions.functions[functionIndex];

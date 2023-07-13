@@ -9,6 +9,8 @@
 #include <stdint.h>
 #endif
 
+#include <assert.h>
+
 #ifndef __bool_true_false_are_defined
 typedef enum bool {
     false = 0,
@@ -195,6 +197,16 @@ typedef double F64;
 #ifndef INFINITY
 #define INFINITY (1.0/0.0)
 #endif
+
+static
+W2C2_INLINE
+U32
+assertSizeU32(
+    size_t size
+) {
+    assert(size <= UINT32_MAX);
+    return (U32) size;
+}
 
 typedef enum Trap {
     trapUnreachable,
@@ -608,14 +620,14 @@ wasmMemoryFill(
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + destinationAddress,
-        value,
-        count
+        (int) value,
+        (size_t) count
     );
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
     memset(
         memory->data + memory->size - destinationAddress - count,
-        value,
-        count
+        (int) value,
+        (size_t) count
     );
 #endif
 }

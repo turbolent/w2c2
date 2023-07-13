@@ -106,12 +106,12 @@ main(
         switch (c) {
 #if HAS_PTHREAD
             case 't': {
-                threadCount = strtoul(optarg, NULL, 0);
+                threadCount = (U32) strtoul(optarg, NULL, 0);
                 break;
             }
 #endif /* HAS_PTHREAD */
             case 'f': {
-                functionsPerFile = strtoul(optarg, NULL, 0);
+                functionsPerFile = (U32) strtoul(optarg, NULL, 0);
                 break;
             }
             case 'p': {
@@ -203,7 +203,7 @@ main(
 #if HAS_PTHREAD
     if (threadCount < 1) {
 #ifdef _SC_NPROCESSORS_ONLN
-        threadCount = sysconf(_SC_NPROCESSORS_ONLN);
+        threadCount = (U32) sysconf(_SC_NPROCESSORS_ONLN);
 #else
         threadCount = 1;
 #endif

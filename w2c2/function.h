@@ -10,7 +10,7 @@ typedef struct WasmFunction {
     WasmLocalsDeclarations localsDeclarations;
     Buffer code;
     /* Offset relative to the code section start (function count) */
-    U32 start;
+    size_t start;
 } WasmFunction;
 
 static const WasmFunction wasmEmptyFunction =

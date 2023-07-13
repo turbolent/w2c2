@@ -201,8 +201,8 @@ stringBuilderAppendF32(
 ) {
     char buffer[32];
     /* FLT_DECIMAL_DIG */
-    size_t length = sprintf(buffer, "%.9g", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    int length = sprintf(buffer, "%.9g", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -212,18 +212,18 @@ stringBuilderAppendF64(
 ) {
     char buffer[32];
     /* DBL_DECIMAL_DIG */
-    size_t length = sprintf(buffer, "%.17g", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    int length = sprintf(buffer, "%.17g", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
-stringBuilderAppendU8Hex(
+stringBuilderAppendCharHex(
     StringBuilder* stringBuilder,
-    U8 value
+    char value
 ) {
     char buffer[3];
-    size_t length = sprintf(buffer, "%02X", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    int length = sprintf(buffer, "%02X", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -232,8 +232,8 @@ stringBuilderAppendU32Hex(
     U32 value
 ) {
     char buffer[9];
-    size_t length = sprintf(buffer, "%08X", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    int length = sprintf(buffer, "%08X", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -242,6 +242,6 @@ stringBuilderAppendU64Hex(
     U64 value
 ) {
     char buffer[17];
-    size_t length = sprintf(buffer, "%016llX", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, length);
+    int length = sprintf(buffer, "%016llX", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }

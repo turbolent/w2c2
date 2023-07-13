@@ -42,7 +42,7 @@ foreach(TARGET w2c2 w2c2_test)
 
     target_compile_options(${TARGET} PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
-        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Werror=conversion -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
     )
 
     if(DWARF_FOUND)

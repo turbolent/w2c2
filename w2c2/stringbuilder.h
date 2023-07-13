@@ -62,9 +62,9 @@ stringBuilderAppendChar(
 
 bool
 WARN_UNUSED_RESULT
-stringBuilderAppendU8Hex(
+stringBuilderAppendCharHex(
     StringBuilder* stringBuilder,
-    U8 value
+    char value
 );
 
 bool
