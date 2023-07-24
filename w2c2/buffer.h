@@ -60,62 +60,62 @@ bufferReadByte(
     return true;
 }
 
+/* Read a 32-bit float as an I32, which prevents x87 NaN canonicalization */
 static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadF32(
     Buffer* buffer,
-    F32* result
+    I32* result
 ) {
-    if (buffer->length < sizeof(F32)) {
+    if (buffer->length < sizeof(I32)) {
         return false;
     } else {
         union {
-            F32 f32;
             I32 i32;
-            U8 bytes[sizeof(F32)];
+            U8 bytes[sizeof(I32)];
         } value = {0};
 
-        memcpy(value.bytes, buffer->data, sizeof(F32));
+        memcpy(value.bytes, buffer->data, sizeof(I32));
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
         value.i32 = (I32) swap32((U32) value.i32);
 #endif
 
-        *result = value.f32;
+        *result = value.i32;
 
-        bufferSkipUnchecked(buffer, sizeof(F32));
+        bufferSkipUnchecked(buffer, sizeof(I32));
 
         return true;
     }
 }
 
+/* Read a 64-bit float as an I64, which prevents x87 NaN canonicalization */
 static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 bufferReadF64(
     Buffer* buffer,
-    F64* result
+    I64* result
 ) {
-    if (buffer->length < sizeof(F64)) {
+    if (buffer->length < sizeof(I64)) {
         return false;
     } else {
         union {
-            F64 f64;
             I64 i64;
-            U8 bytes[sizeof(F64)];
+            U8 bytes[sizeof(I64)];
         } value = {0};
 
-        memcpy(value.bytes, buffer->data, sizeof(F64));
+        memcpy(value.bytes, buffer->data, sizeof(I64));
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
         value.i64 = (I64) swap64((U64) value.i64);
 #endif
-        *result = value.f64;
+        *result = value.i64;
 
-        bufferSkipUnchecked(buffer, sizeof(F64));
+        bufferSkipUnchecked(buffer, sizeof(I64));
 
         return true;
     }
