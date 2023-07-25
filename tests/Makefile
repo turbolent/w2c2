@@ -41,11 +41,11 @@ run-tests-%:
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
-	$(EXECUTE) ./$<
+	$(PYTHON3) run.py $(if $(EXECUTE),-e $(EXECUTE),) $(if $(ARCH),-a $(ARCH),) $<
 	echo
 
 test_%$(EXE): test_%.o main.o
-	$(CC) $< main.o -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< main.o -o $@ $(LDFLAGS)
 
 test_%.c: gen/%.wasm
 	echo "#include \"test.h\"" > $@
@@ -62,4 +62,4 @@ gen-%:
 	$(PYTHON3) gen.py $*
 
 clean:
-	-rm -f main.o test_*
+	-rm -f main.o test_*.o

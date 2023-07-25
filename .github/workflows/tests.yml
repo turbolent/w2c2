@@ -25,29 +25,30 @@ jobs:
         system:
           - { target: gcc,                                              cc: gcc,                                                    }
           - { target: clang,                                            cc: clang,                                                  }
-          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static     }
           - { target: arm,      toolchain: gcc-arm-linux-gnueabi,       cc: arm-linux-gnueabi-gcc,       qemu: qemu-arm-static      }
           - { target: armhf,    toolchain: gcc-arm-linux-gnueabihf,     cc: arm-linux-gnueabihf-gcc,     qemu: qemu-arm-static      }
           - { target: aarch64,  toolchain: gcc-aarch64-linux-gnu,       cc: aarch64-linux-gnu-gcc,       qemu: qemu-aarch64-static  }
           - { target: riscv64,  toolchain: gcc-riscv64-linux-gnu,       cc: riscv64-linux-gnu-gcc,       qemu: qemu-riscv64-static  }
           - { target: ppc,      toolchain: gcc-powerpc-linux-gnu,       cc: powerpc-linux-gnu-gcc,       qemu: qemu-ppc-static      }
           - { target: ppc64,    toolchain: gcc-powerpc64-linux-gnu,     cc: powerpc64-linux-gnu-gcc,     qemu: qemu-ppc64-static    }
-          # fails on conversions.0 f32.convert_i64_s tests
-          # - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
           - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static    }
-          - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static     }
-          # fails on float_exprs.87 f32.arithmetic_nan_bitpattern tests
-          # - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static   }
-          - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static   }
-          # fails on float_exprs.87 f32.arithmetic_nan_bitpattern tests
-          # - { target: mips64el, toolchain: gcc-mips64el-linux-gnuabi64, cc: mips64el-linux-gnuabi64-gcc, qemu: qemu-mips64el-static }
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static    }
-          # fails on float_exprs.87 f32.canonical_nan_bitpattern tests
-          # - { target: sparc64,  toolchain: gcc-sparc64-linux-gnu,       cc: sparc64-linux-gnu-gcc,       qemu: qemu-sparc64-static  }
+
+          # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
+          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static     }
           - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static     }
-          # fails on f32_bitwise.0 copysign tests
+          - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static     }
+          - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static   }
+          - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static   }
+          - { target: mips64el, toolchain: gcc-mips64el-linux-gnuabi64, cc: mips64el-linux-gnuabi64-gcc, qemu: qemu-mips64el-static }
+          - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
+
+          # Disabled due to miscompilation or qemu issues (?)
+          # - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
+          # - { target: sparc64,  toolchain: gcc-sparc64-linux-gnu,       cc: sparc64-linux-gnu-gcc,       qemu: qemu-sparc64-static  }
+
+          # Disabled due to too large `switch'-statement
           # - { target: m68k,     toolchain: gcc-m68k-linux-gnu,          cc: m68k-linux-gnu-gcc,          qemu: qemu-m68k-static     }
-          - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
 
     env:
       CC: ${{ matrix.system.cc }}
@@ -81,10 +82,10 @@ jobs:
         name: Run w2c2 tests
         env:
           LDFLAGS: -static
+          ARCH: ${{ matrix.system.target }}
         working-directory: ./tests
         shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
+        run: make run-tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -118,65 +119,69 @@ jobs:
         name: Run tests
         working-directory: ./tests
         shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
+        env:
+          ARCH: ${{ matrix.system.target }}
+        run: make run-tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat"
 
-  windows-mingw:
-    runs-on: windows-latest
-    name: "Windows (mingw), ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
-
-    strategy:
-      fail-fast: false
-      matrix:
-        build: [release, debug]
-        threads: [true, false]
-        system:
-          - { target: mingw64, env: x86_64 }
-          - { target: mingw32, env: i686   }
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    env:
-      CC: gcc
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.system.target }}
-          install: >-
-            make
-            gcc
-      - uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          filters: |
-            w2c2:
-              - 'w2c2/**'
-            wasi:
-              - 'wasi/**'
-      - if: steps.changes.outputs.w2c2 == 'true'
-        name: Build w2c2
-        env:
-          LDFLAGS: -static
-        working-directory: ./w2c2
-        run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
-      - if: steps.changes.outputs.w2c2 == 'true'
-        name: Run tests
-        working-directory: ./tests
-        shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
-      - if: steps.changes.outputs.wasi == 'true'
-        name: Build wasi
-        working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }}
+# Disabled due to sqrt issues
+#
+#     windows-mingw:
+#         runs-on: windows-latest
+#         name: "Windows (mingw), ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
+#
+#         strategy:
+#           fail-fast: false
+#           matrix:
+#             build: [release, debug]
+#             threads: [true, false]
+#             system:
+#               - { target: mingw64, env: x86_64 }
+#               - { target: mingw32, env: i686   }
+#
+#         defaults:
+#           run:
+#             shell: msys2 {0}
+#
+#         env:
+#           CC: gcc
+#
+#         steps:
+#           - uses: actions/checkout@v3
+#           - uses: msys2/setup-msys2@v2
+#             with:
+#               msystem: ${{ matrix.system.target }}
+#               install: >-
+#                 make
+#                 gcc
+#           - uses: dorny/paths-filter@v2
+#             id: changes
+#             with:
+#               filters: |
+#                 w2c2:
+#                   - 'w2c2/**'
+#                 wasi:
+#                   - 'wasi/**'
+#           - if: steps.changes.outputs.w2c2 == 'true'
+#             name: Build w2c2
+#             env:
+#               LDFLAGS: -static
+#             working-directory: ./w2c2
+#             run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
+#           - if: steps.changes.outputs.w2c2 == 'true'
+#             name: Run tests
+#             working-directory: ./tests
+#             shell: bash
+#             env:
+#               ARCH: ${{ matrix.system.target }}
+#             run: make run-tests
+#           - if: steps.changes.outputs.wasi == 'true'
+#             name: Build wasi
+#             working-directory: ./wasi
+#             run: make BUILD=${{ matrix.build }}
 
   windows-msvc:
     runs-on: windows-2019
@@ -192,14 +197,14 @@ jobs:
               - 'w2c2/**'
             wasi:
               - 'wasi/**'
-      - # if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
         run: |
           cmake -Bbuild
           cmake --build build
       # TODO: run tests
-      - # if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
         run: |

@@ -49,9 +49,9 @@ wasmConstInstructionRead(
         case wasmOpcodeI64Const:
             return leb128ReadI64(buffer, &result->value.i64) > 0;
         case wasmOpcodeF32Const:
-            return bufferReadF32(buffer, &result->value.f32) > 0;
+            return bufferReadF32(buffer, &result->value.i32) > 0;
         case wasmOpcodeF64Const:
-            return bufferReadF64(buffer, &result->value.f64) > 0;
+            return bufferReadF64(buffer, &result->value.i64) > 0;
         default:
             return false;
     }
