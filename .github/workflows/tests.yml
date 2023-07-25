@@ -34,25 +34,21 @@ jobs:
           - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static    }
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static    }
 
-          # Architectures with expected failures
+          # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
           - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static     }
           - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static     }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static     }
           - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static   }
           - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static   }
           - { target: mips64el, toolchain: gcc-mips64el-linux-gnuabi64, cc: mips64el-linux-gnuabi64-gcc, qemu: qemu-mips64el-static }
+          - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
 
-          # FP issues
+          # Disabled due to miscompilation or qemu issues (?)
+          # - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
           # - { target: sparc64,  toolchain: gcc-sparc64-linux-gnu,       cc: sparc64-linux-gnu-gcc,       qemu: qemu-sparc64-static  }
 
-          # Disabled due to qemu issues (?)
-          # - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
-
-          # Disabled due to e.g. f32_bitwise.0 copysign issues
+          # Disabled due to too large `switch'-statement
           # - { target: m68k,     toolchain: gcc-m68k-linux-gnu,          cc: m68k-linux-gnu-gcc,          qemu: qemu-m68k-static     }
-
-          # Disabled due to e.g. conversions.0 f32.convert_i64_s issues
-          # - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
 
     env:
       CC: ${{ matrix.system.cc }}
