@@ -50,7 +50,6 @@ jobs:
           # fails on conversions.0 f32.convert_i64_s tests
           # - { target: ppc64le,  toolchain: gcc-powerpc64le-linux-gnu,   cc: powerpc64le-linux-gnu-gcc,   qemu: qemu-ppc64le-static  }
 
-
     env:
       CC: ${{ matrix.system.cc }}
 
@@ -83,10 +82,10 @@ jobs:
         name: Run w2c2 tests
         env:
           LDFLAGS: -static
+          ARCH: ${{ matrix.system.target }}
         working-directory: ./tests
         shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
+        run: make run-tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -120,8 +119,9 @@ jobs:
         name: Run tests
         working-directory: ./tests
         shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
+        env:
+          ARCH: ${{ matrix.system.target }}
+        run: make run-tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -173,8 +173,9 @@ jobs:
         name: Run tests
         working-directory: ./tests
         shell: bash
-        run: |
-          make run-tests 2>&1 | tee results && ! grep -q "^FAIL: " results
+        env:
+          ARCH: ${{ matrix.system.target }}
+        run: make run-tests
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -194,14 +195,14 @@ jobs:
               - 'w2c2/**'
             wasi:
               - 'wasi/**'
-      - # if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
         run: |
           cmake -Bbuild
           cmake --build build
       # TODO: run tests
-      - # if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
         run: |
