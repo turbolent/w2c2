@@ -1,0 +1,12 @@
+START: float_memory.2.wasm
+OK: i32.load()
+OK: reset()
+OK: i32.load()
+OK: f32.load()
+OK: f32.store()
+FAIL: i32.load(): 2145386496 != 2141192192
+OK: reset()
+OK: i32.load()
+OK: f32.load()
+OK: i32.store()
+OK: i32.load()
