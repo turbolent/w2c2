@@ -34,16 +34,16 @@ jobs:
           - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static    }
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static    }
 
-          # Expected failures
+          # Architectures with expected failures
           - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static     }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static     }
+          - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static     }
 
           # FP issues
           # - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static   }
           # - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static   }
           # - { target: mips64el, toolchain: gcc-mips64el-linux-gnuabi64, cc: mips64el-linux-gnuabi64-gcc, qemu: qemu-mips64el-static }
           # - { target: sparc64,  toolchain: gcc-sparc64-linux-gnu,       cc: sparc64-linux-gnu-gcc,       qemu: qemu-sparc64-static  }
-          # - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static     }
           # - { target: sh4,      toolchain: gcc-sh4-linux-gnu,           cc: sh4-linux-gnu-gcc,           qemu: qemu-sh4-static      }
 
           # fails on f32_bitwise.0 copysign tests
