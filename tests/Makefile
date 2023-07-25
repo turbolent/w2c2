@@ -62,4 +62,4 @@ gen-%:
 	$(PYTHON3) gen.py $*
 
 clean:
-	-rm -f main.o test_*.h
+	-rm -f main.o test_*.o
