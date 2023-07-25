@@ -45,7 +45,7 @@ run-test-%: test_%$(EXE)
 	echo
 
 test_%$(EXE): test_%.o main.o
-	$(CC) $< main.o -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< main.o -o $@ $(LDFLAGS)
 
 test_%.c: gen/%.wasm
 	echo "#include \"test.h\"" > $@
