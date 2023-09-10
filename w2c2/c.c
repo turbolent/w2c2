@@ -3355,15 +3355,17 @@ wasmCWriteFileParameters(
     const char* moduleName,
     WasmFunctionType functionType,
     bool writeParameterNames,
-    bool structInstanceType,
+    bool voidPointerInstanceType,
     bool pretty
 ) {
     fputc('(', file);
-    if (structInstanceType) {
-        fputs("struct ", file);
+    if (voidPointerInstanceType) {
+        fputs("void*", file);
+    } else {
+        fputs(moduleName, file);
+        fputs("Instance*", file);
     }
-    fputs(moduleName, file);
-    fputs("Instance*", file);
+
     if (writeParameterNames) {
         if (pretty) {
             fputs(" i", file);
@@ -3414,7 +3416,14 @@ wasmCWriteFileFunctionSignature(
         fputc('_', file);
     }
     wasmCWriteFileFunctionNonImportName(file, functionIndex);
-    wasmCWriteFileParameters(file, moduleName, functionType, writeParameterNames, false, pretty);
+    wasmCWriteFileParameters(
+        file,
+        moduleName,
+        functionType,
+        writeParameterNames,
+        false,
+        pretty
+    );
 }
 
 static
@@ -3675,7 +3684,7 @@ void
 wasmCWriteInitImportAssignment(
     FILE* file,
     const char* module,
-    const char* name, 
+    const char* name,
     bool pretty
 ) {
     if (pretty) {
@@ -3894,7 +3903,14 @@ wasmCWriteFunctionExport(
     fputs(wasmCGetReturnType(functionType), file);
     fputc(' ', file);
     wasmCWriteExportName(file, moduleName, export.name);
-    wasmCWriteFileParameters(file, moduleName, functionType, true, false, pretty);
+    wasmCWriteFileParameters(
+        file,
+        moduleName,
+        functionType,
+        true,
+        false,
+        pretty
+    );
     if (writeBody) {
         if (pretty) {
             fputc(' ', file);
