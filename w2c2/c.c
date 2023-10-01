@@ -3748,27 +3748,6 @@ wasmCWriteFunctionImport(
 
 static
 void
-wasmCWriteInitFunctionImports(
-    FILE* file,
-    const WasmModule* module,
-    const char* moduleName,
-    bool pretty,
-    bool multipleModules
-) {
-    const size_t functionImportCount = module->functionImports.length;
-    U32 functionIndex = 0;
-    for (; functionIndex < functionImportCount; functionIndex++) {
-        const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
-        fputc('(', file);
-        wasmCWriteFunctionImport(file, module, moduleName, import, false, pretty, multipleModules);
-        fputc(')', file);
-        wasmCWriteInitImportValue(file, import.module, import.name);
-    }
-}
-
-static
-void
 wasmCWriteInitGlobalImports(
     FILE* file,
     const WasmModule* module,
