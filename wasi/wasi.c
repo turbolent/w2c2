@@ -725,9 +725,6 @@ wasiFDWrite(
     struct iovec* iovecs = NULL;
     I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    U8* temporaryBuffer = NULL;
-#endif
 
     if (wasiFD > 2) {
         WASI_TRACE((
@@ -760,7 +757,6 @@ wasiFDWrite(
         return WASI_ERRNO_NOMEM;
     }
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     /* Convert WASI ciovecs to native iovecs */
     {
         U32 ciovecIndex = 0;
@@ -783,62 +779,11 @@ wasiFDWrite(
             iovecs[ciovecIndex].iov_len = length;
         }
     }
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-
-    /* Convert WASI ciovecs to native iovecs */
-    {
-        U8* memoryStart = memory->data + memory->size - 1;
-
-        U32 totalLength = 0;
-        U32 ciovecIndex = 0;
-        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
-            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 length = i32_load(memory, ciovecPointer + 4);
-            iovecs[ciovecIndex].iov_len = length;
-            totalLength += length;
-        }
-
-        temporaryBuffer = malloc(totalLength);
-        if (temporaryBuffer == NULL) {
-            return WASI_ERRNO_NOMEM;
-        }
-
-        totalLength = 0;
-        ciovecIndex = 0;
-        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
-            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 bufferPointer = i32_load(memory, ciovecPointer);
-            U32 length = iovecs[ciovecIndex].iov_len;
-            U8* bufferStart = memoryStart - bufferPointer;
-            U32 i = 0;
-            for (; i < length; i++) {
-                temporaryBuffer[totalLength + i] = bufferStart[-i];
-            }
-
-            iovecs[ciovecIndex].iov_base = temporaryBuffer + totalLength;
-
-            totalLength += length;
-            if (wasiFD > 2) {
-                WASI_TRACE((
-                    "fd_write: "
-                    "length=%d, "
-                    "bufferPointer=0x%x",
-                    length,
-                    bufferPointer
-                ));
-            }
-        }
-    }
-#endif
 
     /* Perform the writes */
     total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
 
     free(iovecs);
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    free(temporaryBuffer);
-#endif
 
     if (total < 0) {
         WASI_TRACE(("fd_write: writev failed: %s", strerror(errno)));
@@ -998,20 +943,12 @@ wasiFDRead(
 
     /* Convert WASI iovecs to native iovecs */
     {
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-        U8* memoryStart = memory->data + memory->size;
-#endif
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
             U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
             U32 bufferPointer = i32_load(memory, iovecPointer);
             U32 length = i32_load(memory, iovecPointer + 4);
-
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
             iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-            iovecs[iovecIndex].iov_base = memoryStart - bufferPointer - length;
-#endif
             iovecs[iovecIndex].iov_len = length;
         }
     }
@@ -1025,22 +962,6 @@ wasiFDRead(
         WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
         return wasiErrno();
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    {
-        U32 iovecIndex = 0;
-        for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U8* base = iovecs[iovecIndex].iov_base;
-            U32 length = iovecs[iovecIndex].iov_len;
-            int i = 0;
-            for (; i < length / 2; i++) {
-                U8 value = base[i];
-                base[i] = base[length - i - 1];
-                base[length - i - 1] = value;
-            }
-        }
-    }
-#endif
 
     free(iovecs);
 
@@ -1153,9 +1074,6 @@ wasiEnvironGet(
     wasmMemory* memory = wasiMemory(instance);
 
     U32 index = 0;
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    U8* memoryStart = memory->data + memory->size - 1;
-#endif
 
     WASI_TRACE((
         "environ_get("
@@ -1169,18 +1087,11 @@ wasiEnvironGet(
     for (; wasi.envp[index] != NULL; index++) {
         char* env = wasi.envp[index];
         size_t length = strlen(env) + 1;
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
             memory->data + envpBufPointer,
             env,
             length
         );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        U32 i = 0;
-        for (; i < length; i++) {
-           memoryStart[-envpBufPointer-i] = env[i];
-        }
-#endif
         i32_store(
             memory,
             envpPointer + index * sizeof(U32),
@@ -1244,9 +1155,6 @@ wasiArgsGet(
     wasmMemory* memory = wasiMemory(instance);
 
     U32 index = 0;
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    U8* memoryStart = memory->data + memory->size - 1;
-#endif
 
     WASI_TRACE((
         "args_get("
@@ -1260,18 +1168,11 @@ wasiArgsGet(
     for (; index < wasi.argc; index++) {
         char* arg = wasi.argv[index];
         size_t length = strlen(arg) + 1;
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
             memory->data + argvBufPointer,
             arg,
             length
         );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        U32 i = 0;
-        for (; i < length; i++) {
-            memoryStart[-argvBufPointer-i] = arg[i];
-        }
-#endif
         i32_store(
             memory,
             argvPointer + index * sizeof(U32),
@@ -1684,19 +1585,11 @@ wasiFDReaddir(
             break;
         }
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memset(
             memory->data + resultPointer,
             0,
             WASI_DIRENT_SIZE
         );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        memset(
-            memory->data + memory->size - resultPointer - WASI_DIRENT_SIZE,
-            0,
-            WASI_DIRENT_SIZE
-        );
-#endif
 
         i64_store(memory, resultPointer, next);
         i64_store(memory, resultPointer + 8, inode);
@@ -1714,22 +1607,12 @@ wasiFDReaddir(
             ? bufferRemaining
             : nameLength;
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memcpy(
             memory->data + resultPointer,
             name,
             adjustedNameLength
         );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        {
-            U8* base = memory->data + memory->size - 1 - resultPointer;
 
-            U32 i = 0;
-            for (; i < adjustedNameLength; i++) {
-                base[-i] = name[i];
-            }
-        }
-#endif
         bufferUsed += adjustedNameLength;
     }
 
@@ -2338,19 +2221,11 @@ wasiFdFdstatGet(
     }
 
     /* Store result */
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + resultPointer,
         0,
         WASI_FDSTAT_SIZE
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    memset(
-        memory->data + memory->size - resultPointer - WASI_FDSTAT_SIZE,
-        0,
-        WASI_FDSTAT_SIZE
-    );
-#endif
 
     WASI_TRACE((
         "fd_fdstat_get: "
@@ -2564,22 +2439,11 @@ wasiFdPrestatDirName(
         length = pathLength;
     }
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memcpy(
         memory->data + pathPointer,
         path,
         length
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    {
-        U8* base = memory->data + memory->size - 1 - pathPointer;
-
-        U32 i = 0;
-        for (; i < length; i++) {
-            base[-i] = path[i];
-        }
-    }
-#endif
 
     return WASI_ERRNO_SUCCESS;
 }
@@ -2600,29 +2464,6 @@ WASI_IMPORT(U32, fd_prestat_dir_name, (
 
 static
 W2C2_INLINE
-bool
-getBigEndianPath(
-    wasmMemory* memory,
-    U32 pathPointer,
-    U32 pathLength,
-    char path[PATH_MAX]
-) {
-    char* base = (char*) memory->data + memory->size - 1 - pathPointer;
-    U32 i = 0;
-
-    MUST (pathLength <= PATH_MAX)
-
-    for (; i < pathLength; i++) {
-        path[i] = base[-i];
-    }
-
-    path[pathLength] = '\0';
-
-    return true;
-}
-
-static
-W2C2_INLINE
 U32
 wasiPathOpen(
     void* instance,
@@ -2638,11 +2479,8 @@ wasiPathOpen(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
+
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     int nativeFlags = 0;
@@ -2683,20 +2521,12 @@ wasiPathOpen(
         fdPointer
     ));
 
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_open: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
-
     WASI_TRACE((
         "path_open: "
         "path=%.*s",
         pathLength,
         path
     ));
-
 
     if (!wasiFileDescriptorGet(wasiDirFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_open: bad preopen FD"));
@@ -2925,19 +2755,11 @@ storePreview1Filestat(
 
     getStatTimes(st, &access, &modification, &creation);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + statPointer,
         0,
         wasiPreview1FilestatSize
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    memset(
-        memory->data + memory->size - statPointer - wasiPreview1FilestatSize,
-        0,
-        wasiPreview1FilestatSize
-    );
-#endif
 
     {
         I64 dev = st->st_dev;
@@ -3071,19 +2893,11 @@ storeUnstableFilestat(
 
     getStatTimes(st, &access, &modification, &creation);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + statPointer,
         0,
         wasiUnstableFilestatSize
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    memset(
-        memory->data + memory->size - statPointer - wasiUnstableFilestatSize,
-        0,
-        wasiUnstableFilestatSize
-    );
-#endif
 
     {
         I64 dev = st->st_dev;
@@ -3167,11 +2981,7 @@ wasiPathFilestatGet(
     U32 pathLength,
     struct stat* st
 ) {
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     int res = 0;
@@ -3182,13 +2992,6 @@ wasiPathFilestatGet(
         WASI_TRACE(("path_filestat_get: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_filestat_get: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_filestat_get: "
@@ -3365,13 +3168,8 @@ wasiPathRename(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* oldPath = (char*) memory->data + oldPathPointer;
     char* newPath = (char*) memory->data + newPathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char oldPath[PATH_MAX];
-    char newPath[PATH_MAX];
-#endif
     char oldResolvedPath[PATH_MAX];
     char newResolvedPath[PATH_MAX];
     char nativeOldResolvedPath[PATH_MAX];
@@ -3408,18 +3206,6 @@ wasiPathRename(
         WASI_TRACE(("path_rename: bad new preopen fd"));
         return WASI_ERRNO_BADF;
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, oldPathPointer, oldPathLength, oldPath)) {
-        WASI_TRACE(("path_rename: bad old path"));
-        return WASI_ERRNO_INVAL;
-    }
-
-    if (!getBigEndianPath(memory, newPathPointer, newPathLength, newPath)) {
-        WASI_TRACE(("path_rename: bad new path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_rename: "
@@ -3519,11 +3305,7 @@ wasiPathUnlinkFile(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     int res = -1;
@@ -3545,13 +3327,6 @@ wasiPathUnlinkFile(
         WASI_TRACE(("path_unlink_file: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_unlink_file: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_unlink_file: "
@@ -3623,11 +3398,7 @@ wasiPathRemoveDirectory(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     int res = -1;
@@ -3649,13 +3420,6 @@ wasiPathRemoveDirectory(
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_remove_directory: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_remove_directory: "
@@ -3727,11 +3491,7 @@ wasiPathCreateDirectory(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     int res = -1;
@@ -3753,13 +3513,6 @@ wasiPathCreateDirectory(
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_create_directory: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_create_directory: "
@@ -3832,11 +3585,7 @@ wasiPathSymlink(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* newPath = (char*) memory->data + newPathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char newPath[PATH_MAX];
-#endif
     char oldResolvedPath[PATH_MAX];
     char newResolvedPath[PATH_MAX];
     char nativeOldResolvedPath[PATH_MAX];
@@ -3884,21 +3633,12 @@ wasiPathSymlink(
         return WASI_ERRNO_INVAL;
     }
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-    memcpy(oldResolvedPath, memory->data + oldPathPointer, oldPathLength);
+    memcpy(
+        oldResolvedPath,
+        memory->data + oldPathPointer,
+        oldPathLength
+    );
     oldResolvedPath[oldPathLength] = '\0';
-
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, oldPathPointer, oldPathLength, oldResolvedPath)) {
-        WASI_TRACE(("path_symlink: bad old path"));
-        return WASI_ERRNO_INVAL;
-    }
-
-    if (!getBigEndianPath(memory, newPathPointer, newPathLength, newPath)) {
-        WASI_TRACE(("path_symlink: bad new path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
 
     WASI_TRACE((
         "path_symlink: "
@@ -4001,11 +3741,7 @@ wasiPathReadlink(
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     char* path = (char*) memory->data + pathPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    char path[PATH_MAX];
-#endif
     char resolvedPath[PATH_MAX];
     char nativeResolvedPath[PATH_MAX];
     char* buffer = NULL;
@@ -4048,13 +3784,6 @@ wasiPathReadlink(
         return WASI_ERRNO_BADF;
     }
 
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    if (!getBigEndianPath(memory, pathPointer, pathLength, path)) {
-        WASI_TRACE(("path_readlink: bad path"));
-        return WASI_ERRNO_INVAL;
-    }
-#endif
-
     WASI_TRACE((
         "path_readlink: "
         "path=%.*s",
@@ -4079,11 +3808,7 @@ wasiPathReadlink(
         resolvedPath
     ));
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     buffer = (char*)memory->data + bufferPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    buffer = (char*)memory->data + memory->size - bufferPointer - bufferLength;
-#endif
 
     strcpy(nativeResolvedPath, resolvedPath);
 #if HAS_NONPOSIXPATH
@@ -4106,17 +3831,6 @@ wasiPathReadlink(
         WASI_TRACE(("path_readlink: readlink failed: %s", strerror(errno)));
         return wasiErrno();
     }
-
-#if WASM_ENDIAN == WASM_BIG_ENDIAN
-    {
-        U32 i = 0;
-        for (; i < length / 2; i++) {
-            char value = buffer[i];
-            buffer[i] = buffer[length - i - 1];
-            buffer[length - i - 1] = value;
-        }
-    }
-#endif
 
     i32_store(memory, lengthPointer, length);
 
@@ -4187,11 +3901,7 @@ wasiRandomGet(
         bufferLength
     ));
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     bufferStart = memory->data + bufferPointer;
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    bufferStart = memory->data + memory->size - bufferPointer - bufferLength;
-#endif
 
 #ifdef _WIN32
 #include <wincrypt.h>
