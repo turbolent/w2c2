@@ -96,12 +96,35 @@ typedef double F64;
 #endif /* WASM_ENDIAN */
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
+
+/*
+ * Use compiler byte-swapping intrinsics if they are available.
+ * 32-bit and 64-bit versions are available in Clang and GCC as of GCC 4.8.0.
+ */
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || __GNUC__ >= 5))
+
+#define swap16(x) __builtin_bswap16(x)
+#define swap32(x) __builtin_bswap32(x)
+#define swap64(x) __builtin_bswap64(x)
+
+#elif defined(__APPLE__)
+
+#include <libkern/OSByteOrder.h>
+
+#define swap16(x) OSSwapInt16(x)
+#define swap32(x) OSSwapInt32(x)
+#define swap64(x) OSSwapInt64(x)
+
+#else
+
 /*
  * Mask, and then shift.
  * Mask, and then shift.
  * Mask, and then shift.
  * Mask, and then shift.
  */
+#define swap16(x) ((((x) & 0xFF00) >> 8) \
+                 | (((x) & 0x00FF) << 8))
 #define swap32(x) ((((x) & 0xFF000000) >> 24) \
                  | (((x) & 0x00FF0000) >> 8 ) \
                  | (((x) & 0x0000FF00) << 8 ) \
@@ -114,6 +137,9 @@ typedef double F64;
                  | (((x) & 0x0000000000ff0000ull) << 24) \
                  | (((x) & 0x000000000000ff00ull) << 40) \
                  | (((x) & 0x00000000000000ffull) << 56))
+
+#endif
+
 #elif WASM_ENDIAN == WASM_LITTLE_ENDIAN
 #define swap32(x) (x)
 #define swap64(x) (x)
@@ -569,12 +595,7 @@ wasmMemoryGrow(
             return (U32) -1;
         }
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
         memset(newData + oldSize, 0, deltaSize);
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-        memmove(newData + newSize - oldSize, newData, oldSize);
-        memset(newData, 0, deltaSize);
-#endif
         memory->pages = newPages;
         memory->size = newSize;
         memory->data = newData;
@@ -593,20 +614,12 @@ wasmMemoryCopy(
     U32 sourceAddress,
     U32 count
 ) {
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memmove(
         destinationMemory->data + destinationAddress,
         sourceMemory->data + sourceAddress,
         count
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    memmove(
-        destinationMemory->data + destinationMemory->size - destinationAddress - count,
-        sourceMemory->data + sourceMemory->size - sourceAddress - count,
-        count
-    );
-#endif
-    }
+}
 
 static
 W2C2_INLINE
@@ -617,71 +630,58 @@ wasmMemoryFill(
     U32 value,
     U32 count
 ) {
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
     memset(
         memory->data + destinationAddress,
         (int) value,
         (size_t) count
     );
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
-    memset(
-        memory->data + memory->size - destinationAddress - count,
-        (int) value,
-        (size_t) count
-    );
-#endif
+}
+
+static
+W2C2_INLINE
+void
+load_data(
+    void *dest,
+    const void *src,
+    size_t n
+) {
+    memcpy(dest, src, n);
 }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-static
-W2C2_INLINE
-void
-load_data(
-    void *dest,
-    const void *src,
-    size_t n
-) {
-    size_t i = 0;
-    U8* destChars = dest;
-    memcpy(dest, src, n);
-    for (; i < (n>>1); i++) {
-        U8 cursor = destChars[i];
-        destChars[i] = destChars[n - i - 1];
-        destChars[n - i - 1] = cursor;
-    }
-}
 
-#define LOAD_DATA(m, o, i, s) \
-    load_data(&((m).data[(m).size - (o) - (s)]), i, s)
+#if defined(__APPLE__)
 
-#define DEFINE_LOAD(name, t1, t2, t3)                                            \
-    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {                      \
-        t1 result;                                                               \
-        memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1));  \
-        return (t3)(t2)result;                                                   \
-    }
+#include <libkern/OSByteOrder.h>
 
-#define DEFINE_STORE(name, t1, t2)                                                \
-    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {           \
-        t1 wrapped = (t1)value;                                                   \
-        memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1));  \
-    }
+#define readSwap16(base, offset) OSReadSwapInt16(base, offset)
+#define readSwap32(base, offset) OSReadSwapInt32(base, offset)
+#define readSwap64(base, offset) OSReadSwapInt64(base, offset)
 
-#elif WASM_ENDIAN == WASM_LITTLE_ENDIAN
+#define writeSwap16(base, offset, value) OSWriteSwapInt16(base, offset, value)
+#define writeSwap32(base, offset, value) OSWriteSwapInt32(base, offset, value)
+#define writeSwap64(base, offset, value) OSWriteSwapInt64(base, offset, value)
 
-static
-W2C2_INLINE
-void
-load_data(
-    void *dest,
-    const void *src,
-    size_t n
-) {
-    memcpy(dest, src, n);
-}
+#else
+
+#define readSwap16(base, offset) swap16(*(U16*)((base) + (offset)))
+#define readSwap32(base, offset) swap32(*(U32*)((base) + (offset)))
+#define readSwap64(base, offset) swap64(*(U64*)((base) + (offset)))
+
+#define writeSwap16(base, offset, value) (*(U16*)((base) + (offset)) = swap16(value))
+#define writeSwap32(base, offset, value) (*(U32*)((base) + (offset)) = swap32(value))
+#define writeSwap64(base, offset, value) (*(U64*)((base) + (offset)) = swap64(value))
+
+#endif
+
+#endif
+
+/* LOAD_DATA */
 
 #define LOAD_DATA(m, o, i, s) \
     load_data(&((m).data[o]), i, s)
+
+/* DEFINE_LOAD */
 
 #define DEFINE_LOAD(name, t1, t2, t3)                        \
     static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
@@ -690,37 +690,153 @@ load_data(
         return (t3)(t2)result;                               \
     }
 
+/* DEFINE_LOAD8 */
+
+#define DEFINE_LOAD8(name, t1, t2, t3) DEFINE_LOAD(name, t1, t2, t3)
+
+/* DEFINE_LOAD16 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_LOAD16(name, t1, t2, t3) DEFINE_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_LOAD16(name, t1, t2, t3)                      \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
+        t1 result;                                           \
+        U16 v = readSwap16(mem->data, addr);                 \
+        memcpy(&result, &v, sizeof(U16));                    \
+        return (t3)(t2)result;                               \
+    }
+
+#endif
+
+/* DEFINE_LOAD32 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_LOAD32(name, t1, t2, t3) DEFINE_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_LOAD32(name, t1, t2, t3)                      \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
+        t1 result;                                           \
+        U32 v = readSwap32(mem->data, addr);                 \
+        memcpy(&result, &v, sizeof(U32));                    \
+        return (t3)(t2)result;                               \
+    }
+
+#endif
+
+/* DEFINE_LOAD64 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_LOAD64(name, t1, t2, t3) DEFINE_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_LOAD64(name, t1, t2, t3)                      \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
+        t1 result;                                           \
+        U64 v = readSwap64(mem->data, addr);                 \
+        memcpy(&result, &v, sizeof(U64));                    \
+        return (t3)(t2)result;                               \
+    }
+
+#endif
+
+/* DEFINE_STORE */
+
 #define DEFINE_STORE(name, t1, t2)                                       \
     static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
         t1 wrapped = (t1)value;                                          \
         memcpy(&mem->data[addr], &wrapped, sizeof(t1));                  \
     }
 
+/* DEFINE_STORE8 */
+
+#define DEFINE_STORE8(name, t1, t2) DEFINE_STORE(name, t1, t2)
+
+/* DEFINE_STORE16 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_STORE16(name, t1, t2) DEFINE_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_STORE16(name, t1, t2)                                     \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
+        t1 wrapped = (t1)value;                                          \
+        U16 v;                                                           \
+        memcpy(&v, &wrapped, sizeof(U16));                               \
+        writeSwap16(mem->data, addr, v);                                 \
+    }
+
 #endif
 
-DEFINE_LOAD(i32_load, U32, U32, U32)
-DEFINE_LOAD(i64_load, U64, U64, U64)
-DEFINE_LOAD(f32_load, F32, F32, F32)
-DEFINE_LOAD(f64_load, F64, F64, F64)
-DEFINE_LOAD(i32_load8_s, I8, I32, U32)
-DEFINE_LOAD(i64_load8_s, I8, I64, U64)
-DEFINE_LOAD(i32_load8_u, U8, U32, U32)
-DEFINE_LOAD(i64_load8_u, U8, U64, U64)
-DEFINE_LOAD(i32_load16_s, I16, I32, U32)
-DEFINE_LOAD(i64_load16_s, I16, I64, U64)
-DEFINE_LOAD(i32_load16_u, U16, U32, U32)
-DEFINE_LOAD(i64_load16_u, U16, U64, U64)
-DEFINE_LOAD(i64_load32_s, I32, I64, U64)
-DEFINE_LOAD(i64_load32_u, U32, U64, U64)
-DEFINE_STORE(i32_store, U32, U32)
-DEFINE_STORE(i64_store, U64, U64)
-DEFINE_STORE(f32_store, F32, F32)
-DEFINE_STORE(f64_store, F64, F64)
-DEFINE_STORE(i32_store8, U8, U32)
-DEFINE_STORE(i32_store16, U16, U32)
-DEFINE_STORE(i64_store8, U8, U64)
-DEFINE_STORE(i64_store16, U16, U64)
-DEFINE_STORE(i64_store32, U32, U64)
+/* DEFINE_STORE32 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_STORE32(name, t1, t2) DEFINE_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_STORE32(name, t1, t2)                                     \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
+        t1 wrapped = (t1)value;                                          \
+        U32 v;                                                           \
+        memcpy(&v, &wrapped, sizeof(U32));                               \
+        writeSwap32(mem->data, addr, v);                                 \
+    }
+
+#endif
+
+/* DEFINE_STORE64 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_STORE64(name, t1, t2) DEFINE_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_STORE64(name, t1, t2)                                     \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
+        t1 wrapped = (t1)value;                                          \
+        U64 v;                                                           \
+        memcpy(&v, &wrapped, sizeof(U64));                               \
+        writeSwap64(mem->data, addr, v);                                 \
+    }
+
+#endif
+
+DEFINE_LOAD32(i32_load, U32, U32, U32)
+DEFINE_LOAD64(i64_load, U64, U64, U64)
+DEFINE_LOAD32(f32_load, F32, F32, F32)
+DEFINE_LOAD64(f64_load, F64, F64, F64)
+DEFINE_LOAD8(i32_load8_s, I8, I32, U32)
+DEFINE_LOAD8(i64_load8_s, I8, I64, U64)
+DEFINE_LOAD8(i32_load8_u, U8, U32, U32)
+DEFINE_LOAD8(i64_load8_u, U8, U64, U64)
+DEFINE_LOAD16(i32_load16_s, I16, I32, U32)
+DEFINE_LOAD16(i64_load16_s, I16, I64, U64)
+DEFINE_LOAD16(i32_load16_u, U16, U32, U32)
+DEFINE_LOAD16(i64_load16_u, U16, U64, U64)
+DEFINE_LOAD32(i64_load32_s, I32, I64, U64)
+DEFINE_LOAD32(i64_load32_u, U32, U64, U64)
+DEFINE_STORE32(i32_store, U32, U32)
+DEFINE_STORE64(i64_store, U64, U64)
+DEFINE_STORE32(f32_store, F32, F32)
+DEFINE_STORE64(f64_store, F64, F64)
+DEFINE_STORE8(i32_store8, U8, U32)
+DEFINE_STORE16(i32_store16, U16, U32)
+DEFINE_STORE8(i64_store8, U8, U64)
+DEFINE_STORE16(i64_store16, U16, U64)
+DEFINE_STORE32(i64_store32, U32, U64)
 
 typedef void (*wasmFunc)(void);
 
