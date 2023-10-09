@@ -838,6 +838,34 @@ DEFINE_STORE8(i64_store8, U8, U64)
 DEFINE_STORE16(i64_store16, U16, U64)
 DEFINE_STORE32(i64_store32, U32, U64)
 
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_SWAP(size, suffix, type) \
+    static __inline__ void swap_ ## suffix(type* v) {}
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_SWAP(size, suffix, type)                \
+    static __inline__ void swap_ ## suffix(type* v) {  \
+        U ## size tmp;                                 \
+        memcpy(&tmp, v, size / 8);                     \
+        tmp = swap ## size(tmp);                       \
+        memcpy(v, &tmp, size / 8);                     \
+    }
+
+#endif
+
+DEFINE_SWAP(16, s, short)
+DEFINE_SWAP(16, S, unsigned short)
+DEFINE_SWAP(32, i, int)
+DEFINE_SWAP(32, I, unsigned int)
+DEFINE_SWAP(32, l, long)
+DEFINE_SWAP(32, L, unsigned long)
+DEFINE_SWAP(64, q, long long)
+DEFINE_SWAP(64, Q, unsigned long long)
+DEFINE_SWAP(32, f, float)
+DEFINE_SWAP(64, d, double)
+
 typedef void (*wasmFunc)(void);
 
 typedef struct wasmTable {
