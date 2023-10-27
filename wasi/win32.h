@@ -4,6 +4,10 @@
 #include <windows.h>
 #include <errno.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct dirent {
     long d_ino;
     unsigned short d_reclen;
@@ -34,5 +38,9 @@ struct DIR {
     struct dirent ret;
     HANDLE handle;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_WASI_WIN32_H */

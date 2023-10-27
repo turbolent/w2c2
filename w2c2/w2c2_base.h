@@ -11,11 +11,17 @@
 
 #include <assert.h>
 
+#ifdef __cplusplus
+extern "C" {
+#else
+
 #ifndef __bool_true_false_are_defined
 typedef enum bool {
     false = 0,
     true = 1
 } bool;
+#endif
+
 #endif
 
 typedef unsigned char U8;
@@ -902,5 +908,9 @@ wasmTableFree(
 }
 
 #define TF(table, index, t) ((t)((table).data[index]))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_BASE_H */
