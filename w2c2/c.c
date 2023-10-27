@@ -4656,6 +4656,8 @@ wasmCWriteModuleHeader(
     fprintf(file, "#ifndef %s_H\n", moduleName);
     fprintf(file, "#define %s_H\n\n", moduleName);
 
+    fputs("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n", file);
+
     wasmCWriteBaseInclude(file);
     wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules);
     fprintf(
@@ -4670,6 +4672,8 @@ wasmCWriteModuleHeader(
         moduleName,
         moduleName
     );
+
+    fputs("#ifdef __cplusplus\n}\n#endif\n\n", file);
 
     fprintf(file, "#endif /* %s_H */\n\n", moduleName);
 
