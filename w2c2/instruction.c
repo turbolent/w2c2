@@ -72,7 +72,7 @@ wasmLoadStoreInstructionRead(
     MUST (leb128ReadU32(buffer, &offset) > 0)
 
     result->opcode = opcode;
-    result->align = align;
+    result->align = 1 << align;
     result->offset = offset;
 
     return true;

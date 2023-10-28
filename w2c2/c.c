@@ -553,6 +553,7 @@ typedef struct WasmCFunctionWriter {
     bool pretty;
     bool debug;
     bool multipleModules;
+    bool writeAlignment;
     WasmDebugLines* debugLines;
 } WasmCFunctionWriter;
 
@@ -1244,6 +1245,10 @@ wasmCWriteLoadExpr(
                 MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
                 MUST (wasmCWriteChar(writer, 'U'))
             }
+            if (writer->writeAlignment) {
+                MUST (wasmCWriteComma(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.align))
+            }
             MUST (wasmCWrite(writer, ");\n"))
 
             wasmTypeStackDrop(writer->typeStack, 1);
@@ -1344,6 +1349,10 @@ wasmCWriteStoreExpr(
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
+            if (writer->writeAlignment) {
+                MUST (wasmCWriteComma(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.align))
+            }
             MUST (wasmCWrite(writer, ");\n"))
 
             wasmTypeStackDrop(writer->typeStack, 2);
@@ -3290,7 +3299,8 @@ wasmCWriteFunctionBody(
     WasmDebugLines* debugLines,
     bool pretty,
     bool debug,
-    bool multipleModules
+    bool multipleModules,
+    bool writeAlignment
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -3329,6 +3339,7 @@ wasmCWriteFunctionBody(
         writer.pretty = pretty;
         writer.debug = debug;
         writer.multipleModules = multipleModules;
+        writer.writeAlignment = writeAlignment;
         writer.debugLines = debugLines;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
@@ -3474,7 +3485,8 @@ wasmCWriteFunctionImplementations(
     U32 endIndex,
     bool pretty,
     bool debug,
-    bool multipleModules
+    bool multipleModules,
+    bool writeAlignment
 ) {
     const size_t functionImportCount = module->functionImports.length;
 
@@ -3519,7 +3531,8 @@ wasmCWriteFunctionImplementations(
             debugLines,
             pretty,
             debug,
-            multipleModules
+            multipleModules,
+            writeAlignment
         ))
         fputs("\n", file);
     }
@@ -4730,7 +4743,8 @@ wasmCWriteImplementationFile(
     U32 startFunctionIndex,
     bool pretty,
     bool debug,
-    bool multipleModules
+    bool multipleModules,
+    bool writeAlignment
 ) {
     char filename[13];
     U32 functionCount = module->functions.count;
@@ -4771,7 +4785,8 @@ wasmCWriteImplementationFile(
             endFunctionIndex,
             pretty,
             debug,
-            multipleModules
+            multipleModules,
+            writeAlignment
         ))
     }
 
@@ -4802,6 +4817,7 @@ typedef struct WasmCImplementationWriterTask {
     bool pretty;
     bool debug;
     bool multipleModules;
+    bool writeAlignment;
     bool result;
 } WasmCImplementationWriterTask;
 
@@ -4872,6 +4888,7 @@ wasmCImplementationWriterThread(
             bool pretty = task->pretty;
             bool debug = task->debug;
             bool multipleModules = task->multipleModules;
+            bool writeAlignment = task->writeAlignment;
 
             writer->task = NULL;
 
@@ -4889,7 +4906,8 @@ wasmCImplementationWriterThread(
                     startFunctionIndex,
                     pretty,
                     debug,
-                    multipleModules
+                    multipleModules,
+                    writeAlignment
                 );
                 if (!result) {
                     fprintf(
@@ -4940,7 +4958,8 @@ wasmCWriteModuleImplementationFiles(
         0,
         options.pretty,
         options.debug,
-        options.multipleModules
+        options.multipleModules,
+        options.writeAlignment
     ))
 
     {
@@ -4959,6 +4978,7 @@ wasmCWriteModuleImplementationFiles(
         task.pretty = options.pretty;
         task.debug = options.debug;
         task.multipleModules = options.multipleModules;
+        task.writeAlignment = options.writeAlignment;
 
         for (; jobIndex < threadCount; jobIndex++) {
             int err = pthread_create(
@@ -5010,7 +5030,8 @@ wasmCWriteModuleImplementationFiles(
                 startFunctionIndex,
                 options.pretty,
                 options.debug,
-                options.multipleModules
+                options.multipleModules,
+                options.writeAlignment
             ))
 #endif /* HAS_PTHREAD */
         }

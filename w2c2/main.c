@@ -22,9 +22,9 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:pgmh";
+static char* const optString = "t:f:d:pgmah";
 #else
-static char* const optString = "f:d:pgmh";
+static char* const optString = "f:d:pgmah";
 #endif /* HAS_PTHREAD */
 
 static
@@ -94,6 +94,7 @@ main(
     bool pretty = false;
     bool debug = false;
     bool multipleModules = false;
+    bool writeAlignment = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
     char moduleName[PATH_MAX];
 
@@ -124,6 +125,10 @@ main(
             }
             case 'm': {
                 multipleModules = true;
+                break;
+            }
+            case 'a': {
+                writeAlignment = true;
                 break;
             }
             case 'd': {
@@ -180,6 +185,7 @@ main(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -m         Support multiple modules (prefixes function names)\n"
+                    "  -a         Pass alignment hints to the load and store macros. You'll need a custom w2c2_base.h to use this\n"
                 );
                 return 0;
             }
@@ -259,6 +265,7 @@ main(
         writeOptions.pretty = pretty;
         writeOptions.debug = debug;
         writeOptions.multipleModules = multipleModules;
+        writeOptions.writeAlignment = writeAlignment;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
         if (!wasmCWriteModule(reader.module, moduleName, writeOptions)) {
