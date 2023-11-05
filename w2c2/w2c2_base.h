@@ -841,7 +841,7 @@ DEFINE_STORE32(i64_store32, U32, U64)
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
 #define DEFINE_SWAP(size, suffix, type) \
-    static W2C2_INLINE void swap_ ## suffix(type* v) {}
+    static W2C2_INLINE void swap_ ## suffix(type* v) { (void)v; }
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 

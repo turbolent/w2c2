@@ -21,9 +21,11 @@ static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    const WasmModule* module,
-    const char* moduleName,
-    WasmCWriteModuleOptions options
+    const WasmModule *module,
+    const char *moduleName,
+    WasmCWriteModuleOptions options,
+    WasmFunctionIDs staticFunctionIDs,
+    WasmFunctionIDs dynamicFunctionIDs
 );
 
 #endif /* W2C2_C_H */

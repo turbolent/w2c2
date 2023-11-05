@@ -22,9 +22,9 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:pgmh";
+static char* const optString = "t:f:d:r:pgmh";
 #else
-static char* const optString = "f:d:pgmh";
+static char* const optString = "f:d:r:pgmh";
 #endif /* HAS_PTHREAD */
 
 static
@@ -46,7 +46,12 @@ readWasmBinary(
 
     wasmModuleRead(wasmModuleReaderResult, &error);
     if (error != NULL) {
-        fprintf(stderr, "w2c2: failed to read module: %s\n", wasmModuleReaderErrorMessage(error));
+        fprintf(
+            stderr,
+            "w2c2: failed to read module %s: %s\n",
+            path,
+            wasmModuleReaderErrorMessage(error)
+        );
         return false;
     }
 
@@ -82,6 +87,88 @@ getPathModuleName(
     moduleName[j] = '\0';
 }
 
+int wasmFunctionIDsCompareHashes(const void* a, const void* b) {
+    const WasmFunctionID* functionIDA = a;
+    const WasmFunctionID* functionIDB = b;
+    return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
+}
+
+WasmFunctionIDs wasmSortedFunctionIDs(WasmFunctions functions) {
+    WasmFunctionIDs result = emptyWasmFunctionIDs;
+
+    U32 functionIndex = 0;
+    for (; functionIndex < functions.count; functionIndex++) {
+        WasmFunction function = functions.functions[functionIndex];
+        WasmFunctionID functionID = emptyWasmFunctionID;
+        memcpy(functionID.hash, function.hash, SHA1_DIGEST_LENGTH);
+        functionID.functionIndex = functionIndex;
+        if (!wasmFunctionIDsAppend(&result, functionID)) {
+            exit(1);
+        }
+    }
+
+    if (result.length > 1) {
+        qsort(
+                result.functionIDs,
+                result.length,
+                sizeof(WasmFunctionID),
+                wasmFunctionIDsCompareHashes
+        );
+    }
+
+    return result;
+}
+
+void wasmSplitStaticAndDynamicFunctions(
+    WasmFunctionIDs functionIDs,
+    WasmFunctionIDs referenceFunctionIDs,
+    WasmFunctionIDs *staticFunctions,
+    WasmFunctionIDs *dynamicFunctions
+) {
+    WasmFunctionID* functionID = functionIDs.functionIDs;
+    WasmFunctionID* lastFunctionID = functionID + functionIDs.length;
+
+    WasmFunctionID* referenceFunctionID = referenceFunctionIDs.functionIDs;
+    WasmFunctionID* lastReferenceFunctionID = referenceFunctionID + referenceFunctionIDs.length;
+
+    while (
+        functionID != lastFunctionID
+        && referenceFunctionID != lastReferenceFunctionID
+    ) {
+        int comparisonResult = wasmFunctionIDsCompareHashes(functionID, referenceFunctionID);
+        if (comparisonResult < 0) {
+            /* Function only exists in the module, and not in the reference module, so it's a dynamic function */
+            if (!wasmFunctionIDsAppend(dynamicFunctions, *functionID)) {
+                exit(1);
+            }
+
+            functionID++;
+
+        } else if (comparisonResult > 0) {
+            /* Function only exists in the reference module, and not in the module, so skip it */
+            referenceFunctionID++;
+
+        } else {
+            /* comparisonResult == 0 */
+            /* Function exists in both modules, so it's a static function */
+            if (!wasmFunctionIDsAppend(staticFunctions, *functionID)) {
+                exit(1);
+            }
+
+            functionID++;
+            referenceFunctionID++;
+        }
+    }
+
+    while (functionID != lastFunctionID) {
+        /* Identifier only exists in the module, and not in the reference module, so it's a dynamic function */
+        if (!wasmFunctionIDsAppend(dynamicFunctions, *functionID)) {
+            exit(1);
+        }
+        functionID++;
+    }
+}
+
 int
 main(
     int argc,
@@ -89,6 +176,7 @@ main(
 ) {
     U32 threadCount = 0;
     char* modulePath = NULL;
+    char* referenceModulePath = NULL;
     char* outputPath = NULL;
     U32 functionsPerFile = 0;
     bool pretty = false;
@@ -157,6 +245,10 @@ main(
                 }
                 break;
             }
+            case 'r': {
+                referenceModulePath = optarg;
+                break;
+            }
             case 'h': {
                 fprintf(
                     stderr,
@@ -180,6 +272,7 @@ main(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -m         Support multiple modules (prefixes function names)\n"
+                    "  -r         Reference module\n"
                 );
                 return 0;
             }
@@ -242,15 +335,55 @@ main(
         WasmModuleReader reader = emptyWasmModuleReader;
         WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
 
+        WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
+
+        WasmFunctionIDs staticFunctionIDs = emptyWasmFunctionIDs;
+        WasmFunctionIDs dynamicFunctionIDs = emptyWasmFunctionIDs;
+
         if (!readWasmBinary(modulePath, &reader, debug)) {
             return 1;
+        }
+
+        functionIDs = wasmSortedFunctionIDs(reader.module->functions);
+
+        if (referenceModulePath != NULL) {
+            WasmModuleReader referenceReader = emptyWasmModuleReader;
+            WasmFunctionIDs referenceFunctionIDs = emptyWasmFunctionIDs;
+
+            size_t total = 0;
+
+            if (!readWasmBinary(referenceModulePath, &referenceReader, false)) {
+                return 1;
+            }
+
+            referenceFunctionIDs = wasmSortedFunctionIDs(referenceReader.module->functions);
+
+            wasmSplitStaticAndDynamicFunctions(
+                    functionIDs,
+                    referenceFunctionIDs,
+                    &staticFunctionIDs,
+                    &dynamicFunctionIDs
+            );
+
+            total = dynamicFunctionIDs.length + staticFunctionIDs.length;
+
+            fprintf(
+                stderr,
+                "w2c2: %lu of %lu functions are dynamic (%.2f%%)\n",
+                dynamicFunctionIDs.length,
+                total,
+                (float)dynamicFunctionIDs.length / (float)total * 100.0
+            );
+        } else {
+            staticFunctionIDs = functionIDs;
+            dynamicFunctionIDs = emptyWasmFunctionIDs;
         }
 
         if (functionsPerFile == 0) {
             functionsPerFile = reader.module->functions.count;
         }
         if (functionsPerFile == 0) {
-            functionsPerFile = 1;
+            functionsPerFile = UINT32_MAX;
         }
 
         writeOptions.outputPath = outputPath;
@@ -261,7 +394,13 @@ main(
         writeOptions.multipleModules = multipleModules;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
-        if (!wasmCWriteModule(reader.module, moduleName, writeOptions)) {
+        if (!wasmCWriteModule(
+            reader.module,
+            moduleName,
+            writeOptions,
+            staticFunctionIDs,
+            dynamicFunctionIDs
+        )) {
             fprintf(stderr, "w2c2: failed to compile\n");
             return 1;
         }

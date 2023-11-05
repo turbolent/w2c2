@@ -3470,8 +3470,9 @@ wasmCWriteFunctionImplementations(
     const WasmModule* module,
     const char *moduleName,
     WasmDebugLines* debugLines,
-    U32 startIndex,
-    U32 endIndex,
+    U32 startIDIndex,
+    U32 endIDIndex,
+    WasmFunctionIDs functionIDs,
     bool pretty,
     bool debug,
     bool multipleModules
@@ -3482,8 +3483,10 @@ wasmCWriteFunctionImplementations(
     WasmTypeStack stackDeclarations = wasmEmptyTypeStack;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
 
-    U32 functionIndex = startIndex;
-    for (; functionIndex < endIndex; functionIndex++) {
+    U32 functionIDIndex = startIDIndex;
+    for (; functionIDIndex < endIDIndex; functionIDIndex++) {
+        WasmFunctionID functionID = functionIDs.functionIDs[functionIDIndex];
+        U32 functionIndex = functionID.functionIndex;
         const WasmFunction function = module->functions.functions[functionIndex];
 
         wasmTypeStackClear(&typeStack);
@@ -3830,8 +3833,7 @@ wasmCWriteInitImports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool multipleModules
+    bool pretty
 ) {
     fprintf(
         file,
@@ -4702,7 +4704,7 @@ wasmCWriteInits(
     MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty))
     MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules))
     MUST (wasmCWriteInitGlobals(file, module, moduleName, pretty))
-    MUST (wasmCWriteInitImports(file, module, moduleName, pretty, multipleModules))
+    MUST (wasmCWriteInitImports(file, module, moduleName, pretty))
 
     wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules);
 
@@ -4722,65 +4724,61 @@ wasmCWriteImplementationFile(
     WasmDebugLines* debugLines,
     U32 fileIndex,
     U32 functionsPerFile,
-    FILE* file,
-    U32 startFunctionIndex,
+    U32 startFunctionIDIndex,
+    WasmFunctionIDs functionIDs,
     bool pretty,
     bool debug,
     bool multipleModules
 ) {
+    FILE* file = NULL;
     char filename[13];
-    U32 functionCount = module->functions.count;
-    bool separate = file == NULL;
+    U32 functionCount = (U32)functionIDs.length;
 
-    U32 endFunctionIndex = startFunctionIndex + functionsPerFile;
-    if (endFunctionIndex > functionCount) {
-        endFunctionIndex = functionCount;
+    U32 endFunctionIDIndex = startFunctionIDIndex + (U32)functionsPerFile;
+    if (endFunctionIDIndex > functionCount) {
+        endFunctionIDIndex = functionCount;
     }
 
     /* Do not create empty files */
-    if (startFunctionIndex > endFunctionIndex) {
+    if (startFunctionIDIndex > endFunctionIDIndex) {
         return true;
     }
 
-    if (separate) {
-        sprintf(filename, "%010u.c", fileIndex);
-        file = fopen(filename, "w");
-        if (file == NULL) {
-            fprintf(
-                stderr,
-                "w2c2: failed to create implementation file %s: %s\n",
-                filename,
-                strerror(errno)
-            );
-            return false;
-        }
-        wasmCWriteIncludes(file, headerName);
+    sprintf(filename, "%010u.c", fileIndex);
+    file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(
+            stderr,
+            "w2c2: failed to create implementation file %s: %s\n",
+            filename,
+            strerror(errno)
+        );
+        return false;
     }
 
-    {
-        MUST (wasmCWriteFunctionImplementations(
-            file,
-            module,
-            moduleName,
-            debugLines,
-            startFunctionIndex,
-            endFunctionIndex,
-            pretty,
-            debug,
-            multipleModules
-        ))
-    }
+    wasmCWriteIncludes(file, headerName);
 
-    if (separate) {
-        if (fclose(file) != 0) {
-            fprintf(
-                stderr,
-                "w2c2: failed to close implementation file: %s: %s\n",
-                filename,
-                strerror(errno)
-            );
-            return false;
-        }
+    MUST (wasmCWriteFunctionImplementations(
+        file,
+        module,
+        moduleName,
+        debugLines,
+        startFunctionIDIndex,
+        endFunctionIDIndex,
+        functionIDs,
+        pretty,
+        debug,
+        multipleModules
+    ))
+
+    if (fclose(file) != 0) {
+        fprintf(
+            stderr,
+            "w2c2: failed to close implementation file: %s: %s\n",
+            filename,
+            strerror(errno)
+        );
+        return false;
     }
 
     return true;
@@ -4794,7 +4792,8 @@ typedef struct WasmCImplementationWriterTask {
     const WasmModule* module;
     const char* moduleName;
     const char* headerName;
-    U32 startFunctionIndex;
+    U32 startFunctionIDIndex;
+    WasmFunctionIDs functionIDs;
     bool pretty;
     bool debug;
     bool multipleModules;
@@ -4864,7 +4863,8 @@ wasmCImplementationWriterThread(
             const char* headerName = task->headerName;
             U32 fileIndex = task->fileIndex;
             U32 functionsPerFile = task->functionsPerFile;
-            U32 startFunctionIndex = task->startFunctionIndex;
+            U32 startFunctionIDIndex = task->startFunctionIDIndex;
+            WasmFunctionIDs functionIDs = task->functionIDs;
             bool pretty = task->pretty;
             bool debug = task->debug;
             bool multipleModules = task->multipleModules;
@@ -4881,18 +4881,19 @@ wasmCImplementationWriterThread(
                     NULL,
                     fileIndex,
                     functionsPerFile,
-                    NULL,
-                    startFunctionIndex,
+                    startFunctionIDIndex,
+                    functionIDs,
                     pretty,
                     debug,
                     multipleModules
                 );
                 if (!result) {
+                    WasmFunctionID startFunctionID = functionIDs.functionIDs[startFunctionIDIndex];
                     fprintf(
                         stderr,
-                        "w2c2: failed to write implementation file %d, start func %d\n",
+                        "w2c2: failed to write implementation file %d. start function index: %d\n",
                         fileIndex,
-                        startFunctionIndex
+                        startFunctionID.functionIndex
                     );
                     exit(1);
                 }
@@ -4912,34 +4913,24 @@ wasmCWriteModuleImplementationFiles(
     const WasmModule* module,
     const char* moduleName,
     const char* headerName,
-    FILE* mainFile,
+    WasmFunctionIDs functionIDs,
+    U32* fileIndex,
     WasmCWriteModuleOptions options
 ) {
     WasmDebugLines debugLines = module->debugLines;
 
-    U32 fileIndex = 0;
-    U32 functionCount = module->functions.count;
+    size_t functionCount = functionIDs.length;
     U32 functionsPerFile = options.functionsPerFile;
-    U32 fileCount = 0;
-    if (functionCount > 0) {
-        fileCount = 1 + (functionCount - 1) / functionsPerFile;
+    size_t fileCount = 0;
+    if (functionCount == 0) {
+        return true;
     }
-
-    MUST (wasmCWriteImplementationFile(
-        module,
-        moduleName,
-        headerName,
-        &debugLines,
-        fileIndex++,
-        functionsPerFile,
-        mainFile,
-        0,
-        options.pretty,
-        options.debug,
-        options.multipleModules
-    ))
+    fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
     {
+        size_t totalFileCount = *fileIndex + fileCount;
+        U32 startFunctionIDIndex = 0;
+
 #if HAS_PTHREAD
         U32 threadCount = options.threadCount;
         pthread_t* threads = calloc(threadCount * sizeof(pthread_t), 1);
@@ -4974,8 +4965,11 @@ wasmCWriteModuleImplementationFiles(
         }
 #endif /* HAS_PTHREAD */
 
-        for (; fileIndex < fileCount; fileIndex++) {
-            U32 startFunctionIndex = fileIndex * functionsPerFile;
+        for (;
+            *fileIndex < totalFileCount;
+            (*fileIndex)++,
+                startFunctionIDIndex += functionsPerFile
+        ) {
 #if HAS_PTHREAD
             pthread_mutex_lock(&writer.mutex);
 
@@ -4986,8 +4980,9 @@ wasmCWriteModuleImplementationFiles(
                 );
             }
 
-            task.fileIndex = fileIndex;
-            task.startFunctionIndex = startFunctionIndex;
+            task.fileIndex = *fileIndex;
+            task.startFunctionIDIndex = startFunctionIDIndex;
+            task.functionIDs = functionIDs;
 
             writer.task = &task;
 
@@ -5000,10 +4995,10 @@ wasmCWriteModuleImplementationFiles(
                 moduleName,
                 headerName,
                 &debugLines,
-                fileIndex,
+                *fileIndex,
                 functionsPerFile,
-                NULL,
-                startFunctionIndex,
+                startFunctionIDIndex,
+                functionIDs,
                 options.pretty,
                 options.debug,
                 options.multipleModules
@@ -5050,8 +5045,12 @@ wasmCWriteModuleImplementation(
     const char* moduleName,
     const char* filename,
     const char* headerName,
+    WasmFunctionIDs staticFunctionIDs,
+    WasmFunctionIDs dynamicFunctionIDs,
     WasmCWriteModuleOptions options
 ) {
+    U32 fileIndex = 0;
+
     /* Create file */
     FILE *file = NULL;
 
@@ -5074,7 +5073,17 @@ wasmCWriteModuleImplementation(
         module,
         moduleName,
         headerName,
-        file,
+        staticFunctionIDs,
+        &fileIndex,
+        options
+    ))
+
+    MUST (wasmCWriteModuleImplementationFiles(
+        module,
+        moduleName,
+        headerName,
+        dynamicFunctionIDs,
+        &fileIndex,
         options
     ))
 
@@ -5107,9 +5116,11 @@ wasmCWriteModuleImplementation(
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    const WasmModule* module,
-    const char* moduleName,
-    WasmCWriteModuleOptions options
+    const WasmModule *module,
+    const char *moduleName,
+    WasmCWriteModuleOptions options,
+    WasmFunctionIDs staticFunctionIDs,
+    WasmFunctionIDs dynamicFunctionIDs
 ) {
     char outputDir[PATH_MAX];
     char outputName[PATH_MAX];
@@ -5139,8 +5150,24 @@ wasmCWriteModule(
         return false;
     }
 
-    MUST (wasmCWriteModuleHeader(module, moduleName, headerName, options.pretty, options.debug, options.multipleModules))
-    MUST (wasmCWriteModuleImplementation(module, moduleName, outputName, headerName, options))
+    MUST (wasmCWriteModuleHeader(
+        module,
+        moduleName,
+        headerName,
+        options.pretty,
+        options.debug,
+        options.multipleModules
+    ))
+
+    MUST (wasmCWriteModuleImplementation(
+        module,
+        moduleName,
+        outputName,
+        headerName,
+        staticFunctionIDs,
+        dynamicFunctionIDs,
+        options
+    ))
 
     return true;
 }
