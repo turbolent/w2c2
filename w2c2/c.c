@@ -4732,7 +4732,7 @@ wasmCWriteImplementationFile(
     bool multipleModules
 ) {
     FILE* file = NULL;
-    char filename[14];
+    char filename[W2C2_IMPL_FILENAME_LENGTH+1];
     U32 functionCount = (U32)functionIDs.length;
 
     U32 endFunctionIDIndex = startFunctionIDIndex + (U32)functionsPerFile;

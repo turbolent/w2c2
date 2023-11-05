@@ -11,6 +11,8 @@
 #endif
 #if HAS_GETOPT
   #include <getopt.h>
+#include <glob.h>
+
 #else
   #include "getopt_impl.h"
 #endif /* HAS_GETOPT */
@@ -22,9 +24,9 @@
 #include "stringbuilder.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:r:pgmh";
+static char* const optString = "t:f:d:r:pgmch";
 #else
-static char* const optString = "f:d:r:pgmh";
+static char* const optString = "f:d:r:pgmch";
 #endif /* HAS_PTHREAD */
 
 static
@@ -169,6 +171,46 @@ void wasmSplitStaticAndDynamicFunctions(
     }
 }
 
+static
+void
+cleanImplementationFiles(void) {
+    glob_t globbuf;
+    size_t pathIndex = 0;
+    int globResult = glob("[sd]*.c", GLOB_NOSORT, NULL, &globbuf);
+    if (globResult != 0) {
+        if (globResult != GLOB_NOMATCH) {
+            fprintf(stderr, "w2c2: failed to glob files to clean\n");
+        }
+        return;
+    }
+
+    for (; pathIndex < globbuf.gl_pathc; pathIndex++) {
+        int pathCharIndex = 1;
+        bool allDigits = true;
+
+        char *path = globbuf.gl_pathv[pathIndex];
+        size_t pathLength = strlen(path);
+        if (pathLength != W2C2_IMPL_FILENAME_LENGTH) {
+            continue;
+        }
+
+        for (; pathCharIndex < pathLength - 2; pathCharIndex++) {
+            char c = path[pathCharIndex];
+            if (c < '0' || c > '9') {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {
+            continue;
+        }
+
+        if (remove(path) != 0) {
+            fprintf(stderr, "w2c2: failed to remove file %s\n", path);
+        }
+    }
+}
+
 int
 main(
     int argc,
@@ -184,6 +226,7 @@ main(
     bool multipleModules = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
     char moduleName[PATH_MAX];
+    bool clean = false;
 
     int index = 0;
     int c = -1;
@@ -212,6 +255,10 @@ main(
             }
             case 'm': {
                 multipleModules = true;
+                break;
+            }
+            case 'c': {
+                clean = true;
                 break;
             }
             case 'd': {
@@ -330,6 +377,10 @@ main(
     outputPath = argv[index++];
 
     getPathModuleName(moduleName, modulePath);
+
+    if (clean) {
+        cleanImplementationFiles();
+    }
 
     {
         WasmModuleReader reader = emptyWasmModuleReader;
