@@ -4722,6 +4722,7 @@ wasmCWriteImplementationFile(
     const char* moduleName,
     const char* headerName,
     WasmDebugLines* debugLines,
+    char filePrefix,
     U32 fileIndex,
     U32 functionsPerFile,
     U32 startFunctionIDIndex,
@@ -4731,7 +4732,7 @@ wasmCWriteImplementationFile(
     bool multipleModules
 ) {
     FILE* file = NULL;
-    char filename[13];
+    char filename[14];
     U32 functionCount = (U32)functionIDs.length;
 
     U32 endFunctionIDIndex = startFunctionIDIndex + (U32)functionsPerFile;
@@ -4744,7 +4745,7 @@ wasmCWriteImplementationFile(
         return true;
     }
 
-    sprintf(filename, "%010u.c", fileIndex);
+    sprintf(filename, "%c%010u.c", filePrefix, fileIndex);
     file = fopen(filename, "w");
     if (file == NULL) {
         fprintf(
@@ -4787,6 +4788,7 @@ wasmCWriteImplementationFile(
 #if HAS_PTHREAD
 
 typedef struct WasmCImplementationWriterTask {
+    char filePrefix;
     U32 fileIndex;
     U32 functionsPerFile;
     const WasmModule* module;
@@ -4798,6 +4800,7 @@ typedef struct WasmCImplementationWriterTask {
     bool debug;
     bool multipleModules;
     bool result;
+    WasmDebugLines *debugLines;
 } WasmCImplementationWriterTask;
 
 typedef struct WasmCImplementationConcurrentWriter {
@@ -4861,6 +4864,7 @@ wasmCImplementationWriterThread(
             const WasmModule* module = task->module;
             const char* moduleName = task->moduleName;
             const char* headerName = task->headerName;
+            char filePrefix = task->filePrefix;
             U32 fileIndex = task->fileIndex;
             U32 functionsPerFile = task->functionsPerFile;
             U32 startFunctionIDIndex = task->startFunctionIDIndex;
@@ -4868,6 +4872,7 @@ wasmCImplementationWriterThread(
             bool pretty = task->pretty;
             bool debug = task->debug;
             bool multipleModules = task->multipleModules;
+            WasmDebugLines* debugLines = task->debugLines;
 
             writer->task = NULL;
 
@@ -4878,7 +4883,8 @@ wasmCImplementationWriterThread(
                     module,
                     moduleName,
                     headerName,
-                    NULL,
+                    debugLines,
+                    filePrefix,
                     fileIndex,
                     functionsPerFile,
                     startFunctionIDIndex,
@@ -4914,11 +4920,12 @@ wasmCWriteModuleImplementationFiles(
     const char* moduleName,
     const char* headerName,
     WasmFunctionIDs functionIDs,
-    U32* fileIndex,
+    char filePrefix,
     WasmCWriteModuleOptions options
 ) {
     WasmDebugLines debugLines = module->debugLines;
 
+    U32 fileIndex = 0;
     size_t functionCount = functionIDs.length;
     U32 functionsPerFile = options.functionsPerFile;
     size_t fileCount = 0;
@@ -4928,13 +4935,13 @@ wasmCWriteModuleImplementationFiles(
     fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
     {
-        size_t totalFileCount = *fileIndex + fileCount;
-        U32 startFunctionIDIndex = 0;
 
 #if HAS_PTHREAD
         U32 threadCount = options.threadCount;
         pthread_t* threads = calloc(threadCount * sizeof(pthread_t), 1);
         U32 jobIndex = 0;
+
+        bool setDebugLines = options.debug && options.threadCount == 1;
 
         WasmCImplementationConcurrentWriter writer = wasmCImplementationConcurrentWriterNew();
 
@@ -4965,11 +4972,8 @@ wasmCWriteModuleImplementationFiles(
         }
 #endif /* HAS_PTHREAD */
 
-        for (;
-            *fileIndex < totalFileCount;
-            (*fileIndex)++,
-                startFunctionIDIndex += functionsPerFile
-        ) {
+        for (; fileIndex < fileCount; fileIndex++) {
+            U32 startFunctionIDIndex = fileIndex * functionsPerFile;
 #if HAS_PTHREAD
             pthread_mutex_lock(&writer.mutex);
 
@@ -4980,9 +4984,15 @@ wasmCWriteModuleImplementationFiles(
                 );
             }
 
-            task.fileIndex = *fileIndex;
+            task.filePrefix = filePrefix;
+            task.fileIndex = fileIndex;
             task.startFunctionIDIndex = startFunctionIDIndex;
             task.functionIDs = functionIDs;
+            if (setDebugLines) {
+                task.debugLines = &debugLines;
+            } else {
+                task.debugLines = NULL;
+            }
 
             writer.task = &task;
 
@@ -4995,7 +5005,8 @@ wasmCWriteModuleImplementationFiles(
                 moduleName,
                 headerName,
                 &debugLines,
-                *fileIndex,
+                filePrefix,
+                fileIndex,
                 functionsPerFile,
                 startFunctionIDIndex,
                 functionIDs,
@@ -5049,8 +5060,6 @@ wasmCWriteModuleImplementation(
     WasmFunctionIDs dynamicFunctionIDs,
     WasmCWriteModuleOptions options
 ) {
-    U32 fileIndex = 0;
-
     /* Create file */
     FILE *file = NULL;
 
@@ -5074,7 +5083,7 @@ wasmCWriteModuleImplementation(
         moduleName,
         headerName,
         staticFunctionIDs,
-        &fileIndex,
+        's',
         options
     ))
 
@@ -5083,7 +5092,7 @@ wasmCWriteModuleImplementation(
         moduleName,
         headerName,
         dynamicFunctionIDs,
-        &fileIndex,
+        'd',
         options
     ))
 
