@@ -5078,23 +5078,43 @@ wasmCWriteModuleImplementation(
 
     /* Write implementations */
 
-    MUST (wasmCWriteModuleImplementationFiles(
-        module,
-        moduleName,
-        headerName,
-        staticFunctionIDs,
-        's',
-        options
-    ))
+    if (options.functionsPerFile >= module->functions.count
+        && dynamicFunctionIDs.length == 0)
+    {
+        WasmDebugLines debugLines = module->debugLines;
 
-    MUST (wasmCWriteModuleImplementationFiles(
-        module,
-        moduleName,
-        headerName,
-        dynamicFunctionIDs,
-        'd',
-        options
-    ))
+        MUST (wasmCWriteFunctionImplementations(
+            file,
+            module,
+            moduleName,
+            &debugLines,
+            0,
+            (U32)staticFunctionIDs.length,
+            staticFunctionIDs,
+            options.pretty,
+            options.debug,
+            options.multipleModules
+        ))
+    } else {
+
+        MUST (wasmCWriteModuleImplementationFiles(
+            module,
+            moduleName,
+            headerName,
+            staticFunctionIDs,
+            's',
+            options
+        ))
+
+        MUST (wasmCWriteModuleImplementationFiles(
+            module,
+            moduleName,
+            headerName,
+            dynamicFunctionIDs,
+            'd',
+            options
+        ))
+    }
 
     /* Write initializations code */
 

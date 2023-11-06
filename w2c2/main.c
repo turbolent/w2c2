@@ -410,10 +410,10 @@ main(
             referenceFunctionIDs = wasmSortedFunctionIDs(referenceReader.module->functions);
 
             wasmSplitStaticAndDynamicFunctions(
-                    functionIDs,
-                    referenceFunctionIDs,
-                    &staticFunctionIDs,
-                    &dynamicFunctionIDs
+                functionIDs,
+                referenceFunctionIDs,
+                &staticFunctionIDs,
+                &dynamicFunctionIDs
             );
 
             total = dynamicFunctionIDs.length + staticFunctionIDs.length;
