@@ -75,7 +75,7 @@ wasmTypeStackSet(
         typeStack->length = newLength;
     }
 
-    typeStack->valueTypes[index] |= (1 << valueType);
+    typeStack->valueTypes[index] |= (WasmValueType)(1 << valueType);
 
     return true;
 }

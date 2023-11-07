@@ -20,7 +20,7 @@ typedef struct DIR DIR;
 
 DIR* opendir(const char*);
 struct dirent* readdir(DIR*);
-int	closedir(DIR*);
+int closedir(DIR*);
 
 /* File types for 'd_type' */
 #define DT_UNKNOWN  0

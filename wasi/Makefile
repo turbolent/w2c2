@@ -83,7 +83,7 @@ OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
 	$(CC) $(CFLAGS) -c $< -o $@
 
 libw2c2wasi.a: $(OBJECTS)
-	$(AR) rcu $@ $^
+	$(AR) qc $@ $^
 	ranlib $@
 
 test: $(OBJECTS) test.c
