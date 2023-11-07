@@ -690,6 +690,7 @@ wasmReadLimits(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
+    bool *shared,
     WasmModuleReaderError** error
 ) {
     U8 kindIndicator = 0;
@@ -715,6 +716,7 @@ wasmReadLimits(
     switch (kindIndicator) {
         case 0x0: {
             *max = 0;
+            *shared = false;
             break;
         }
         case 0x1: {
@@ -726,6 +728,19 @@ wasmReadLimits(
                 *error = &wasmModuleReaderError;
                 return;
             }
+            *shared = false;
+            break;
+        }
+        case 0x3: {
+            /* Read max */
+            if (leb128ReadU32(&reader->buffer, max) == 0) {
+                static WasmModuleReaderError wasmModuleReaderError = {
+                    wasmModuleReaderInvalidLimitMaximum
+                };
+                *error = &wasmModuleReaderError;
+                return;
+            }
+            *shared = true;
             break;
         }
         default: {
@@ -746,9 +761,10 @@ wasmReadMemoryType(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
+    bool* shared,
     WasmModuleReaderError** error
 ) {
-    wasmReadLimits(reader, min, max, error);
+    wasmReadLimits(reader, min, max, shared, error);
     if (*error != NULL) {
         return;
     }
@@ -770,7 +786,7 @@ wasmReadMemoryImport(
     import.module = module;
     import.name = name;
 
-    wasmReadMemoryType(reader, &import.min, &import.max, error);
+    wasmReadMemoryType(reader, &import.min, &import.max, &import.shared, error);
     if (*error != NULL) {
         return;
     }
@@ -792,6 +808,7 @@ wasmReadTableType(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
+    bool* shared,
     WasmModuleReaderError** error
 ) {
     U8 tableType = 0;
@@ -808,7 +825,7 @@ wasmReadTableType(
         return;
     }
 
-    wasmReadLimits(reader, min, max, error);
+    wasmReadLimits(reader, min, max, shared, error);
     if (*error != NULL) {
         return;
     }
@@ -832,7 +849,7 @@ wasmReadTableImport(
     import.module = module;
     import.name = name;
 
-    wasmReadTableType(reader, &import.min, &import.max, error);
+    wasmReadTableType(reader, &import.min, &import.max, &import.shared, error);
     if (*error != NULL) {
         return;
     }
@@ -1091,7 +1108,7 @@ wasmReadMemorySection(
     /* Read memories */
     for (; memoryIndex < memoryCount; memoryIndex++) {
         WasmMemory memory = wasmEmptyMemory;
-        wasmReadMemoryType(reader, &memory.min, &memory.max, error);
+        wasmReadMemoryType(reader, &memory.min, &memory.max, &memory.shared, error);
         if (*error != NULL) {
             return;
         }
@@ -1549,7 +1566,7 @@ wasmReadTableSection(
         U32 tableIndex = 0;
         for (; tableIndex < tableCount; tableIndex++) {
             WasmTable table = wasmEmptyTable;
-            wasmReadTableType(reader, &table.min, &table.max, error);
+            wasmReadTableType(reader, &table.min, &table.max, &table.shared, error);
             if (*error != NULL) {
                 return;
             }

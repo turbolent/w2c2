@@ -1,0 +1,11 @@
+{"source_filename": "shared.wast",
+ "commands": [
+  {"type": "module", "line": 3, "filename": "shared.0.wasm"}, 
+  {"type": "module", "line": 4, "filename": "shared.1.wasm"}, 
+  {"type": "module", "line": 8, "filename": "shared.2.wasm"}, 
+  {"type": "module", "line": 9, "filename": "shared.3.wasm"}, 
+  {"type": "module", "line": 10, "filename": "shared.4.wasm"}, 
+  {"type": "module", "line": 11, "filename": "shared.5.wasm"}, 
+  {"type": "module", "line": 12, "filename": "shared.6.wasm"}, 
+  {"type": "module", "line": 13, "filename": "shared.7.wasm"}, 
+  {"type": "module", "line": 20, "filename": "shared.8.wasm"}]}
