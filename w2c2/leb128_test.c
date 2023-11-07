@@ -42,7 +42,6 @@ testReadU32LEB128() {
 
         if (count == 0 || actual != testCase.expected) {
             fprintf(stderr, "FAIL testReadU32LEB128: %u != %u\n", actual, testCase.expected);
-        } else {
         }
     }
 
