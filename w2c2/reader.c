@@ -184,7 +184,7 @@ wasmReadValueTypes(
         for (; valueTypeIndex < count; valueTypeIndex++) {
             WasmValueType valueType = wasmModuleReadValueType(reader, error);
             if (*error != NULL) {
-                return NULL;
+                goto fail;
             }
             valueTypes[valueTypeIndex] = valueType;
         }
@@ -192,6 +192,10 @@ wasmReadValueTypes(
 
     *error = NULL;
     return valueTypes;
+
+fail:
+    free(valueTypes);
+    return NULL;
 }
 
 /* wasmFunctionTypeIndicator is the byte used to indicate a function type in the WASM binary */
@@ -243,13 +247,13 @@ wasmReadFunctionType(
             wasmModuleReaderInvalidFunctionTypeResultCount
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     /* Read result types */
     resultTypes = wasmReadValueTypes(reader, resultCount, error);
     if (*error != NULL) {
-        return;
+        goto fail;
     }
 
     *error = NULL;
@@ -258,6 +262,11 @@ wasmReadFunctionType(
     result->parameterTypes = parameterTypes;
     result->resultCount = resultCount;
     result->resultTypes = resultTypes;
+
+    return;
+
+fail:
+    free(parameterTypes);
 }
 
 static
@@ -311,10 +320,9 @@ wasmFunctionNameEntryCompareNames(
     const void* a,
     const void* b
 ) {
-    return strcmp(
-        ((const WasmFunctionNameEntry*)a)->name,
-        ((const WasmFunctionNameEntry*)b)->name
-    );
+    const WasmFunctionNameEntry* entryA = a;
+    const WasmFunctionNameEntry* entryB = b;
+    return strcmp(entryA->name, entryB->name);
 }
 
 static
@@ -518,7 +526,7 @@ wasmReadCustomSection(
                 wasmModuleReaderDebugSectionAppendFailed
             };
             *error = &wasmModuleReaderError;
-            return;
+            goto fail;
         }
 
         bufferSkip(&reader->buffer, sectionSize);
@@ -526,14 +534,20 @@ wasmReadCustomSection(
     } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
         wasmReadNameSection(reader, sectionSize, error);
         if (*error != NULL) {
-            return;
+            goto fail;
         }
+        free(name);
     } else {
         fprintf(stderr, "w2c2: skipping custom section '%s' (size %u)\n", name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
+        free(name);
     }
 
     *error = NULL;
+    return;
+
+fail:
+    free(name);
 }
 
 static
@@ -571,8 +585,7 @@ wasmReadTypeSection(
         WasmFunctionType functionType = wasmEmptyFunctionType;
         wasmReadFunctionType(reader, &functionType, error);
         if (*error != NULL) {
-            free(functionTypes);
-            return;
+            goto fail;
         }
         functionTypes[typeIndex] = functionType;
     }
@@ -581,6 +594,11 @@ wasmReadTypeSection(
 
     reader->module->functionTypes.count = typeCount;
     reader->module->functionTypes.functionTypes = functionTypes;
+
+    return;
+
+fail:
+    free(functionTypes);
 }
 
 static
@@ -864,7 +882,7 @@ wasmReadImport(
             wasmModuleReaderInvalidImportSectionImportModule
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     /* Read name */
@@ -873,7 +891,7 @@ wasmReadImport(
             wasmModuleReaderInvalidImportSectionImportName
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     /* Read import kind */
@@ -884,35 +902,35 @@ wasmReadImport(
             wasmModuleReaderInvalidImportSectionImportKind
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     switch (kindIndicator) {
         case wasmImportKindFunction: {
             wasmReadFunctionImport(reader, module, name, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             break;
         }
         case wasmImportKindGlobal: {
             wasmReadGlobalImport(reader, module, name, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             break;
         }
         case wasmImportKindMemory: {
             wasmReadMemoryImport(reader, module, name, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             break;
         }
         case wasmImportKindTable: {
             wasmReadTableImport(reader, module, name, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             break;
         }
@@ -921,11 +939,16 @@ wasmReadImport(
                 wasmModuleReaderInvalidImportSectionImportKind
             };
             *error = &wasmModuleReaderError;
-            return;
+            goto fail;
         }
     }
 
     *error = NULL;
+    return;
+
+fail:
+    free(module);
+    free(name);
 }
 
 static
@@ -1001,7 +1024,7 @@ wasmReadFunctionSection(
                 wasmModuleReaderInvalidFunctionTypeIndex
             };
             *error = &wasmModuleReaderError;
-            return;
+            goto fail;
         }
 
         /* Check function type index does not exceed function type count */
@@ -1010,7 +1033,7 @@ wasmReadFunctionSection(
                 wasmModuleReaderInvalidFunctionTypeIndex
             };
             *error = &wasmModuleReaderError;
-            return;
+            goto fail;
         }
 
         function.functionTypeIndex = functionTypeIndex;
@@ -1021,6 +1044,11 @@ wasmReadFunctionSection(
 
     reader->module->functions.count = functionCount;
     reader->module->functions.functions = functions;
+
+    return;
+
+fail:
+    free(functions);
 }
 
 static
@@ -1093,7 +1121,7 @@ wasmReadMemorySection(
         WasmMemory memory = wasmEmptyMemory;
         wasmReadMemoryType(reader, &memory.min, &memory.max, error);
         if (*error != NULL) {
-            return;
+            goto fail;
         }
         memories[memoryIndex] = memory;
     }
@@ -1102,6 +1130,11 @@ wasmReadMemorySection(
 
     reader->module->memories.count = memoryCount;
     reader->module->memories.memories = memories;
+
+    return;
+
+fail:
+    free(memories);
 }
 
 static
@@ -1171,7 +1204,7 @@ wasmReadGlobalSection(
         WasmGlobal global = wasmEmptyGlobal;
         wasmReadGlobal(reader, &global, error);
         if (*error != NULL) {
-            return;
+            goto fail;
         }
         globals[globalIndex] = global;
     }
@@ -1180,6 +1213,11 @@ wasmReadGlobalSection(
 
     reader->module->globals.count = globalCount;
     reader->module->globals.globals = globals;
+
+    return;
+
+fail:
+    free(globals);
 }
 
 static
@@ -1210,7 +1248,7 @@ wasmReadExport(
             wasmModuleReaderInvalidExportSectionExportKind
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     /* Read export index */
@@ -1219,7 +1257,7 @@ wasmReadExport(
             wasmModuleReaderInvalidExportSectionIndex
         };
         *error = &wasmModuleReaderError;
-        return;
+        goto fail;
     }
 
     *error = NULL;
@@ -1227,6 +1265,11 @@ wasmReadExport(
     result->name = name;
     result->kind = kindIndicator;
     result->index = index;
+
+    return;
+
+fail:
+    free(name);
 }
 
 static
@@ -1265,7 +1308,7 @@ wasmReadExportSection(
             WasmExport export = wasmEmptyExport;
             wasmReadExport(reader, &export, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             exports[exportIndex] = export;
         }
@@ -1275,6 +1318,11 @@ wasmReadExportSection(
 
     reader->module->exports.count = exportCount;
     reader->module->exports.exports = exports;
+
+    return;
+
+fail:
+    free(exports);
 }
 
 static
@@ -1298,8 +1346,13 @@ wasmReadCodeLocalsDeclarations(
             for (; declarationIndex < declarationCount; declarationIndex++) {
                 WasmLocalsDeclaration declaration = {0, 0};
 
-                MUST (leb128ReadU32(&reader->buffer, &declaration.count) > 0)
-                MUST (wasmReadValueType(&reader->buffer, &declaration.type))
+                if (leb128ReadU32(&reader->buffer, &declaration.count) <= 0) {
+                    goto fail;
+                }
+
+                if (!wasmReadValueType(&reader->buffer, &declaration.type)) {
+                    goto fail;
+                }
 
                 declarations[declarationIndex] = declaration;
             }
@@ -1310,6 +1363,10 @@ wasmReadCodeLocalsDeclarations(
     result->declarationCount = declarationCount;
 
     return true;
+
+fail:
+    free(declarations);
+    return false;
 }
 
 static
@@ -1503,7 +1560,7 @@ wasmReadDataSection(
             WasmDataSegment dataSegment = wasmEmptyDataSegment;
             wasmReadDataSegment(reader, &dataSegment, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             dataSegments[dataSegmentIndex] = dataSegment;
         }
@@ -1513,6 +1570,11 @@ wasmReadDataSection(
 
     reader->module->dataSegments.count = dataSegmentCount;
     reader->module->dataSegments.dataSegments = dataSegments;
+
+    return;
+
+fail:
+    free(dataSegments);
 }
 
 static
@@ -1551,7 +1613,7 @@ wasmReadTableSection(
             WasmTable table = wasmEmptyTable;
             wasmReadTableType(reader, &table.min, &table.max, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             tables[tableIndex] = table;
         }
@@ -1561,6 +1623,11 @@ wasmReadTableSection(
 
     reader->module->tables.count = tableCount;
     reader->module->tables.tables = tables;
+
+    return;
+
+fail:
+    free(tables);
 }
 
 static
@@ -1624,7 +1691,7 @@ wasmReadElementSegment(
                     wasmModuleReaderInvalidElementSectionFunctionIndex
                 };
                 *error = &wasmModuleReaderError;
-                return;
+                goto fail;
             }
             functionIndices[functionIndexIndex] = functionIndex;
         }
@@ -1636,6 +1703,11 @@ wasmReadElementSegment(
     result->offset = offset;
     result->functionIndexCount = functionIndexCount;
     result->functionIndices = functionIndices;
+
+    return;
+
+fail:
+    free(functionIndices);
 }
 
 static
@@ -1674,7 +1746,7 @@ wasmReadElementSection(
             WasmElementSegment elementSegment = wasmEmptyElementSegment;
             wasmReadElementSegment(reader, &elementSegment, error);
             if (*error != NULL) {
-                return;
+                goto fail;
             }
             elementSegments[elementSegmentIndex] = elementSegment;
         }
@@ -1684,6 +1756,11 @@ wasmReadElementSection(
 
     reader->module->elementSegments.count = elementSegmentCount;
     reader->module->elementSegments.elementSegments = elementSegments;
+
+    return;
+
+fail:
+    free(elementSegments);
 }
 
 static
@@ -1825,7 +1902,7 @@ wasmModuleRead(
 
         wasmModuleReadSection(reader, error);
         if (*error != NULL) {
-            return;
+            goto fail;
         }
 
         *error = NULL;
@@ -1836,4 +1913,9 @@ wasmModuleRead(
     } else {
         module->debugLines = emptyWasmDebugLines;
     }
+
+    return;
+
+fail:
+    free(module);
 }
