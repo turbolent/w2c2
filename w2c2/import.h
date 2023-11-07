@@ -57,9 +57,10 @@ typedef struct WasmMemoryImport {
     char* name;
     U32 min;
     U32 max;
+    bool shared;
 } WasmMemoryImport;
 
-static const WasmMemoryImport wasmEmptyMemoryImport = {NULL, NULL, 0, 0};
+static const WasmMemoryImport wasmEmptyMemoryImport = {NULL, NULL, 0, 0, false};
 
 ARRAY_TYPE(
     WasmMemoryImports,
@@ -76,9 +77,10 @@ typedef struct WasmTableImport {
     char* name;
     U32 min;
     U32 max;
+    bool shared;
 } WasmTableImport;
 
-static const WasmTableImport wasmEmptyTableImport = {NULL, NULL, 0, 0};
+static const WasmTableImport wasmEmptyTableImport = {NULL, NULL, 0, 0, false};
 
 ARRAY_TYPE(
     WasmTableImports,

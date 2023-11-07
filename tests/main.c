@@ -15,6 +15,7 @@ void spectest__print_i32(U32 l0) {
 
 static wasmTable spectest_table;
 static wasmMemory spectest_memory;
+static wasmMemory spectest_shared_memory;
 
 void*
 resolveTestImports(
@@ -40,6 +41,10 @@ resolveTestImports(
 
     if (strcmp(name, "global_i64") == 0) {
         return (void*)&spectest_global_i64;
+    }
+
+    if (strcmp(name, "shared_memory") == 0) {
+        return (void*)&spectest_shared_memory;
     }
 
     fprintf(stderr, "FAIL: import of unknown spectest item: %s\n", name);
@@ -113,6 +118,7 @@ void printOK(const char* description) {
 
 static void initTest() {
     wasmMemoryAllocate(&spectest_memory, 1, 2);
+    wasmMemoryAllocate(&spectest_shared_memory, 1, 2);
     wasmTableAllocate(&spectest_table, 10, 20);
 }
 
