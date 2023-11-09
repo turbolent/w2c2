@@ -8,7 +8,6 @@ testSHA1(void) {
     {
         unsigned char actual[SHA1_DIGEST_LENGTH] = SHA1_DIGEST_EMPTY;
         const char* test = "abc";
-        SHA1((unsigned char *)test, strlen(test), actual);
 
         unsigned char expected[SHA1_DIGEST_LENGTH] = {
             0xa9, 0x99, 0x3e, 0x36,
@@ -17,6 +16,8 @@ testSHA1(void) {
             0x78, 0x50, 0xc2, 0x6c,
             0x9c, 0xd0, 0xd8, 0x9d,
         };
+
+        SHA1((unsigned char*)test, strlen(test), actual);
 
         if (memcmp(actual, expected, SHA1_DIGEST_LENGTH) != 0) {
             fprintf(stderr, "FAIL testSHA1\n");
@@ -27,7 +28,6 @@ testSHA1(void) {
     {
         unsigned char actual[SHA1_DIGEST_LENGTH] = SHA1_DIGEST_EMPTY;
         const char* test = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-        SHA1((unsigned char *)test, strlen(test), actual);
 
         unsigned char expected[SHA1_DIGEST_LENGTH] = {
             0x84, 0x98, 0x3e, 0x44,
@@ -36,6 +36,8 @@ testSHA1(void) {
             0xf9, 0x51, 0x29, 0xe5,
             0xe5, 0x46, 0x70, 0xf1
         };
+
+        SHA1((unsigned char*)test, strlen(test), actual);
 
         if (memcmp(actual, expected, SHA1_DIGEST_LENGTH) != 0) {
             fprintf(stderr, "FAIL testSHA1\n");
