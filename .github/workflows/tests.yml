@@ -77,7 +77,7 @@ jobs:
         env:
           LDFLAGS: -static
         working-directory: ./w2c2
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run w2c2 tests
         env:
@@ -114,7 +114,7 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt ${{ matrix.threads && 'threads' || '' }}"
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run tests
         working-directory: ./tests

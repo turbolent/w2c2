@@ -4,6 +4,8 @@
 #include "w2c2_base.h"
 #include "module.h"
 
+#define W2C2_IMPL_FILENAME_LENGTH 13
+
 typedef struct WasmCWriteModuleOptions {
     const char* outputPath;
     U32 threadCount;
@@ -21,9 +23,11 @@ static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    const WasmModule* module,
-    const char* moduleName,
-    WasmCWriteModuleOptions options
+    const WasmModule *module,
+    const char *moduleName,
+    WasmCWriteModuleOptions options,
+    WasmFunctionIDs staticFunctionIDs,
+    WasmFunctionIDs dynamicFunctionIDs
 );
 
 #endif /* W2C2_C_H */

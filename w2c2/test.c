@@ -2,6 +2,7 @@
 #include "stringbuilder_test.h"
 #include "typestack_test.h"
 #include "opcode_test.h"
+#include "sha1_test.h"
 
 int
 main(void) {
@@ -10,5 +11,6 @@ main(void) {
     testStringBuilder();
     testTypeStack();
     testOpcodes();
+    testSHA1();
     return 0;
 }

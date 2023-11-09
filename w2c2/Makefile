@@ -27,7 +27,8 @@ CFLAGS += -std=c89 $(WARNS)
 # - unistd.h
 # - libgen.h
 # - strdup
-FEATURES ?= threads getopt unistd libgen strdup
+# - glob
+FEATURES ?= threads getopt unistd libgen strdup glob
 
 ifeq ($(UNAME),Windows)
 	OUTPUT := w2c2.exe
@@ -60,6 +61,10 @@ endif
 
 ifneq (,$(findstring strdup,$(FEATURES)))
 	CFLAGS += -DHAS_STRDUP=1
+endif
+
+ifneq (,$(findstring glob,$(FEATURES)))
+	CFLAGS += -DHAS_GLOB=1
 endif
 
 ifneq (,$(findstring debugging,$(FEATURES)))
