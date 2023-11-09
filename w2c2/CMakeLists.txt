@@ -22,6 +22,7 @@ include(CheckIncludeFile)
 check_include_file(getopt.h HAVE_GETOPT_H)
 check_include_file(libgen.h HAVE_LIBGEN_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(glob.h HAVE_GLOB_H)
 
 include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
@@ -75,6 +76,10 @@ foreach(TARGET w2c2 w2c2_test)
 
     if(HAVE_STRDUP)
         target_compile_definitions(${TARGET} PUBLIC HAS_STRDUP=1)
+    endif()
+
+    if(HAVE_GLOB_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_GLOB=1)
     endif()
 
     if(MSVC)

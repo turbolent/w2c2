@@ -11,8 +11,6 @@
 #endif
 #if HAS_GETOPT
   #include <getopt.h>
-#include <glob.h>
-
 #else
   #include "getopt_impl.h"
 #endif /* HAS_GETOPT */
@@ -28,6 +26,14 @@ static char* const optString = "t:f:d:r:pgmch";
 #else
 static char* const optString = "f:d:r:pgmch";
 #endif /* HAS_PTHREAD */
+
+#if HAS_GLOB
+#include <glob.h>
+#endif /* HAS_GLOB */
+
+#if _WIN32
+#include <windows.h>
+#endif
 
 static
 bool
@@ -174,9 +180,11 @@ void wasmSplitStaticAndDynamicFunctions(
 static
 void
 cleanImplementationFiles(void) {
+    char* path = NULL;
+#if HAS_GLOB
     glob_t globbuf;
     size_t pathIndex = 0;
-    int globResult = glob("[sd]*.c", GLOB_NOSORT, NULL, &globbuf);
+    int globResult = glob("*.c", GLOB_NOSORT, NULL, &globbuf);
     if (globResult != 0) {
         if (globResult != GLOB_NOMATCH) {
             fprintf(stderr, "w2c2: failed to glob files to clean\n");
@@ -185,16 +193,34 @@ cleanImplementationFiles(void) {
     }
 
     for (; pathIndex < globbuf.gl_pathc; pathIndex++) {
-        int pathCharIndex = 1;
+        path = globbuf.gl_pathv[pathIndex];
+#elif _WIN32
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile("*.c", &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        if (GetLastError() != ERROR_FILE_NOT_FOUND) {
+            fprintf(stderr, "w2c2: failed to find files to clean\n");
+        }
+        return;
+    }
+    do {
+        path = findFileData.cFileName;
+#else
+#error "Unable to find files"
+#endif
+        int pathCharIndex = 0;
         bool allDigits = true;
 
-        char *path = globbuf.gl_pathv[pathIndex];
         size_t pathLength = strlen(path);
         if (pathLength != W2C2_IMPL_FILENAME_LENGTH) {
             continue;
         }
 
-        for (; pathCharIndex < pathLength - 2; pathCharIndex++) {
+        if (path[pathCharIndex] != 'd' && path[pathCharIndex] != 's') {
+            continue;
+        }
+
+        for (pathCharIndex = 1; pathCharIndex < pathLength - 2; pathCharIndex++) {
             char c = path[pathCharIndex];
             if (c < '0' || c > '9') {
                 allDigits = false;
@@ -205,10 +231,21 @@ cleanImplementationFiles(void) {
             continue;
         }
 
+        fprintf(stderr, "w2c2: cleaning file: %s\n", path);
+
         if (remove(path) != 0) {
             fprintf(stderr, "w2c2: failed to remove file %s\n", path);
         }
     }
+#if _WIN32
+    while (FindNextFile(hFind, &findFileData) != 0);
+#endif
+
+#if HAS_GLOB
+    globfree(&globbuf);
+#elif _WIN32
+    FindClose(hFind);
+#endif
 }
 
 int
