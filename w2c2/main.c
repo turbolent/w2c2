@@ -444,14 +444,6 @@ main(
 
     getPathModuleName(moduleName, modulePath);
 
-    if (!changeToOutputDirectory(outputPath)) {
-        return 1;
-    }
-
-    if (clean) {
-        cleanImplementationFiles();
-    }
-
     {
         WasmModuleReader reader = emptyWasmModuleReader;
         WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
@@ -505,6 +497,14 @@ main(
         }
         if (functionsPerFile == 0) {
             functionsPerFile = UINT32_MAX;
+        }
+
+        if (!changeToOutputDirectory(outputPath)) {
+            return 1;
+        }
+
+        if (clean) {
+            cleanImplementationFiles();
         }
 
         writeOptions.outputPath = outputPath;
