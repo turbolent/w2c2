@@ -19,7 +19,7 @@
 #include "file.h"
 #include "reader.h"
 #include "c.h"
-#include "stringbuilder.h"
+#include "compat.h"
 
 #if HAS_PTHREAD
 static char* const optString = "t:f:d:r:pgmch";
@@ -30,6 +30,13 @@ static char* const optString = "f:d:r:pgmch";
 #if HAS_GLOB
 #include <glob.h>
 #endif /* HAS_GLOB */
+
+#if HAS_UNISTD
+#include <unistd.h>
+#endif /* HAS_UNISTD */
+#if _WIN32
+#include <direct.h>
+#endif
 
 #if _WIN32
 #include <windows.h>
@@ -181,6 +188,10 @@ static
 void
 cleanImplementationFiles(void) {
     char* path = NULL;
+    int pathCharIndex = 0;
+    bool allDigits = true;
+    size_t pathLength = 0;
+
 #if HAS_GLOB
     glob_t globbuf;
     size_t pathIndex = 0;
@@ -196,7 +207,7 @@ cleanImplementationFiles(void) {
         path = globbuf.gl_pathv[pathIndex];
 #elif _WIN32
     WIN32_FIND_DATA findFileData;
-    HANDLE hFind = FindFirstFile("*.c", &findFileData);
+    const HANDLE hFind = FindFirstFile("*.c", &findFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         if (GetLastError() != ERROR_FILE_NOT_FOUND) {
             fprintf(stderr, "w2c2: failed to find files to clean\n");
@@ -208,10 +219,10 @@ cleanImplementationFiles(void) {
 #else
 #error "Unable to find files"
 #endif
-        int pathCharIndex = 0;
-        bool allDigits = true;
+        pathCharIndex = 0;
+        allDigits = true;
 
-        size_t pathLength = strlen(path);
+        pathLength = strlen(path);
         if (pathLength != W2C2_IMPL_FILENAME_LENGTH) {
             continue;
         }
@@ -246,6 +257,24 @@ cleanImplementationFiles(void) {
 #elif _WIN32
     FindClose(hFind);
 #endif
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+changeToOutputDirectory(
+    const char* outputPath
+) {
+    char outputDir[PATH_MAX];
+    strcpy(outputDir, outputPath);
+    strcpy(outputDir, dirname(outputDir));
+
+    if (chdir(outputDir) < 0) {
+        fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputDir);
+        return false;
+    }
+
+    return true;
 }
 
 int
@@ -415,10 +444,6 @@ main(
 
     getPathModuleName(moduleName, modulePath);
 
-    if (clean) {
-        cleanImplementationFiles();
-    }
-
     {
         WasmModuleReader reader = emptyWasmModuleReader;
         WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
@@ -472,6 +497,14 @@ main(
         }
         if (functionsPerFile == 0) {
             functionsPerFile = UINT32_MAX;
+        }
+
+        if (!changeToOutputDirectory(outputPath)) {
+            return 1;
+        }
+
+        if (clean) {
+            cleanImplementationFiles();
         }
 
         writeOptions.outputPath = outputPath;
