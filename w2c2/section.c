@@ -2,7 +2,7 @@
 
 const char*
 wasmSectionIDDescription(
-    WasmSectionID sectionID
+    const WasmSectionID sectionID
 ) {
     switch (sectionID) {
         case wasmSectionIDCustom:
@@ -36,7 +36,7 @@ wasmSectionIDDescription(
 
 const char*
 wasmNameSubsectionIDDescription(
-    WasmNameSubsectionID subsectionID
+    const WasmNameSubsectionID subsectionID
 ) {
     switch (subsectionID) {
         case wasmNameSubsectionIDModuleName:

@@ -70,7 +70,7 @@ typedef struct WasmModuleReaderError {
 
 const char*
 wasmModuleReaderErrorMessage(
-    WasmModuleReaderError* error
+    const WasmModuleReaderError* error
 );
 
 void

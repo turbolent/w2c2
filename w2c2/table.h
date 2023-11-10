@@ -2,8 +2,6 @@
 #define W2C2_TABLE_H
 
 #include "w2c2_base.h"
-#include "buffer.h"
-#include "valuetype.h"
 
 static const U8 wasmTableTypeFuncRef = 0x70;
 

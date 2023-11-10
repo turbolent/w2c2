@@ -2,7 +2,6 @@
 #define W2C2_EXPORT_H
 
 #include "w2c2_base.h"
-#include "valuetype.h"
 
 typedef enum WasmExportKind {
     wasmExportKindFunction,

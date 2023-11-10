@@ -9,7 +9,7 @@ testSHA1(void) {
         unsigned char actual[SHA1_DIGEST_LENGTH] = SHA1_DIGEST_EMPTY;
         const char* test = "abc";
 
-        unsigned char expected[SHA1_DIGEST_LENGTH] = {
+        const unsigned char expected[SHA1_DIGEST_LENGTH] = {
             0xa9, 0x99, 0x3e, 0x36,
             0x47, 0x06, 0x81, 0x6a,
             0xba, 0x3e, 0x25, 0x71,
@@ -29,7 +29,7 @@ testSHA1(void) {
         unsigned char actual[SHA1_DIGEST_LENGTH] = SHA1_DIGEST_EMPTY;
         const char* test = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
 
-        unsigned char expected[SHA1_DIGEST_LENGTH] = {
+        const unsigned char expected[SHA1_DIGEST_LENGTH] = {
             0x84, 0x98, 0x3e, 0x44,
             0x1c, 0x3b, 0xd2, 0x6e,
             0xba, 0xae, 0x4a, 0xa1,

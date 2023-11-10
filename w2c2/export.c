@@ -2,7 +2,7 @@
 
 const char*
 wasmExportKindDescription(
-    WasmExportKind exportKind
+    const WasmExportKind exportKind
 ) {
     switch (exportKind) {
         case wasmExportKindFunction:

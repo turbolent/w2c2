@@ -47,10 +47,10 @@ bool
 readWasmBinary(
     const char* path,
     WasmModuleReader* wasmModuleReaderResult,
-    bool debug
+    const bool debug
 ) {
     WasmModuleReaderError* error = NULL;
-    Buffer buffer = readFile(path);
+    const Buffer buffer = readFile(path);
     if (buffer.data == NULL) {
         fprintf(stderr, "w2c2: failed to read file %s\n", path);
         return false;
@@ -77,7 +77,7 @@ static
 void
 getPathModuleName(
     char* moduleName,
-    char* modulePath
+    const char* modulePath
 ) {
     int j = 0;
     size_t ext;
@@ -102,18 +102,26 @@ getPathModuleName(
     moduleName[j] = '\0';
 }
 
-int wasmFunctionIDsCompareHashes(const void* a, const void* b) {
+static
+int
+wasmFunctionIDsCompareHashes(
+    const void* a,
+    const void* b
+) {
     const WasmFunctionID* functionIDA = a;
     const WasmFunctionID* functionIDB = b;
     return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
 }
 
-WasmFunctionIDs wasmSortedFunctionIDs(WasmFunctions functions) {
+WasmFunctionIDs
+wasmSortedFunctionIDs(
+    const WasmFunctions functions
+) {
     WasmFunctionIDs result = emptyWasmFunctionIDs;
 
     U32 functionIndex = 0;
     for (; functionIndex < functions.count; functionIndex++) {
-        WasmFunction function = functions.functions[functionIndex];
+        const WasmFunction function = functions.functions[functionIndex];
         WasmFunctionID functionID = emptyWasmFunctionID;
         memcpy(functionID.hash, function.hash, SHA1_DIGEST_LENGTH);
         functionID.functionIndex = functionIndex;
@@ -135,22 +143,22 @@ WasmFunctionIDs wasmSortedFunctionIDs(WasmFunctions functions) {
 }
 
 void wasmSplitStaticAndDynamicFunctions(
-    WasmFunctionIDs functionIDs,
-    WasmFunctionIDs referenceFunctionIDs,
+    const WasmFunctionIDs functionIDs,
+    const WasmFunctionIDs referenceFunctionIDs,
     WasmFunctionIDs *staticFunctions,
     WasmFunctionIDs *dynamicFunctions
 ) {
-    WasmFunctionID* functionID = functionIDs.functionIDs;
-    WasmFunctionID* lastFunctionID = functionID + functionIDs.length;
+    const WasmFunctionID* functionID = functionIDs.functionIDs;
+    const WasmFunctionID* lastFunctionID = functionID + functionIDs.length;
 
-    WasmFunctionID* referenceFunctionID = referenceFunctionIDs.functionIDs;
-    WasmFunctionID* lastReferenceFunctionID = referenceFunctionID + referenceFunctionIDs.length;
+    const WasmFunctionID* referenceFunctionID = referenceFunctionIDs.functionIDs;
+    const WasmFunctionID* lastReferenceFunctionID = referenceFunctionID + referenceFunctionIDs.length;
 
     while (
         functionID != lastFunctionID
         && referenceFunctionID != lastReferenceFunctionID
     ) {
-        int comparisonResult = wasmFunctionIDsCompareHashes(functionID, referenceFunctionID);
+        const int comparisonResult = wasmFunctionIDsCompareHashes(functionID, referenceFunctionID);
         if (comparisonResult < 0) {
             /* Function only exists in the module, and not in the reference module, so it's a dynamic function */
             if (!wasmFunctionIDsAppend(dynamicFunctions, *functionID)) {
@@ -232,7 +240,7 @@ cleanImplementationFiles(void) {
         }
 
         for (pathCharIndex = 1; pathCharIndex < pathLength - 2; pathCharIndex++) {
-            char c = path[pathCharIndex];
+            const char c = path[pathCharIndex];
             if (c < '0' || c > '9') {
                 allDigits = false;
                 break;
@@ -279,13 +287,13 @@ changeToOutputDirectory(
 
 int
 main(
-    int argc,
+    const int argc,
     char* argv[]
 ) {
     U32 threadCount = 0;
-    char* modulePath = NULL;
-    char* referenceModulePath = NULL;
-    char* outputPath = NULL;
+    const char* modulePath = NULL;
+    const char* referenceModulePath = NULL;
+    const char* outputPath = NULL;
     U32 functionsPerFile = 0;
     bool pretty = false;
     bool debug = false;

@@ -82,7 +82,7 @@ WARN_UNUSED_RESULT
 wasmModuleFunctionGetLocalType(
     const WasmModule* module,
     const WasmFunction function,
-    U32 localIndex,
+    const U32 localIndex,
     WasmValueType* result
 ) {
     const WasmFunctionType functionType =
@@ -111,13 +111,13 @@ wasmModuleGetGlobalType(
 ) {
     const U32 globalImportCount = assertSizeU32(module->globalImports.length);
     if (globalIndex < globalImportCount) {
-        WasmGlobalImport import = module->globalImports.imports[globalIndex];
+        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         *result = import.globalType.valueType;
     } else {
         globalIndex -= globalImportCount;
         MUST (globalIndex < module->globals.count)
         {
-            WasmGlobal global = module->globals.globals[globalIndex];
+            const WasmGlobal global = module->globals.globals[globalIndex];
             *result = global.type.valueType;
         }
     }
@@ -135,7 +135,7 @@ wasmModuleGetFunctionType(
 ) {
     const U32 functionImportCount = assertSizeU32(module->functionImports.length);
     if (functionIndex < functionImportCount) {
-        WasmFunctionImport import = module->functionImports.imports[functionIndex];
+        const WasmFunctionImport import = module->functionImports.imports[functionIndex];
         *result = module->functionTypes.functionTypes[import.functionTypeIndex];
     } else {
         functionIndex -= functionImportCount;

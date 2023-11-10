@@ -24,7 +24,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmDecodeValueType(
-    I32 encodedValueType,
+    const I32 encodedValueType,
     WasmValueType* result
 ) {
     switch (encodedValueType) {

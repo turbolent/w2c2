@@ -5,7 +5,7 @@
 bool
 wasmLocalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmLocalInstruction* result
 ) {
     U32 localIndex = 0;
@@ -22,7 +22,7 @@ wasmLocalInstructionRead(
 bool
 wasmGlobalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmGlobalInstruction* result
 ) {
     U32 globalIndex = 0;
@@ -39,7 +39,7 @@ wasmGlobalInstructionRead(
 bool
 wasmConstInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmConstInstruction* result
 ) {
     result->opcode = opcode;
@@ -62,7 +62,7 @@ wasmConstInstructionRead(
 bool
 wasmLoadStoreInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmLoadStoreInstruction* result
 ) {
     U32 align = 0;
@@ -117,7 +117,7 @@ wasmCallIndirectInstructionRead(
 bool
 wasmBranchInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmBranchInstruction* result
 ) {
     U32 labelIndex = 0;
@@ -161,7 +161,7 @@ wasmBranchTableInstructionRead(
 
 void
 wasmBranchTableInstructionFree(
-    WasmBranchTableInstruction instruction
+    const WasmBranchTableInstruction instruction
 ) {
     free(instruction.labelIndices);
 }
@@ -171,7 +171,7 @@ wasmBranchTableInstructionFree(
 bool
 wasmMemoryInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmMemoryInstruction* result
 ) {
     U32 memoryIndex = 0;
@@ -189,7 +189,7 @@ bool
 WARN_UNUSED_RESULT
 wasmMiscMemoryInstructionRead(
     Buffer* buffer,
-    WasmMiscOpcode opcode,
+    const WasmMiscOpcode opcode,
     WasmMiscMemoryInstruction* result
 ) {
     U32 memoryIndex = 0;

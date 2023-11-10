@@ -19,8 +19,8 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmLocalsDeclarationsGetType(
-    WasmLocalsDeclarations localsDeclarations,
-    U32 localIndex,
+    const WasmLocalsDeclarations localsDeclarations,
+    const U32 localIndex,
     WasmValueType* result
 ) {
     U32 localsCount = 0;

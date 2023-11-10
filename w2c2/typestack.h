@@ -1,7 +1,6 @@
 #ifndef W2C2_TYPESTACK_H
 #define W2C2_TYPESTACK_H
 
-#include <stdio.h>
 #include <assert.h>
 #include "w2c2_base.h"
 #include "valuetype.h"
@@ -29,7 +28,7 @@ wasmTypeStackDrop(
     }
 
     {
-        size_t newLength = typeStack->length - count;
+        const size_t newLength = typeStack->length - count;
 
         size_t index = newLength;
         for (; index < typeStack->length; index++) {

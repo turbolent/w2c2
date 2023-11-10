@@ -174,7 +174,7 @@ typedef double F64;
 #endif
 
 #if defined(__GNUC__) && GCC_VERSION >= 20905
-#define UNUSED __attribute__((__unused__))
+#define UNUSED __attribute__((unused))
 #else
 #define UNUSED
 #endif
@@ -234,7 +234,7 @@ static
 W2C2_INLINE
 U32
 assertSizeU32(
-    size_t size
+    const size_t size
 ) {
     assert(size <= UINT32_MAX);
     return (U32) size;
@@ -251,7 +251,7 @@ static
 W2C2_INLINE
 const char*
 trapDescription(
-    Trap trap
+    const Trap trap
 ) {
     switch (trap) {
         case trapUnreachable:
@@ -434,7 +434,7 @@ static
 W2C2_INLINE
 U32
 I32_CTZ(
-    U32 x
+    const U32 x
 ) {
     return 32 - I32_CLZ(~x & (x - 1));
 }
@@ -449,7 +449,7 @@ static
 W2C2_INLINE
 U64
 I64_CTZ(
-    U64 x
+    const U64 x
 ) {
     return 64 - I64_CLZ(~x & (x - 1));
 }
@@ -548,10 +548,10 @@ W2C2_INLINE
 void
 wasmMemoryAllocate(
     wasmMemory* memory,
-    U32 initialPages,
-    U32 maxPages
+    const U32 initialPages,
+    const U32 maxPages
 ) {
-    U32 size = initialPages * WASM_PAGE_SIZE;
+    const U32 size = initialPages * WASM_PAGE_SIZE;
     memory->data = calloc(size, 1);
     memory->size = size;
     memory->pages = initialPages;
@@ -579,10 +579,10 @@ W2C2_INLINE
 U32
 wasmMemoryGrow(
     wasmMemory* memory,
-    U32 delta
+    const U32 delta
 ) {
-    U32 oldPages = memory->pages;
-    U32 newPages = memory->pages + delta;
+    const U32 oldPages = memory->pages;
+    const U32 newPages = memory->pages + delta;
 
     if (newPages == 0) {
         return 0;
@@ -593,9 +593,9 @@ wasmMemoryGrow(
     }
 
     {
-        U32 oldSize = oldPages * WASM_PAGE_SIZE;
-        U32 newSize = newPages * WASM_PAGE_SIZE;
-        U32 deltaSize = delta * WASM_PAGE_SIZE;
+        const U32 oldSize = oldPages * WASM_PAGE_SIZE;
+        const U32 newSize = newPages * WASM_PAGE_SIZE;
+        const U32 deltaSize = delta * WASM_PAGE_SIZE;
         U8* newData = realloc(memory->data, newSize);
         if (newData == NULL) {
             return (U32) -1;
@@ -614,11 +614,11 @@ static
 W2C2_INLINE
 void
 wasmMemoryCopy(
-    wasmMemory* destinationMemory,
-    wasmMemory* sourceMemory,
-    U32 destinationAddress,
-    U32 sourceAddress,
-    U32 count
+    const wasmMemory* destinationMemory,
+    const wasmMemory* sourceMemory,
+    const U32 destinationAddress,
+    const U32 sourceAddress,
+    const U32 count
 ) {
     memmove(
         destinationMemory->data + destinationAddress,
@@ -631,10 +631,10 @@ static
 W2C2_INLINE
 void
 wasmMemoryFill(
-    wasmMemory* memory,
-    U32 destinationAddress,
-    U32 value,
-    U32 count
+    const wasmMemory* memory,
+    const U32 destinationAddress,
+    const U32 value,
+    const U32 count
 ) {
     memset(
         memory->data + destinationAddress,
@@ -649,7 +649,7 @@ void
 load_data(
     void *dest,
     const void *src,
-    size_t n
+    const size_t n
 ) {
     memcpy(dest, src, n);
 }
@@ -884,8 +884,8 @@ W2C2_INLINE
 void
 wasmTableAllocate(
     wasmTable* table,
-    U32 size,
-    U32 maxSize
+    const U32 size,
+    const U32 maxSize
 ) {
     table->size = size;
     table->maxSize = maxSize;
