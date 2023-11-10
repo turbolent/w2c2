@@ -5,9 +5,6 @@
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif /* HAS_PTHREAD */
-#if HAS_UNISTD
-#include <unistd.h>
-#endif /* HAS_UNISTD */
 #include <errno.h>
 #include <limits.h>
 #include "compat.h"
@@ -5155,16 +5152,12 @@ wasmCWriteModule(
     WasmFunctionIDs staticFunctionIDs,
     WasmFunctionIDs dynamicFunctionIDs
 ) {
-    char outputDir[PATH_MAX];
     char outputName[PATH_MAX];
     char headerName[PATH_MAX];
 
     const char* outputPath = options.outputPath;
 
-    strcpy(outputDir, outputPath);
     strcpy(outputName, outputPath);
-
-    strcpy(outputDir, dirname(outputDir));
     strcpy(outputName, basename(outputName));
 
     strcpy(headerName, outputName);
@@ -5175,12 +5168,6 @@ wasmCWriteModule(
             headerExt = headerName + strlen(headerName);
         }
         strcpy(headerExt, ".h");
-    }
-
-    /* Change to output directory */
-    if (chdir(outputDir) < 0) {
-        fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputDir);
-        return false;
     }
 
     MUST (wasmCWriteModuleHeader(
