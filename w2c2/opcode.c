@@ -3,7 +3,7 @@
 
 const char*
 wasmOpcodeDescription(
-    WasmOpcode opcode
+    const WasmOpcode opcode
 ) {
     switch (opcode) {
         case wasmOpcodeUnreachable:
@@ -778,7 +778,7 @@ wasmOpcodeParameter1Type(
 
 const char*
 wasmMiscOpcodeDescription(
-    WasmMiscOpcode miscOpcode
+    const WasmMiscOpcode miscOpcode
 ) {
     switch (miscOpcode) {
     case wasmMiscOpcodeI32TruncSatF32S:

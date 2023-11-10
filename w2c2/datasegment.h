@@ -3,7 +3,6 @@
 
 #include "w2c2_base.h"
 #include "buffer.h"
-#include "valuetype.h"
 
 typedef struct WasmDataSegment {
     U32 memoryIndex;

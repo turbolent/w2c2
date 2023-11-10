@@ -49,7 +49,7 @@ bool
 WARN_UNUSED_RESULT
 wasmLabelStackPush(
     WasmLabelStack* labelStack,
-    size_t typeStackLength,
+    const size_t typeStackLength,
     WasmValueType* type,
     WasmLabel* result
 ) {

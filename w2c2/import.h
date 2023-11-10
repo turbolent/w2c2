@@ -2,7 +2,6 @@
 #define W2C2_IMPORT_H
 
 #include "w2c2_base.h"
-#include "valuetype.h"
 #include "global.h"
 #include "array.h"
 

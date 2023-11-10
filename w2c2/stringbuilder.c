@@ -8,11 +8,11 @@ bool
 WARN_UNUSED_RESULT
 stringBuilderEnsureCapacity(
     StringBuilder* stringBuilder,
-    size_t length
+    const size_t length
 ) {
-    size_t lengthWithNull = length + 1;
+    const size_t lengthWithNull = length + 1;
     if (lengthWithNull > stringBuilder->capacity) {
-        size_t newCapacity = lengthWithNull + (stringBuilder->capacity >> 1U);
+        const size_t newCapacity = lengthWithNull + (stringBuilder->capacity >> 1U);
         void* newString = realloc(stringBuilder->string, newCapacity);
         MUST (newString != NULL)
         stringBuilder->string = (char*) newString;
@@ -74,9 +74,9 @@ bool
 WARN_UNUSED_RESULT
 stringBuilderAppendChar(
     StringBuilder* stringBuilder,
-    char c
+    const char c
 ) {
-    size_t newLength = stringBuilder->length + 1;
+    const size_t newLength = stringBuilder->length + 1;
     MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
 
     stringBuilder->string[stringBuilder->length++] = c;
@@ -91,9 +91,9 @@ WARN_UNUSED_RESULT
 stringBuilderAppendSized(
     StringBuilder* stringBuilder,
     const char* string,
-    size_t length
+    const size_t length
 ) {
-    size_t newLength = stringBuilder->length + length;
+    const size_t newLength = stringBuilder->length + length;
     MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
 
     strncpy(
@@ -138,7 +138,7 @@ stringBuilderAppendU32(
 bool
 stringBuilderAppendI32(
     StringBuilder* stringBuilder,
-    I32 value
+    const I32 value
 ) {
     U32 unsignedValue = (U32)value;
     if (value < 0) {
@@ -181,7 +181,7 @@ stringBuilderAppendU64(
 bool
 stringBuilderAppendI64(
     StringBuilder* stringBuilder,
-    I64 value
+    const I64 value
 ) {
     U64 unsignedValue = (U64)value;
     if (value < 0) {
@@ -197,51 +197,51 @@ stringBuilderAppendI64(
 bool
 stringBuilderAppendF32(
     StringBuilder* stringBuilder,
-    F32 value
+    const F32 value
 ) {
     char buffer[32];
     /* FLT_DECIMAL_DIG */
-    int length = sprintf(buffer, "%.9g", value);
+    const int length = sprintf(buffer, "%.9g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
 stringBuilderAppendF64(
     StringBuilder* stringBuilder,
-    F64 value
+    const F64 value
 ) {
     char buffer[32];
     /* DBL_DECIMAL_DIG */
-    int length = sprintf(buffer, "%.17g", value);
+    const int length = sprintf(buffer, "%.17g", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
 stringBuilderAppendCharHex(
     StringBuilder* stringBuilder,
-    char value
+    const char value
 ) {
     char buffer[3];
-    int length = sprintf(buffer, "%02X", value);
+    const int length = sprintf(buffer, "%02X", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
 stringBuilderAppendU32Hex(
     StringBuilder* stringBuilder,
-    U32 value
+    const U32 value
 ) {
     char buffer[9];
-    int length = sprintf(buffer, "%08X", value);
+    const int length = sprintf(buffer, "%08X", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
 stringBuilderAppendU64Hex(
     StringBuilder* stringBuilder,
-    U64 value
+    const U64 value
 ) {
     char buffer[17];
-    int length = sprintf(buffer, "%016llX", value);
+    const int length = sprintf(buffer, "%016llX", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }

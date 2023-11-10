@@ -4,9 +4,9 @@
 bool
 arrayEnsureCapacitySlowPath(
     void** items,
-    size_t length,
+    const size_t length,
     size_t* capacity,
-    size_t itemSize
+    const size_t itemSize
 ) {
     size_t newCapacity = 0;
     void* newItems = NULL;

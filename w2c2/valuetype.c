@@ -2,7 +2,7 @@
 
 const char*
 wasmValueTypeDescription(
-    WasmValueType valueType
+    const WasmValueType valueType
 ) {
     switch (valueType) {
         case wasmValueTypeI32:

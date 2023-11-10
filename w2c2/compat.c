@@ -1,3 +1,4 @@
+#include <string.h>
 #include "compat.h"
 #include "path.h"
 

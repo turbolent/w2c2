@@ -66,13 +66,13 @@ wasmCWriteFileEscaped(
     static const char escapeChar = 'X';
     const char* p = name;
     for (; *p != '\0'; p++) {
-        char c = *p;
+        const char c = *p;
         if (c == '_') {
             /*
              * Double underscore is reserved for concatenating module name and import name,
              * so produce triple underscore instead.
              */
-            bool wasUnderscore = p != name && *(p-1) == '_';
+            const bool wasUnderscore = p != name && *(p-1) == '_';
             if (wasUnderscore) {
                 fputs("__", file);
             } else {
@@ -99,13 +99,13 @@ wasmCWriteStringEscaped(
     static const char escapeChar = 'X';
     const char* p = name;
     for (; *p != '\0'; p++) {
-        char c = *p;
+        const char c = *p;
         if (c == '_') {
             /*
              * Double underscore is reserved for concatenating module name and import name,
              * so produce triple underscore instead.
              */
-            bool wasUnderscore = p != name && *(p-1) == '_';
+            const bool wasUnderscore = p != name && *(p-1) == '_';
             if (wasUnderscore) {
                 MUST (stringBuilderAppend(builder, "__"))
             } else {
@@ -126,7 +126,7 @@ W2C2_INLINE
 void
 wasmCWriteFileGlobalNonImportName(
     FILE* file,
-    U32 globalIndex
+    const U32 globalIndex
 ) {
     fputc(globalNamePrefix, file);
     fprintf(file, "%u", globalIndex);
@@ -152,11 +152,11 @@ void
 wasmCWriteFileGlobalUse(
     FILE* file,
     const WasmModule* module,
-    U32 globalIndex,
-    bool reference
+    const U32 globalIndex,
+    const bool reference
 ) {
     if (globalIndex < module->globalImports.length) {
-        WasmGlobalImport import = module->globalImports.imports[globalIndex];
+        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (!reference) {
             fputs("(*", file);
         }
@@ -180,11 +180,11 @@ WARN_UNUSED_RESULT
 wasmCWriteStringGlobalUse(
     StringBuilder* builder,
     const WasmModule* module,
-    U32 globalIndex,
-    bool reference
+    const U32 globalIndex,
+    const bool reference
 ) {
     if (globalIndex < module->globalImports.length) {
-        WasmGlobalImport import = module->globalImports.imports[globalIndex];
+        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (!reference) {
             MUST (stringBuilderAppend(builder, "(*"))
         }
@@ -211,7 +211,7 @@ W2C2_INLINE
 void
 wasmCWriteFileMemoryNonImportName(
     FILE* file,
-    U32 memoryIndex
+    const U32 memoryIndex
 ) {
     fputc(memoryNamePrefix, file);
     fprintf(file, "%u", memoryIndex);
@@ -223,11 +223,11 @@ void
 wasmCWriteFileMemoryUse(
     FILE* file,
     const WasmModule* module,
-    U32 memoryIndex,
-    bool reference
+    const U32 memoryIndex,
+    const bool reference
 ) {
     if (memoryIndex < module->memoryImports.length) {
-        WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
+        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         if (!reference) {
             fputs("(*", file);
         }
@@ -252,11 +252,11 @@ WARN_UNUSED_RESULT
 wasmCWriteStringMemoryUse(
     StringBuilder* builder,
     const WasmModule* module,
-    U32 memoryIndex,
-    bool reference
+    const U32 memoryIndex,
+    const bool reference
 ) {
     if (memoryIndex < module->memoryImports.length) {
-        WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
+        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         if (!reference) {
             MUST (stringBuilderAppend(builder, "(*"))
         }
@@ -282,7 +282,7 @@ static
 void
 wasmCWriteFileTableNonImportName(
     FILE* file,
-    U32 tableIndex
+    const U32 tableIndex
 ) {
     fputc(tableNamePrefix, file);
     fprintf(file, "%u", tableIndex);
@@ -294,11 +294,11 @@ void
 wasmCWriteFileTableUse(
     FILE* file,
     const WasmModule* module,
-    U32 tableIndex,
-    bool reference
+    const U32 tableIndex,
+    const bool reference
 ) {
     if (tableIndex < module->tableImports.length) {
-        WasmTableImport import = module->tableImports.imports[tableIndex];
+        const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (!reference) {
             fputs("(*", file);
         }
@@ -323,11 +323,11 @@ WARN_UNUSED_RESULT
 wasmCWriteStringTableUse(
     StringBuilder* builder,
     const WasmModule* module,
-    U32 tableIndex,
-    bool reference
+    const U32 tableIndex,
+    const bool reference
 ) {
     if (tableIndex < module->tableImports.length) {
-        WasmTableImport import = module->tableImports.imports[tableIndex];
+        const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (!reference) {
             MUST (stringBuilderAppend(builder, "(*"))
         }
@@ -365,7 +365,7 @@ W2C2_INLINE
 void
 wasmCWriteFileFunctionNonImportName(
     FILE* file,
-     U32 functionIndex
+    const U32 functionIndex
 ) {
     fprintf(file, "f%u", functionIndex);
 }
@@ -377,9 +377,9 @@ wasmCWriteFileFunctionUse(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    U32 functionIndex,
-    bool reference,
-    bool prefix
+    const U32 functionIndex,
+    const bool reference,
+    const bool prefix
 ) {
     if (reference) {
         fputc('&', file);
@@ -404,9 +404,9 @@ wasmCWriteStringFunctionUse(
     StringBuilder* builder,
     const WasmModule* module,
     const char* moduleName,
-    U32 functionIndex,
-    bool reference,
-    bool prefix
+    const U32 functionIndex,
+    const bool reference,
+    const bool prefix
 ) {
     if (reference) {
         MUST (stringBuilderAppendChar(builder, '&'))
@@ -416,7 +416,7 @@ wasmCWriteStringFunctionUse(
         MUST (stringBuilderAppendChar(builder, '_'))
     }
     if (functionIndex < module->functionImports.length) {
-        WasmFunctionImport import = module->functionImports.imports[functionIndex];
+        const WasmFunctionImport import = module->functionImports.imports[functionIndex];
         MUST (wasmCWriteStringEscaped(builder, import.module))
         MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
         MUST (wasmCWriteStringEscaped(builder, import.name))
@@ -511,7 +511,7 @@ wasmCWriteFileLocalsDeclarations(
     FILE* file,
     const WasmModule* module,
     const WasmFunction function,
-    bool pretty
+    const bool pretty
 ) {
     const WasmFunctionType functionType = module->functionTypes.functionTypes[function.functionTypeIndex];
     const U32 parameterCount = functionType.parameterCount;
@@ -558,11 +558,11 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteIndent(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     if (writer->pretty) {
         StringBuilder* builder = writer->builder;
-        U32 indent = writer->indent;
+        const U32 indent = writer->indent;
         U32 index = 0;
         for (; index <= indent; index++) {
             MUST (stringBuilderAppend(builder, indentation))
@@ -576,7 +576,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWrite(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const char* string
 ) {
     return stringBuilderAppend(writer->builder, string);
@@ -588,8 +588,8 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteChar(
-    WasmCFunctionWriter* writer,
-    char c
+    const WasmCFunctionWriter* writer,
+    const char c
 ) {
     return stringBuilderAppendChar(writer->builder, c);
 }
@@ -599,7 +599,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteAssign(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     if (writer->pretty) {
         return wasmCWrite(writer, " = ");
@@ -613,7 +613,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteComma(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     if (writer->pretty) {
         return wasmCWrite(writer, ", ");
@@ -627,7 +627,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWritePlus(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     if (writer->pretty) {
         return wasmCWrite(writer, " + ");
@@ -648,7 +648,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteCallExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     WasmCallInstruction instruction;
     if (!wasmCallInstructionRead(writer->code, &instruction)) {
@@ -693,7 +693,7 @@ wasmCWriteCallExpr(
                 U32 parameterIndex = 0;
                 for (; parameterIndex < parameterCount; parameterIndex++) {
                     const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
-                    U32 paramStackIndex = wasmTypeStackGetTopIndex(
+                    const U32 paramStackIndex = wasmTypeStackGetTopIndex(
                         writer->typeStack,
                         parameterCount - parameterIndex - 1
                     );
@@ -721,8 +721,8 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteParameters(
-    WasmCFunctionWriter* writer,
-    WasmFunctionType functionType
+    const WasmCFunctionWriter* writer,
+    const WasmFunctionType functionType
 ) {
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWrite(writer, writer->moduleName))
@@ -744,7 +744,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteCallIndirectExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     WasmCallIndirectInstruction instruction;
     if (!wasmCallIndirectInstructionRead(writer->code, &instruction)) {
@@ -753,7 +753,7 @@ wasmCWriteCallIndirectExpr(
     }
 
     if (!writer->ignore) {
-        WasmFunctionType functionType = writer->module->functionTypes.functionTypes[instruction.functionTypeIndex];
+        const WasmFunctionType functionType = writer->module->functionTypes.functionTypes[instruction.functionTypeIndex];
 
         const U32 parameterCount = functionType.parameterCount;
         const U32 resultCount = functionType.resultCount;
@@ -799,7 +799,7 @@ wasmCWriteCallIndirectExpr(
             U32 parameterIndex = 0;
             for (; parameterIndex < parameterCount; parameterIndex++) {
                 const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
-                U32 paramStackIndex = wasmTypeStackGetTopIndex(
+                const U32 paramStackIndex = wasmTypeStackGetTopIndex(
                     writer->typeStack,
                     parameterCount - parameterIndex
                 );
@@ -826,7 +826,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteLocalGetExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeLocalGet;
 
@@ -838,7 +838,7 @@ wasmCWriteLocalGetExpr(
 
     if (!writer->ignore) {
         WasmValueType localType = 0;
-        bool gotType = wasmModuleFunctionGetLocalType(
+        const bool gotType = wasmModuleFunctionGetLocalType(
             writer->module,
             writer->function,
             instruction.localIndex,
@@ -854,7 +854,7 @@ wasmCWriteLocalGetExpr(
         }
         MUST (wasmTypeStackAppend(writer->typeStack, localType))
         {
-            U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
@@ -872,7 +872,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteLocalAssignmentExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     WasmLocalInstruction instruction;
@@ -887,7 +887,7 @@ wasmCWriteLocalAssignmentExpr(
 
     if (!writer->ignore) {
         WasmValueType localType = 0;
-        bool gotType = wasmModuleFunctionGetLocalType(
+        const bool gotType = wasmModuleFunctionGetLocalType(
             writer->module,
             writer->function,
             instruction.localIndex,
@@ -903,7 +903,7 @@ wasmCWriteLocalAssignmentExpr(
             return false;
         }
         {
-            U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
@@ -925,7 +925,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteGlobalGetExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeGlobalGet;
 
@@ -941,7 +941,7 @@ wasmCWriteGlobalGetExpr(
 
     if (!writer->ignore) {
         WasmValueType globalType = 0;
-        bool gotType = wasmModuleGetGlobalType(
+        const bool gotType = wasmModuleGetGlobalType(
             writer->module,
             instruction.globalIndex,
             &globalType
@@ -957,7 +957,7 @@ wasmCWriteGlobalGetExpr(
         }
         MUST (wasmTypeStackAppend(writer->typeStack, globalType))
         {
-            U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
@@ -975,7 +975,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteGlobalSetExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeGlobalSet;
 
@@ -991,7 +991,7 @@ wasmCWriteGlobalSetExpr(
 
     if (!writer->ignore) {
         WasmValueType globalType = 0;
-        bool gotType = wasmModuleGetGlobalType(
+        const bool gotType = wasmModuleGetGlobalType(
             writer->module,
             instruction.globalIndex,
             &globalType
@@ -1006,7 +1006,7 @@ wasmCWriteGlobalSetExpr(
             return false;
         }
         {
-            U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
@@ -1026,8 +1026,8 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteLiteral(
     StringBuilder* builder,
-    WasmValueType valueType,
-    WasmValue value
+    const WasmValueType valueType,
+    const WasmValue value
 ) {
     switch (valueType) {
         case wasmValueTypeI32: {
@@ -1041,10 +1041,10 @@ wasmCWriteLiteral(
             break;
         }
         case wasmValueTypeF32: {
-            U32 bits = (U32) value.i32;
+            const U32 bits = (U32) value.i32;
             if ((bits & 0x7f800000U) == 0x7f800000U) {
-                bool isNegative = (bits & 0x80000000U) != 0;
-                U32 significand = bits & 0x7fffffU;
+                const bool isNegative = (bits & 0x80000000U) != 0;
+                const U32 significand = bits & 0x7fffffU;
                 if (significand == 0) {
                     if (isNegative) {
                         MUST (stringBuilderAppendChar(builder, '-'))
@@ -1063,10 +1063,10 @@ wasmCWriteLiteral(
             break;
         }
         case wasmValueTypeF64: {
-            U64 bits = (U64) value.i64;
+            const U64 bits = (U64) value.i64;
             if ((bits & 0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) {
-                bool isNegative = (bits & 0x8000000000000000ULL) != 0;
-                U64 significand = bits & 0x7fffffULL;
+                const bool isNegative = (bits & 0x8000000000000000ULL) != 0;
+                const U64 significand = bits & 0x7fffffULL;
                 if (significand == 0) {
                     if (isNegative) {
                         MUST (stringBuilderAppendChar(builder, '-'))
@@ -1096,7 +1096,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteConstExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     WasmConstInstruction instruction;
@@ -1126,11 +1126,10 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteLoadExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     WasmLoadStoreInstruction instruction;
-    WasmValueType resultType = 0;
 
     if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
         fprintf(stderr, "w2c2: invalid load instruction encoding\n");
@@ -1138,6 +1137,7 @@ wasmCWriteLoadExpr(
     }
 
     if (!writer->ignore) {
+        WasmValueType resultType = 0;
         const char* functionName = NULL;
         switch (opcode) {
             case wasmOpcodeI32Load: {
@@ -1256,7 +1256,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteStoreExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     WasmLoadStoreInstruction instruction;
@@ -1354,7 +1354,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemorySize(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeMemorySize;
 
@@ -1409,7 +1409,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryGrow(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeMemoryGrow;
 
@@ -1466,7 +1466,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryCopy(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     WasmMemoryCopyInstruction instruction;
     if (!wasmMemoryCopyInstructionRead(writer->code, &instruction)) {
@@ -1548,8 +1548,8 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryFill(
-    WasmCFunctionWriter* writer,
-    WasmMiscOpcode miscOpcode
+    const WasmCFunctionWriter* writer,
+    const WasmMiscOpcode miscOpcode
 ) {
     WasmMiscMemoryInstruction instruction;
     if (!wasmMiscMemoryInstructionRead(writer->code, miscOpcode, &instruction)) {
@@ -1614,7 +1614,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteUnaryExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmValueType resultType,
     const char* operator
 ) {
@@ -1644,10 +1644,10 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteInfixBinaryExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmValueType resultType,
     const char* operator,
-    bool assignmentAllowed
+    const bool assignmentAllowed
 ) {
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
@@ -1695,7 +1695,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteSignedInfixBinaryExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode,
     const char* operator
 ) {
@@ -1751,7 +1751,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWritePrefixBinaryExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmValueType resultType,
     const char* operator
 ) {
@@ -1788,7 +1788,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteSignedShiftRightExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     const WasmValueType resultType = wasmOpcodeResultType(opcode);
@@ -1849,7 +1849,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteUnsignedShiftRightExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     const WasmValueType resultType = wasmOpcodeResultType(opcode);
@@ -1896,7 +1896,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteShiftLeftExpr(
-    WasmCFunctionWriter* writer,
+    const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
     const WasmValueType resultType = wasmOpcodeResultType(opcode);
@@ -1943,8 +1943,8 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteLabel(
-    WasmCFunctionWriter* writer,
-    U32 labelIndex
+    const WasmCFunctionWriter* writer,
+    const U32 labelIndex
 ) {
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringLabelName(writer->builder, labelIndex))
@@ -1960,7 +1960,7 @@ wasmCWriteIfExpr(
     WasmCFunctionWriter* writer,
     WasmOpcode* opcode
 ) {
-    bool ignore = writer->ignore;
+    const bool ignore = writer->ignore;
 
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
@@ -2067,7 +2067,7 @@ wasmCWriteBlockExpr(
     WasmCFunctionWriter* writer,
     WasmOpcode* opcode
 ) {
-    bool ignore = writer->ignore;
+    const bool ignore = writer->ignore;
 
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
@@ -2129,7 +2129,7 @@ wasmCWriteLoopExpr(
     WasmCFunctionWriter* writer,
     WasmOpcode* opcode
 ) {
-    bool ignore = writer->ignore;
+    const bool ignore = writer->ignore;
 
     size_t typeStackLengthBeforeBranches = 0;
     WasmLabel label = wasmEmptyLabel;
@@ -2186,15 +2186,15 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteGoto(
-    WasmCFunctionWriter* writer,
-    U32 labelStackIndex
+    const WasmCFunctionWriter* writer,
+    const U32 labelStackIndex
 ) {
-    WasmLabel label = writer->labelStack->labels.labels[labelStackIndex];
+    const WasmLabel label = writer->labelStack->labels.labels[labelStackIndex];
 
     MUST (wasmCWriteIndent(writer))
 
     if (label.type != NULL) {
-        WasmValueType resultType = *label.type;
+        const WasmValueType resultType = *label.type;
 
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
         const U32 destinationStackIndex = assertSizeU32(label.typeStackLength);
@@ -2228,7 +2228,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteSelectExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
@@ -2284,7 +2284,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteBranchExpr(
-    WasmCFunctionWriter* writer
+    const WasmCFunctionWriter* writer
 ) {
     static const WasmOpcode opcode = wasmOpcodeBr;
 
@@ -2432,7 +2432,7 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteDebugLine(
     StringBuilder* builder,
-    WasmDebugLine* debugLine
+    const WasmDebugLine* debugLine
 
 ) {
     MUST (stringBuilderAppend(builder, "#line "))
@@ -2448,7 +2448,7 @@ static
 WasmDebugLine*
 wasmCGetDebugLine(
     WasmDebugLines* debugLines,
-    size_t absoluteAddress
+    const size_t absoluteAddress
 ) {
     WasmDebugLine* debugLine = NULL;
     if (debugLines->length == 0) {
@@ -2458,7 +2458,7 @@ wasmCGetDebugLine(
     debugLine = debugLines->debugLines;
 
     if (debugLines->length > 1) {
-        WasmDebugLine* nextDebugLine = debugLine + 1;
+        const WasmDebugLine* nextDebugLine = debugLine + 1;
         if (absoluteAddress >= nextDebugLine->address) {
             debugLines->length--;
             debugLines->debugLines++;
@@ -2482,9 +2482,9 @@ wasmCWriteFunctionCode(
 ) {
     while (true) {
         if (writer->debug) {
-            size_t relativeAddress = writer->function.code.length - writer->code->length;
-            size_t absoluteAddress = writer->function.start + relativeAddress;
-            WasmDebugLine* debugLine = wasmCGetDebugLine(
+            const size_t relativeAddress = writer->function.code.length - writer->code->length;
+            const size_t absoluteAddress = writer->function.start + relativeAddress;
+            const WasmDebugLine* debugLine = wasmCGetDebugLine(
                 writer->debugLines,
                 absoluteAddress
             );
@@ -2609,7 +2609,7 @@ wasmCWriteFunctionCode(
             }
             case wasmOpcodeMiscPrefix: {
                 WasmMiscOpcode miscOpcode = 0;
-                MUST (leb128ReadU32(writer->code, &miscOpcode) > 0)
+                MUST (leb128ReadU32(writer->code, (U32*)&miscOpcode) > 0)
 
                 switch (miscOpcode) {
                     case wasmMiscOpcodeMemoryInit: {
@@ -3201,7 +3201,7 @@ void
 wasmCWriteStackDeclarations(
     FILE* file,
     const WasmTypeStack* stackDeclarations,
-    bool pretty
+    const bool pretty
 ) {
     WasmValueType testType = 0;
     for (; testType < wasmValueType_count; testType++) {
@@ -3209,7 +3209,7 @@ wasmCWriteStackDeclarations(
 
         U32 stackDeclarationIndex = 0;
         for (; stackDeclarationIndex < stackDeclarations->length; stackDeclarationIndex++) {
-            WasmValueType entry = stackDeclarations->valueTypes[stackDeclarationIndex];
+            const WasmValueType entry = stackDeclarations->valueTypes[stackDeclarationIndex];
             if (!entry) {
                 continue;
             }
@@ -3245,8 +3245,8 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionReturn(
-    WasmCFunctionWriter* writer,
-    WasmFunctionType functionType
+    const WasmCFunctionWriter* writer,
+    const WasmFunctionType functionType
 ) {
     if (!functionType.resultCount) {
         return true;
@@ -3285,9 +3285,9 @@ wasmCWriteFunctionBody(
     const char* moduleName,
     const WasmFunction function,
     WasmDebugLines* debugLines,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -3295,7 +3295,7 @@ wasmCWriteFunctionBody(
     WasmLabel label = wasmEmptyLabel;
     WasmValueType* resultType = NULL;
 
-    WasmFunctionType functionType =
+    const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
     if (functionType.resultCount) {
@@ -3350,10 +3350,10 @@ void
 wasmCWriteFileParameters(
     FILE* file,
     const char* moduleName,
-    WasmFunctionType functionType,
-    bool writeParameterNames,
-    bool voidPointerInstanceType,
-    bool pretty
+    const WasmFunctionType functionType,
+    const bool writeParameterNames,
+    const bool voidPointerInstanceType,
+    const bool pretty
 ) {
     fputc('(', file);
     if (voidPointerInstanceType) {
@@ -3399,9 +3399,9 @@ wasmCWriteFileFunctionSignature(
     const char* moduleName,
     const WasmFunction function,
     const U32 functionIndex,
-    bool writeParameterNames,
-    bool pretty,
-    bool prefix
+    const bool writeParameterNames,
+    const bool pretty,
+    const bool prefix
 ) {
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -3429,9 +3429,9 @@ wasmCWriteFunctionDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
@@ -3467,12 +3467,12 @@ wasmCWriteFunctionImplementations(
     const WasmModule* module,
     const char *moduleName,
     WasmDebugLines* debugLines,
-    U32 startIDIndex,
-    U32 endIDIndex,
-    WasmFunctionIDs functionIDs,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const U32 startIDIndex,
+    const U32 endIDIndex,
+    const WasmFunctionIDs functionIDs,
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
 
@@ -3482,8 +3482,8 @@ wasmCWriteFunctionImplementations(
 
     U32 functionIDIndex = startIDIndex;
     for (; functionIDIndex < endIDIndex; functionIDIndex++) {
-        WasmFunctionID functionID = functionIDs.functionIDs[functionIDIndex];
-        U32 functionIndex = functionID.functionIndex;
+        const WasmFunctionID functionID = functionIDs.functionIDs[functionIDIndex];
+        const U32 functionIndex = functionID.functionIndex;
         const WasmFunction function = module->functions.functions[functionIndex];
 
         wasmTypeStackClear(&typeStack);
@@ -3491,7 +3491,7 @@ wasmCWriteFunctionImplementations(
         wasmLabelStackClear(&labelStack);
 
         if (debug) {
-            WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
+            const WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
             if (debugLine != NULL) {
                 fprintf(file, "#line %u \"%s\"\n", (U32)debugLine->number, debugLine->path);
             }
@@ -3536,7 +3536,7 @@ W2C2_INLINE
 void
 wasmCWriteGlobalImportType(
     FILE* file,
-    WasmGlobalImport import
+    const WasmGlobalImport import
 ) {
     fputs(valueTypeNames[import.globalType.valueType], file);
     fputc('*', file);
@@ -3547,12 +3547,12 @@ void
 wasmCWriteGlobalImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t globalImportCount = module->globalImports.length;
     U32 globalIndex = 0;
     for (; globalIndex < globalImportCount; globalIndex++) {
-        WasmGlobalImport import = module->globalImports.imports[globalIndex];
+        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (pretty) {
             fputs(indentation, file);
         }
@@ -3570,14 +3570,14 @@ void
 wasmCWriteGlobals(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t globalImportCount = module->globalImports.length;
     const U32 globalCount = module->globals.count;
 
     U32 globalIndex = 0;
     for (; globalIndex < globalCount; globalIndex++) {
-        WasmGlobal global = module->globals.globals[globalIndex];
+        const WasmGlobal global = module->globals.globals[globalIndex];
         if (pretty) {
             fputs(indentation, file);
         }
@@ -3603,7 +3603,7 @@ wasmCWriteConstantExpr(
         case wasmOpcodeI64Const:
         case wasmOpcodeF32Const:
         case wasmOpcodeF64Const: {
-            WasmValueType resultType = wasmOpcodeResultType(opcode);
+            const WasmValueType resultType = wasmOpcodeResultType(opcode);
             WasmConstInstruction instruction;
             if (!wasmConstInstructionRead(&code, opcode, &instruction)) {
                 fprintf(stderr, "w2c2: invalid const instruction encoding\n");
@@ -3634,7 +3634,7 @@ wasmCWriteInitGlobals(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    const bool pretty
 ) {
     const size_t globalImportCount = module->globalImports.length;
     const U32 globalCount = module->globals.count;
@@ -3648,7 +3648,7 @@ wasmCWriteInitGlobals(
         {
             U32 globalIndex = 0;
             for (; globalIndex < globalCount; globalIndex++) {
-                WasmGlobal global = module->globals.globals[globalIndex];
+                const WasmGlobal global = module->globals.globals[globalIndex];
 
                 if (pretty) {
                     fputs(indentation, file);
@@ -3660,7 +3660,7 @@ wasmCWriteInitGlobals(
                     fputc('=', file);
                 }
                 {
-                    Buffer code = global.init;
+                    const Buffer code = global.init;
                     MUST (stringBuilderReset(&stringBuilder))
 
                     MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
@@ -3685,7 +3685,7 @@ wasmCWriteInitImportAssignment(
     FILE* file,
     const char* module,
     const char* name,
-    bool pretty
+    const bool pretty
 ) {
     if (pretty) {
         fputs(indentation, file);
@@ -3721,12 +3721,12 @@ wasmCWriteFunctionImport(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    WasmFunctionImport import,
-    bool declaration,
-    bool pretty,
-    bool prefix
+    const WasmFunctionImport import,
+    const bool declaration,
+    const bool pretty,
+    const bool prefix
 ) {
-    WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
+    const WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
     fputs(wasmCGetReturnType(functionType), file);
     fputc(' ', file);
     if (declaration) {
@@ -3751,12 +3751,12 @@ void
 wasmCWriteInitGlobalImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t globalImportCount = module->globalImports.length;
     U32 globalIndex = 0;
     for (; globalIndex < globalImportCount; globalIndex++) {
-        WasmGlobalImport import = module->globalImports.imports[globalIndex];
+        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
         fputc('(', file);
         wasmCWriteGlobalImportType(file, import);
@@ -3779,13 +3779,13 @@ void
 wasmCWriteInitMemoryImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
 
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
-        WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
+        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
         fputc('(', file);
         wasmCWriteMemoryType(file);
@@ -3808,13 +3808,13 @@ void
 wasmCWriteInitTableImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t tableImportCount = module->tableImports.length;
 
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
-        WasmTableImport import = module->tableImports.imports[tableIndex];
+        const WasmTableImport import = module->tableImports.imports[tableIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
         fputc('(', file);
         wasmCWriteTableType(file);
@@ -3830,7 +3830,7 @@ wasmCWriteInitImports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    const bool pretty
 ) {
     fprintf(
         file,
@@ -3870,11 +3870,11 @@ wasmCWriteFunctionExport(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    WasmExport export,
-    WasmFunctionType functionType,
-    bool writeBody,
-    bool pretty,
-    bool multipleModules
+    const WasmExport export,
+    const WasmFunctionType functionType,
+    const bool writeBody,
+    const bool pretty,
+    const bool multipleModules
 ) {
     const U32 parameterCount = functionType.parameterCount;
 
@@ -3925,9 +3925,9 @@ wasmCWriteMemoryExport(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    WasmExport export,
-    bool writeBody,
-    bool pretty
+    const WasmExport export,
+    const bool writeBody,
+    const bool pretty
 ) {
     wasmCWriteMemoryType(file);
     if (pretty) {
@@ -3957,16 +3957,16 @@ wasmCWriteExports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool writeBody,
-    bool pretty,
-    bool multipleModules
+    const bool writeBody,
+    const bool pretty,
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 exportCount = module->exports.count;
 
     U32 exportIndex = 0;
     for (; exportIndex < exportCount; exportIndex++) {
-        WasmExport export = module->exports.exports[exportIndex];
+        const WasmExport export = module->exports.exports[exportIndex];
         switch (export.kind) {
             case wasmExportKindFunction: {
                 WasmFunctionType functionType = wasmEmptyFunctionType;
@@ -4004,13 +4004,13 @@ void
 wasmCWriteDataSegmentsAsArrays(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const U32 dataSegmentCount = module->dataSegments.count;
 
     U32 dataSegmentIndex = 0;
     for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-        WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+        const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
 
         if (!dataSegment.bytes.length) {
             continue;
@@ -4046,7 +4046,7 @@ void
 wasmCWriteDataSegmentsAsSection(
     FILE* file,
     const WasmModule* module,
-    WasmDataSegmentMode mode
+    const WasmDataSegmentMode mode
 ) {
     static char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
@@ -4099,9 +4099,9 @@ wasmCWriteDataSegmentsAsSection(
     }
 
     for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-        WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
-        size_t length = dataSegment.bytes.length;
-        size_t written = fwrite(dataSegment.bytes.data, 1, length, segmentsFile);
+        const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+        const size_t length = dataSegment.bytes.length;
+        const size_t written = fwrite(dataSegment.bytes.data, 1, length, segmentsFile);
         if (written != length) {
             fprintf(
                 stderr,
@@ -4130,8 +4130,8 @@ void
 wasmCWriteDataSegments(
     FILE* file,
     const WasmModule* module,
-    WasmDataSegmentMode mode,
-    bool pretty
+    const WasmDataSegmentMode mode,
+    const bool pretty
 ) {
     switch (mode) {
         case wasmDataSegmentModeArrays: {
@@ -4156,13 +4156,13 @@ void
 wasmCWriteMemoryImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
 
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
-        WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
+        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         if (pretty) {
             fputs(indentation, file);
         }
@@ -4180,7 +4180,7 @@ void
 wasmCWriteMemories(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
@@ -4203,8 +4203,8 @@ wasmCWriteInitMemories(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    WasmDataSegmentMode dataSegmentMode,
-    bool pretty
+    const WasmDataSegmentMode dataSegmentMode,
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
@@ -4239,7 +4239,7 @@ wasmCWriteInitMemories(
         {
             U32 memoryIndex = 0;
             for (; memoryIndex < memoryCount; memoryIndex++) {
-                WasmMemory memory = module->memories.memories[memoryIndex];
+                const WasmMemory memory = module->memories.memories[memoryIndex];
 
                 if (pretty) {
                     fputs(indentation, file);
@@ -4255,7 +4255,7 @@ wasmCWriteInitMemories(
             size_t dataSegmentOffset = 0;
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-                WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+                const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
 
                 if (!dataSegment.bytes.length) {
                     continue;
@@ -4268,7 +4268,7 @@ wasmCWriteInitMemories(
                 wasmCWriteFileMemoryUse(file, module, dataSegment.memoryIndex, false);
                 fputs(", ", file);
                 {
-                    Buffer code = dataSegment.offset;
+                    const Buffer code = dataSegment.offset;
                     MUST (stringBuilderReset(&stringBuilder))
 
                     MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
@@ -4311,7 +4311,7 @@ void
 wasmCWriteFreeMemories(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
@@ -4331,13 +4331,13 @@ void
 wasmCWriteTableImports(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t tableImportCount = module->tableImports.length;
 
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
-        WasmTableImport import = module->tableImports.imports[tableIndex];
+        const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (pretty) {
             fputs(indentation, file);
         }
@@ -4355,7 +4355,7 @@ void
 wasmCWriteTables(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t tableImportCount = module->tableImports.length;
     const U32 tableCount = module->tables.count;
@@ -4378,8 +4378,8 @@ wasmCWriteInitTables(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool multipleModules
+    const bool pretty,
+    const bool multipleModules
 ) {
     const size_t tableImportCount = module->tableImports.length;
     const U32 elementSegmentCount = module->elementSegments.count;
@@ -4400,7 +4400,7 @@ wasmCWriteInitTables(
         {
             U32 tableIndex = 0;
             for (; tableIndex < tableCount; tableIndex++) {
-                WasmTable table = module->tables.tables[tableIndex];
+                const WasmTable table = module->tables.tables[tableIndex];
 
                 if (pretty) {
                     fputs(indentation, file);
@@ -4414,7 +4414,7 @@ wasmCWriteInitTables(
         {
             U32 elementSegmentIndex = 0;
             for (; elementSegmentIndex < elementSegmentCount; elementSegmentIndex++) {
-                WasmElementSegment elementSegment = module->elementSegments.elementSegments[elementSegmentIndex];
+                const WasmElementSegment elementSegment = module->elementSegments.elementSegments[elementSegmentIndex];
 
                 if (pretty) {
                     fputs(indentation, file);
@@ -4423,7 +4423,7 @@ wasmCWriteInitTables(
                     fputs("offset=", file);
                 }
                 {
-                    Buffer code = elementSegment.offset;
+                    const Buffer code = elementSegment.offset;
                     MUST (stringBuilderReset(&stringBuilder))
                     MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
                     fputs(stringBuilder.string, file);
@@ -4433,7 +4433,7 @@ wasmCWriteInitTables(
                 {
                     U32 functionIndexIndex = 0;
                     for (; functionIndexIndex < elementSegment.functionIndexCount; functionIndexIndex++) {
-                        U32 functionIndex = elementSegment.functionIndices[functionIndexIndex];
+                        const U32 functionIndex = elementSegment.functionIndices[functionIndexIndex];
                         if (pretty) {
                             fputs(indentation, file);
                         }
@@ -4463,7 +4463,7 @@ void
 wasmCWriteFreeTables(
     FILE* file,
     const WasmModule* module,
-    bool pretty
+    const bool pretty
 ) {
     const size_t tableImportCount = module->tableImports.length;
     const U32 tableCount = module->tables.count;
@@ -4484,8 +4484,8 @@ wasmCWriteFunctionImports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool multipleModules
+    const bool pretty,
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
@@ -4525,7 +4525,7 @@ wasmCWriteModuleInstanceDeclaration(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    const bool pretty
 ) {
     fprintf(file, "typedef struct %sInstance {\n", moduleName);
 
@@ -4546,9 +4546,9 @@ wasmCWriteModuleDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty);
     wasmCWriteFunctionImports(file, module, moduleName, pretty, multipleModules);
@@ -4562,8 +4562,8 @@ wasmCWriteInstantiateFunction(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty,
-    bool multipleModules
+    const bool pretty,
+    const bool multipleModules
 ) {
     fprintf(
         file,
@@ -4617,7 +4617,7 @@ wasmCWriteFreeFunction(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    bool pretty
+    const bool pretty
 ) {
     fprintf(file, "void %sFreeInstance(%sInstance* i) {\n", moduleName, moduleName);
 
@@ -4634,9 +4634,9 @@ wasmCWriteModuleHeader(
     const WasmModule* module,
     const char* moduleName,
     const char* filename,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     /* Create file */
     FILE *file = NULL;
@@ -4696,9 +4696,9 @@ wasmCWriteInits(
     const WasmModule* module,
     const char* moduleName,
     FILE* file,
-    WasmDataSegmentMode dataSegmentMode,
-    bool pretty,
-    bool multipleModules
+    const WasmDataSegmentMode dataSegmentMode,
+    const bool pretty,
+    const bool multipleModules
 ) {
     wasmCWriteDataSegments(file, module, dataSegmentMode, pretty);
 
@@ -4723,18 +4723,18 @@ wasmCWriteImplementationFile(
     const char* moduleName,
     const char* headerName,
     WasmDebugLines* debugLines,
-    char filePrefix,
-    U32 fileIndex,
-    U32 functionsPerFile,
-    U32 startFunctionIDIndex,
-    WasmFunctionIDs functionIDs,
-    bool pretty,
-    bool debug,
-    bool multipleModules
+    const char filePrefix,
+    const U32 fileIndex,
+    const U32 functionsPerFile,
+    const U32 startFunctionIDIndex,
+    const WasmFunctionIDs functionIDs,
+    const bool pretty,
+    const bool debug,
+    const bool multipleModules
 ) {
     FILE* file = NULL;
     char filename[W2C2_IMPL_FILENAME_LENGTH+1];
-    U32 functionCount = (U32)functionIDs.length;
+    const U32 functionCount = (U32)functionIDs.length;
 
     U32 endFunctionIDIndex = startFunctionIDIndex + (U32)functionsPerFile;
     if (endFunctionIDIndex > functionCount) {
@@ -4927,7 +4927,7 @@ wasmCWriteModuleImplementationFiles(
     WasmDebugLines debugLines = module->debugLines;
 
     U32 fileIndex = 0;
-    size_t functionCount = functionIDs.length;
+    const size_t functionCount = functionIDs.length;
     U32 functionsPerFile = options.functionsPerFile;
     size_t fileCount = 0;
     if (functionCount == 0) {
@@ -5057,9 +5057,9 @@ wasmCWriteModuleImplementation(
     const char* moduleName,
     const char* filename,
     const char* headerName,
-    WasmFunctionIDs staticFunctionIDs,
-    WasmFunctionIDs dynamicFunctionIDs,
-    WasmCWriteModuleOptions options
+    const WasmFunctionIDs staticFunctionIDs,
+    const WasmFunctionIDs dynamicFunctionIDs,
+    const WasmCWriteModuleOptions options
 ) {
     /* Create file */
     FILE *file = NULL;
@@ -5148,9 +5148,9 @@ WARN_UNUSED_RESULT
 wasmCWriteModule(
     const WasmModule *module,
     const char *moduleName,
-    WasmCWriteModuleOptions options,
-    WasmFunctionIDs staticFunctionIDs,
-    WasmFunctionIDs dynamicFunctionIDs
+    const WasmCWriteModuleOptions options,
+    const WasmFunctionIDs staticFunctionIDs,
+    const WasmFunctionIDs dynamicFunctionIDs
 ) {
     char outputName[PATH_MAX];
     char headerName[PATH_MAX];

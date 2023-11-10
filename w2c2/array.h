@@ -16,9 +16,9 @@ W2C2_INLINE
 bool
 arrayEnsureCapacity(
     void** items,
-    size_t length,
+    const size_t length,
     size_t* capacity,
-    size_t itemSize
+    const size_t itemSize
 ) {
     if (length <= *capacity) {
         return true;
