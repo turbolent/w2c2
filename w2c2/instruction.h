@@ -8,7 +8,6 @@
 /* WasmLocalInstruction */
 
 typedef struct WasmLocalInstruction {
-    WasmOpcode opcode;
     U32 localIndex;
 } WasmLocalInstruction;
 
@@ -16,14 +15,12 @@ bool
 WARN_UNUSED_RESULT
 wasmLocalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmLocalInstruction* result
 );
 
 /* WasmGlobalInstruction */
 
 typedef struct WasmGlobalInstruction {
-    WasmOpcode opcode;
     U32 globalIndex;
 } WasmGlobalInstruction;
 
@@ -31,7 +28,6 @@ bool
 WARN_UNUSED_RESULT
 wasmGlobalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmGlobalInstruction* result
 );
 
@@ -45,7 +41,6 @@ typedef union WasmValue {
 } WasmValue;
 
 typedef struct WasmConstInstruction {
-    WasmOpcode opcode;
     WasmValue value;
 } WasmConstInstruction;
 
@@ -60,7 +55,6 @@ wasmConstInstructionRead(
 /* WasmLoadStoreInstruction */
 
 typedef struct WasmLoadStoreInstruction {
-    WasmOpcode opcode;
     U32 align;
     U32 offset;
 } WasmLoadStoreInstruction;
@@ -69,7 +63,6 @@ bool
 WARN_UNUSED_RESULT
 wasmLoadStoreInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmLoadStoreInstruction* result
 );
 
@@ -103,7 +96,6 @@ wasmCallIndirectInstructionRead(
 /* WasmBranchInstruction */
 
 typedef struct WasmBranchInstruction {
-    WasmOpcode opcode;
     U32 labelIndex;
 } WasmBranchInstruction;
 
@@ -111,7 +103,6 @@ bool
 WARN_UNUSED_RESULT
 wasmBranchInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmBranchInstruction* result
 );
 
@@ -138,7 +129,6 @@ wasmBranchTableInstructionRead(
 /* WasmMemoryInstruction */
 
 typedef struct WasmMemoryInstruction {
-    WasmOpcode opcode;
     U32 memoryIndex;
 } WasmMemoryInstruction;
 
@@ -146,23 +136,7 @@ bool
 WARN_UNUSED_RESULT
 wasmMemoryInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmMemoryInstruction* result
-);
-
-/* WasmMiscMemoryInstruction */
-
-typedef struct WasmMiscMemoryInstruction {
-    WasmMiscOpcode opcode;
-    U32 memoryIndex;
-} WasmMiscMemoryInstruction;
-
-bool
-WARN_UNUSED_RESULT
-wasmMiscMemoryInstructionRead(
-    Buffer* buffer,
-    WasmMiscOpcode opcode,
-    WasmMiscMemoryInstruction* result
 );
 
 /* WasmMemoryCopyInstruction */

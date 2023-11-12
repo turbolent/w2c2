@@ -1088,7 +1088,7 @@ wasmReadConstantExpr(
         }
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
-            MUST (wasmGlobalInstructionRead(buffer, opcode, &instruction))
+            MUST (wasmGlobalInstructionRead(buffer, &instruction))
             break;
         }
         case wasmOpcodeEnd:

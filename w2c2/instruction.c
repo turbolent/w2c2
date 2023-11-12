@@ -5,13 +5,11 @@
 bool
 wasmLocalInstructionRead(
     Buffer* buffer,
-    const WasmOpcode opcode,
     WasmLocalInstruction* result
 ) {
     U32 localIndex = 0;
     MUST (leb128ReadU32(buffer, &localIndex) > 0)
 
-    result->opcode = opcode;
     result->localIndex = localIndex;
 
     return true;
@@ -22,13 +20,11 @@ wasmLocalInstructionRead(
 bool
 wasmGlobalInstructionRead(
     Buffer* buffer,
-    const WasmOpcode opcode,
     WasmGlobalInstruction* result
 ) {
     U32 globalIndex = 0;
     MUST (leb128ReadU32(buffer, &globalIndex) > 0)
 
-    result->opcode = opcode;
     result->globalIndex = globalIndex;
 
     return true;
@@ -42,7 +38,6 @@ wasmConstInstructionRead(
     const WasmOpcode opcode,
     WasmConstInstruction* result
 ) {
-    result->opcode = opcode;
     switch (opcode) {
         case wasmOpcodeI32Const:
             return leb128ReadI32(buffer, &result->value.i32) > 0;
@@ -62,7 +57,6 @@ wasmConstInstructionRead(
 bool
 wasmLoadStoreInstructionRead(
     Buffer* buffer,
-    const WasmOpcode opcode,
     WasmLoadStoreInstruction* result
 ) {
     U32 align = 0;
@@ -71,7 +65,6 @@ wasmLoadStoreInstructionRead(
     MUST (leb128ReadU32(buffer, &align) > 0)
     MUST (leb128ReadU32(buffer, &offset) > 0)
 
-    result->opcode = opcode;
     result->align = align;
     result->offset = offset;
 
@@ -117,13 +110,11 @@ wasmCallIndirectInstructionRead(
 bool
 wasmBranchInstructionRead(
     Buffer* buffer,
-    const WasmOpcode opcode,
     WasmBranchInstruction* result
 ) {
     U32 labelIndex = 0;
     MUST(leb128ReadU32(buffer, &labelIndex) > 0)
 
-    result->opcode = opcode;
     result->labelIndex = labelIndex;
 
     return true;
@@ -171,31 +162,11 @@ wasmBranchTableInstructionFree(
 bool
 wasmMemoryInstructionRead(
     Buffer* buffer,
-    const WasmOpcode opcode,
     WasmMemoryInstruction* result
 ) {
     U32 memoryIndex = 0;
     MUST(leb128ReadU32(buffer, &memoryIndex) > 0)
 
-    result->opcode = opcode;
-    result->memoryIndex = memoryIndex;
-
-    return true;
-}
-
-/* WasmMiscMemoryInstruction */
-
-bool
-WARN_UNUSED_RESULT
-wasmMiscMemoryInstructionRead(
-    Buffer* buffer,
-    const WasmMiscOpcode opcode,
-    WasmMiscMemoryInstruction* result
-) {
-    U32 memoryIndex = 0;
-    MUST(leb128ReadU32(buffer, &memoryIndex) > 0)
-
-    result->opcode = opcode;
     result->memoryIndex = memoryIndex;
 
     return true;
@@ -219,4 +190,3 @@ wasmMemoryCopyInstructionRead(
 
     return true;
 }
-
