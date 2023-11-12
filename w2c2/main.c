@@ -203,7 +203,7 @@ cleanImplementationFiles(void) {
 #if HAS_GLOB
     glob_t globbuf;
     size_t pathIndex = 0;
-    int globResult = glob("*.c", GLOB_NOSORT, NULL, &globbuf);
+    const int globResult = glob("*.c", GLOB_NOSORT, NULL, &globbuf);
     if (globResult != 0) {
         if (globResult != GLOB_NOMATCH) {
             fprintf(stderr, "w2c2: failed to glob files to clean\n");

@@ -828,10 +828,8 @@ WARN_UNUSED_RESULT
 wasmCWriteLocalGetExpr(
     const WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeLocalGet;
-
     WasmLocalInstruction instruction;
-    if (!wasmLocalInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmLocalInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid local.get instruction encoding\n");
         return false;
     }
@@ -876,7 +874,7 @@ wasmCWriteLocalAssignmentExpr(
     const WasmOpcode opcode
 ) {
     WasmLocalInstruction instruction;
-    if (!wasmLocalInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmLocalInstructionRead(writer->code, &instruction)) {
         fprintf(
             stderr,
             "w2c2: invalid %s instruction encoding\n",
@@ -930,7 +928,7 @@ wasmCWriteGlobalGetExpr(
     static const WasmOpcode opcode = wasmOpcodeGlobalGet;
 
     WasmGlobalInstruction instruction;
-    if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmGlobalInstructionRead(writer->code, &instruction)) {
         fprintf(
             stderr,
             "w2c2: invalid %s instruction encoding\n",
@@ -980,7 +978,7 @@ wasmCWriteGlobalSetExpr(
     static const WasmOpcode opcode = wasmOpcodeGlobalSet;
 
     WasmGlobalInstruction instruction;
-    if (!wasmGlobalInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmGlobalInstructionRead(writer->code, &instruction)) {
         fprintf(
             stderr,
             "w2c2: invalid %s instruction encoding\n",
@@ -1131,7 +1129,7 @@ wasmCWriteLoadExpr(
 ) {
     WasmLoadStoreInstruction instruction;
 
-    if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmLoadStoreInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid load instruction encoding\n");
         return false;
     }
@@ -1260,7 +1258,7 @@ wasmCWriteStoreExpr(
     const WasmOpcode opcode
 ) {
     WasmLoadStoreInstruction instruction;
-    if (!wasmLoadStoreInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmLoadStoreInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid store instruction encoding\n");
         return false;
     }
@@ -1356,10 +1354,8 @@ WARN_UNUSED_RESULT
 wasmCWriteMemorySize(
     const WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeMemorySize;
-
     WasmMemoryInstruction instruction;
-    if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid memory.size instruction encoding\n");
         return false;
     }
@@ -1411,10 +1407,8 @@ WARN_UNUSED_RESULT
 wasmCWriteMemoryGrow(
     const WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeMemoryGrow;
-
     WasmMemoryInstruction instruction;
-    if (!wasmMemoryInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid memory.grow instruction encoding\n");
         return false;
     }
@@ -1551,8 +1545,8 @@ wasmCWriteMemoryFill(
     const WasmCFunctionWriter* writer,
     const WasmMiscOpcode miscOpcode
 ) {
-    WasmMiscMemoryInstruction instruction;
-    if (!wasmMiscMemoryInstructionRead(writer->code, miscOpcode, &instruction)) {
+    WasmMemoryInstruction instruction;
+    if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid memory.fill instruction encoding\n");
         return false;
     }
@@ -2286,10 +2280,8 @@ WARN_UNUSED_RESULT
 wasmCWriteBranchExpr(
     const WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeBr;
-
     WasmBranchInstruction instruction;
-    if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmBranchInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid br instruction encoding\n");
         return false;
     }
@@ -2308,10 +2300,8 @@ WARN_UNUSED_RESULT
 wasmCWriteBranchIfExpr(
     WasmCFunctionWriter* writer
 ) {
-    static const WasmOpcode opcode = wasmOpcodeBrIf;
-
     WasmBranchInstruction instruction;
-    if (!wasmBranchInstructionRead(writer->code, opcode, &instruction)) {
+    if (!wasmBranchInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid br.if instruction encoding\n");
         return false;
     }
@@ -3614,7 +3604,7 @@ wasmCWriteConstantExpr(
         }
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
-            MUST (wasmGlobalInstructionRead(&code, opcode, &instruction))
+            MUST (wasmGlobalInstructionRead(&code, &instruction))
             MUST (wasmCWriteStringGlobalUse(builder, module, instruction.globalIndex, false))
             break;
         }
@@ -4860,19 +4850,19 @@ wasmCImplementationWriterThread(
         }
 
         {
-            WasmCImplementationWriterTask* task = writer->task;
+            const WasmCImplementationWriterTask* task = writer->task;
 
             const WasmModule* module = task->module;
             const char* moduleName = task->moduleName;
             const char* headerName = task->headerName;
-            char filePrefix = task->filePrefix;
-            U32 fileIndex = task->fileIndex;
-            U32 functionsPerFile = task->functionsPerFile;
-            U32 startFunctionIDIndex = task->startFunctionIDIndex;
-            WasmFunctionIDs functionIDs = task->functionIDs;
-            bool pretty = task->pretty;
-            bool debug = task->debug;
-            bool multipleModules = task->multipleModules;
+            const char filePrefix = task->filePrefix;
+            const U32 fileIndex = task->fileIndex;
+            const U32 functionsPerFile = task->functionsPerFile;
+            const U32 startFunctionIDIndex = task->startFunctionIDIndex;
+            const WasmFunctionIDs functionIDs = task->functionIDs;
+            const bool pretty = task->pretty;
+            const bool debug = task->debug;
+            const bool multipleModules = task->multipleModules;
             WasmDebugLines* debugLines = task->debugLines;
 
             writer->task = NULL;
@@ -4880,7 +4870,7 @@ wasmCImplementationWriterThread(
             pthread_mutex_unlock(&writer->mutex);
 
             {
-                bool result = wasmCWriteImplementationFile(
+                const bool result = wasmCWriteImplementationFile(
                     module,
                     moduleName,
                     headerName,
@@ -4895,7 +4885,7 @@ wasmCImplementationWriterThread(
                     multipleModules
                 );
                 if (!result) {
-                    WasmFunctionID startFunctionID = functionIDs.functionIDs[startFunctionIDIndex];
+                    const WasmFunctionID startFunctionID = functionIDs.functionIDs[startFunctionIDIndex];
                     fprintf(
                         stderr,
                         "w2c2: failed to write implementation file %d. start function index: %d\n",
