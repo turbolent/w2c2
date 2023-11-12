@@ -52,12 +52,12 @@ wasmConstInstructionRead(
     }
 }
 
-/* WasmLoadStoreInstruction */
+/* WasmMemoryArgumentInstruction */
 
 bool
-wasmLoadStoreInstructionRead(
+wasmMemoryArgumentInstructionRead(
     Buffer* buffer,
-    WasmLoadStoreInstruction* result
+    WasmMemoryArgumentInstruction* result
 ) {
     U32 align = 0;
     U32 offset = 0;

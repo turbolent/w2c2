@@ -503,9 +503,6 @@ main(
         if (functionsPerFile == 0) {
             functionsPerFile = reader.module->functions.count;
         }
-        if (functionsPerFile == 0) {
-            functionsPerFile = UINT32_MAX;
-        }
 
         if (!changeToOutputDirectory(outputPath)) {
             return 1;

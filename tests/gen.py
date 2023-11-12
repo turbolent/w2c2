@@ -200,7 +200,7 @@ def gen(paths):
     for wast_path in paths:
         print(wast_path)
 
-        wast2json_opts = []
+        wast2json_opts = ['--enable-threads']
 
         if has_new_wabt:
             if wast_path not in memory_files:
