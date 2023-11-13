@@ -689,11 +689,11 @@ load_data(
 
 /* DEFINE_LOAD */
 
-#define DEFINE_LOAD(name, t1, t2, t3)                        \
-    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
-        t1 result;                                           \
-        memcpy(&result, &mem->data[addr], sizeof(t1));       \
-        return (t3)(t2)result;                               \
+#define DEFINE_LOAD(name, t1, t2, t3)                       \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        memcpy(&result, &mem->data[addr], sizeof(t1));      \
+        return (t3)(t2)result;                              \
     }
 
 /* DEFINE_LOAD8 */
@@ -708,12 +708,12 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_LOAD16(name, t1, t2, t3)                      \
-    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
-        t1 result;                                           \
-        U16 v = readSwap16(mem->data, addr);                 \
-        memcpy(&result, &v, sizeof(U16));                    \
-        return (t3)(t2)result;                               \
+#define DEFINE_LOAD16(name, t1, t2, t3)                     \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        U16 v = readSwap16(mem->data, addr);                \
+        memcpy(&result, &v, sizeof(U16));                   \
+        return (t3)(t2)result;                              \
     }
 
 #endif
@@ -726,12 +726,12 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_LOAD32(name, t1, t2, t3)                      \
-    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
-        t1 result;                                           \
-        U32 v = readSwap32(mem->data, addr);                 \
-        memcpy(&result, &v, sizeof(U32));                    \
-        return (t3)(t2)result;                               \
+#define DEFINE_LOAD32(name, t1, t2, t3)                     \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        U32 v = readSwap32(mem->data, addr);                \
+        memcpy(&result, &v, sizeof(U32));                   \
+        return (t3)(t2)result;                              \
     }
 
 #endif
@@ -744,22 +744,22 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_LOAD64(name, t1, t2, t3)                      \
-    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) {  \
-        t1 result;                                           \
-        U64 v = readSwap64(mem->data, addr);                 \
-        memcpy(&result, &v, sizeof(U64));                    \
-        return (t3)(t2)result;                               \
+#define DEFINE_LOAD64(name, t1, t2, t3)                     \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        U64 v = readSwap64(mem->data, addr);                \
+        memcpy(&result, &v, sizeof(U64));                   \
+        return (t3)(t2)result;                              \
     }
 
 #endif
 
 /* DEFINE_STORE */
 
-#define DEFINE_STORE(name, t1, t2)                                       \
-    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
-        t1 wrapped = (t1)value;                                          \
-        memcpy(&mem->data[addr], &wrapped, sizeof(t1));                  \
+#define DEFINE_STORE(name, t1, t2)                                      \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        memcpy(&mem->data[addr], &wrapped, sizeof(t1));                 \
     }
 
 /* DEFINE_STORE8 */
@@ -774,12 +774,12 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_STORE16(name, t1, t2)                                     \
-    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
-        t1 wrapped = (t1)value;                                          \
-        U16 v;                                                           \
-        memcpy(&v, &wrapped, sizeof(U16));                               \
-        writeSwap16(mem->data, addr, v);                                 \
+#define DEFINE_STORE16(name, t1, t2)                                    \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        U16 v;                                                          \
+        memcpy(&v, &wrapped, sizeof(U16));                              \
+        writeSwap16(mem->data, addr, v);                                \
     }
 
 #endif
@@ -792,12 +792,12 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_STORE32(name, t1, t2)                                     \
-    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
-        t1 wrapped = (t1)value;                                          \
-        U32 v;                                                           \
-        memcpy(&v, &wrapped, sizeof(U32));                               \
-        writeSwap32(mem->data, addr, v);                                 \
+#define DEFINE_STORE32(name, t1, t2)                                    \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        U32 v;                                                          \
+        memcpy(&v, &wrapped, sizeof(U32));                              \
+        writeSwap32(mem->data, addr, v);                                \
     }
 
 #endif
@@ -810,12 +810,12 @@ load_data(
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_STORE64(name, t1, t2)                                     \
-    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) {  \
-        t1 wrapped = (t1)value;                                          \
-        U64 v;                                                           \
-        memcpy(&v, &wrapped, sizeof(U64));                               \
-        writeSwap64(mem->data, addr, v);                                 \
+#define DEFINE_STORE64(name, t1, t2)                                    \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        U64 v;                                                          \
+        memcpy(&v, &wrapped, sizeof(U64));                              \
+        writeSwap64(mem->data, addr, v);                                \
     }
 
 #endif
@@ -851,12 +851,12 @@ DEFINE_STORE32(i64_store32, U32, U64)
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_SWAP(size, suffix, type)                 \
-    static W2C2_INLINE void swap_ ## suffix(type* v) {  \
-        U ## size tmp;                                  \
-        memcpy(&tmp, v, size / 8);                      \
-        tmp = swap ## size(tmp);                        \
-        memcpy(v, &tmp, size / 8);                      \
+#define DEFINE_SWAP(size, suffix, type)                \
+    static W2C2_INLINE void swap_ ## suffix(type* v) { \
+        U ## size tmp;                                 \
+        memcpy(&tmp, v, size / 8);                     \
+        tmp = swap ## size(tmp);                       \
+        memcpy(v, &tmp, size / 8);                     \
     }
 
 #endif
@@ -913,8 +913,6 @@ wasmTableFree(
 }
 #endif
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-
 #if defined(_MSC_VER)
 
 #include <intrin.h>
@@ -928,6 +926,31 @@ wasmTableFree(
 #define atomic_store_U16(a, v) _InterlockedExchange16(a, v)
 #define atomic_store_U32(a, v) _InterlockedExchange(a, v)
 #define atomic_store_U64(a, v) _InterlockedExchange64(a, v)
+
+#define atomic_fence() _ReadWriteBarrier()
+
+#else
+
+// Use gcc/clang/icc intrinsics
+#define atomic_load_U8(a) __atomic_load_n((U8*)(a), __ATOMIC_SEQ_CST)
+#define atomic_load_U16(a) __atomic_load_n((U16*)(a), __ATOMIC_SEQ_CST)
+#define atomic_load_U32(a) __atomic_load_n((U32*)(a), __ATOMIC_SEQ_CST)
+#define atomic_load_U64(a) __atomic_load_n((U64*)(a), __ATOMIC_SEQ_CST)
+
+#define atomic_store_U8(a, v) __atomic_store_n((U8*)(a), v, __ATOMIC_SEQ_CST)
+#define atomic_store_U16(a, v) __atomic_store_n((U16*)(a), v, __ATOMIC_SEQ_CST)
+#define atomic_store_U32(a, v) __atomic_store_n((U32*)(a), v, __ATOMIC_SEQ_CST)
+#define atomic_store_U64(a, v) __atomic_store_n((U64*)(a), v, __ATOMIC_SEQ_CST)
+
+#define atomic_fence() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+
+#endif
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#if defined(_MSC_VER)
+
+#include <intrin.h>
 
 #define atomic_add_U8(a, v) _InterlockedExchangeAdd8(a, v)
 #define atomic_add_U16(a, v) _InterlockedExchangeAdd16(a, v)
@@ -959,25 +982,18 @@ wasmTableFree(
 #define atomic_exchange_U32(a, v) _InterlockedExchange(a, v)
 #define atomic_exchange_U64(a, v) _InterlockedExchange64(a, v)
 
-#define atomic_compare_exchange_U8(a, expected_ptr, desired) _InterlockedCompareExchange8(a, desired, *(expected_ptr))
-#define atomic_compare_exchange_U16(a, expected_ptr, desired) _InterlockedCompareExchange16(a, desired, *(expected_ptr))
-#define atomic_compare_exchange_U32(a, expected_ptr, desired) _InterlockedCompareExchange(a, desired, *(expected_ptr))
-#define atomic_compare_exchange_U64(a, expected_ptr, desired) _InterlockedCompareExchange64(a, desired, *(expected_ptr))
-
-#define atomic_fence() _ReadWriteBarrier()
+#define atomic_compare_exchange_U8(a, expected_ptr, desired) \
+    _InterlockedCompareExchange8(a, desired, *(expected_ptr))
+#define atomic_compare_exchange_U16(a, expected_ptr, desired) \
+    _InterlockedCompareExchange16(a, desired, *(expected_ptr))
+#define atomic_compare_exchange_U32(a, expected_ptr, desired) \
+    _InterlockedCompareExchange(a, desired, *(expected_ptr))
+#define atomic_compare_exchange_U64(a, expected_ptr, desired) \
+    _InterlockedCompareExchange64(a, desired, *(expected_ptr))
 
 #else
 
 // Use gcc/clang/icc intrinsics
-#define atomic_load_U8(a) __atomic_load_n((U8*)(a), __ATOMIC_SEQ_CST)
-#define atomic_load_U16(a) __atomic_load_n((U16*)(a), __ATOMIC_SEQ_CST)
-#define atomic_load_U32(a) __atomic_load_n((U32*)(a), __ATOMIC_SEQ_CST)
-#define atomic_load_U64(a) __atomic_load_n((U64*)(a), __ATOMIC_SEQ_CST)
-
-#define atomic_store_U8(a, v) __atomic_store_n((U8*)(a), v, __ATOMIC_SEQ_CST)
-#define atomic_store_U16(a, v) __atomic_store_n((U16*)(a), v, __ATOMIC_SEQ_CST)
-#define atomic_store_U32(a, v) __atomic_store_n((U32*)(a), v, __ATOMIC_SEQ_CST)
-#define atomic_store_U64(a, v) __atomic_store_n((U64*)(a), v, __ATOMIC_SEQ_CST)
 
 #define atomic_add_U8(a, v) __atomic_fetch_add((U8*)(a), v, __ATOMIC_SEQ_CST)
 #define atomic_add_U16(a, v) __atomic_fetch_add((U16*)(a), v, __ATOMIC_SEQ_CST)
@@ -1004,67 +1020,162 @@ wasmTableFree(
 #define atomic_xor_U32(a, v) __atomic_fetch_xor((U32*)(a), v, __ATOMIC_SEQ_CST)
 #define atomic_xor_U64(a, v) __atomic_fetch_xor((U64*)(a), v, __ATOMIC_SEQ_CST)
 
-// clang-format off
 #define atomic_exchange_U8(a, v) __atomic_exchange_n((U8*)(a), v, __ATOMIC_SEQ_CST)
 #define atomic_exchange_U16(a, v) __atomic_exchange_n((U16*)(a), v, __ATOMIC_SEQ_CST)
 #define atomic_exchange_U32(a, v) __atomic_exchange_n((U32*)(a), v, __ATOMIC_SEQ_CST)
 #define atomic_exchange_U64(a, v) __atomic_exchange_n((U64*)(a), v, __ATOMIC_SEQ_CST)
-// clang-format on
 
 #define __atomic_compare_exchange_helper(a, expected_ptr, desired)        \
   (__atomic_compare_exchange_n(a, expected_ptr, desired, 0 /* is_weak */, \
                                __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST),       \
    *(expected_ptr))
 
-#define atomic_compare_exchange_U8(a, expected_ptr, desired) __atomic_compare_exchange_helper((U8*)(a), expected_ptr, desired)
-#define atomic_compare_exchange_U16(a, expected_ptr, desired) __atomic_compare_exchange_helper((U16*)(a), expected_ptr, desired)
-#define atomic_compare_exchange_U32(a, expected_ptr, desired) __atomic_compare_exchange_helper((U32*)(a), expected_ptr, desired)
-#define atomic_compare_exchange_U64(a, expected_ptr, desired) __atomic_compare_exchange_helper((U64*)(a), expected_ptr, desired)
+#define atomic_compare_exchange_U8(a, expected_ptr, desired) \
+    __atomic_compare_exchange_helper((U8*)(a), expected_ptr, desired)
+#define atomic_compare_exchange_U16(a, expected_ptr, desired) \
+    __atomic_compare_exchange_helper((U16*)(a), expected_ptr, desired)
+#define atomic_compare_exchange_U32(a, expected_ptr, desired) \
+    __atomic_compare_exchange_helper((U32*)(a), expected_ptr, desired)
+#define atomic_compare_exchange_U64(a, expected_ptr, desired) \
+    __atomic_compare_exchange_helper((U64*)(a), expected_ptr, desired)
 
-#define atomic_fence() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#endif
 
 #endif
 
 #define DEFINE_ATOMIC_LOAD(name, t1, t2, t3)                \
     static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
         t1 result;                                          \
-        memcpy(&result, &mem->data[addr], sizeof(t1));      \
         result = atomic_load_##t1(&mem->data[addr]);        \
         return (t3)(t2)result;                              \
     }
 
-#define DEFINE_ATOMIC_STORE(name, t1, t2)                          \
-    static inline void name(wasmMemory* mem, U64 addr, t2 value) { \
-        t1 wrapped = (t1)value;                                    \
-        atomic_store_##t1(&mem->data[addr], wrapped);              \
-    }
+/* DEFINE_ATOMIC_LOAD8 */
 
+#define DEFINE_ATOMIC_LOAD8(name, t1, t2, t3) DEFINE_ATOMIC_LOAD(name, t1, t2, t3)
 
-#define DEFINE_ATOMIC_RMW(name, op, t1, t2)                        \
-    static inline t2 name(wasmMemory* mem, U64 addr, t2 value) {   \
-        t1 wrapped = (t1)value;                                    \
-        t1 ret = atomic_##op##_##t1(&mem->data[addr], wrapped);    \
-        return (t2)ret;                                            \
-    }
+/* DEFINE_ATOMIC_LOAD16 */
 
-#define DEFINE_ATOMIC_CMP_XCHG(name, t1, t2)                                             \
-    static W2C2_INLINE t1 name(wasmMemory* mem, U64 addr, t1 expected, t1 replacement) { \
-        t2 expected_wrapped = (t2)expected;                                              \
-        t2 replacement_wrapped = (t2)replacement;                                        \
-        t2 old = atomic_compare_exchange_##t2(&mem->data[addr], &expected_wrapped,       \
-                                              replacement_wrapped);                      \
-        return (t1)old;                                                                  \
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD16(name, t1, t2, t3) DEFINE_ATOMIC_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD16(name, t1, t2, t3)              \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        result = atomic_load_##t1(&mem->data[addr]);        \
+        result = swap16(result);                            \
+        return (t3)(t2)result;                              \
     }
 
 #endif
 
-DEFINE_ATOMIC_LOAD(i32_atomic_load, U32, U32, U32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load, U64, U64, U64)
-DEFINE_ATOMIC_LOAD(i32_atomic_load8_u, U8, U32, U32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load8_u, U8, U64, U64)
-DEFINE_ATOMIC_LOAD(i32_atomic_load16_u, U16, U32, U32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load16_u, U16, U64, U64)
-DEFINE_ATOMIC_LOAD(i64_atomic_load32_u, U32, U64, U64)
+/* DEFINE_ATOMIC_LOAD32 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD32(name, t1, t2, t3) DEFINE_ATOMIC_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD32(name, t1, t2, t3)              \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        result = atomic_load_##t1(&mem->data[addr]);        \
+        result = swap32(result);                            \
+        return (t3)(t2)result;                              \
+    }
+
+#endif
+
+/* DEFINE_ATOMIC_LOAD64 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD64(name, t1, t2, t3) DEFINE_ATOMIC_LOAD(name, t1, t2, t3)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_LOAD64(name, t1, t2, t3)              \
+    static W2C2_INLINE t3 name(wasmMemory* mem, U64 addr) { \
+        t1 result;                                          \
+        result = atomic_load_##t1(&mem->data[addr]);        \
+        result = swap32(result);                            \
+        return (t3)(t2)result;                              \
+    }
+
+#endif
+
+DEFINE_ATOMIC_LOAD8(i32_atomic_load8_u, U8, U32, U32)
+DEFINE_ATOMIC_LOAD8(i64_atomic_load8_u, U8, U64, U64)
+DEFINE_ATOMIC_LOAD16(i32_atomic_load16_u, U16, U32, U32)
+DEFINE_ATOMIC_LOAD16(i64_atomic_load16_u, U16, U64, U64)
+DEFINE_ATOMIC_LOAD32(i64_atomic_load32_u, U32, U64, U64)
+DEFINE_ATOMIC_LOAD32(i32_atomic_load, U32, U32, U32)
+DEFINE_ATOMIC_LOAD64(i64_atomic_load, U64, U64, U64)
+
+#define DEFINE_ATOMIC_STORE(name, t1, t2)                               \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        atomic_store_##t1(&mem->data[addr], wrapped);                   \
+    }
+
+/* DEFINE_ATOMIC_STORE8 */
+
+#define DEFINE_ATOMIC_STORE8(name, t1, t2) DEFINE_ATOMIC_STORE(name, t1, t2)
+
+/* DEFINE_ATOMIC_STORE16 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_STORE16(name, t1, t2) DEFINE_ATOMIC_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_STORE16(name, t1, t2)                             \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        wrapped = swap16(wrapped);                                      \
+        atomic_store_##t1(&mem->data[addr], wrapped);                   \
+    }
+
+#endif
+
+/* DEFINE_ATOMIC_STORE32 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_STORE32(name, t1, t2) DEFINE_ATOMIC_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_STORE32(name, t1, t2)                             \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        wrapped = swap32(wrapped);                                      \
+        atomic_store_##t1(&mem->data[addr], wrapped);                   \
+    }
+
+#endif
+
+/* DEFINE_ATOMIC_STORE64 */
+
+#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
+
+#define DEFINE_ATOMIC_STORE64(name, t1, t2) DEFINE_ATOMIC_STORE(name, t1, t2)
+
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+
+#define DEFINE_ATOMIC_STORE64(name, t1, t2)                             \
+    static W2C2_INLINE void name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                         \
+        wrapped = swap64(wrapped);                                      \
+        atomic_store_##t1(&mem->data[addr], wrapped);                   \
+    }
+
+#endif
 
 DEFINE_ATOMIC_STORE(i32_atomic_store, U32, U32)
 DEFINE_ATOMIC_STORE(i64_atomic_store, U64, U64)
@@ -1074,6 +1185,12 @@ DEFINE_ATOMIC_STORE(i64_atomic_store8, U8, U64)
 DEFINE_ATOMIC_STORE(i64_atomic_store16, U16, U64)
 DEFINE_ATOMIC_STORE(i64_atomic_store32, U32, U64)
 
+#define DEFINE_ATOMIC_RMW(name, op, t1, t2)                           \
+    static W2C2_INLINE t2 name(wasmMemory* mem, U64 addr, t2 value) { \
+        t1 wrapped = (t1)value;                                       \
+        t1 ret = atomic_##op##_##t1(&mem->data[addr], wrapped);       \
+        return (t2)ret;                                               \
+    }
 DEFINE_ATOMIC_RMW(i32_atomic_rmw8_add_u, add, U8, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw16_add_u, add, U16, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw_add, add, U32, U32)
@@ -1121,6 +1238,18 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw8_xchg_u, exchange, U8, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw16_xchg_u, exchange, U16, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw32_xchg_u, exchange, U32, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw_xchg, exchange, U64, U64)
+
+#define DEFINE_ATOMIC_CMP_XCHG(name, t1, t2)                                             \
+    static W2C2_INLINE t1 name(wasmMemory* mem, U64 addr, t1 expected, t1 replacement) { \
+        t2 expected_wrapped = (t2)expected;                                              \
+        t2 replacement_wrapped = (t2)replacement;                                        \
+        t2 old = atomic_compare_exchange_##t2(                                           \
+            &mem->data[addr],                                                            \
+            &expected_wrapped,                                                           \
+            replacement_wrapped                                                          \
+        );                                                                               \
+        return (t1)old;                                                                  \
+    }
 
 DEFINE_ATOMIC_CMP_XCHG(i32_atomic_rmw8_cmpxchg_u, U32, U8)
 DEFINE_ATOMIC_CMP_XCHG(i32_atomic_rmw16_cmpxchg_u, U32, U16)
