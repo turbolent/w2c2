@@ -5217,7 +5217,11 @@ wasmCWriteInitMemories(
                 if (pretty) {
                     fputs(indentation, file);
                 }
-                fputs("wasmMemoryAllocate(", file);
+                if (memory.shared) {
+                    fputs("WASM_MEMORY_ALLOCATE_SHARED(", file);
+                } else {
+                    fputs("wasmMemoryAllocate(", file);
+                }
                 wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
                 fprintf(file, ", %u, %u);\n", memory.min, memory.max);
             }
