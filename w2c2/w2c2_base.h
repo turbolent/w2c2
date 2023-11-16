@@ -539,7 +539,7 @@ DEFINE_REINTERPRET(i32_reinterpret_f32, F32, U32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
-#ifdef WASM_MUTEX_PTHREAD
+#ifdef WASM_MUTEX_PTHREADS
 #include <pthread.h>
 
 #define WASM_MUTEX_TYPE pthread_mutex_t
@@ -1220,7 +1220,7 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
 
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define DEFINE_ATOMIC_RMW_XCHG(name, size, t)          \
+#define DEFINE_ATOMIC_RMW_XCHG(name, size, t)                       \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t value) { \
         WASM_MUTEX_LOCK(&mem->mutex);                               \
         U ## size old = readSwapU ## size(mem->data, addr);         \

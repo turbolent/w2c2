@@ -5,6 +5,12 @@ CFLAGS ?= -I../w2c2 -O0 -g
 
 EXE =
 
+ifeq ($(OS),Windows_NT)
+# TODO: add -DWASM_MUTEX_WIN32 to CFLAGS
+else
+	CFLAGS += -DWASM_MUTEX_PTHREADS
+endif
+
 ifeq ($(TARGET),Wii)
 
 ifeq ($(strip $(DEVKITPRO)),)
