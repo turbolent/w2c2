@@ -1158,7 +1158,7 @@ DEFINE_ATOMIC_STORE(i64_atomic_store32, U32, U64)
         return (t)ret;                                                      \
     }
 
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE)
 
 #define DEFINE_ATOMIC_RMW(name, op, op2, size, t)                   \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t value) { \
@@ -1173,7 +1173,7 @@ DEFINE_ATOMIC_STORE(i64_atomic_store32, U32, U64)
 
 #endif
 
-#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE))
 DEFINE_ATOMIC_RMW(i32_atomic_rmw8_add_u, add, +, 8, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw16_add_u, add, +, 16, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw_add, add, +, 32, U32)
@@ -1220,7 +1220,7 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
 #define DEFINE_ATOMIC_RMW_XCHG(name, size, t) \
     DEFINE_ATOMIC_RMW(name, exchange, /**/, size, t)
 
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE)
 
 #define DEFINE_ATOMIC_RMW_XCHG(name, size, t)                       \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t value) { \
@@ -1234,7 +1234,7 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
 
 #endif
 
-#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE))
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw8_xchg_u, 8, U32)
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw16_xchg_u, 16, U32)
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw_xchg, 32, U32)
@@ -1258,7 +1258,7 @@ DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw_xchg, 64, U64)
         return (t)old;                                                                \
     }
 
-#elif WASM_ENDIAN == WASM_BIG_ENDIAN
+#elif WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE)
 
 #define DEFINE_ATOMIC_RMW_CMPXCHG(name, size, t)                                      \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t expected, t replacement) { \
@@ -1275,7 +1275,7 @@ DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw_xchg, 64, U64)
 
 #endif
 
-#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUTEX_TYPE))
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw8_cmpxchg_u, 8, U32)
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw16_cmpxchg_u, 16, U32)
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw_cmpxchg, 32, U32)
