@@ -28,7 +28,7 @@ jobs:
           - { target: arm,      toolchain: gcc-arm-linux-gnueabi,       cc: arm-linux-gnueabi-gcc,       qemu: qemu-arm-static,        linkAtomic: true }
           - { target: armhf,    toolchain: gcc-arm-linux-gnueabihf,     cc: arm-linux-gnueabihf-gcc,     qemu: qemu-arm-static                          }
           - { target: aarch64,  toolchain: gcc-aarch64-linux-gnu,       cc: aarch64-linux-gnu-gcc,       qemu: qemu-aarch64-static                      }
-          - { target: riscv64,  toolchain: gcc-riscv64-linux-gnu,       cc: riscv64-linux-gnu-gcc,       qemu: qemu-riscv64-static                      }
+          - { target: riscv64,  toolchain: gcc-riscv64-linux-gnu,       cc: riscv64-linux-gnu-gcc,       qemu: qemu-riscv64-static,    linkAtomic: true }
           - { target: ppc,      toolchain: gcc-powerpc-linux-gnu,       cc: powerpc-linux-gnu-gcc,       qemu: qemu-ppc-static,        linkAtomic: true }
           - { target: ppc64,    toolchain: gcc-powerpc64-linux-gnu,     cc: powerpc64-linux-gnu-gcc,     qemu: qemu-ppc64-static                        }
           - { target: s390x,    toolchain: gcc-s390x-linux-gnu,         cc: s390x-linux-gnu-gcc,         qemu: qemu-s390x-static                        }
