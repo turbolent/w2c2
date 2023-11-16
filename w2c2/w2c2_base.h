@@ -1173,6 +1173,7 @@ DEFINE_ATOMIC_STORE(i64_atomic_store32, U32, U64)
 
 #endif
 
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
 DEFINE_ATOMIC_RMW(i32_atomic_rmw8_add_u, add, +, 8, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw16_add_u, add, +, 16, U32)
 DEFINE_ATOMIC_RMW(i32_atomic_rmw_add, add, +, 32, U32)
@@ -1212,6 +1213,7 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw8_xor_u, xor, ^, 8, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw16_xor_u, xor, ^, 16, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw32_xor_u, xor, ^, 32, U64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
+#endif
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
@@ -1232,6 +1234,7 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
 
 #endif
 
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw8_xchg_u, 8, U32)
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw16_xchg_u, 16, U32)
 DEFINE_ATOMIC_RMW_XCHG(i32_atomic_rmw_xchg, 32, U32)
@@ -1239,6 +1242,7 @@ DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw8_xchg_u, 8, U64)
 DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw16_xchg_u, 16, U64)
 DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw32_xchg_u, 32, U64)
 DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw_xchg, 64, U64)
+#endif
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
@@ -1271,6 +1275,7 @@ DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw_xchg, 64, U64)
 
 #endif
 
+#if (WASM_ENDIAN == WASM_LITTLE_ENDIAN) || (WASM_ENDIAN == WASM_BIG_ENDIAN && defined(WASM_MUEX_TYPE))
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw8_cmpxchg_u, 8, U32)
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw16_cmpxchg_u, 16, U32)
 DEFINE_ATOMIC_RMW_CMPXCHG(i32_atomic_rmw_cmpxchg, 32, U32)
@@ -1278,5 +1283,6 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw8_cmpxchg_u, 8, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw16_cmpxchg_u, 16, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw32_cmpxchg_u, 32, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
+#endif
 
 #endif /* W2C2_BASE_H */
