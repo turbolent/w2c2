@@ -75,13 +75,13 @@ jobs:
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         env:
-          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
+          LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Run w2c2 tests
         env:
-          LDFLAGS: -static
+          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
           ARCH: ${{ matrix.system.target }}
         working-directory: ./tests
         shell: bash
