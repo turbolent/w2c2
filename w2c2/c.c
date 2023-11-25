@@ -5685,6 +5685,96 @@ wasmCWriteModuleDeclarations(
     wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules);
 }
 
+/* TODO: verify */
+static
+void
+wasmCWriteNewChildFunction(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool pretty,
+    const bool multipleModules
+) {
+    fprintf(
+        file,
+        "%sInstance* %sNewChild(%sInstance* self) {\n",
+        moduleName,
+        moduleName,
+        moduleName
+    );
+
+    /* TODO: clean up */
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(
+        file,
+        "%sInstance* child = (%sInstance*)calloc(1, sizeof(%sInstance));\n",
+        moduleName,
+        moduleName,
+        moduleName
+    );
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.funcExports = self->common.funcExports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.resolveImports = self->common.resolveImports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.newChild = self->common.newChild;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInitImports(child, self->common.resolveImports);\n", moduleName);
+
+    if (module->memories.count > 0) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitMemories(child, self);\n", moduleName);
+    }
+
+    if (module->tables.count > 0
+        || module->elementSegments.count > 0
+            ) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitTables(child);\n", moduleName);
+    }
+
+    if (module->globals.count > 0) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitGlobals(child);\n", moduleName);
+    }
+
+    if (module->hasStartFunction) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        wasmCWriteFileFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
+        fputs("(child);\n", file);
+    }
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("return child;\n", file);
+
+    fputs("}\n\n", file);
+}
+
+
 static
 void
 wasmCWriteInstantiateFunction(
@@ -5706,6 +5796,15 @@ wasmCWriteInstantiateFunction(
     }
     fprintf(file, "i->common.funcExports = %sFuncExports;\n", moduleName);
 
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("i->common.resolveImports = resolveImports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "i->common.newChild = (struct wasmModuleInstance* (*)(struct wasmModuleInstance*))%sNewChild;\n", moduleName);
 
     if (pretty) {
         fputs(indentation, file);
@@ -5898,6 +5997,7 @@ wasmCWriteInits(
 
     wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules);
 
+    wasmCWriteNewChildFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteInstantiateFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteFreeFunction(file, module, moduleName, pretty);
 

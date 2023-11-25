@@ -1019,6 +1019,8 @@ typedef struct wasmFuncExport {
 
 typedef struct wasmModuleInstance {
     wasmFuncExport* funcExports;
+    void* (*resolveImports)(const char* module, const char* name);
+    struct wasmModuleInstance* (*newChild)(struct wasmModuleInstance* self);
 } wasmModuleInstance;
 
 #if defined(_MSC_VER)
