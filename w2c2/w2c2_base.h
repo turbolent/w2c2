@@ -647,8 +647,8 @@ wasmMemoryAllocateShared(
 #define WASM_MEMORY_ALLOCATE_SHARED(initialPages, maxPages) \
     wasmMemoryAllocateShared(initialPages, maxPages)
 #else
-#define WASM_MEMORY_ALLOCATE_SHARED(memory, initialPages, maxPages) \
-    _Pragma ("GCC error \"Shared memory not supported. Please define a threads implementation to use (WASM_THREADS_*)\"")
+#define WASM_MEMORY_ALLOCATE_SHARED(initialPages, maxPages) \
+    (_Pragma ("GCC error \"Shared memory not supported. Please define a threads implementation to use (WASM_THREADS_*)\"") NULL)
 #endif
 
 static

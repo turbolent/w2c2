@@ -118,7 +118,7 @@ void printOK(const char* description) {
 
 static void initTest() {
     spectest_memory = wasmMemoryAllocate(1, 2);
-    spectest_shared_memory = wasmMemoryAllocateShared(1, 2);
+    spectest_shared_memory = WASM_MEMORY_ALLOCATE_SHARED(1, 2);
     wasmTableAllocate(&spectest_table, 10, 20);
 }
 
