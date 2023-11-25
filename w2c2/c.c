@@ -5511,6 +5511,11 @@ wasmCWriteModuleInstanceDeclaration(
 ) {
     fprintf(file, "typedef struct %sInstance {\n", moduleName);
 
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("wasmModuleInstance common;\n", file);
+
     wasmCWriteMemoryImports(file, module, pretty);
     wasmCWriteTableImports(file, module, pretty);
     wasmCWriteGlobalImports(file, module, pretty);
@@ -5549,7 +5554,7 @@ wasmCWriteInstantiateFunction(
 ) {
     fprintf(
         file,
-        "void %sInstantiate(%sInstance* i, void* resolve(const char* module, const char* name)) {\n",
+        "void %sInstantiate(%sInstance* i, void* resolveImports(const char* module, const char* name)) {\n",
         moduleName,
         moduleName
     );
@@ -5557,7 +5562,13 @@ wasmCWriteInstantiateFunction(
     if (pretty) {
         fputs(indentation, file);
     }
-    fprintf(file, "%sInitImports(i, resolve);\n", moduleName);
+    fprintf(file, "i->common.funcExports = %sFuncExports;\n", moduleName);
+
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInitImports(i, resolveImports);\n", moduleName);
 
     if (module->memories.count > 0) {
         if (pretty) {
@@ -5674,6 +5685,60 @@ wasmCWriteModuleHeader(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteModuleFunctionExportsArray(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool pretty,
+    const bool multipleModules
+) {
+    U32 functionExportCount = 0;
+    {
+        U32 exportIndex = 0;
+        for (; exportIndex < module->exports.count; exportIndex++) {
+            const WasmExport export = module->exports.exports[exportIndex];
+            if (export.kind == wasmExportKindFunction) {
+                functionExportCount += 1;
+            }
+        }
+    }
+
+    fprintf(
+        file,
+        "wasmFuncExport %sFuncExports[%u] = {\n",
+        moduleName,
+        functionExportCount + 1
+    );
+
+    {
+        U32 exportIndex = 0;
+        for (; exportIndex < module->exports.count; exportIndex++) {
+            const WasmExport export = module->exports.exports[exportIndex];
+            if (export.kind != wasmExportKindFunction) {
+                continue;
+            }
+
+            fputs("{(wasmFunc)", file);
+            wasmCWriteFileFunctionUse(
+                file,
+                module,
+                moduleName,
+                export.index,
+                false,
+                multipleModules
+            );
+            fprintf(file, ",\"%s\"},\n", export.name);
+        }
+    }
+
+    fputs("{NULL,NULL}\n};\n\n", file);
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteInits(
     const WasmModule* module,
     const char* moduleName,
@@ -5683,6 +5748,7 @@ wasmCWriteInits(
     const bool multipleModules
 ) {
     wasmCWriteDataSegments(file, module, dataSegmentMode, pretty);
+    MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
     MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty))
     MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules))

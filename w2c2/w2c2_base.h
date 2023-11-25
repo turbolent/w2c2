@@ -959,6 +959,14 @@ wasmTableFree(
 
 #define TF(table, index, t) ((t)((table).data[index]))
 
+typedef struct wasmFuncExport {
+    wasmFunc func;
+    char* name;
+} wasmFuncExport;
+
+typedef struct wasmModuleInstance {
+    wasmFuncExport* funcExports;
+} wasmModuleInstance;
 
 #if defined(_MSC_VER)
 
