@@ -4412,23 +4412,25 @@ wasmCWriteFunctionDeclarations(
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
 
-    U32 functionIndex = 0;
-    for (; functionIndex < functionCount; functionIndex++) {
-        const WasmFunction function = module->functions.functions[functionIndex];
+    U32 declaredFunctionIndex = 0;
+    for (; declaredFunctionIndex < functionCount; declaredFunctionIndex++) {
+        const WasmFunction function = module->functions.functions[declaredFunctionIndex];
+        const U32 moduleFunctionIndex = assertSizeU32(functionImportCount) + declaredFunctionIndex;
         wasmCWriteFileFunctionSignature(
             file,
             module,
             moduleName,
             function,
-            assertSizeU32(functionImportCount) + functionIndex,
+            moduleFunctionIndex,
             false,
             pretty,
             multipleModules
         );
-        if (debug && functionIndex < module->functionNames.length) {
-            char* functionName = module->functionNames.names[functionIndex];
+
+        if (debug && function.exportName == NULL && moduleFunctionIndex < module->functionNames.length) {
+            char* functionName = module->functionNames.names[moduleFunctionIndex];
             if (functionName != NULL) {
-                fprintf(file," __asm__(\"%s_%s\")", moduleName, functionName);
+                fprintf(file, " __asm__(\"%s_%s\")", moduleName, functionName);
             }
         }
         fputs(";\n\n", file);

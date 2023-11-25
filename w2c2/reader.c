@@ -73,8 +73,8 @@ wasmModuleReaderErrorMessage(
             return "invalid export section export name";
         case wasmModuleReaderInvalidExportSectionExportKind:
             return "invalid export section export kind";
-        case wasmModuleReaderInvalidExportSectionIndex:
-            return "invalid export section index";
+        case wasmModuleReaderInvalidExportSectionExportIndex:
+            return "invalid export section export index";
         case wasmModuleReaderInvalidGlobalSectionGlobalCount:
             return "invalid global section global count";
         case wasmModuleReaderInvalidGlobalSectionMutabilityIndicator:
@@ -1276,7 +1276,7 @@ wasmReadExport(
     /* Read export index */
     if (leb128ReadU32(&reader->buffer, &index) == 0) {
         static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidExportSectionIndex
+            wasmModuleReaderInvalidExportSectionExportIndex
         };
         *error = &wasmModuleReaderError;
         goto fail;
@@ -1307,7 +1307,7 @@ wasmReadExportSection(
     /* Read export count */
     if (leb128ReadU32(&reader->buffer, &exportCount) == 0) {
         static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidTypeSectionTypeCount
+            wasmModuleReaderInvalidExportSectionExportCount
         };
         *error = &wasmModuleReaderError;
         return;
@@ -1325,6 +1325,10 @@ wasmReadExportSection(
 
     /* Read exports */
     {
+        const size_t functionImportCount = reader->module->functionImports.length;
+        WasmFunctions functions = reader->module->functions;
+        const U32 functionCount = assertSizeU32(functionImportCount) + functions.count;
+
         U32 exportIndex = 0;
         for (; exportIndex < exportCount; exportIndex++) {
             WasmExport export = wasmEmptyExport;
@@ -1333,6 +1337,21 @@ wasmReadExportSection(
                 goto fail;
             }
             exports[exportIndex] = export;
+
+            if (export.kind == wasmExportKindFunction) {
+                if (export.index >= functionCount) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidExportSectionExportIndex
+                    };
+                    *error = &wasmModuleReaderError;
+                    goto fail;
+                }
+
+                if (export.index >= functionImportCount) {
+                    size_t functionIndex = export.index - functionImportCount;
+                    functions.functions[functionIndex].exportName = export.name;
+                }
+            }
         }
     }
 

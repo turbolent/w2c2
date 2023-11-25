@@ -39,7 +39,7 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidExportSectionExportCount,
     wasmModuleReaderInvalidExportSectionExportName,
     wasmModuleReaderInvalidExportSectionExportKind,
-    wasmModuleReaderInvalidExportSectionIndex,
+    wasmModuleReaderInvalidExportSectionExportIndex,
     wasmModuleReaderInvalidGlobalSectionGlobalCount,
     wasmModuleReaderInvalidGlobalSectionMutabilityIndicator,
     wasmModuleReaderInvalidGlobalSectionInitExpression,
