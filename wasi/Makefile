@@ -1,12 +1,19 @@
-LDFLAGS += -lm
+BUILD := release
+
+ifeq ($(OS),Windows_NT)
+	UNAME := Windows
+endif
+ifndef UNAME
+	UNAME := $(shell uname -s)
+endif
+
+WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 ifeq ($(BUILD),release)
 	CFLAGS += -O3
 else
 	CFLAGS += -g -O0
 endif
-
-WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 CFLAGS += -std=c89 $(WARNS)
 
@@ -22,6 +29,10 @@ CFLAGS += -std=c89 $(WARNS)
 # - getentropy
 # - pthreads
 FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy pthreads
+
+ifeq ($(UNAME),Linux)
+	LDFLAGS += -lm
+endif
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
