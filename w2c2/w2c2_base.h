@@ -1296,6 +1296,21 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw32_cmpxchg_u, 32, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
 #endif
 
+U32
+wasmMemoryAtomicWait(
+    wasmMemory* mem,
+    U32 address,
+    U64 expect,
+    I64 timeout,
+    bool wait64
+);
+
+U32
+wasmMemoryAtomicNotify(
+    wasmMemory *mem,
+    U32 address,
+    U32 count
+);
 
 #ifdef __cplusplus
 }

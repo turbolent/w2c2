@@ -2598,12 +2598,98 @@ wasmCWriteMemoryAtomicNotifyExpr(
         return false;
     }
 
-    /* TODO */
-    fprintf(
-        stderr,
-        "w2c2: unimplemented opcode: %s\n",
-        wasmThreadsOpcodeDescription(opcode)
-    );
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+
+        static const WasmValueType resultType = wasmValueTypeI32;
+
+        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+        MUST (wasmCWriteAssign(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
+        MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                0,
+                true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex1,
+                writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 2);
+
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryAtomicWaitExpr(
+    const WasmCFunctionWriter* writer,
+    const bool isWait64
+) {
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        static const WasmValueType resultType = wasmValueTypeI32;
+
+        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWriteStringStackName(writer->builder, stackIndex2, resultType))
+        MUST (wasmCWriteAssign(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
+        MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                0,
+                true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex2,
+                writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex1,
+                writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, isWait64 ? "true" : "false"))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+    }
 
     return true;
 }
@@ -2627,12 +2713,7 @@ wasmCWriteMemoryAtomicWait32Expr(
         return false;
     }
 
-    /* TODO */
-    fprintf(
-        stderr,
-        "w2c2: unimplemented opcode: %s\n",
-        wasmThreadsOpcodeDescription(opcode)
-    );
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, false))
 
     return true;
 }
@@ -2656,12 +2737,7 @@ wasmCWriteMemoryAtomicWait64Expr(
         return false;
     }
 
-    /* TODO */
-    fprintf(
-        stderr,
-        "w2c2: unimplemented opcode: %s\n",
-        wasmThreadsOpcodeDescription(opcode)
-    );
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, true))
 
     return true;
 }
@@ -2685,12 +2761,10 @@ wasmCWriteAtomicFenceExpr(
         return false;
     }
 
-    /* TODO: MUST (wasmCWrite(writer, "atomic_fence();\n")) */
-    fprintf(
-        stderr,
-        "w2c2: unimplemented opcode: %s\n",
-        wasmThreadsOpcodeDescription(opcode)
-    );
+    if (!writer->ignore) {
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "atomic_fence();\n"))
+    }
 
     return true;
 }
