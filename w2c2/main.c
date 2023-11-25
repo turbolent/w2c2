@@ -132,10 +132,10 @@ wasmSortedFunctionIDs(
 
     if (result.length > 1) {
         qsort(
-                result.functionIDs,
-                result.length,
-                sizeof(WasmFunctionID),
-                wasmFunctionIDsCompareHashes
+            result.functionIDs,
+            result.length,
+            sizeof(WasmFunctionID),
+            wasmFunctionIDsCompareHashes
         );
     }
 

@@ -434,7 +434,7 @@ wasiFileDescriptorsEnsureCapacity(
         size_t newCapacity = length + (descriptors->capacity >> 1U);
         void* newFileDescriptors = NULL;
         if (descriptors->fds == NULL) {
-            newFileDescriptors = calloc(newCapacity * sizeof(WasiFileDescriptor), 1);
+            newFileDescriptors = calloc(newCapacity, sizeof(WasiFileDescriptor));
         } else {
             newFileDescriptors = realloc(descriptors->fds, newCapacity * sizeof(WasiFileDescriptor));
         }
@@ -728,17 +728,17 @@ wasiFDWrite(
 
     if (wasiFD > 2) {
         WASI_TRACE((
-           "fd_write("
-           "wasiFD=%d, "
-           "ciovecsPointer=0x%x, "
-           "ciovecsCount=%d, "
-           "resultPointer=0x%x"
-           ")",
-           wasiFD,
-           ciovecsPointer,
-           ciovecsCount,
-           resultPointer
-       ));
+            "fd_write("
+            "wasiFD=%d, "
+            "ciovecsPointer=0x%x, "
+            "ciovecsCount=%d, "
+            "resultPointer=0x%x"
+            ")",
+            wasiFD,
+            ciovecsPointer,
+            ciovecsCount,
+            resultPointer
+        ));
     }
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -2275,8 +2275,7 @@ wasiFDDatasync(
         "fd_datasync("
         "wasiFD=%d, "
         ")",
-        wasiFD,
-        resultPointer
+        wasiFD
     ));
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -2324,8 +2323,7 @@ wasiFDSync(
        "fd_sync("
        "wasiFD=%d, "
        ")",
-       wasiFD,
-       resultPointer
+       wasiFD
     ));
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {

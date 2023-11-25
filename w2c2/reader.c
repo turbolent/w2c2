@@ -171,7 +171,7 @@ wasmReadValueTypes(
     WasmModuleReaderError** error
 ) {
     /* Allocate value type array */
-    WasmValueType* valueTypes = calloc(sizeof(WasmValueType) * count, 1);
+    WasmValueType* valueTypes = calloc(count, sizeof(WasmValueType));
     if (valueTypes == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -572,7 +572,7 @@ wasmReadTypeSection(
     }
 
     /* Allocate function type array */
-    functionTypes = calloc(sizeof(WasmFunctionType) * typeCount, 1);
+    functionTypes = calloc(typeCount, sizeof(WasmFunctionType));
     if (functionTypes == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1022,7 +1022,7 @@ wasmReadFunctionSection(
     }
 
     /* Allocate function array */
-    functions = calloc(sizeof(WasmFunction) * functionCount, 1);
+    functions = calloc(functionCount, sizeof(WasmFunction));
     if (functions == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1125,7 +1125,7 @@ wasmReadMemorySection(
     }
 
     /* Allocate memories array */
-    memories = calloc(sizeof(WasmMemory) * memoryCount, 1);
+    memories = calloc(memoryCount, sizeof(WasmMemory));
     if (memories == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1208,7 +1208,7 @@ wasmReadGlobalSection(
     }
 
     /* Allocate globals array */
-    globals = calloc(sizeof(WasmGlobal) * globalCount, 1);
+    globals = calloc(globalCount, sizeof(WasmGlobal));
     if (globals == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1310,7 +1310,7 @@ wasmReadExportSection(
     }
 
     /* Allocate export array */
-    exports = calloc(sizeof(WasmExport) * exportCount, 1);
+    exports = calloc(exportCount, sizeof(WasmExport));
     if (exports == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1356,7 +1356,7 @@ wasmReadCodeLocalsDeclarations(
     MUST (leb128ReadU32(&reader->buffer, &declarationCount) > 0)
 
     if (declarationCount > 0) {
-        declarations = calloc(sizeof(WasmLocalsDeclaration) * declarationCount, 1);
+        declarations = calloc(declarationCount, sizeof(WasmLocalsDeclaration));
         MUST (declarations != NULL)
 
         {
@@ -1564,7 +1564,7 @@ wasmReadDataSection(
     }
 
     /* Allocate data segment array */
-    dataSegments = calloc(sizeof(WasmDataSegment) * dataSegmentCount, 1);
+    dataSegments = calloc(dataSegmentCount, sizeof(WasmDataSegment));
     if (dataSegments == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1617,7 +1617,7 @@ wasmReadTableSection(
     }
 
     /* Allocate table segment array */
-    tables = calloc(sizeof(WasmTable) * tableCount, 1);
+    tables = calloc(tableCount, sizeof(WasmTable));
     if (tables == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1692,7 +1692,7 @@ wasmReadElementSegment(
     }
 
     /* Allocate element segment array */
-    functionIndices = calloc(sizeof(U32) * functionIndexCount, 1);
+    functionIndices = calloc(functionIndexCount, sizeof(U32));
     if (functionIndices == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1750,7 +1750,7 @@ wasmReadElementSection(
     }
 
     /* Allocate element segment array */
-    elementSegments = calloc(sizeof(WasmElementSegment) * elementSegmentCount, 1);
+    elementSegments = calloc(elementSegmentCount, sizeof(WasmElementSegment));
     if (elementSegments == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
@@ -1883,7 +1883,12 @@ wasmModuleReadSection(
         }
     }
 
-    fprintf(stderr, "w2c2: skipping unsupported %s\n", wasmSectionIDDescription(sectionID));
+    fprintf(
+        stderr,
+        "w2c2: skipping unsupported %s (%d)\n",
+        wasmSectionIDDescription(sectionID),
+        sectionID
+    );
 
     bufferSkip(&reader->buffer, sectionSize);
 
@@ -1904,7 +1909,7 @@ wasmModuleRead(
         return;
     }
 
-    module = calloc(sizeof(WasmModule), 1);
+    module = calloc(1, sizeof(WasmModule));
     if (module == NULL) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderAllocationFailed
