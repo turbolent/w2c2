@@ -55,37 +55,50 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Install QEMU
         if: ${{ matrix.system.qemu }}
         run: |
           sudo apt update
           sudo apt install qemu-user-static
+
       - name: Install ${{ matrix.system.toolchain }}
         if: ${{ matrix.system.toolchain }}
         run: |
           sudo apt install ${{ matrix.system.toolchain }}
+
       - uses: dorny/paths-filter@v2
         id: changes
         with:
           filters: |
             w2c2:
               - 'w2c2/**'
+              - 'futex/**'
+              - 'tests/**'
             wasi:
               - 'wasi/**'
+
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         env:
           LDFLAGS: -static
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+
       - if: steps.changes.outputs.w2c2 == 'true'
-        name: Run w2c2 tests
+        name: Build futex
+        working-directory: ./futex
+        run: make BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Run WebAssembly tests
         env:
           LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
           ARCH: ${{ matrix.system.target }}
         working-directory: ./tests
         shell: bash
         run: make run-tests
+
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
@@ -103,85 +116,40 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - uses: dorny/paths-filter@v2
         id: changes
         with:
           filters: |
             w2c2:
               - 'w2c2/**'
+              - 'futex/**'
+              - 'tests/**'
             wasi:
               - 'wasi/**'
+
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
         run: make BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+
       - if: steps.changes.outputs.w2c2 == 'true'
-        name: Run tests
-        working-directory: ./tests
-        shell: bash
+        name: Build futex
+        working-directory: ./futex
+        run: make BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Run WebAssembly tests
         env:
           ARCH: ${{ matrix.system.target }}
+        working-directory: ./tests
+        shell: bash
         run: make run-tests
+
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat"
-
-# Disabled due to sqrt issues
-#
-#     windows-mingw:
-#         runs-on: windows-latest
-#         name: "Windows (mingw), ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
-#
-#         strategy:
-#           fail-fast: false
-#           matrix:
-#             build: [release, debug]
-#             threads: [true, false]
-#             system:
-#               - { target: mingw64, env: x86_64 }
-#               - { target: mingw32, env: i686   }
-#
-#         defaults:
-#           run:
-#             shell: msys2 {0}
-#
-#         env:
-#           CC: gcc
-#
-#         steps:
-#           - uses: actions/checkout@v3
-#           - uses: msys2/setup-msys2@v2
-#             with:
-#               msystem: ${{ matrix.system.target }}
-#               install: >-
-#                 make
-#                 gcc
-#           - uses: dorny/paths-filter@v2
-#             id: changes
-#             with:
-#               filters: |
-#                 w2c2:
-#                   - 'w2c2/**'
-#                 wasi:
-#                   - 'wasi/**'
-#           - if: steps.changes.outputs.w2c2 == 'true'
-#             name: Build w2c2
-#             env:
-#               LDFLAGS: -static
-#             working-directory: ./w2c2
-#             run: make BUILD=${{ matrix.build }} FEATURES="getopt ${{ matrix.threads && 'threads' || '' }}"
-#           - if: steps.changes.outputs.w2c2 == 'true'
-#             name: Run tests
-#             working-directory: ./tests
-#             shell: bash
-#             env:
-#               ARCH: ${{ matrix.system.target }}
-#             run: make run-tests
-#           - if: steps.changes.outputs.wasi == 'true'
-#             name: Build wasi
-#             working-directory: ./wasi
-#             run: make BUILD=${{ matrix.build }}
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
 
   windows-msvc:
     runs-on: windows-2019
@@ -197,13 +165,14 @@ jobs:
               - 'w2c2/**'
             wasi:
               - 'wasi/**'
+
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
         run: |
           cmake -Bbuild
           cmake --build build
-      # TODO: run tests
+
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
