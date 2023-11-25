@@ -91,6 +91,8 @@ wasmModuleReaderErrorMessage(
             return "invalid limit maximum";
         case wasmModuleReaderInvalidDataSectionDataSegmentCount:
             return "invalid data section data segment count";
+        case wasmModuleReaderInvalidDataSectionKind:
+            return "invalid data section kind";
         case wasmModuleReaderInvalidDataSectionMemoryIndex:
             return "invalid data section memory index";
         case wasmModuleReaderInvalidDataSectionOffsetExpression:
@@ -1506,29 +1508,67 @@ wasmReadDataSegment(
     WasmDataSegment* result,
     WasmModuleReaderError** error
 ) {
+    U8 kind = 0;
+    bool readMemoryIndex = false;
+    bool readOffsetExpression = false;
     U32 memoryIndex = 0;
-    Buffer offset;
+    Buffer offset = {NULL, 0};
     Buffer bytes = {NULL, 0};
 
-    /* Read memory index */
-    if (leb128ReadU32(&reader->buffer, &memoryIndex) == 0) {
+    if (!bufferReadByte(&reader->buffer, &kind)) {
         static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidDataSectionMemoryIndex
+            wasmModuleReaderInvalidDataSectionKind
         };
         *error = &wasmModuleReaderError;
         return;
+    }
+
+    switch (kind) {
+        case 0x0: {
+            readMemoryIndex = false;
+            readOffsetExpression = true;
+            break;
+        }
+        case 0x1:
+            readMemoryIndex = false;
+            readOffsetExpression = false;
+            break;
+        case 0x2:
+            readMemoryIndex = true;
+            readOffsetExpression = true;
+            break;
+        default: {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidDataSectionKind
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+    }
+
+    /* Read memory index */
+    if (readMemoryIndex) {
+        if (leb128ReadU32(&reader->buffer, &memoryIndex) == 0) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidDataSectionMemoryIndex
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
     }
 
     /* Read offset expression */
-    offset = reader->buffer;
-    if (!wasmReadConstantExpr(&reader->buffer)) {
-        static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidDataSectionOffsetExpression
-        };
-        *error = &wasmModuleReaderError;
-        return;
+    if (readOffsetExpression) {
+        offset = reader->buffer;
+        if (!wasmReadConstantExpr(&reader->buffer)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidDataSectionOffsetExpression
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+        offset.length -= reader->buffer.length;
     }
-    offset.length -= reader->buffer.length;
 
     /* Read bytes */
     if (!wasmReadBytes(&reader->buffer, &bytes)) {

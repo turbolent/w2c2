@@ -48,6 +48,7 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidLimitMinimum,
     wasmModuleReaderInvalidLimitMaximum,
     wasmModuleReaderInvalidDataSectionDataSegmentCount,
+    wasmModuleReaderInvalidDataSectionKind,
     wasmModuleReaderInvalidDataSectionMemoryIndex,
     wasmModuleReaderInvalidDataSectionOffsetExpression,
     wasmModuleReaderInvalidDataSectionBytes,
