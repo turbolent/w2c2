@@ -576,8 +576,8 @@ wasmCondRelativeWait(
 ) {
     struct timespec absoluteTimeout;
     clock_gettime(CLOCK_REALTIME, &absoluteTimeout);
-    absoluteTimeout.tv_sec += relativeTimeout / (U64)NS_PER_S;
-    absoluteTimeout.tv_nsec += relativeTimeout % (U64)NS_PER_S;
+    absoluteTimeout.tv_sec += relativeTimeout / NS_PER_S;
+    absoluteTimeout.tv_nsec += relativeTimeout % NS_PER_S;
     if (absoluteTimeout.tv_nsec >= NS_PER_S) {
         absoluteTimeout.tv_nsec -= NS_PER_S;
         absoluteTimeout.tv_sec++;

@@ -91,7 +91,7 @@ wasmMemoryAtomicWait(
         if (!wait) {
             WASM_MUTEX_UNLOCK(mutex);
             trap(trapAllocationFailed);
-            return -1;
+            return (U32)-1;
         }
 
         wait->status = waitStatusWaiting;
@@ -100,7 +100,7 @@ wasmMemoryAtomicWait(
             WASM_MUTEX_UNLOCK(mutex);
             free(wait);
             trap(trapAllocationFailed);
-            return -1;
+            return (U32)-1;
         }
 
         /* Insert wait into futex map */
@@ -113,7 +113,7 @@ wasmMemoryAtomicWait(
                 WASM_MUTEX_UNLOCK(mutex);
                 waitFree(wait);
                 trap(trapAllocationFailed);
-                return -1;
+                return (U32)-1;
             }
             mapInitialize(futexMap, FUTEX_BUCKET_COUNT);
             mem->futex = futexMap;
@@ -128,7 +128,7 @@ wasmMemoryAtomicWait(
                 WASM_MUTEX_UNLOCK(mutex);
                 waitFree(wait);
                 trap(trapAllocationFailed);
-                return -1;
+                return (U32)-1;
             }
         }
 
