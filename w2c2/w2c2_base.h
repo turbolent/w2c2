@@ -11,6 +11,8 @@
 
 #include <assert.h>
 
+#include <errno.h>
+
 #ifdef __cplusplus
 extern "C" {
 #else
@@ -248,7 +250,8 @@ typedef enum Trap {
     trapUnreachable,
     trapDivByZero,
     trapIntOverflow,
-    trapInvalidConversion
+    trapInvalidConversion,
+    trapAllocationFailed
 } Trap;
 
 static
@@ -266,6 +269,8 @@ trapDescription(
             return "int overflow";
         case trapInvalidConversion:
             return "invalid conversion";
+        case trapAllocationFailed:
+            return "allocation failed";
         default:
             return "unknown";
     }
@@ -539,14 +544,46 @@ DEFINE_REINTERPRET(i32_reinterpret_f32, F32, U32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
-#ifdef WASM_MUTEX_PTHREADS
+#ifdef WASM_THREADS_PTHREADS
 #include <pthread.h>
 
+#define WASM_THREAD_TYPE pthread_t
+#define WASM_THREAD_CREATE(thread, func, arg) (pthread_create(thread, NULL, func, arg) == 0)
+
 #define WASM_MUTEX_TYPE pthread_mutex_t
-#define WASM_MUTEX_INIT(mutex) pthread_mutex_init(mutex, NULL)
+#define WASM_MUTEX_INIT(mutex) (pthread_mutex_init(mutex, NULL) == 0)
 #define WASM_MUTEX_FREE(mutex) pthread_mutex_destroy(mutex)
 #define WASM_MUTEX_LOCK(mutex) pthread_mutex_lock(mutex)
 #define WASM_MUTEX_UNLOCK(mutex) pthread_mutex_unlock(mutex)
+
+#define WASM_COND_TYPE pthread_cond_t
+#define WASM_COND_INIT(cond) (pthread_cond_init(cond, NULL) == 0)
+#define WASM_COND_FREE(cond) pthread_cond_destroy(cond)
+#define WASM_COND_WAIT(cond, mutex) pthread_cond_wait(cond, mutex)
+#define WASM_COND_RELATIVE_WAIT(cond, signal, timeout) wasmCondRelativeWait(cond, signal, timeout)
+#define WASM_COND_SIGNAL(cond) pthread_cond_signal(cond)
+
+#define NS_PER_S 1000000000
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmCondRelativeWait(
+        WASM_COND_TYPE* cond,
+        WASM_MUTEX_TYPE* mutex,
+        I64 relativeTimeout
+) {
+    struct timespec absoluteTimeout;
+    clock_gettime(CLOCK_REALTIME, &absoluteTimeout);
+    absoluteTimeout.tv_sec += relativeTimeout / (U64)NS_PER_S;
+    absoluteTimeout.tv_nsec += relativeTimeout % (U64)NS_PER_S;
+    if (absoluteTimeout.tv_nsec >= NS_PER_S) {
+        absoluteTimeout.tv_nsec -= NS_PER_S;
+        absoluteTimeout.tv_sec++;
+    }
+    return pthread_cond_timedwait(cond, mutex, &absoluteTimeout) != ETIMEDOUT;
+}
 
 #endif
 
@@ -556,6 +593,8 @@ typedef struct wasmMemory {
     U32 pages;
     U32 maxPages;
     bool shared;
+    void* futex;
+    void (*futexFree)(void* futex);
 #ifdef WASM_MUTEX_TYPE
     WASM_MUTEX_TYPE mutex;
 #endif
@@ -580,6 +619,8 @@ wasmMemoryAllocate(
     memory->pages = initialPages;
     memory->maxPages = maxPages;
     memory->shared = false;
+    memory->futex = NULL;
+    memory->futexFree = NULL;
     return memory;
 }
 
@@ -607,7 +648,7 @@ wasmMemoryAllocateShared(
     wasmMemoryAllocateShared(initialPages, maxPages)
 #else
 #define WASM_MEMORY_ALLOCATE_SHARED(memory, initialPages, maxPages) \
-    _Pragma ("GCC error \"Shared memory not supported. Please define a mutex implementation to use (WASM_MUTEX_*)\"")
+    _Pragma ("GCC error \"Shared memory not supported. Please define a threads implementation to use (WASM_THREADS_*)\"")
 #endif
 
 static
@@ -626,6 +667,12 @@ wasmMemoryFree(
         WASM_MUTEX_FREE(&memory->mutex);
     }
 #endif
+
+    if (memory->futexFree) {
+        memory->futexFree(memory->futex);
+    }
+    memory->futex = NULL;
+    memory->futexFree = NULL;
 }
 
 static
