@@ -959,9 +959,6 @@ wasmTableFree(
 
 #define TF(table, index, t) ((t)((table).data[index]))
 
-#ifdef __cplusplus
-}
-#endif
 
 #if defined(_MSC_VER)
 
@@ -1283,6 +1280,11 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw8_cmpxchg_u, 8, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw16_cmpxchg_u, 16, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw32_cmpxchg_u, 32, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
+#endif
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* W2C2_BASE_H */
