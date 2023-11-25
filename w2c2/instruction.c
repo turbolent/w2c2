@@ -190,3 +190,23 @@ wasmMemoryCopyInstructionRead(
 
     return true;
 }
+
+/* WasmMemoryInitInstruction */
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryInitInstructionRead(
+    Buffer* buffer,
+    WasmMemoryInitInstruction* result
+) {
+    U32 dataSegmentIndex = 0;
+    U32 memoryIndex = 0;
+
+    MUST (leb128ReadU32(buffer, &dataSegmentIndex) > 0)
+    MUST (leb128ReadU32(buffer, &memoryIndex) > 0)
+
+    result->dataSegmentIndex = dataSegmentIndex;
+    result->memoryIndex = memoryIndex;
+
+    return true;
+}

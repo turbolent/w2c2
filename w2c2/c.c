@@ -224,24 +224,25 @@ wasmCWriteFileMemoryUse(
     FILE* file,
     const WasmModule* module,
     const U32 memoryIndex,
+    const char *variableName,
     const bool reference
 ) {
+    if (variableName == NULL) {
+        variableName = "i";
+    }
+
+    if (!reference) {
+        fputs("(*", file);
+    }
+    fprintf(file, "%s->", variableName);
     if (memoryIndex < module->memoryImports.length) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        if (!reference) {
-            fputs("(*", file);
-        }
-        fputs("i->", file);
         wasmCWriteFileImportName(file, import.module, import.name);
-        if (!reference) {
-            fputc(')', file);
-        }
     } else {
-        if (reference) {
-            fputc('&', file);
-        }
-        fputs("i->", file);
         wasmCWriteFileMemoryNonImportName(file, memoryIndex);
+    }
+    if (!reference) {
+        fputc(')', file);
     }
 }
 
@@ -255,25 +256,21 @@ wasmCWriteStringMemoryUse(
     const U32 memoryIndex,
     const bool reference
 ) {
+    if (!reference) {
+        MUST (stringBuilderAppend(builder, "(*"))
+    }
+    MUST (stringBuilderAppend(builder, "i->"))
     if (memoryIndex < module->memoryImports.length) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        if (!reference) {
-            MUST (stringBuilderAppend(builder, "(*"))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
         MUST (wasmCWriteStringEscaped(builder, import.module))
         MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
         MUST (wasmCWriteStringEscaped(builder, import.name))
-        if (!reference) {
-            MUST (stringBuilderAppendChar(builder, ')'))
-        }
     } else {
-        if (reference) {
-            MUST (stringBuilderAppendChar(builder, '&'))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
         MUST (stringBuilderAppendChar(builder, memoryNamePrefix))
         MUST (stringBuilderAppendU32(builder, memoryIndex))
+    }
+    if (!reference) {
+        MUST (stringBuilderAppendChar(builder, ')'))
     }
     return true;
 }
@@ -349,6 +346,7 @@ wasmCWriteStringTableUse(
     return true;
 }
 
+/* TODO: add support for multiple modules */
 static
 W2C2_INLINE
 void
@@ -358,6 +356,19 @@ wasmCWriteFileDataSegmentName(
 ) {
     fputc(dataSegmentNamePrefix, file);
     fprintf(file, "%u", dataSegmentIndex);
+}
+
+/* TODO: add support for multiple modules */
+static
+W2C2_INLINE
+bool
+wasmCWriteStringDataSegmentName(
+    StringBuilder* builder,
+    const U32 dataSegmentIndex
+) {
+    MUST (stringBuilderAppendChar(builder, dataSegmentNamePrefix))
+    MUST (stringBuilderAppendU32(builder, dataSegmentIndex))
+    return true;
 }
 
 static
@@ -1498,6 +1509,60 @@ wasmCWriteMemoryGrowExpr(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteMemoryInitExpr(
+    const WasmCFunctionWriter* writer
+) {
+    WasmMemoryInitInstruction instruction;
+    if (!wasmMemoryInitInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid memory.init instruction encoding\n");
+        return false;
+    }
+
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "LOAD_DATA("))
+        MUST (wasmCWriteStringMemoryUse(
+            writer->builder,
+            writer->module,
+            instruction.memoryIndex,
+            false
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex2,
+            writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        /* TODO: add support for multiple modules */
+        MUST (wasmCWriteStringDataSegmentName(writer->builder, instruction.dataSegmentIndex))
+        MUST (wasmCWriteChar(writer, '+'))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex1,
+            writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex0,
+            writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteMemoryCopyExpr(
     const WasmCFunctionWriter* writer
 ) {
@@ -1537,7 +1602,7 @@ wasmCWriteMemoryCopyExpr(
         const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "wasmMemoryCopy(\n"))
+        MUST (wasmCWrite(writer, "wasmMemoryCopy("))
         MUST (wasmCWriteStringMemoryUse(
             writer->builder,
             writer->module,
@@ -1609,7 +1674,7 @@ wasmCWriteMemoryFillExpr(
         const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "wasmMemoryFill(\n"))
+        MUST (wasmCWrite(writer, "wasmMemoryFill("))
         MUST (wasmCWriteStringMemoryUse(
             writer->builder,
             writer->module,
@@ -3522,19 +3587,7 @@ wasmCWriteFunctionCode(
 
                 switch (miscOpcode) {
                     case wasmMiscOpcodeMemoryInit: {
-                        /* TODO: refactor into instruction read function */
-                        U32 dataIndex = 0;
-                        U8 memoryIndex = 0;
-                        MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
-                        MUST (bufferReadByte(writer->code, &memoryIndex) > 0)
-
-                        /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
-                        );
-
+                        MUST (wasmCWriteMemoryInitExpr(writer))
                         break;
                     }
                     case wasmMiscOpcodeDataDrop: {
@@ -4922,7 +4975,7 @@ wasmCWriteMemoryExport(
             fputs(indentation, file);
         }
         fputs("return ", file);
-        wasmCWriteFileMemoryUse(file, module, export.index, true);
+        wasmCWriteFileMemoryUse(file, module, export.index, NULL, true);
         fputs(";\n}\n\n", file);
     } else {
         fputs(";\n\n", file);
@@ -4977,56 +5030,85 @@ wasmCWriteExports(
     }
 }
 
+/* TODO: add support for multiple modules */
 static
 void
-wasmCWriteDataSegmentsAsArrays(
+wasmCWriteDataSegments(
     FILE* file,
     const WasmModule* module,
+    const WasmDataSegmentMode mode,
     const bool pretty
 ) {
     const U32 dataSegmentCount = module->dataSegments.count;
 
-    U32 dataSegmentIndex = 0;
-    for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-        const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+    {
+        U32 dataSegmentIndex = 0;
+        U64 byteOffset = 0;
+        for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
+            const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
 
-        if (!dataSegment.bytes.length) {
-            continue;
-        }
+            if (!dataSegment.bytes.length) {
+                continue;
+            }
 
-        fputs("const U8 ", file);
-        wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-        if (pretty) {
-            fputs("[] = {\n", file);
-        } else {
-            fputs("[]={\n", file);
-        }
-        if (pretty) {
-            fputs(indentation, file);
-        }
-        {
-            U32 byteIndex = 0;
-            for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
-                fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
-                if (pretty) {
-                    fputs(", ", file);
-                } else {
-                    fputc(',', file);
+            switch (mode) {
+                case wasmDataSegmentModeArrays: {
+                    fputs("const U8 ", file);
+                    /* TODO: add support for multiple modules */
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    if (pretty) {
+                        fputs("[] = {\n", file);
+                    } else {
+                        fputs("[]={\n", file);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    {
+                        U32 byteIndex = 0;
+                        for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
+                            fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
+                            if (pretty) {
+                                fputs(", ", file);
+                            } else {
+                                fputc(',', file);
+                            }
+                        }
+                    }
+                    fputs("\n};\n\n", file);
+                    break;
+                }
+                case wasmDataSegmentModeGNULD:
+                case wasmDataSegmentModeSectcreate1:
+                case wasmDataSegmentModeSectcreate2: {
+                    fputs("const U8* ", file);
+                    /* TODO: add support for multiple modules */
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    if (pretty) {
+                        fprintf(file, " = ds + %llu", byteOffset);
+                    } else {
+                        fprintf(file, "=ds+%llu", byteOffset);
+                    }
+                    byteOffset += dataSegment.bytes.length;
+                    break;
+                }
+                default: {
+                    fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
+                    abort();
                 }
             }
         }
-        fputs("\n};\n\n", file);
     }
 }
 
 static
 void
-wasmCWriteDataSegmentsAsSection(
+wasmCWriteDataSegmentsFromSection(
     FILE* file,
     const WasmModule* module,
     const WasmDataSegmentMode mode
 ) {
-    static char* const filename = "datasegments";
+    static const char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
 
     U32 dataSegmentIndex = 0;
@@ -5035,10 +5117,12 @@ wasmCWriteDataSegmentsAsSection(
     switch (mode) {
         case wasmDataSegmentModeGNULD: {
             fputs("extern char _binary_datasegments_start[];\n\n", file);
+            fputs("static char* ds = _binary_datasegments_start;\n", file);
             break;
         }
         case wasmDataSegmentModeSectcreate1: {
-            fputs("extern char datasegments __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            fputs("extern char data_segments_data __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            fputs("static char* ds = &data_segments_data;\n", file);
             break;
         }
         case wasmDataSegmentModeSectcreate2: {
@@ -5055,6 +5139,11 @@ wasmCWriteDataSegmentsAsSection(
                 "#include <libc.h>\n"
                 "#define SECT_DATA_SIZE_TYPE int\n"
                 "#endif\n",
+                file
+            );
+            fputs(
+                "SECT_DATA_SIZE_TYPE len = 0;\n"
+                "static char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
                 file
             );
             break;
@@ -5102,33 +5191,6 @@ wasmCWriteDataSegmentsAsSection(
     }
 }
 
-
-static
-void
-wasmCWriteDataSegments(
-    FILE* file,
-    const WasmModule* module,
-    const WasmDataSegmentMode mode,
-    const bool pretty
-) {
-    switch (mode) {
-        case wasmDataSegmentModeArrays: {
-            wasmCWriteDataSegmentsAsArrays(file, module, pretty);
-            break;
-        }
-        case wasmDataSegmentModeGNULD:
-        case wasmDataSegmentModeSectcreate1:
-        case wasmDataSegmentModeSectcreate2: {
-            wasmCWriteDataSegmentsAsSection(file, module, mode);
-            break;
-        }
-        default: {
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
-            abort();
-        }
-    }
-}
-
 static
 void
 wasmCWriteMemoryImports(
@@ -5165,11 +5227,12 @@ wasmCWriteMemories(
 
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryCount; memoryIndex++) {
+        U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmMemory ", file);
-        wasmCWriteFileMemoryNonImportName(file, assertSizeU32(memoryImportCount) + memoryIndex);
+        fputs("wasmMemory* ", file);
+        wasmCWriteFileMemoryNonImportName(file, moduleMemoryIndex);
         fputs(";\n", file);
     }
 }
@@ -5191,55 +5254,75 @@ wasmCWriteInitMemories(
         StringBuilder stringBuilder = emptyStringBuilder;
         MUST (stringBuilderInitialize(&stringBuilder))
 
-        fprintf(file, "static void %sInitMemories(%sInstance* i) {\n", moduleName, moduleName);
-
-        switch (dataSegmentMode) {
-            case wasmDataSegmentModeGNULD: {
-                fputs("static char* ds = _binary_datasegments_start;\n", file);
-                break;
-            }
-            case wasmDataSegmentModeSectcreate1: {
-                fputs("static char* ds = &datasegments;\n", file);
-                break;
-            }
-            case wasmDataSegmentModeSectcreate2: {
-                fputs(
-                    "SECT_DATA_SIZE_TYPE len = 0;\n"
-                    "char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
-                    file
-                );
-                break;
-            }
-            default:
-                break;
-        }
+        fprintf(
+            file,
+            "static void %sInitMemories(%sInstance* i, %sInstance* parent) {\n",
+            moduleName,
+            moduleName,
+            moduleName
+        );
 
         {
             U32 memoryIndex = 0;
             for (; memoryIndex < memoryCount; memoryIndex++) {
                 const WasmMemory memory = module->memories.memories[memoryIndex];
+                U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
 
-                if (pretty) {
-                    fputs(indentation, file);
-                }
                 if (memory.shared) {
-                    fputs("WASM_MEMORY_ALLOCATE_SHARED(", file);
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("if (parent == NULL) {\n", file);
+                    {
+                        if (pretty) {
+                            fputs(indentation, file);
+                            fputs(indentation, file);
+                        }
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        fprintf(file, "= WASM_MEMORY_ALLOCATE_SHARED(%u, %u);\n", memory.min, memory.max);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("} else {\n", file);
+                    {
+                        if (pretty) {
+                            fputs(indentation, file);
+                            fputs(indentation, file);
+                        }
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        fputs(" = ", file);
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, "parent", true);
+                        fputs(";\n", file);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("}\n", file);
                 } else {
-                    fputs("wasmMemoryAllocate(", file);
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                    fprintf(file, " = wasmMemoryAllocate(%u, %u);\n", memory.min, memory.max);
                 }
-                wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
-                fprintf(file, ", %u, %u);\n", memory.min, memory.max);
             }
         }
 
         {
             const U32 dataSegmentCount = module->dataSegments.count;
-            size_t dataSegmentOffset = 0;
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
                 const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+                const size_t dataSegmentLength = dataSegment.bytes.length;
+                const Buffer code = dataSegment.offset;
 
-                if (!dataSegment.bytes.length) {
+                if (!dataSegmentLength) {
+                    continue;
+                }
+
+                /* Skip passive segments */
+                if (code.data == NULL) {
                     continue;
                 }
 
@@ -5247,37 +5330,21 @@ wasmCWriteInitMemories(
                     fputs(indentation, file);
                 }
                 fputs("LOAD_DATA(", file);
-                wasmCWriteFileMemoryUse(file, module, dataSegment.memoryIndex, false);
+                wasmCWriteFileMemoryUse(
+                    file,
+                    module,
+                    dataSegment.memoryIndex,
+                    NULL,
+                    false
+                );
                 fputs(", ", file);
-                {
-                    const Buffer code = dataSegment.offset;
-                    MUST (stringBuilderReset(&stringBuilder))
-
-                    MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
-                    fputs(stringBuilder.string, file);
-                }
+                MUST (stringBuilderReset(&stringBuilder))
+                MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                fputs(stringBuilder.string, file);
                 fputs(", ", file);
-
-                switch (dataSegmentMode) {
-                    case wasmDataSegmentModeArrays: {
-                        wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-                        break;
-                    }
-                    case wasmDataSegmentModeGNULD:
-                    case wasmDataSegmentModeSectcreate1:
-                    case wasmDataSegmentModeSectcreate2: {
-                        fprintf(file, "ds + %lu", (unsigned long) dataSegmentOffset);
-                        break;
-                    }
-                    default: {
-                        fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", dataSegmentMode);
-                    }
-
-                }
-
-                fprintf(file, ", %lu);\n", (unsigned long) dataSegment.bytes.length);
-
-                dataSegmentOffset += dataSegment.bytes.length;
+                /* TODO: add support for multiple modules */
+                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                fprintf(file, ", %lu);\n", (unsigned long) dataSegmentLength);
             }
         }
 
@@ -5299,11 +5366,12 @@ wasmCWriteFreeMemories(
     const U32 memoryCount = module->memories.count;
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryCount; memoryIndex++) {
+        U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
         if (pretty) {
             fputs(indentation, file);
         }
         fputs("wasmMemoryFree(", file);
-        wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
+        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
         fputs(");\n", file);
     }
 }
@@ -5574,7 +5642,7 @@ wasmCWriteInstantiateFunction(
         if (pretty) {
             fputs(indentation, file);
         }
-        fprintf(file, "%sInitMemories(i);\n", moduleName);
+        fprintf(file, "%sInitMemories(i, NULL);\n", moduleName);
     }
 
     if (module->tables.count > 0
@@ -5747,7 +5815,6 @@ wasmCWriteInits(
     const bool pretty,
     const bool multipleModules
 ) {
-    wasmCWriteDataSegments(file, module, dataSegmentMode, pretty);
     MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
     MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty))
@@ -5990,7 +6057,7 @@ wasmCWriteModuleImplementationFiles(
 
 #if HAS_PTHREAD
         U32 threadCount = options.threadCount;
-        pthread_t* threads = calloc(threadCount * sizeof(pthread_t), 1);
+        pthread_t* threads = calloc(threadCount, sizeof(pthread_t));
         U32 jobIndex = 0;
 
         bool setDebugLines = options.debug && options.threadCount == 1;
@@ -6127,6 +6194,33 @@ wasmCWriteModuleImplementation(
     }
 
     wasmCWriteIncludes(file, headerName);
+
+    switch (options.dataSegmentMode) {
+        case wasmDataSegmentModeGNULD:
+        case wasmDataSegmentModeSectcreate1:
+        case wasmDataSegmentModeSectcreate2: {
+            wasmCWriteDataSegmentsFromSection(
+                file,
+                module,
+                options.dataSegmentMode
+            );
+            break;
+        }
+        case wasmDataSegmentModeArrays: {
+            /* NO-OP */
+            break;
+        }
+        default: {
+            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
+            abort();
+        }
+    }
+
+    wasmCWriteDataSegments(
+        file, module,
+        options.dataSegmentMode,
+        options.pretty
+    );
 
     /* Write implementations */
 

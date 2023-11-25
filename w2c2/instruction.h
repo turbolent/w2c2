@@ -206,4 +206,18 @@ wasmMemoryCopyInstructionRead(
     WasmMemoryCopyInstruction* result
 );
 
+/* WasmMemoryInitInstruction */
+
+typedef struct WasmMemoryInitInstruction {
+    U32 dataSegmentIndex;
+    U32 memoryIndex;
+} WasmMemoryInitInstruction;
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryInitInstructionRead(
+    Buffer* buffer,
+    WasmMemoryInitInstruction* result
+);
+
 #endif /* W2C2_INSTRUCTION_H */

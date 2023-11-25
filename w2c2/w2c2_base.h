@@ -552,9 +552,9 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
 typedef struct wasmMemory {
     U8* data;
+    U32 size;
     U32 pages;
     U32 maxPages;
-    U32 size;
     bool shared;
 #ifdef WASM_MUTEX_TYPE
     WASM_MUTEX_TYPE mutex;
@@ -565,40 +565,46 @@ typedef struct wasmMemory {
 
 static
 W2C2_INLINE
-void
+wasmMemory*
 wasmMemoryAllocate(
-    wasmMemory* memory,
     const U32 initialPages,
     const U32 maxPages
 ) {
     const U32 size = initialPages * WASM_PAGE_SIZE;
+    wasmMemory* memory = calloc(1, sizeof(wasmMemory));
+    if (!memory) {
+        abort();
+    }
     memory->data = calloc(size, 1);
     memory->size = size;
     memory->pages = initialPages;
     memory->maxPages = maxPages;
     memory->shared = false;
+    return memory;
 }
 
 static
 W2C2_INLINE
-void
+wasmMemory*
 wasmMemoryAllocateShared(
-    wasmMemory* memory,
     const U32 initialPages,
     const U32 maxPages
 ) {
-    wasmMemoryAllocate(memory, initialPages, maxPages);
+    wasmMemory* memory = wasmMemoryAllocate(initialPages, maxPages);
     memory->shared = true;
 #ifdef WASM_MUTEX_TYPE
-    WASM_MUTEX_INIT(&memory->mutex);
+    if (!WASM_MUTEX_INIT(&memory->mutex)) {
+        abort();
+    }
 #else
     abort();
 #endif
+    return memory;
 }
 
 #ifdef WASM_MUTEX_TYPE
-#define WASM_MEMORY_ALLOCATE_SHARED(memory, initialPages, maxPages) \
-    wasmMemoryAllocateShared(memory, initialPages, maxPages)
+#define WASM_MEMORY_ALLOCATE_SHARED(initialPages, maxPages) \
+    wasmMemoryAllocateShared(initialPages, maxPages)
 #else
 #define WASM_MEMORY_ALLOCATE_SHARED(memory, initialPages, maxPages) \
     _Pragma ("GCC error \"Shared memory not supported. Please define a mutex implementation to use (WASM_MUTEX_*)\"")
