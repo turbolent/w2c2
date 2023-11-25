@@ -29,6 +29,8 @@ wasmSectionIDDescription(
             return "code section";
         case wasmSectionIDData:
             return "data section";
+        case wasmSectionIDDataCount:
+            return "data count section";
         default:
             return "unknown section";
     }

@@ -51,6 +51,7 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidDataSectionMemoryIndex,
     wasmModuleReaderInvalidDataSectionOffsetExpression,
     wasmModuleReaderInvalidDataSectionBytes,
+    wasmModuleReaderInvalidDataCountSectionDataCount,
     wasmModuleReaderInvalidTableSectionTableCount,
     wasmModuleReaderInvalidTableSectionTableType,
     wasmModuleReaderInvalidElementSectionElementSegmentCount,

@@ -97,6 +97,8 @@ wasmModuleReaderErrorMessage(
             return "invalid data section offset expression";
         case wasmModuleReaderInvalidDataSectionBytes:
             return "invalid data section bytes";
+        case wasmModuleReaderInvalidDataCountSectionDataCount:
+            return "invalid data count section data count";
         case wasmModuleReaderInvalidTableSectionTableCount:
             return "invalid table section table count";
         case wasmModuleReaderInvalidTableSectionTableType:
@@ -1599,6 +1601,27 @@ fail:
 
 static
 void
+wasmReadDataCountSection(
+    WasmModuleReader* reader,
+    U32 UNUSED(sectionSize),
+    WasmModuleReaderError** error
+) {
+    U32 dataCount = 0;
+
+    /* Read export count */
+    if (leb128ReadU32(&reader->buffer, &dataCount) == 0) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderInvalidDataCountSectionDataCount
+        };
+        *error = &wasmModuleReaderError;
+        return;
+    }
+
+    *error = NULL;
+}
+
+static
+void
 wasmReadTableSection(
     WasmModuleReader* reader,
     U32 UNUSED(sectionSize),
@@ -1808,18 +1831,19 @@ wasmReadStartSection(
 }
 
 static WasmSectionReader wasmSectionReaders[] = {
-    /* wasmSectionIDCustom   */ wasmReadCustomSection,
-    /* wasmSectionIDType     */ wasmReadTypeSection,
-    /* wasmSectionIDImport   */ wasmReadImportSection,
-    /* wasmSectionIDFunction */ wasmReadFunctionSection,
-    /* wasmSectionIDTable    */ wasmReadTableSection,
-    /* wasmSectionIDMemory   */ wasmReadMemorySection,
-    /* wasmSectionIDGlobal   */ wasmReadGlobalSection,
-    /* wasmSectionIDExport   */ wasmReadExportSection,
-    /* wasmSectionIDStart    */ wasmReadStartSection,
-    /* wasmSectionIDElement  */ wasmReadElementSection,
-    /* wasmSectionIDCode     */ wasmReadCodeSection,
-    /* wasmSectionIDData     */ wasmReadDataSection,
+    /* wasmSectionIDCustom    */ wasmReadCustomSection,
+    /* wasmSectionIDType      */ wasmReadTypeSection,
+    /* wasmSectionIDImport    */ wasmReadImportSection,
+    /* wasmSectionIDFunction  */ wasmReadFunctionSection,
+    /* wasmSectionIDTable     */ wasmReadTableSection,
+    /* wasmSectionIDMemory    */ wasmReadMemorySection,
+    /* wasmSectionIDGlobal    */ wasmReadGlobalSection,
+    /* wasmSectionIDExport    */ wasmReadExportSection,
+    /* wasmSectionIDStart     */ wasmReadStartSection,
+    /* wasmSectionIDElement   */ wasmReadElementSection,
+    /* wasmSectionIDCode      */ wasmReadCodeSection,
+    /* wasmSectionIDData      */ wasmReadDataSection,
+    /* wasmSectionIDDataCount */ wasmReadDataCountSection
 };
 
 static
