@@ -3648,53 +3648,56 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     default:
+                        if (writer->ignore) {
+                            break;
+                        }
+
+                        switch (miscOpcode) {
+                            case wasmMiscOpcodeI32TruncSatF32S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF32S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF64S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF64S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF32U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF32U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF64U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF64U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F64"))
+                                break;
+                            }
+                            default: {
+                                fprintf(
+                                    stderr,
+                                    "w2c2: unsupported misc opcode: %s\n",
+                                    wasmMiscOpcodeDescription(miscOpcode)
+                                );
+                                return false;
+                            }
+                        }
+
                         break;
                 }
 
-                if (!writer->ignore) {
-                    switch (miscOpcode) {
-                        case wasmMiscOpcodeI32TruncSatF32S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF32S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF64S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF32U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF32U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF64U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F64"))
-                            break;
-                        }
-                        default: {
-                            fprintf(
-                                stderr,
-                                "w2c2: unsupported misc opcode: %s\n",
-                                wasmMiscOpcodeDescription(miscOpcode)
-                            );
-                            return false;
-                        }
-                    }
-                }
                 break;
             }
             default: {
