@@ -12,7 +12,7 @@ else
 	LDFLAGS += -lm
 endif
 
-LDFLAGS += -lw2c2futex -L../futex
+LDFLAGS := -lw2c2futex -L../futex $(LDFLAGS)
 
 ifeq ($(TARGET),Wii)
 
