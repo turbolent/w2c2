@@ -27,8 +27,8 @@ CFLAGS += -std=c89 $(WARNS)
 # - timespec
 # - lstat
 # - getentropy
-# - pthreads
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy pthreads
+# - threads
+FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
 
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
@@ -70,8 +70,12 @@ ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
 endif
 
-ifneq (,$(findstring pthreads,$(FEATURES)))
+ifneq (,$(findstring threads,$(FEATURES)))
+ifeq ($(UNAME),Windows)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
 	CFLAGS += -pthread -DWASM_THREADS_PTHREADS
+endif
 endif
 
 ifneq (,$(findstring tracing,$(FEATURES)))

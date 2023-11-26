@@ -1,5 +1,7 @@
 #include <stdio.h>
+#if HAS_UNISTD
 #include <unistd.h>
+#endif
 
 #include "futex_test.h"
 #include "futex.h"
@@ -103,17 +105,23 @@ testFutex(void) {
 
     /* Wait for all threads to have started */
     while (i32_atomic_load8_u(mem, initAddress) < 4) {
-        usleep(100000);
+#if HAS_UNISTD
+        sleep(1);
+#elif _WIN32
+        Sleep(1000);
+#else
+#error "Cannot sleep"
+#endif
     }
 
     wasmMemoryAtomicNotify(mem, waitAddress1, 2);
     wasmMemoryAtomicNotify(mem, waitAddress2, 2);
     wasmMemoryAtomicNotify(mem, waitAddress1, 1);
 
-    pthread_join(thread1, NULL);
-    pthread_join(thread2, NULL);
-    pthread_join(thread3, NULL);
-    pthread_join(thread4, NULL);
+    WASM_THREAD_JOIN(thread1);
+    WASM_THREAD_JOIN(thread2);
+    WASM_THREAD_JOIN(thread3);
+    WASM_THREAD_JOIN(thread4);
 
     wasmMemoryFree(mem);
 

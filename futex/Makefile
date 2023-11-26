@@ -17,14 +17,25 @@ endif
 
 CFLAGS += -std=c89 $(WARNS)
 
-FEATURES ?= pthreads
+# By default assume the system has
+# - unistd.h
+# - threads
+FEATURES ?= unistd threads
 
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
 endif
 
-ifneq (,$(findstring pthreads,$(FEATURES)))
+ifneq (,$(findstring unistd,$(FEATURES)))
+	CFLAGS += -DHAS_UNISTD=1
+endif
+
+ifneq (,$(findstring threads,$(FEATURES)))
+ifeq ($(UNAME),Windows)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
 	CFLAGS += -pthread -DWASM_THREADS_PTHREADS
+endif
 endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))

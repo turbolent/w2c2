@@ -549,19 +549,20 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
 #define WASM_THREAD_TYPE pthread_t
 #define WASM_THREAD_CREATE(thread, func, arg) (pthread_create(thread, NULL, func, arg) == 0)
+#define WASM_THREAD_JOIN(thread) ((void)pthread_join(thread, NULL))
 
 #define WASM_MUTEX_TYPE pthread_mutex_t
 #define WASM_MUTEX_INIT(mutex) (pthread_mutex_init(mutex, NULL) == 0)
-#define WASM_MUTEX_FREE(mutex) pthread_mutex_destroy(mutex)
-#define WASM_MUTEX_LOCK(mutex) pthread_mutex_lock(mutex)
-#define WASM_MUTEX_UNLOCK(mutex) pthread_mutex_unlock(mutex)
+#define WASM_MUTEX_FREE(mutex) ((void)pthread_mutex_destroy(mutex))
+#define WASM_MUTEX_LOCK(mutex) ((void)pthread_mutex_lock(mutex))
+#define WASM_MUTEX_UNLOCK(mutex) ((void)pthread_mutex_unlock(mutex))
 
 #define WASM_COND_TYPE pthread_cond_t
 #define WASM_COND_INIT(cond) (pthread_cond_init(cond, NULL) == 0)
-#define WASM_COND_FREE(cond) pthread_cond_destroy(cond)
-#define WASM_COND_WAIT(cond, mutex) pthread_cond_wait(cond, mutex)
+#define WASM_COND_FREE(cond) ((void)pthread_cond_destroy(cond))
+#define WASM_COND_WAIT(cond, mutex) ((void)pthread_cond_wait(cond, mutex))
 #define WASM_COND_RELATIVE_WAIT(cond, signal, timeout) wasmCondRelativeWait(cond, signal, timeout)
-#define WASM_COND_SIGNAL(cond) pthread_cond_signal(cond)
+#define WASM_COND_SIGNAL(cond) ((void)pthread_cond_signal(cond))
 
 #define NS_PER_S 1000000000
 
@@ -570,9 +571,9 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCondRelativeWait(
-        WASM_COND_TYPE* cond,
-        WASM_MUTEX_TYPE* mutex,
-        I64 relativeTimeout
+    WASM_COND_TYPE* cond,
+    WASM_MUTEX_TYPE* mutex,
+    I64 relativeTimeout
 ) {
     struct timespec absoluteTimeout;
     clock_gettime(CLOCK_REALTIME, &absoluteTimeout);
@@ -583,6 +584,71 @@ wasmCondRelativeWait(
         absoluteTimeout.tv_sec++;
     }
     return pthread_cond_timedwait(cond, mutex, &absoluteTimeout) != ETIMEDOUT;
+}
+
+#elif defined(WASM_THREADS_WIN32)
+
+#include <windows.h>
+
+#define NS_PER_MS 100000
+
+#define WASM_THREAD_TYPE HANDLE
+#define WASM_THREAD_CREATE(thread, func, arg) wasmThreadCreate(thread, func, arg)
+#define WASM_THREAD_JOIN(thread) (WaitForSingleObject(thread, INFINITE), (void)CloseHandle(thread))
+
+#define WASM_MUTEX_TYPE CRITICAL_SECTION
+#define WASM_MUTEX_INIT(mutex) (InitializeCriticalSection(mutex), true)
+#define WASM_MUTEX_FREE(mutex) DeleteCriticalSection(mutex)
+#define WASM_MUTEX_LOCK(mutex) EnterCriticalSection(mutex)
+#define WASM_MUTEX_UNLOCK(mutex) LeaveCriticalSection(mutex)
+
+#define WASM_COND_TYPE CONDITION_VARIABLE
+#define WASM_COND_INIT(cond) (InitializeConditionVariable(cond), true)
+#define WASM_COND_FREE(cond) ((void)cond) /* NO-OP */
+#define WASM_COND_WAIT(cond, mutex) ((void)SleepConditionVariableCS(cond, mutex, INFINITE))
+#define WASM_COND_RELATIVE_WAIT(cond, signal, timeout) SleepConditionVariableCS(cond, signal, (DWORD)timeout / NS_PER_MS)
+#define WASM_COND_SIGNAL(cond) WakeConditionVariable(cond)
+
+typedef struct wasmWin32ThreadStartArg {
+    void* (*startFunc)(void*);
+    void* startFuncArg;
+} wasmWin32ThreadStartArg;
+
+static
+DWORD
+wasmWin32ThreadStart(
+    void *arg
+) {
+    wasmWin32ThreadStartArg* startArg = (wasmWin32ThreadStartArg*)arg;
+    void* (*startFunc)(void*) = startArg->startFunc;
+    void* startFuncArg = startArg->startFuncArg;
+
+    free(arg);
+
+    startFunc(startFuncArg);
+
+    return ERROR_SUCCESS;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmThreadCreate(
+    WASM_THREAD_TYPE* thread,
+    void* (*startFunc)(void*),
+    void* startFuncArg
+) {
+    wasmWin32ThreadStartArg* startArg = (wasmWin32ThreadStartArg*)calloc(1, sizeof(wasmWin32ThreadStartArg));
+    if (!startArg) {
+        return false;
+    }
+
+    startArg->startFunc = startFunc;
+    startArg->startFuncArg = startFuncArg;
+
+    *thread = CreateThread(NULL, 0, wasmWin32ThreadStart, startArg, 0, NULL);
+    return thread != NULL;
 }
 
 #endif

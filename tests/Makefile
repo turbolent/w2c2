@@ -6,7 +6,7 @@ CFLAGS ?= -I../w2c2 -O0 -g
 EXE =
 
 ifeq ($(OS),Windows_NT)
-# TODO: add -DWASM_THREADS_WIN32 to CFLAGS
+	CFLAGS += -DWASM_THREADS_WIN32
 else
 	CFLAGS += -DWASM_THREADS_PTHREADS
 	LDFLAGS += -lm

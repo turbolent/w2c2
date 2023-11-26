@@ -1,6 +1,12 @@
 LDFLAGS += -lm -L../../wasi -lw2c2wasi -L../../futex -lw2c2futex
-CFLAGS += -O0 -g -DWASM_THREADS_PTHREADS
+CFLAGS += -O0 -g
 W2C2 ?= ../../w2c2/w2c2
+
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
+	CFLAGS += -pthread -DWASM_THREADS_PTHREADS
+endif
 
 threads: threads.o main.o
 	$(CC) $^ -o threads $(LDFLAGS)

@@ -48,8 +48,12 @@ foreach(TARGET w2c2wasi w2c2wasi_test)
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
     )
 
-    if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
-        target_compile_definitions(${TARGET} PUBLIC WASM_THREADS_PTHREADS)
+    if(Threads_FOUND)
+        if(CMAKE_USE_PTHREADS_INIT)
+            target_compile_definitions(${TARGET} PUBLIC WASM_THREADS_PTHREADS)
+        elseif(CMAKE_USE_WIN32_THREADS_INIT)
+            target_compile_definitions(${TARGET} PUBLIC WASM_THREADS_WIN32)
+        endif()
         target_link_libraries(${TARGET} PUBLIC Threads::Threads)
     endif()
 
