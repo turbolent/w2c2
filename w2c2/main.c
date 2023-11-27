@@ -132,10 +132,10 @@ wasmSortedFunctionIDs(
 
     if (result.length > 1) {
         qsort(
-                result.functionIDs,
-                result.length,
-                sizeof(WasmFunctionID),
-                wasmFunctionIDsCompareHashes
+            result.functionIDs,
+            result.length,
+            sizeof(WasmFunctionID),
+            wasmFunctionIDsCompareHashes
         );
     }
 
@@ -502,9 +502,6 @@ main(
 
         if (functionsPerFile == 0) {
             functionsPerFile = reader.module->functions.count;
-        }
-        if (functionsPerFile == 0) {
-            functionsPerFile = UINT32_MAX;
         }
 
         if (!changeToOutputDirectory(outputPath)) {

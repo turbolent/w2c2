@@ -18,10 +18,13 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 ## Features
 
-- Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/), as well as
+- Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
+- Implements several extensions:
+  - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
+  - [Conditional data segment initialization](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
-  - [Non-trapping Float-to-int Conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)
+  - [Non-trapping float-to-int conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
 - Written in C89 and generates C89
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
@@ -35,7 +38,10 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
   - Function names, if function names are provided in the [`names` custom section](https://webassembly.github.io/spec/core/appendix/custom.html#function-names)
   - Source line mapping, if DWARF line information is provided in the [`.debug_line` custom section](https://yurydelendik.github.io/webassembly-dwarf/).
     Requires [libdwarf](https://github.com/davea42/libdwarf-code) to be installed. See instructions below.
-- WASI implementation which is able to run clang and Python
+- WASI implementation
+  - Able to run clang and Python
+  - Support for many operating systems and architectures, support for big-endian systems
+  - Implements the [threads proposal](https://github.com/webAssembly/wasi-threads)
 
 ## Performance
 
@@ -116,50 +122,51 @@ make run-tests
 
 ## WASI Status
 
-- [x] args_get
-- [x] args_sizes_get
-- [x] clock_res_get
-- [x] clock_time_get
-- [x] environ_get
-- [x] environ_sizes_get
-- [ ] fd_advise
-- [ ] fd_allocate
-- [x] fd_close
-- [x] fd_datasync
-- [x] fd_fdstat_get
-- [ ] fd_fdstat_set_flags
-- [ ] fd_fdstat_set_rights
-- [x] fd_filestat_get
-- [ ] fd_filestat_set_size
-- [ ] fd_filestat_set_times
-- [x] fd_pread
-- [x] fd_prestat_get
-- [x] fd_prestat_dir_name
-- [x] fd_pwrite
-- [x] fd_read
-- [x] fd_readdir
-- [ ] fd_renumber
-- [x] fd_seek
-- [x] fd_sync
-- [x] fd_tell
-- [x] fd_write
-- [x] path_create_directory
-- [x] path_filestat_get
-- [ ] path_filestat_set_times
-- [ ] path_link
-- [x] path_open
-- [x] path_readlink
-- [x] path_remove_directory
-- [x] path_rename
-- [x] path_symlink
-- [x] path_unlink_file
-- [ ] poll_oneoff
-- [x] proc_exit
-- [x] random_get
-- [ ] sched_yield
-- [ ] sock_recv
-- [ ] sock_send
-- [ ] sock_shutdown
+- [x] `args_get`
+- [x] `args_sizes_get`
+- [x] `clock_res_get`
+- [x] `clock_time_get`
+- [x] `environ_get`
+- [x] `environ_sizes_get`
+- [ ] `fd_advise`
+- [ ] `fd_allocate`
+- [x] `fd_close`
+- [x] `fd_datasync`
+- [x] `fd_fdstat_get`
+- [ ] `fd_fdstat_set_flags`
+- [ ] `fd_fdstat_set_rights`
+- [x] `fd_filestat_get`
+- [ ] `fd_filestat_set_size`
+- [ ] `fd_filestat_set_times`
+- [x] `fd_pread`
+- [x] `fd_prestat_get`
+- [x] `fd_prestat_dir_name`
+- [x] `fd_pwrite`
+- [x] `fd_read`
+- [x] `fd_readdir`
+- [ ] `fd_renumber`
+- [x] `fd_seek`
+- [x] `fd_sync`
+- [x] `fd_tell`
+- [x] `fd_write`
+- [x] `path_create_directory`
+- [x] `path_filestat_get`
+- [ ] `path_filestat_set_times`
+- [ ] `path_link`
+- [x] `path_open`
+- [x] `path_readlink`
+- [x] `path_remove_directory`
+- [x] `path_rename`
+- [x] `path_symlink`
+- [x] `path_unlink_file`
+- [ ] `poll_oneoff`
+- [x] `proc_exit`
+- [x] `random_get`
+- [ ] `sched_yield`
+- [ ] `sock_recv`
+- [ ] `sock_send`
+- [ ] `sock_shutdown`
+- [x] `thread-spawn` (from the [threads proposal](https://github.com/webAssembly/wasi-threads))
 
 ## Development
 

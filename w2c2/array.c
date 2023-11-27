@@ -15,7 +15,7 @@ arrayEnsureCapacitySlowPath(
 
     newCapacity = length + (*capacity >> 1U);
     if (*items == NULL) {
-        newItems = calloc(newCapacity * itemSize, 1);
+        newItems = calloc(newCapacity, itemSize);
     } else {
         newItems = realloc(*items, newCapacity * itemSize);
     }

@@ -18,7 +18,8 @@ typedef enum WasmSectionID {
     wasmSectionIDStart = 8,
     wasmSectionIDElement = 9,
     wasmSectionIDCode = 10,
-    wasmSectionIDData = 11
+    wasmSectionIDData = 11,
+    wasmSectionIDDataCount = 12
 } WasmSectionID;
 
 const char*

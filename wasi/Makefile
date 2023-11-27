@@ -1,12 +1,19 @@
-LDFLAGS += -lm
+BUILD := release
+
+ifeq ($(OS),Windows_NT)
+	UNAME := Windows
+endif
+ifndef UNAME
+	UNAME := $(shell uname -s)
+endif
+
+WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 ifeq ($(BUILD),release)
 	CFLAGS += -O3
 else
 	CFLAGS += -g -O0
 endif
-
-WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
 
 CFLAGS += -std=c89 $(WARNS)
 
@@ -20,7 +27,12 @@ CFLAGS += -std=c89 $(WARNS)
 # - timespec
 # - lstat
 # - getentropy
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy
+# - threads
+FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
+
+ifeq ($(UNAME),Linux)
+	LDFLAGS += -lm
+endif
 
 ifneq (,$(findstring unistd,$(FEATURES)))
 	CFLAGS += -DHAS_UNISTD=1
@@ -56,6 +68,14 @@ endif
 
 ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
+endif
+
+ifneq (,$(findstring threads,$(FEATURES)))
+ifeq ($(UNAME),Windows)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
+	CFLAGS += -pthread -DWASM_THREADS_PTHREADS
+endif
 endif
 
 ifneq (,$(findstring tracing,$(FEATURES)))

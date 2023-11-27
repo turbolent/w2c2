@@ -14,8 +14,8 @@ void spectest__print_i32(U32 l0) {
 }
 
 static wasmTable spectest_table;
-static wasmMemory spectest_memory;
-static wasmMemory spectest_shared_memory;
+static wasmMemory* spectest_memory;
+static wasmMemory* spectest_shared_memory;
 
 void*
 resolveTestImports(
@@ -117,8 +117,8 @@ void printOK(const char* description) {
 }
 
 static void initTest() {
-    wasmMemoryAllocate(&spectest_memory, 1, 2);
-    wasmMemoryAllocate(&spectest_shared_memory, 1, 2);
+    spectest_memory = wasmMemoryAllocate(1, 2);
+    spectest_shared_memory = WASM_MEMORY_ALLOCATE_SHARED(1, 2);
     wasmTableAllocate(&spectest_table, 10, 20);
 }
 

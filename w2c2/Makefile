@@ -38,6 +38,9 @@ ifeq ($(UNAME),WASI)
 endif
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
+ifneq (,$(findstring debugging,$(FEATURES)))
+	CFLAGS += -I/usr/include/libdwarf
+endif
 	ifneq (,$(findstring threads,$(FEATURES)))
 	CFLAGS += -pthread
 	endif

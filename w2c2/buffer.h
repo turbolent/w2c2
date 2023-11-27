@@ -80,7 +80,7 @@ bufferReadF32(
         memcpy(value.bytes, buffer->data, sizeof(I32));
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-        value.i32 = (I32) swap32((U32) value.i32);
+        value.i32 = (I32) swapU32((U32) value.i32);
 #endif
 
         *result = value.i32;
@@ -111,7 +111,7 @@ bufferReadF64(
         memcpy(value.bytes, buffer->data, sizeof(I64));
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
-        value.i64 = (I64) swap64((U64) value.i64);
+        value.i64 = (I64) swapU64((U64) value.i64);
 #endif
         *result = value.i64;
 

@@ -5,6 +5,15 @@ CFLAGS ?= -I../w2c2 -O0 -g
 
 EXE =
 
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
+	CFLAGS += -DWASM_THREADS_PTHREADS
+	LDFLAGS += -lm
+endif
+
+LDFLAGS := -lw2c2futex -L../futex $(LDFLAGS)
+
 ifeq ($(TARGET),Wii)
 
 ifeq ($(strip $(DEVKITPRO)),)
@@ -27,8 +36,6 @@ EXECUTE ?= $(DOLPHIN) -b -e
 %.elf:
 
 endif
-
-LDFLAGS += -lm
 
 .SILENT:
 

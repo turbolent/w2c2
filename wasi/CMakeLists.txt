@@ -9,6 +9,9 @@ project(w2c2wasi)
 set(CMAKE_C_STANDARD 90)
 set(SHARED_LIB 0 CACHE BOOL "Build as a shared library")
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 include(CheckIncludeFile)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/uio.h HAVE_SYSUIO_H)
@@ -44,6 +47,15 @@ foreach(TARGET w2c2wasi w2c2wasi_test)
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
     )
+
+    if(Threads_FOUND)
+        if(CMAKE_USE_PTHREADS_INIT)
+            target_compile_definitions(${TARGET} PUBLIC WASM_THREADS_PTHREADS)
+        elseif(CMAKE_USE_WIN32_THREADS_INIT)
+            target_compile_definitions(${TARGET} PUBLIC WASM_THREADS_WIN32)
+        endif()
+        target_link_libraries(${TARGET} PUBLIC Threads::Threads)
+    endif()
 
     if(HAVE_UNISTD_H)
         target_compile_definitions(${TARGET} PUBLIC HAS_UNISTD=1)

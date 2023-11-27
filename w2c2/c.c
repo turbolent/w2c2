@@ -224,24 +224,25 @@ wasmCWriteFileMemoryUse(
     FILE* file,
     const WasmModule* module,
     const U32 memoryIndex,
+    const char *variableName,
     const bool reference
 ) {
+    if (variableName == NULL) {
+        variableName = "i";
+    }
+
+    if (!reference) {
+        fputs("(*", file);
+    }
+    fprintf(file, "%s->", variableName);
     if (memoryIndex < module->memoryImports.length) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        if (!reference) {
-            fputs("(*", file);
-        }
-        fputs("i->", file);
         wasmCWriteFileImportName(file, import.module, import.name);
-        if (!reference) {
-            fputc(')', file);
-        }
     } else {
-        if (reference) {
-            fputc('&', file);
-        }
-        fputs("i->", file);
         wasmCWriteFileMemoryNonImportName(file, memoryIndex);
+    }
+    if (!reference) {
+        fputc(')', file);
     }
 }
 
@@ -255,25 +256,21 @@ wasmCWriteStringMemoryUse(
     const U32 memoryIndex,
     const bool reference
 ) {
+    if (!reference) {
+        MUST (stringBuilderAppend(builder, "(*"))
+    }
+    MUST (stringBuilderAppend(builder, "i->"))
     if (memoryIndex < module->memoryImports.length) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        if (!reference) {
-            MUST (stringBuilderAppend(builder, "(*"))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
         MUST (wasmCWriteStringEscaped(builder, import.module))
         MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
         MUST (wasmCWriteStringEscaped(builder, import.name))
-        if (!reference) {
-            MUST (stringBuilderAppendChar(builder, ')'))
-        }
     } else {
-        if (reference) {
-            MUST (stringBuilderAppendChar(builder, '&'))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
         MUST (stringBuilderAppendChar(builder, memoryNamePrefix))
         MUST (stringBuilderAppendU32(builder, memoryIndex))
+    }
+    if (!reference) {
+        MUST (stringBuilderAppendChar(builder, ')'))
     }
     return true;
 }
@@ -349,6 +346,7 @@ wasmCWriteStringTableUse(
     return true;
 }
 
+/* TODO: add support for multiple modules */
 static
 W2C2_INLINE
 void
@@ -358,6 +356,19 @@ wasmCWriteFileDataSegmentName(
 ) {
     fputc(dataSegmentNamePrefix, file);
     fprintf(file, "%u", dataSegmentIndex);
+}
+
+/* TODO: add support for multiple modules */
+static
+W2C2_INLINE
+bool
+wasmCWriteStringDataSegmentName(
+    StringBuilder* builder,
+    const U32 dataSegmentIndex
+) {
+    MUST (stringBuilderAppendChar(builder, dataSegmentNamePrefix))
+    MUST (stringBuilderAppendU32(builder, dataSegmentIndex))
+    return true;
 }
 
 static
@@ -1099,7 +1110,11 @@ wasmCWriteConstExpr(
 ) {
     WasmConstInstruction instruction;
     if (!wasmConstInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(stderr, "w2c2: invalid const instruction encoding\n");
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmOpcodeDescription(opcode)
+        );
         return false;
     }
 
@@ -1123,20 +1138,62 @@ wasmCWriteConstExpr(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteLoad(
+    const WasmCFunctionWriter* writer,
+    const WasmMemoryArgumentInstruction instruction,
+    const char* functionName,
+    WasmValueType resultType
+) {
+    const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+    MUST (wasmCWriteIndent(writer))
+    MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+    MUST (wasmCWriteAssign(writer))
+    MUST (wasmCWrite(writer, functionName))
+    MUST (wasmCWriteChar(writer, '('))
+    MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+    MUST (wasmCWriteComma(writer))
+    MUST (wasmCWrite(writer, "(U64)"))
+    MUST (wasmCWriteStringStackName(
+        writer->builder,
+        stackIndex0,
+        writer->typeStack->valueTypes[stackIndex0]
+    ))
+    if (instruction.offset != 0) {
+        MUST (wasmCWritePlus(writer))
+        MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+        MUST (wasmCWriteChar(writer, 'U'))
+    }
+    MUST (wasmCWrite(writer, ");\n"))
+
+    wasmTypeStackDrop(writer->typeStack, 1);
+
+    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteLoadExpr(
     const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
-    WasmLoadStoreInstruction instruction;
+    WasmMemoryArgumentInstruction instruction;
 
-    if (!wasmLoadStoreInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid load instruction encoding\n");
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmOpcodeDescription(opcode)
+        );
         return false;
     }
 
     if (!writer->ignore) {
         WasmValueType resultType = 0;
-        const char* functionName = NULL;
+        char* functionName = NULL;
         switch (opcode) {
             case wasmOpcodeI32Load: {
                 resultType = wasmValueTypeI32;
@@ -1218,34 +1275,53 @@ wasmCWriteLoadExpr(
             }
         }
 
-        {
-            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
-            MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
-            MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWrite(writer, functionName))
-            MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
-            MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)"))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
-                stackIndex0,
-                writer->typeStack->valueTypes[stackIndex0]
-            ))
-            if (instruction.offset != 0) {
-                MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
-                MUST (wasmCWriteChar(writer, 'U'))
-            }
-            MUST (wasmCWrite(writer, ");\n"))
-
-            wasmTypeStackDrop(writer->typeStack, 1);
-
-            MUST (wasmTypeStackAppend(writer->typeStack, resultType))
-        }
+        MUST (wasmCWriteLoad(
+            writer,
+            instruction,
+            functionName,
+            resultType
+        ))
     }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteStore(
+    const WasmCFunctionWriter* writer,
+    const WasmMemoryArgumentInstruction instruction,
+    const char* functionName
+) {
+    const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+    const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+
+    MUST (wasmCWriteIndent(writer))
+    MUST (wasmCWrite(writer, functionName))
+    MUST (wasmCWriteChar(writer, '('))
+    MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+    MUST (wasmCWriteComma(writer))
+    MUST (wasmCWrite(writer, "(U64)"))
+    MUST (wasmCWriteStringStackName(
+        writer->builder,
+        stackIndex1,
+        writer->typeStack->valueTypes[stackIndex1]
+    ))
+    if (instruction.offset != 0) {
+        MUST (wasmCWritePlus(writer))
+        MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+        MUST (wasmCWriteChar(writer, 'U'))
+    }
+    MUST (wasmCWriteComma(writer))
+    MUST (wasmCWriteStringStackName(
+        writer->builder,
+        stackIndex0,
+        writer->typeStack->valueTypes[stackIndex0]
+    ))
+    MUST (wasmCWrite(writer, ");\n"))
+
+    wasmTypeStackDrop(writer->typeStack, 2);
 
     return true;
 }
@@ -1257,15 +1333,18 @@ wasmCWriteStoreExpr(
     const WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
-    WasmLoadStoreInstruction instruction;
-    if (!wasmLoadStoreInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid store instruction encoding\n");
+    WasmMemoryArgumentInstruction instruction;
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmOpcodeDescription(opcode)
+        );
         return false;
     }
 
     if (!writer->ignore) {
-
-        const char* functionName = NULL;
+        char* functionName = NULL;
         switch (opcode) {
             case wasmOpcodeI32Store: {
                 functionName = "i32_store";
@@ -1313,36 +1392,7 @@ wasmCWriteStoreExpr(
             }
         }
 
-        {
-            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
-
-            MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWrite(writer, functionName))
-            MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
-            MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)"))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
-                stackIndex1,
-                writer->typeStack->valueTypes[stackIndex1]
-            ))
-            if (instruction.offset != 0) {
-                MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
-                MUST (wasmCWriteChar(writer, 'U'))
-            }
-            MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
-                stackIndex0,
-                writer->typeStack->valueTypes[stackIndex0]
-            ))
-            MUST (wasmCWrite(writer, ");\n"))
-
-            wasmTypeStackDrop(writer->typeStack, 2);
-        }
+        MUST (wasmCWriteStore(writer, instruction, functionName))
     }
 
     return true;
@@ -1351,7 +1401,7 @@ wasmCWriteStoreExpr(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteMemorySize(
+wasmCWriteMemorySizeExpr(
     const WasmCFunctionWriter* writer
 ) {
     WasmMemoryInstruction instruction;
@@ -1404,7 +1454,7 @@ wasmCWriteMemorySize(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteMemoryGrow(
+wasmCWriteMemoryGrowExpr(
     const WasmCFunctionWriter* writer
 ) {
     WasmMemoryInstruction instruction;
@@ -1459,7 +1509,61 @@ wasmCWriteMemoryGrow(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteMemoryCopy(
+wasmCWriteMemoryInitExpr(
+    const WasmCFunctionWriter* writer
+) {
+    WasmMemoryInitInstruction instruction;
+    if (!wasmMemoryInitInstructionRead(writer->code, &instruction)) {
+        fprintf(stderr, "w2c2: invalid memory.init instruction encoding\n");
+        return false;
+    }
+
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "LOAD_DATA("))
+        MUST (wasmCWriteStringMemoryUse(
+            writer->builder,
+            writer->module,
+            instruction.memoryIndex,
+            false
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex2,
+            writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        /* TODO: add support for multiple modules */
+        MUST (wasmCWriteStringDataSegmentName(writer->builder, instruction.dataSegmentIndex))
+        MUST (wasmCWriteChar(writer, '+'))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex1,
+            writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+            writer->builder,
+            stackIndex0,
+            writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryCopyExpr(
     const WasmCFunctionWriter* writer
 ) {
     WasmMemoryCopyInstruction instruction;
@@ -1498,7 +1602,7 @@ wasmCWriteMemoryCopy(
         const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "wasmMemoryCopy(\n"))
+        MUST (wasmCWrite(writer, "wasmMemoryCopy("))
         MUST (wasmCWriteStringMemoryUse(
             writer->builder,
             writer->module,
@@ -1541,7 +1645,7 @@ wasmCWriteMemoryCopy(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteMemoryFill(
+wasmCWriteMemoryFillExpr(
     const WasmCFunctionWriter* writer,
     const WasmMiscOpcode miscOpcode
 ) {
@@ -1570,7 +1674,7 @@ wasmCWriteMemoryFill(
         const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "wasmMemoryFill(\n"))
+        MUST (wasmCWrite(writer, "wasmMemoryFill("))
         MUST (wasmCWriteStringMemoryUse(
             writer->builder,
             writer->module,
@@ -1962,7 +2066,11 @@ wasmCWriteIfExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "w2c2: invalid if instruction: expected block type\n");
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction: expected block type\n",
+            wasmOpcodeDescription(*opcode)
+        );
         return false;
     }
 
@@ -2069,7 +2177,11 @@ wasmCWriteBlockExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "w2c2: invalid block instruction: expected block type\n");
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction: expected block type\n",
+            wasmOpcodeDescription(*opcode)
+        );
         return false;
     }
 
@@ -2131,7 +2243,11 @@ wasmCWriteLoopExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(stderr, "w2c2: invalid loop instruction: expected block type\n");
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction: expected block type\n",
+            wasmOpcodeDescription(*opcode)
+       );
         return false;
     }
 
@@ -2466,6 +2582,848 @@ wasmCGetDebugLine(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteMemoryAtomicNotifyExpr(
+    const WasmCFunctionWriter* writer
+) {
+    static const WasmThreadsOpcode opcode = wasmThreadsOpcodeMemoryAtomicNotify;
+
+    WasmMemoryArgumentInstruction instruction;
+
+    if (!wasmMemoryArgument32InstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+
+        static const WasmValueType resultType = wasmValueTypeI32;
+
+        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+        MUST (wasmCWriteAssign(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
+        MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                0,
+                true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex1,
+                writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 2);
+
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryAtomicWaitExpr(
+    const WasmCFunctionWriter* writer,
+    const bool isWait64
+) {
+    if (!writer->ignore) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+        const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+
+        static const WasmValueType resultType = wasmValueTypeI32;
+
+        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWriteStringStackName(writer->builder, stackIndex2, resultType))
+        MUST (wasmCWriteAssign(writer))
+        MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
+        MUST (wasmCWriteStringMemoryUse(
+                writer->builder,
+                writer->module,
+                0,
+                true
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex2,
+                writer->typeStack->valueTypes[stackIndex2]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex1,
+                writer->typeStack->valueTypes[stackIndex1]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, isWait64 ? "true" : "false"))
+        MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, 3);
+
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryAtomicWait32Expr(
+    const WasmCFunctionWriter* writer
+) {
+    static const WasmThreadsOpcode opcode = wasmThreadsOpcodeMemoryAtomicWait32;
+
+    WasmMemoryArgumentInstruction instruction;
+
+    if (!wasmMemoryArgument32InstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, false))
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteMemoryAtomicWait64Expr(
+    const WasmCFunctionWriter* writer
+) {
+    static const WasmThreadsOpcode opcode = wasmThreadsOpcodeMemoryAtomicWait64;
+
+    WasmMemoryArgumentInstruction instruction;
+
+    if (!wasmMemoryArgument64InstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, true))
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAtomicFenceExpr(
+    const WasmCFunctionWriter* writer
+) {
+    static const WasmThreadsOpcode opcode = wasmThreadsOpcodeAtomicFence;
+
+    U8 immediate = 0;
+    MUST (bufferReadByte(writer->code, &immediate) > 0)
+    if (immediate != 0x0) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "atomic_fence();\n"))
+    }
+
+    return true;
+}
+
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAtomicLoadExpr(
+    const WasmCFunctionWriter* writer,
+    const WasmThreadsOpcode opcode
+) {
+    WasmMemoryArgumentInstruction instruction;
+
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        U32 expectedAlign = 0;
+        WasmValueType resultType = 0;
+        char* functionName = NULL;
+        switch (opcode) {
+            case wasmThreadsOpcodeI32AtomicLoad: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_load";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicLoad: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_load";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicLoad8U: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_load8_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicLoad16U: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_load16_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicLoad8U: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_load8_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicLoad16U: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_load16_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicLoad32U: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_load32_u";
+                break;
+            }
+            default: {
+                fprintf(
+                    stderr,
+                    "w2c2: unsupported atomic load instruction opcode: %s\n",
+                    wasmThreadsOpcodeDescription(opcode)
+                );
+                return false;
+            }
+        }
+
+        if (instruction.align != expectedAlign) {
+            fprintf(
+                stderr,
+                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
+                wasmThreadsOpcodeDescription(opcode),
+                expectedAlign,
+                instruction.align
+            );
+            return false;
+        }
+
+        MUST (wasmCWriteLoad(
+            writer,
+            instruction,
+            functionName,
+            resultType
+        ))
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAtomicStoreExpr(
+    const WasmCFunctionWriter* writer,
+    const WasmThreadsOpcode opcode
+) {
+    WasmMemoryArgumentInstruction instruction;
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        U32 expectedAlign = 0;
+        char* functionName = NULL;
+        switch (opcode) {
+            case wasmThreadsOpcodeI32AtomicStore: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                functionName = "i32_atomic_store";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicStore: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                functionName = "i64_atomic_store";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicStore8: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                functionName = "i32_atomic_store8";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicStore8: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                functionName = "i64_atomic_store8";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicStore16: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                functionName = "i32_atomic_store16";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicStore16: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                functionName = "i64_atomic_store16";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicStore32: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                functionName = "i64_atomic_store32";
+                break;
+            }
+            default: {
+                fprintf(
+                    stderr,
+                    "w2c2: unsupported atomic store instruction opcode: %s\n",
+                    wasmThreadsOpcodeDescription(opcode)
+                );
+                return false;
+            }
+        }
+
+        if (instruction.align != expectedAlign) {
+            fprintf(
+                stderr,
+                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
+                wasmThreadsOpcodeDescription(opcode),
+                expectedAlign,
+                instruction.align
+            );
+            return false;
+        }
+
+        MUST (wasmCWriteStore(writer, instruction, functionName))
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAtomicRMWExpr(
+    const WasmCFunctionWriter* writer,
+    const WasmThreadsOpcode opcode
+) {
+    WasmMemoryArgumentInstruction instruction;
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        U32 expectedAlign = 0;
+        WasmValueType resultType = 0;
+        char *functionName = NULL;
+        switch (opcode) {
+            /* Add */
+            case wasmThreadsOpcodeI32AtomicRMWAdd: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_add";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWAdd: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_add";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8AddU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_add_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16AddU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_add_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8AddU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_add_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16AddU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_add_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32AddU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_add_u";
+                break;
+            }
+            /* Sub */
+            case wasmThreadsOpcodeI32AtomicRMWSub: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_sub";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWSub: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_sub";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8SubU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_sub_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16SubU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_sub_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8SubU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_sub_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16SubU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_sub_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32SubU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_sub_u";
+                break;
+            }
+            /* And */
+            case wasmThreadsOpcodeI32AtomicRMWAnd: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_and";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWAnd: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_and";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8AndU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_and_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16AndU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_and_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8AndU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_and_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16AndU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_and_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32AndU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_and_u";
+                break;
+            }
+            /* Or */
+            case wasmThreadsOpcodeI32AtomicRMWOr: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_or";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWOr: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_or";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8OrU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_or_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16OrU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_or_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8OrU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_or_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16OrU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_or_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32OrU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_or_u";
+                break;
+            }
+            /* Xor */
+            case wasmThreadsOpcodeI32AtomicRMWXor: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_xor";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWXor: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_xor";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8XorU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_xor_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16XorU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_xor_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8XorU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_xor_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16XorU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_xor_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32XorU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_xor_u";
+                break;
+            }
+            /* Xchg */
+            case wasmThreadsOpcodeI32AtomicRMWXchg: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_xchg";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWXchg: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_xchg";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8XchgU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_xchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16XchgU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_xchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8XchgU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_xchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16XchgU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_xchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32XchgU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_xchg_u";
+                break;
+            }
+            default: {
+                fprintf(
+                    stderr,
+                    "w2c2: unsupported atomic RMW instruction opcode: %s\n",
+                    wasmThreadsOpcodeDescription(opcode)
+                );
+                return false;
+            }
+        }
+
+        if (instruction.align != expectedAlign) {
+            fprintf(
+                stderr,
+                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
+                wasmThreadsOpcodeDescription(opcode),
+                expectedAlign,
+                instruction.align
+            );
+            return false;
+        }
+
+        {
+            const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+
+            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+
+            MUST (wasmCWriteIndent(writer))
+            MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+            MUST (wasmCWriteAssign(writer))
+            MUST (wasmCWrite(writer, functionName))
+            MUST (wasmCWriteChar(writer, '('))
+            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWrite(writer, "(U64)"))
+            MUST (wasmCWriteStringStackName(
+                    writer->builder,
+                stackIndex1,
+                writer->typeStack->valueTypes[stackIndex1]
+            ))
+            if (instruction.offset != 0) {
+                MUST (wasmCWritePlus(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                MUST (wasmCWriteChar(writer, 'U'))
+            }
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWriteStringStackName(
+                writer->builder,
+                stackIndex0,
+                writer->typeStack->valueTypes[stackIndex0]
+            ))
+            MUST (wasmCWrite(writer, ");\n"))
+
+            wasmTypeStackDrop(writer->typeStack, 2);
+            MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+        }
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteAtomicRMWCmpxchgExpr(
+    const WasmCFunctionWriter* writer,
+    const WasmThreadsOpcode opcode
+) {
+    WasmMemoryArgumentInstruction instruction;
+    if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
+        fprintf(
+            stderr,
+            "w2c2: invalid %s instruction encoding\n",
+            wasmThreadsOpcodeDescription(opcode)
+        );
+        return false;
+    }
+
+    if (!writer->ignore) {
+        U32 expectedAlign = 0;
+        WasmValueType resultType = 0;
+        char *functionName = NULL;
+        switch (opcode) {
+            case wasmThreadsOpcodeI32AtomicRMWCmpxchg: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw_cmpxchg";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMWCmpxchg: {
+                expectedAlign = WASM_MEMARG64_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw_cmpxchg";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW8CmpxchgU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw8_cmpxchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI32AtomicRMW16CmpxchgU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI32;
+                functionName = "i32_atomic_rmw16_cmpxchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW8CmpxchgU: {
+                expectedAlign = WASM_MEMARG8_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw8_cmpxchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW16CmpxchgU: {
+                expectedAlign = WASM_MEMARG16_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw16_cmpxchg_u";
+                break;
+            }
+            case wasmThreadsOpcodeI64AtomicRMW32CmpxchgU: {
+                expectedAlign = WASM_MEMARG32_ALIGN;
+                resultType = wasmValueTypeI64;
+                functionName = "i64_atomic_rmw32_cmpxchg_u";
+                break;
+            }
+            default: {
+                fprintf(
+                    stderr,
+                    "w2c2: unsupported atomic RMW compare-exchange instruction opcode: %s\n",
+                    wasmThreadsOpcodeDescription(opcode)
+                );
+                return false;
+            }
+        }
+
+        if (instruction.align != expectedAlign) {
+            fprintf(
+                stderr,
+                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
+                wasmThreadsOpcodeDescription(opcode),
+                expectedAlign,
+                instruction.align
+            );
+            return false;
+        }
+
+        {
+            const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
+            const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+
+            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+
+            MUST (wasmCWriteIndent(writer))
+            MUST (wasmCWriteStringStackName(writer->builder, stackIndex2, resultType))
+            MUST (wasmCWriteAssign(writer))
+            MUST (wasmCWrite(writer, functionName))
+            MUST (wasmCWriteChar(writer, '('))
+            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWrite(writer, "(U64)"))
+            MUST (wasmCWriteStringStackName(
+                    writer->builder,
+                    stackIndex2,
+                    writer->typeStack->valueTypes[stackIndex2]
+            ))
+            if (instruction.offset != 0) {
+                MUST (wasmCWritePlus(writer))
+                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                MUST (wasmCWriteChar(writer, 'U'))
+            }
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWriteStringStackName(
+                    writer->builder,
+                    stackIndex1,
+                    writer->typeStack->valueTypes[stackIndex1]
+            ))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWriteStringStackName(
+                    writer->builder,
+                    stackIndex0,
+                    writer->typeStack->valueTypes[stackIndex0]
+            ))
+            MUST (wasmCWrite(writer, ");\n"))
+
+            wasmTypeStackDrop(writer->typeStack, 3);
+            MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+        }
+    }
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionCode(
     WasmCFunctionWriter* writer,
     WasmOpcode* opcode
@@ -2590,11 +3548,111 @@ wasmCWriteFunctionCode(
                 break;
             }
             case wasmOpcodeMemorySize: {
-                MUST (wasmCWriteMemorySize(writer))
+                MUST (wasmCWriteMemorySizeExpr(writer))
                 break;
             }
             case wasmOpcodeMemoryGrow: {
-                MUST (wasmCWriteMemoryGrow(writer))
+                MUST (wasmCWriteMemoryGrowExpr(writer))
+                break;
+            }
+            case wasmOpcodeThreadsPrefix: {
+                WasmThreadsOpcode threadsOpcode = 0;
+                MUST (leb128ReadU32(writer->code, (U32*)&threadsOpcode) > 0)
+
+                switch (threadsOpcode) {
+                    case wasmThreadsOpcodeMemoryAtomicNotify: {
+                        MUST (wasmCWriteMemoryAtomicNotifyExpr(writer))
+                        break;
+                    }
+                    case wasmThreadsOpcodeMemoryAtomicWait32: {
+                        MUST (wasmCWriteMemoryAtomicWait32Expr(writer))
+                        break;
+                    }
+                    case wasmThreadsOpcodeMemoryAtomicWait64: {
+                        MUST (wasmCWriteMemoryAtomicWait64Expr(writer))
+                        break;
+                    }
+                    case wasmThreadsOpcodeAtomicFence: {
+                        MUST (wasmCWriteAtomicFenceExpr(writer))
+                        break;
+                    }
+                    case wasmThreadsOpcodeI32AtomicLoad:
+                    case wasmThreadsOpcodeI64AtomicLoad:
+                    case wasmThreadsOpcodeI32AtomicLoad8U:
+                    case wasmThreadsOpcodeI32AtomicLoad16U:
+                    case wasmThreadsOpcodeI64AtomicLoad8U:
+                    case wasmThreadsOpcodeI64AtomicLoad16U:
+                    case wasmThreadsOpcodeI64AtomicLoad32U: {
+                        MUST (wasmCWriteAtomicLoadExpr(writer, threadsOpcode))
+                        break;
+                    }
+                    case wasmThreadsOpcodeI32AtomicStore:
+                    case wasmThreadsOpcodeI64AtomicStore:
+                    case wasmThreadsOpcodeI32AtomicStore8:
+                    case wasmThreadsOpcodeI32AtomicStore16:
+                    case wasmThreadsOpcodeI64AtomicStore8:
+                    case wasmThreadsOpcodeI64AtomicStore16:
+                    case wasmThreadsOpcodeI64AtomicStore32: {
+                        MUST (wasmCWriteAtomicStoreExpr(writer, threadsOpcode))
+                        break;
+                    }
+                    case wasmThreadsOpcodeI32AtomicRMWAdd:
+                    case wasmThreadsOpcodeI64AtomicRMWAdd:
+                    case wasmThreadsOpcodeI32AtomicRMW8AddU:
+                    case wasmThreadsOpcodeI32AtomicRMW16AddU:
+                    case wasmThreadsOpcodeI64AtomicRMW8AddU:
+                    case wasmThreadsOpcodeI64AtomicRMW16AddU:
+                    case wasmThreadsOpcodeI64AtomicRMW32AddU:
+                    case wasmThreadsOpcodeI32AtomicRMWSub:
+                    case wasmThreadsOpcodeI64AtomicRMWSub:
+                    case wasmThreadsOpcodeI32AtomicRMW8SubU:
+                    case wasmThreadsOpcodeI32AtomicRMW16SubU:
+                    case wasmThreadsOpcodeI64AtomicRMW8SubU:
+                    case wasmThreadsOpcodeI64AtomicRMW16SubU:
+                    case wasmThreadsOpcodeI64AtomicRMW32SubU:
+                    case wasmThreadsOpcodeI32AtomicRMWAnd:
+                    case wasmThreadsOpcodeI64AtomicRMWAnd:
+                    case wasmThreadsOpcodeI32AtomicRMW8AndU:
+                    case wasmThreadsOpcodeI32AtomicRMW16AndU:
+                    case wasmThreadsOpcodeI64AtomicRMW8AndU:
+                    case wasmThreadsOpcodeI64AtomicRMW16AndU:
+                    case wasmThreadsOpcodeI64AtomicRMW32AndU:
+                    case wasmThreadsOpcodeI32AtomicRMWOr:
+                    case wasmThreadsOpcodeI64AtomicRMWOr:
+                    case wasmThreadsOpcodeI32AtomicRMW8OrU:
+                    case wasmThreadsOpcodeI32AtomicRMW16OrU:
+                    case wasmThreadsOpcodeI64AtomicRMW8OrU:
+                    case wasmThreadsOpcodeI64AtomicRMW16OrU:
+                    case wasmThreadsOpcodeI64AtomicRMW32OrU:
+                    case wasmThreadsOpcodeI32AtomicRMWXor:
+                    case wasmThreadsOpcodeI64AtomicRMWXor:
+                    case wasmThreadsOpcodeI32AtomicRMW8XorU:
+                    case wasmThreadsOpcodeI32AtomicRMW16XorU:
+                    case wasmThreadsOpcodeI64AtomicRMW8XorU:
+                    case wasmThreadsOpcodeI64AtomicRMW16XorU:
+                    case wasmThreadsOpcodeI64AtomicRMW32XorU:
+                    case wasmThreadsOpcodeI32AtomicRMWXchg:
+                    case wasmThreadsOpcodeI64AtomicRMWXchg:
+                    case wasmThreadsOpcodeI32AtomicRMW8XchgU:
+                    case wasmThreadsOpcodeI32AtomicRMW16XchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW8XchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW16XchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW32XchgU: {
+                        MUST (wasmCWriteAtomicRMWExpr(writer, threadsOpcode))
+                        break;
+                    }
+                    case wasmThreadsOpcodeI32AtomicRMWCmpxchg:
+                    case wasmThreadsOpcodeI64AtomicRMWCmpxchg:
+                    case wasmThreadsOpcodeI32AtomicRMW8CmpxchgU:
+                    case wasmThreadsOpcodeI32AtomicRMW16CmpxchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW8CmpxchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW16CmpxchgU:
+                    case wasmThreadsOpcodeI64AtomicRMW32CmpxchgU: {
+                        MUST (wasmCWriteAtomicRMWCmpxchgExpr(writer, threadsOpcode))
+                        break;
+                    }
+                }
+
                 break;
             }
             case wasmOpcodeMiscPrefix: {
@@ -2603,25 +3661,29 @@ wasmCWriteFunctionCode(
 
                 switch (miscOpcode) {
                     case wasmMiscOpcodeMemoryInit: {
-                        /* TODO: refactor into instruction read function */
-                        U32 dataIndex = 0;
-                        U8 memoryIndex = 0;
-                        MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
-                        MUST (bufferReadByte(writer->code, &memoryIndex) > 0)
+                        MUST (wasmCWriteMemoryInitExpr(writer))
                         break;
                     }
                     case wasmMiscOpcodeDataDrop: {
                         /* TODO: refactor into instruction read function */
                         U32 dataIndex = 0;
                         MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeMemoryCopy: {
-                        MUST (wasmCWriteMemoryCopy(writer))
+                        MUST (wasmCWriteMemoryCopyExpr(writer))
                         continue;
                     }
                     case wasmMiscOpcodeMemoryFill: {
-                        MUST (wasmCWriteMemoryFill(writer, miscOpcode))
+                        MUST (wasmCWriteMemoryFillExpr(writer, miscOpcode))
                         continue;
                     }
                     case wasmMiscOpcodeTableInit: {
@@ -2630,12 +3692,28 @@ wasmCWriteFunctionCode(
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeElemDrop: {
                         /* TODO: refactor into instruction read function */
                         U32 elemIndex = 0;
                         MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeTableCopy: {
@@ -2644,74 +3722,109 @@ wasmCWriteFunctionCode(
                         U32 tableIndex2 = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex1) > 0)
                         MUST (leb128ReadU32(writer->code, &tableIndex2) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeTableGrow: {
                         /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeTableSize: {
                         /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     case wasmMiscOpcodeTableFill: {
                         /* TODO: refactor into instruction read function */
                         U32 tableIndex = 0;
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
+
+                        /* TODO */
+                        fprintf(
+                            stderr,
+                            "w2c2: unimplemented opcode: %s\n",
+                            wasmMiscOpcodeDescription(miscOpcode)
+                        );
+
                         break;
                     }
                     default:
+                        if (writer->ignore) {
+                            break;
+                        }
+
+                        switch (miscOpcode) {
+                            case wasmMiscOpcodeI32TruncSatF32S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF32S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF64S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF64S: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF32U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF32U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F32"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI32TruncSatF64U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F64"))
+                                break;
+                            }
+                            case wasmMiscOpcodeI64TruncSatF64U: {
+                                MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F64"))
+                                break;
+                            }
+                            default: {
+                                fprintf(
+                                    stderr,
+                                    "w2c2: unsupported misc opcode: %s\n",
+                                    wasmMiscOpcodeDescription(miscOpcode)
+                                );
+                                return false;
+                            }
+                        }
+
                         break;
                 }
 
-                if (!writer->ignore) {
-                    switch (miscOpcode) {
-                        case wasmMiscOpcodeI32TruncSatF32S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF32S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_S_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF64S: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_S_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF32U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF32U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F32"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI32TruncSatF64U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI32, "I32_TRUNC_SAT_U_F64"))
-                            break;
-                        }
-                        case wasmMiscOpcodeI64TruncSatF64U: {
-                            MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeI64, "I64_TRUNC_SAT_U_F64"))
-                            break;
-                        }
-                        default: {
-                            fprintf(
-                                stderr,
-                                "w2c2: unsupported misc opcode: %s\n",
-                                wasmMiscOpcodeDescription(miscOpcode)
-                            );
-                            return false;
-                        }
-                    }
-                }
                 break;
             }
             default: {
@@ -3426,23 +4539,25 @@ wasmCWriteFunctionDeclarations(
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
 
-    U32 functionIndex = 0;
-    for (; functionIndex < functionCount; functionIndex++) {
-        const WasmFunction function = module->functions.functions[functionIndex];
+    U32 declaredFunctionIndex = 0;
+    for (; declaredFunctionIndex < functionCount; declaredFunctionIndex++) {
+        const WasmFunction function = module->functions.functions[declaredFunctionIndex];
+        const U32 moduleFunctionIndex = assertSizeU32(functionImportCount) + declaredFunctionIndex;
         wasmCWriteFileFunctionSignature(
             file,
             module,
             moduleName,
             function,
-            assertSizeU32(functionImportCount) + functionIndex,
+            moduleFunctionIndex,
             false,
             pretty,
             multipleModules
         );
-        if (debug && functionIndex < module->functionNames.length) {
-            char *functionName = module->functionNames.names[functionIndex];
+
+        if (debug && function.exportName == NULL && moduleFunctionIndex < module->functionNames.length) {
+            char* functionName = module->functionNames.names[moduleFunctionIndex];
             if (functionName != NULL) {
-                fprintf(file," __asm__(\"%s_%s\")", moduleName, functionName);
+                fprintf(file, " __asm__(\"%s_%s\")", moduleName, functionName);
             }
         }
         fputs(";\n\n", file);
@@ -3455,7 +4570,7 @@ WARN_UNUSED_RESULT
 wasmCWriteFunctionImplementations(
     FILE* file,
     const WasmModule* module,
-    const char *moduleName,
+    const char* moduleName,
     WasmDebugLines* debugLines,
     const U32 startIDIndex,
     const U32 endIDIndex,
@@ -3934,7 +5049,7 @@ wasmCWriteMemoryExport(
             fputs(indentation, file);
         }
         fputs("return ", file);
-        wasmCWriteFileMemoryUse(file, module, export.index, true);
+        wasmCWriteFileMemoryUse(file, module, export.index, NULL, true);
         fputs(";\n}\n\n", file);
     } else {
         fputs(";\n\n", file);
@@ -3989,56 +5104,85 @@ wasmCWriteExports(
     }
 }
 
+/* TODO: add support for multiple modules */
 static
 void
-wasmCWriteDataSegmentsAsArrays(
+wasmCWriteDataSegments(
     FILE* file,
     const WasmModule* module,
+    const WasmDataSegmentMode mode,
     const bool pretty
 ) {
     const U32 dataSegmentCount = module->dataSegments.count;
 
-    U32 dataSegmentIndex = 0;
-    for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-        const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+    {
+        U32 dataSegmentIndex = 0;
+        U64 byteOffset = 0;
+        for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
+            const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
 
-        if (!dataSegment.bytes.length) {
-            continue;
-        }
+            if (!dataSegment.bytes.length) {
+                continue;
+            }
 
-        fputs("const U8 ", file);
-        wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-        if (pretty) {
-            fputs("[] = {\n", file);
-        } else {
-            fputs("[]={\n", file);
-        }
-        if (pretty) {
-            fputs(indentation, file);
-        }
-        {
-            U32 byteIndex = 0;
-            for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
-                fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
-                if (pretty) {
-                    fputs(", ", file);
-                } else {
-                    fputc(',', file);
+            switch (mode) {
+                case wasmDataSegmentModeArrays: {
+                    fputs("const U8 ", file);
+                    /* TODO: add support for multiple modules */
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    if (pretty) {
+                        fputs("[] = {\n", file);
+                    } else {
+                        fputs("[]={\n", file);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    {
+                        U32 byteIndex = 0;
+                        for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
+                            fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
+                            if (pretty) {
+                                fputs(", ", file);
+                            } else {
+                                fputc(',', file);
+                            }
+                        }
+                    }
+                    fputs("\n};\n\n", file);
+                    break;
+                }
+                case wasmDataSegmentModeGNULD:
+                case wasmDataSegmentModeSectcreate1:
+                case wasmDataSegmentModeSectcreate2: {
+                    fputs("const U8* ", file);
+                    /* TODO: add support for multiple modules */
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    if (pretty) {
+                        fprintf(file, " = ds + %llu", byteOffset);
+                    } else {
+                        fprintf(file, "=ds+%llu", byteOffset);
+                    }
+                    byteOffset += dataSegment.bytes.length;
+                    break;
+                }
+                default: {
+                    fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
+                    abort();
                 }
             }
         }
-        fputs("\n};\n\n", file);
     }
 }
 
 static
 void
-wasmCWriteDataSegmentsAsSection(
+wasmCWriteDataSegmentsFromSection(
     FILE* file,
     const WasmModule* module,
     const WasmDataSegmentMode mode
 ) {
-    static char* const filename = "datasegments";
+    static const char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
 
     U32 dataSegmentIndex = 0;
@@ -4047,10 +5191,12 @@ wasmCWriteDataSegmentsAsSection(
     switch (mode) {
         case wasmDataSegmentModeGNULD: {
             fputs("extern char _binary_datasegments_start[];\n\n", file);
+            fputs("static char* ds = _binary_datasegments_start;\n", file);
             break;
         }
         case wasmDataSegmentModeSectcreate1: {
-            fputs("extern char datasegments __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            fputs("extern char data_segments_data __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
+            fputs("static char* ds = &data_segments_data;\n", file);
             break;
         }
         case wasmDataSegmentModeSectcreate2: {
@@ -4067,6 +5213,11 @@ wasmCWriteDataSegmentsAsSection(
                 "#include <libc.h>\n"
                 "#define SECT_DATA_SIZE_TYPE int\n"
                 "#endif\n",
+                file
+            );
+            fputs(
+                "SECT_DATA_SIZE_TYPE len = 0;\n"
+                "static char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
                 file
             );
             break;
@@ -4114,33 +5265,6 @@ wasmCWriteDataSegmentsAsSection(
     }
 }
 
-
-static
-void
-wasmCWriteDataSegments(
-    FILE* file,
-    const WasmModule* module,
-    const WasmDataSegmentMode mode,
-    const bool pretty
-) {
-    switch (mode) {
-        case wasmDataSegmentModeArrays: {
-            wasmCWriteDataSegmentsAsArrays(file, module, pretty);
-            break;
-        }
-        case wasmDataSegmentModeGNULD:
-        case wasmDataSegmentModeSectcreate1:
-        case wasmDataSegmentModeSectcreate2: {
-            wasmCWriteDataSegmentsAsSection(file, module, mode);
-            break;
-        }
-        default: {
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
-            abort();
-        }
-    }
-}
-
 static
 void
 wasmCWriteMemoryImports(
@@ -4177,11 +5301,12 @@ wasmCWriteMemories(
 
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryCount; memoryIndex++) {
+        U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
         if (pretty) {
             fputs(indentation, file);
         }
-        fputs("wasmMemory ", file);
-        wasmCWriteFileMemoryNonImportName(file, assertSizeU32(memoryImportCount) + memoryIndex);
+        fputs("wasmMemory* ", file);
+        wasmCWriteFileMemoryNonImportName(file, moduleMemoryIndex);
         fputs(";\n", file);
     }
 }
@@ -4203,51 +5328,75 @@ wasmCWriteInitMemories(
         StringBuilder stringBuilder = emptyStringBuilder;
         MUST (stringBuilderInitialize(&stringBuilder))
 
-        fprintf(file, "static void %sInitMemories(%sInstance* i) {\n", moduleName, moduleName);
-
-        switch (dataSegmentMode) {
-            case wasmDataSegmentModeGNULD: {
-                fputs("static char* ds = _binary_datasegments_start;\n", file);
-                break;
-            }
-            case wasmDataSegmentModeSectcreate1: {
-                fputs("static char* ds = &datasegments;\n", file);
-                break;
-            }
-            case wasmDataSegmentModeSectcreate2: {
-                fputs(
-                    "SECT_DATA_SIZE_TYPE len = 0;\n"
-                    "char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
-                    file
-                );
-                break;
-            }
-            default:
-                break;
-        }
+        fprintf(
+            file,
+            "static void %sInitMemories(%sInstance* i, %sInstance* parent) {\n",
+            moduleName,
+            moduleName,
+            moduleName
+        );
 
         {
             U32 memoryIndex = 0;
             for (; memoryIndex < memoryCount; memoryIndex++) {
                 const WasmMemory memory = module->memories.memories[memoryIndex];
+                U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
 
-                if (pretty) {
-                    fputs(indentation, file);
+                if (memory.shared) {
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("if (parent == NULL) {\n", file);
+                    {
+                        if (pretty) {
+                            fputs(indentation, file);
+                            fputs(indentation, file);
+                        }
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        fprintf(file, "= WASM_MEMORY_ALLOCATE_SHARED(%u, %u);\n", memory.min, memory.max);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("} else {\n", file);
+                    {
+                        if (pretty) {
+                            fputs(indentation, file);
+                            fputs(indentation, file);
+                        }
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        fputs(" = ", file);
+                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, "parent", true);
+                        fputs(";\n", file);
+                    }
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("}\n", file);
+                } else {
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                    fprintf(file, " = wasmMemoryAllocate(%u, %u);\n", memory.min, memory.max);
                 }
-                fputs("wasmMemoryAllocate(", file);
-                wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
-                fprintf(file, ", %u, %u);\n", memory.min, memory.max);
             }
         }
 
         {
             const U32 dataSegmentCount = module->dataSegments.count;
-            size_t dataSegmentOffset = 0;
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
                 const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+                const size_t dataSegmentLength = dataSegment.bytes.length;
+                const Buffer code = dataSegment.offset;
 
-                if (!dataSegment.bytes.length) {
+                if (!dataSegmentLength) {
+                    continue;
+                }
+
+                /* Skip passive segments */
+                if (code.data == NULL) {
                     continue;
                 }
 
@@ -4255,37 +5404,21 @@ wasmCWriteInitMemories(
                     fputs(indentation, file);
                 }
                 fputs("LOAD_DATA(", file);
-                wasmCWriteFileMemoryUse(file, module, dataSegment.memoryIndex, false);
+                wasmCWriteFileMemoryUse(
+                    file,
+                    module,
+                    dataSegment.memoryIndex,
+                    NULL,
+                    false
+                );
                 fputs(", ", file);
-                {
-                    const Buffer code = dataSegment.offset;
-                    MUST (stringBuilderReset(&stringBuilder))
-
-                    MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
-                    fputs(stringBuilder.string, file);
-                }
+                MUST (stringBuilderReset(&stringBuilder))
+                MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                fputs(stringBuilder.string, file);
                 fputs(", ", file);
-
-                switch (dataSegmentMode) {
-                    case wasmDataSegmentModeArrays: {
-                        wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-                        break;
-                    }
-                    case wasmDataSegmentModeGNULD:
-                    case wasmDataSegmentModeSectcreate1:
-                    case wasmDataSegmentModeSectcreate2: {
-                        fprintf(file, "ds + %lu", (unsigned long) dataSegmentOffset);
-                        break;
-                    }
-                    default: {
-                        fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", dataSegmentMode);
-                    }
-
-                }
-
-                fprintf(file, ", %lu);\n", (unsigned long) dataSegment.bytes.length);
-
-                dataSegmentOffset += dataSegment.bytes.length;
+                /* TODO: add support for multiple modules */
+                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                fprintf(file, ", %lu);\n", (unsigned long) dataSegmentLength);
             }
         }
 
@@ -4307,11 +5440,12 @@ wasmCWriteFreeMemories(
     const U32 memoryCount = module->memories.count;
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryCount; memoryIndex++) {
+        U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
         if (pretty) {
             fputs(indentation, file);
         }
         fputs("wasmMemoryFree(", file);
-        wasmCWriteFileMemoryUse(file, module, assertSizeU32(memoryImportCount) + memoryIndex, true);
+        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
         fputs(");\n", file);
     }
 }
@@ -4519,6 +5653,11 @@ wasmCWriteModuleInstanceDeclaration(
 ) {
     fprintf(file, "typedef struct %sInstance {\n", moduleName);
 
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("wasmModuleInstance common;\n", file);
+
     wasmCWriteMemoryImports(file, module, pretty);
     wasmCWriteTableImports(file, module, pretty);
     wasmCWriteGlobalImports(file, module, pretty);
@@ -4546,6 +5685,96 @@ wasmCWriteModuleDeclarations(
     wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules);
 }
 
+/* TODO: verify */
+static
+void
+wasmCWriteNewChildFunction(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool pretty,
+    const bool multipleModules
+) {
+    fprintf(
+        file,
+        "%sInstance* %sNewChild(%sInstance* self) {\n",
+        moduleName,
+        moduleName,
+        moduleName
+    );
+
+    /* TODO: clean up */
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(
+        file,
+        "%sInstance* child = (%sInstance*)calloc(1, sizeof(%sInstance));\n",
+        moduleName,
+        moduleName,
+        moduleName
+    );
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.funcExports = self->common.funcExports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.resolveImports = self->common.resolveImports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.newChild = self->common.newChild;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInitImports(child, self->common.resolveImports);\n", moduleName);
+
+    if (module->memories.count > 0) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitMemories(child, self);\n", moduleName);
+    }
+
+    if (module->tables.count > 0
+        || module->elementSegments.count > 0
+            ) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitTables(child);\n", moduleName);
+    }
+
+    if (module->globals.count > 0) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        fprintf(file, "%sInitGlobals(child);\n", moduleName);
+    }
+
+    if (module->hasStartFunction) {
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        wasmCWriteFileFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
+        fputs("(child);\n", file);
+    }
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("return child;\n", file);
+
+    fputs("}\n\n", file);
+}
+
+
 static
 void
 wasmCWriteInstantiateFunction(
@@ -4557,7 +5786,7 @@ wasmCWriteInstantiateFunction(
 ) {
     fprintf(
         file,
-        "void %sInstantiate(%sInstance* i, void* resolve(const char* module, const char* name)) {\n",
+        "void %sInstantiate(%sInstance* i, void* resolveImports(const char* module, const char* name)) {\n",
         moduleName,
         moduleName
     );
@@ -4565,13 +5794,28 @@ wasmCWriteInstantiateFunction(
     if (pretty) {
         fputs(indentation, file);
     }
-    fprintf(file, "%sInitImports(i, resolve);\n", moduleName);
+    fprintf(file, "i->common.funcExports = %sFuncExports;\n", moduleName);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("i->common.resolveImports = resolveImports;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "i->common.newChild = (struct wasmModuleInstance* (*)(struct wasmModuleInstance*))%sNewChild;\n", moduleName);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInitImports(i, resolveImports);\n", moduleName);
 
     if (module->memories.count > 0) {
         if (pretty) {
             fputs(indentation, file);
         }
-        fprintf(file, "%sInitMemories(i);\n", moduleName);
+        fprintf(file, "%sInitMemories(i, NULL);\n", moduleName);
     }
 
     if (module->tables.count > 0
@@ -4629,7 +5873,7 @@ wasmCWriteModuleHeader(
     const bool multipleModules
 ) {
     /* Create file */
-    FILE *file = NULL;
+    FILE* file = NULL;
 
     file = fopen(filename, "w");
     if (file == NULL) {
@@ -4682,6 +5926,60 @@ wasmCWriteModuleHeader(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteModuleFunctionExportsArray(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool pretty,
+    const bool multipleModules
+) {
+    U32 functionExportCount = 0;
+    {
+        U32 exportIndex = 0;
+        for (; exportIndex < module->exports.count; exportIndex++) {
+            const WasmExport export = module->exports.exports[exportIndex];
+            if (export.kind == wasmExportKindFunction) {
+                functionExportCount += 1;
+            }
+        }
+    }
+
+    fprintf(
+        file,
+        "wasmFuncExport %sFuncExports[%u] = {\n",
+        moduleName,
+        functionExportCount + 1
+    );
+
+    {
+        U32 exportIndex = 0;
+        for (; exportIndex < module->exports.count; exportIndex++) {
+            const WasmExport export = module->exports.exports[exportIndex];
+            if (export.kind != wasmExportKindFunction) {
+                continue;
+            }
+
+            fputs("{(wasmFunc)", file);
+            wasmCWriteFileFunctionUse(
+                file,
+                module,
+                moduleName,
+                export.index,
+                false,
+                multipleModules
+            );
+            fprintf(file, ",\"%s\"},\n", export.name);
+        }
+    }
+
+    fputs("{NULL,NULL}\n};\n\n", file);
+
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteInits(
     const WasmModule* module,
     const char* moduleName,
@@ -4690,7 +5988,7 @@ wasmCWriteInits(
     const bool pretty,
     const bool multipleModules
 ) {
-    wasmCWriteDataSegments(file, module, dataSegmentMode, pretty);
+    MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
     MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty))
     MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules))
@@ -4699,6 +5997,7 @@ wasmCWriteInits(
 
     wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules);
 
+    wasmCWriteNewChildFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteInstantiateFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteFreeFunction(file, module, moduleName, pretty);
 
@@ -4791,14 +6090,14 @@ typedef struct WasmCImplementationWriterTask {
     bool debug;
     bool multipleModules;
     bool result;
-    WasmDebugLines *debugLines;
+    WasmDebugLines* debugLines;
 } WasmCImplementationWriterTask;
 
 typedef struct WasmCImplementationConcurrentWriter {
     pthread_mutex_t mutex;
     pthread_cond_t consume;
     pthread_cond_t produce;
-    WasmCImplementationWriterTask *task;
+    WasmCImplementationWriterTask* task;
     bool done;
 } WasmCImplementationConcurrentWriter;
 
@@ -4923,13 +6222,16 @@ wasmCWriteModuleImplementationFiles(
     if (functionCount == 0) {
         return true;
     }
+    if (functionsPerFile == 0) {
+        functionsPerFile = UINT32_MAX;
+    }
     fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
     {
 
 #if HAS_PTHREAD
         U32 threadCount = options.threadCount;
-        pthread_t* threads = calloc(threadCount * sizeof(pthread_t), 1);
+        pthread_t* threads = calloc(threadCount, sizeof(pthread_t));
         U32 jobIndex = 0;
 
         bool setDebugLines = options.debug && options.threadCount == 1;
@@ -5052,7 +6354,7 @@ wasmCWriteModuleImplementation(
     const WasmCWriteModuleOptions options
 ) {
     /* Create file */
-    FILE *file = NULL;
+    FILE* file = NULL;
 
     file = fopen(filename, "w");
     if (file == NULL) {
@@ -5066,6 +6368,33 @@ wasmCWriteModuleImplementation(
     }
 
     wasmCWriteIncludes(file, headerName);
+
+    switch (options.dataSegmentMode) {
+        case wasmDataSegmentModeGNULD:
+        case wasmDataSegmentModeSectcreate1:
+        case wasmDataSegmentModeSectcreate2: {
+            wasmCWriteDataSegmentsFromSection(
+                file,
+                module,
+                options.dataSegmentMode
+            );
+            break;
+        }
+        case wasmDataSegmentModeArrays: {
+            /* NO-OP */
+            break;
+        }
+        default: {
+            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
+            abort();
+        }
+    }
+
+    wasmCWriteDataSegments(
+        file, module,
+        options.dataSegmentMode,
+        options.pretty
+    );
 
     /* Write implementations */
 
@@ -5136,8 +6465,8 @@ wasmCWriteModuleImplementation(
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
-    const WasmModule *module,
-    const char *moduleName,
+    const WasmModule* module,
+    const char* moduleName,
     const WasmCWriteModuleOptions options,
     const WasmFunctionIDs staticFunctionIDs,
     const WasmFunctionIDs dynamicFunctionIDs

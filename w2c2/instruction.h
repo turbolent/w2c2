@@ -52,19 +52,72 @@ wasmConstInstructionRead(
     WasmConstInstruction* result
 );
 
-/* WasmLoadStoreInstruction */
+/* WasmMemoryArgumentInstruction */
 
-typedef struct WasmLoadStoreInstruction {
+typedef struct WasmMemoryArgumentInstruction {
     U32 align;
     U32 offset;
-} WasmLoadStoreInstruction;
+} WasmMemoryArgumentInstruction;
 
 bool
 WARN_UNUSED_RESULT
-wasmLoadStoreInstructionRead(
+wasmMemoryArgumentInstructionRead(
     Buffer* buffer,
-    WasmLoadStoreInstruction* result
+    WasmMemoryArgumentInstruction* result
 );
+
+#define WASM_MEMARG8_ALIGN  0
+#define WASM_MEMARG16_ALIGN 1
+#define WASM_MEMARG32_ALIGN 2
+#define WASM_MEMARG64_ALIGN 3
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument8InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG8_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument16InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG16_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument32InstructionRead(
+    Buffer* buffer,
+    WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG32_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument64InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG64_ALIGN;
+}
 
 /* WasmCallInstruction */
 
@@ -151,6 +204,20 @@ WARN_UNUSED_RESULT
 wasmMemoryCopyInstructionRead(
     Buffer* buffer,
     WasmMemoryCopyInstruction* result
+);
+
+/* WasmMemoryInitInstruction */
+
+typedef struct WasmMemoryInitInstruction {
+    U32 dataSegmentIndex;
+    U32 memoryIndex;
+} WasmMemoryInitInstruction;
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryInitInstructionRead(
+    Buffer* buffer,
+    WasmMemoryInitInstruction* result
 );
 
 #endif /* W2C2_INSTRUCTION_H */

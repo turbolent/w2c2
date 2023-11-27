@@ -83,8 +83,6 @@ wasmMemory* wasiMemory(void* instance) {
 
 int
 main(int argc, char* argv[]) {
-    wasmMemory m;
-    wasmMemoryAllocate(&m, 2, 65535);
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;

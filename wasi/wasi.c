@@ -434,7 +434,7 @@ wasiFileDescriptorsEnsureCapacity(
         size_t newCapacity = length + (descriptors->capacity >> 1U);
         void* newFileDescriptors = NULL;
         if (descriptors->fds == NULL) {
-            newFileDescriptors = calloc(newCapacity * sizeof(WasiFileDescriptor), 1);
+            newFileDescriptors = calloc(newCapacity, sizeof(WasiFileDescriptor));
         } else {
             newFileDescriptors = realloc(descriptors->fds, newCapacity * sizeof(WasiFileDescriptor));
         }
@@ -728,17 +728,17 @@ wasiFDWrite(
 
     if (wasiFD > 2) {
         WASI_TRACE((
-           "fd_write("
-           "wasiFD=%d, "
-           "ciovecsPointer=0x%x, "
-           "ciovecsCount=%d, "
-           "resultPointer=0x%x"
-           ")",
-           wasiFD,
-           ciovecsPointer,
-           ciovecsCount,
-           resultPointer
-       ));
+            "fd_write("
+            "wasiFD=%d, "
+            "ciovecsPointer=0x%x, "
+            "ciovecsCount=%d, "
+            "resultPointer=0x%x"
+            ")",
+            wasiFD,
+            ciovecsPointer,
+            ciovecsCount,
+            resultPointer
+        ));
     }
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -2275,8 +2275,7 @@ wasiFDDatasync(
         "fd_datasync("
         "wasiFD=%d, "
         ")",
-        wasiFD,
-        resultPointer
+        wasiFD
     ));
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -2324,8 +2323,7 @@ wasiFDSync(
        "fd_sync("
        "wasiFD=%d, "
        ")",
-       wasiFD,
-       resultPointer
+       wasiFD
     ));
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -4085,3 +4083,92 @@ WASI_IMPORT(U32, sock_shutdown, (
     WASI_TRACE(("sock_shutdown: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
+
+typedef void (*wasiThreadStartFunc)(void* instance, U32 threadID, U32 startArg);
+
+typedef struct ThreadStartArg {
+    void* instance;
+    U32 startArg;
+    U32 threadID;
+    wasiThreadStartFunc startFunc;
+} ThreadStartArg;
+
+static
+void*
+wasiThreadSpawn(
+    void* arg
+) {
+    ThreadStartArg* threadStartArg = (ThreadStartArg*) arg;
+    void* instance = threadStartArg->instance;
+    U32 threadID = threadStartArg->threadID;
+    U32 startArg = threadStartArg->startArg;
+    wasiThreadStartFunc startFunc = threadStartArg->startFunc;
+    free(threadStartArg);
+
+    startFunc(instance, threadID, startArg);
+
+    return NULL;
+}
+
+U32
+wasi__threadX2Dspawn(
+    wasmModuleInstance* instance,
+    U32 startArg
+) {
+    static U32 nextThreadID = 1;
+
+    ThreadStartArg *threadStartArg = NULL;
+    U32 threadID = 0;
+    wasmFuncExport* funcExport = instance->funcExports;
+    wasmFunc startFunc = NULL;
+
+    WASI_TRACE(("thread-spawn(startArg=%d)", startArg));
+
+    /* Find the thread start function that must be exported by the module */
+    for (; funcExport->func != NULL; funcExport++) {
+        if (strcmp(funcExport->name, "wasi_thread_start") == 0) {
+            startFunc = funcExport->func;
+            break;
+        }
+    }
+    if (startFunc == NULL) {
+        WASI_TRACE(("thread-spawn: wasi_thread_start not found"));
+        return -1;
+    }
+
+    /* Allocate and set up the argument for the thread.
+     * It will be freed at the start of the thread execution,
+     * see wasiThreadSpawn.
+     */
+    threadStartArg = calloc(1, sizeof(ThreadStartArg));
+    if (threadStartArg == NULL) {
+        WASI_TRACE(("thread-spawn: allocation failed"));
+        return -1;
+    }
+
+    threadID = atomic_add_U32(&nextThreadID, 1);
+
+    /* TODO: schedule free/cleanup of child instance */
+    threadStartArg->instance = instance->newChild(instance);
+    threadStartArg->startArg = startArg;
+    threadStartArg->threadID = threadID;
+    threadStartArg->startFunc = (wasiThreadStartFunc)startFunc;
+
+    /* Finally, start the thread */
+#ifdef WASM_THREAD_TYPE
+    {
+        WASM_THREAD_TYPE thread;
+        if (!WASM_THREAD_CREATE(&thread, wasiThreadSpawn, threadStartArg)) {
+            WASI_TRACE(("thread-spawn: pthread_create failed"));
+            return -1;
+        }
+    }
+#else
+    WASI_TRACE(("thread-spawn: missing threads implementation"))
+    return -1;
+#endif
+
+    WASI_TRACE(("thread-spawn: threadID=%d", threadID));
+
+    return threadID;
+}
