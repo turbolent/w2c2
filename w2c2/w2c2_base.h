@@ -673,9 +673,10 @@ W2C2_INLINE
 wasmMemory*
 wasmMemoryAllocate(
     const U32 initialPages,
-    const U32 maxPages
+    const U32 maxPages,
+    const bool shared
 ) {
-    const U32 size = initialPages * WASM_PAGE_SIZE;
+    const U32 size = (shared ? maxPages : initialPages) * WASM_PAGE_SIZE;
     wasmMemory* memory = (wasmMemory*)calloc(1, sizeof(wasmMemory));
     if (!memory) {
         abort();
@@ -684,34 +685,24 @@ wasmMemoryAllocate(
     memory->size = size;
     memory->pages = initialPages;
     memory->maxPages = maxPages;
-    memory->shared = false;
+    memory->shared = shared;
     memory->futex = NULL;
     memory->futexFree = NULL;
-    return memory;
-}
-
-static
-W2C2_INLINE
-wasmMemory*
-wasmMemoryAllocateShared(
-    const U32 initialPages,
-    const U32 maxPages
-) {
-    wasmMemory* memory = wasmMemoryAllocate(initialPages, maxPages);
-    memory->shared = true;
+    if (shared) {
 #ifdef WASM_MUTEX_TYPE
-    if (!WASM_MUTEX_INIT(&memory->mutex)) {
-        abort();
-    }
+        if (!WASM_MUTEX_INIT(&memory->mutex)) {
+            abort();
+        }
 #else
-    abort();
+        abort();
 #endif
+    }
     return memory;
 }
 
 #ifdef WASM_MUTEX_TYPE
 #define WASM_MEMORY_ALLOCATE_SHARED(initialPages, maxPages) \
-    wasmMemoryAllocateShared(initialPages, maxPages)
+    wasmMemoryAllocate(initialPages, maxPages, true)
 #else
 #define WASM_MEMORY_ALLOCATE_SHARED(initialPages, maxPages) \
     (_Pragma ("GCC error \"Shared memory not supported. Please define a threads implementation to use (WASM_THREADS_*)\"") NULL)
@@ -748,6 +739,8 @@ wasmMemoryGrow(
     wasmMemory* memory,
     const U32 delta
 ) {
+    bool doRealloc = true;
+
     const U32 oldPages = memory->pages;
     const U32 newPages = memory->pages + delta;
 
@@ -759,19 +752,39 @@ wasmMemoryGrow(
         return (U32) -1;
     }
 
+    if (memory->shared) {
+        doRealloc = false;
+#ifdef WASM_MUTEX_TYPE
+        WASM_MUTEX_LOCK(&memory->mutex);
+#else
+        abort();
+#endif
+    }
+
     {
-        const U32 oldSize = oldPages * WASM_PAGE_SIZE;
         const U32 newSize = newPages * WASM_PAGE_SIZE;
-        const U32 deltaSize = delta * WASM_PAGE_SIZE;
-        U8* newData = (U8*)realloc(memory->data, newSize);
-        if (newData == NULL) {
-            return (U32) -1;
+        if (doRealloc) {
+            const U32 oldSize = oldPages * WASM_PAGE_SIZE;
+            const U32 deltaSize = delta * WASM_PAGE_SIZE;
+            U8* newData = (U8*)realloc(memory->data, newSize);
+            if (newData == NULL) {
+                return (U32) -1;
+            }
+
+            memset(newData + oldSize, 0, deltaSize);
+            memory->data = newData;
         }
 
-        memset(newData + oldSize, 0, deltaSize);
         memory->pages = newPages;
         memory->size = newSize;
-        memory->data = newData;
+    }
+
+    if (memory->shared) {
+#ifdef WASM_MUTEX_TYPE
+        WASM_MUTEX_UNLOCK(&memory->mutex);
+#else
+        abort();
+#endif
     }
 
     return oldPages;
