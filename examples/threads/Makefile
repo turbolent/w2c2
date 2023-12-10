@@ -9,7 +9,7 @@ else
 endif
 
 threads: threads.o main.o
-	$(CC) $^ -o threads $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o threads $(LDFLAGS)
 
 %.c: src/%.wasm
 	$(W2C2) -g $< $@
