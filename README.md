@@ -33,6 +33,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Streaming/single-pass compilation, low memory usage
 - Separate compilation into multiple files
 - Parallel compilation
+- Assist with incremental compilation: Separate static and dynamic functions by comparing with another module
 - Support for multiple modules and instances
 - Support for generating debug information:
   - Function names, if function names are provided in the [`names` custom section](https://webassembly.github.io/spec/core/appendix/custom.html#function-names)
