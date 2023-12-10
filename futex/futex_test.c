@@ -56,7 +56,7 @@ testFutex(void) {
     TestThreadArg arg3;
     TestThreadArg arg4;
 
-    mem = wasmMemoryAllocateShared(1, 1);
+    mem = wasmMemoryAllocate(1, 1, true);
 
     /* Three threads will wait on waitAddress1,
      * one thread will wait on waitAddress2. */

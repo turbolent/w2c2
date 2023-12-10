@@ -5378,7 +5378,7 @@ wasmCWriteInitMemories(
                         fputs(indentation, file);
                     }
                     wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-                    fprintf(file, " = wasmMemoryAllocate(%u, %u);\n", memory.min, memory.max);
+                    fprintf(file, " = wasmMemoryAllocate(%u, %u, false);\n", memory.min, memory.max);
                 }
             }
         }
