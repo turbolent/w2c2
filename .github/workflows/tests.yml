@@ -99,6 +99,8 @@ jobs:
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Test futex
+        env:
+          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
         working-directory: ./futex
         run: make test BUILD=${{ matrix.build }}
 
@@ -118,6 +120,8 @@ jobs:
 
       - if: steps.changes.outputs.wasi == 'true'
         name: Test wasi
+        env:
+          LDFLAGS: -static
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }}
   macos:
