@@ -121,7 +121,7 @@ jobs:
       - if: steps.changes.outputs.wasi == 'true'
         name: Test wasi
         env:
-          LDFLAGS: -static
+          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }}
   macos:
