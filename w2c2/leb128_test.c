@@ -50,6 +50,8 @@ testReadU32LEB128(void) {
 
     if (success) {
         fprintf(stderr, "PASS testReadU32LEB128\n");
+    } else {
+        exit(1);
     }
 }
 
@@ -103,5 +105,7 @@ testReadI32LEB128(void) {
 
     if (success) {
         fprintf(stderr, "PASS testReadI32LEB128\n");
+    } else {
+        exit(1);
     }
 }

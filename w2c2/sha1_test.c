@@ -21,7 +21,7 @@ testSHA1(void) {
 
         if (memcmp(actual, expected, SHA1_DIGEST_LENGTH) != 0) {
             fprintf(stderr, "FAIL testSHA1\n");
-            return;
+            exit(1);
         }
     }
 
@@ -41,7 +41,7 @@ testSHA1(void) {
 
         if (memcmp(actual, expected, SHA1_DIGEST_LENGTH) != 0) {
             fprintf(stderr, "FAIL testSHA1\n");
-            return;
+            exit(1);
         }
     }
 

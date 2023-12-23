@@ -25,19 +25,19 @@ testMapOperations(void) {
     value1 = mapGet(&map, key1);
     if (value1 != NULL) {
         fprintf(stderr, "FAIL testMap: value1 != NULL\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
     if (value2 != NULL) {
         fprintf(stderr, "FAIL testMap: value2 != NULL\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     /* Insert key1. */
@@ -45,7 +45,7 @@ testMapOperations(void) {
     value1 = mapInsert(&map, key1);
     if (value1 == NULL) {
         fprintf(stderr, "FAIL testMap: value1 == NULL\n");
-        return;
+        exit(1);
     }
 
     *value1 = string1;
@@ -53,24 +53,24 @@ testMapOperations(void) {
     value1 = mapGet(&map, key1);
     if (value1 == NULL) {
         fprintf(stderr, "FAIL testMap: value1 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value1 != string1) {
         fprintf(stderr, "FAIL testMap: *value1 != string1\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
     if (value2 != NULL) {
         fprintf(stderr, "FAIL testMap: value2 != NULL\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     /* Insert key2. */
@@ -79,7 +79,7 @@ testMapOperations(void) {
 
     if (value2 == NULL) {
         fprintf(stderr, "FAIL testMap: value2 == NULL\n");
-        return;
+        exit(1);
     }
 
     *value2 = string2;
@@ -87,29 +87,29 @@ testMapOperations(void) {
     value2 = mapGet(&map, key2);
     if (value2 == NULL) {
         fprintf(stderr, "FAIL testMap: value2 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value2 != string2) {
         fprintf(stderr, "FAIL testMap: *value2 != string2\n");
-        return;
+        exit(1);
     }
 
     value1 = mapGet(&map, key1);
     if (value1 == NULL) {
         fprintf(stderr, "FAIL testMap: value1 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value1 != string1) {
         fprintf(stderr, "FAIL testMap: *value1 != string1\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     /* Insert key3. */
@@ -118,7 +118,7 @@ testMapOperations(void) {
 
     if (value3 == NULL) {
         fprintf(stderr, "FAIL testMap: value3 == NULL\n");
-        return;
+        exit(1);
     }
 
     *value3 = string3;
@@ -126,126 +126,126 @@ testMapOperations(void) {
     value3 = mapGet(&map, key3);
     if (value3 == NULL) {
         fprintf(stderr, "FAIL testMap: value3 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value3 != string3) {
         fprintf(stderr, "FAIL testMap: *value3 != string3\n");
-        return;
+        exit(1);
     }
 
     value1 = mapGet(&map, key1);
     if (value1 == NULL) {
         fprintf(stderr, "FAIL testMap: value1 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value1 != string1) {
         fprintf(stderr, "FAIL testMap: *value1 != string1\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
 
     if (value2 == NULL) {
         fprintf(stderr, "FAIL testMap: value2 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value2 != string2) {
         fprintf(stderr, "FAIL testMap: *value2 != string2\n");
-        return;
+        exit(1);
     }
 
     /* Remove key3. */
 
     if (mapRemove(&map, key3) != string3) {
         fprintf(stderr, "FAIL testMap: mapRemove(&map, key3) != string3\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     value1 = mapGet(&map, key1);
     if (value1 == NULL) {
         fprintf(stderr, "FAIL testMap: value1 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value1 != string1) {
         fprintf(stderr, "FAIL testMap: *value1 != string1\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
 
     if (value2 == NULL) {
         fprintf(stderr, "FAIL testMap: value2 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value2 != string2) {
         fprintf(stderr, "FAIL testMap: *value2 != string2\n");
-        return;
+        exit(1);
     }
 
     /* Remove key1. */
 
     if (mapRemove(&map, key1) != string1) {
         fprintf(stderr, "FAIL testMap: mapRemove(&map, key1) != string1\n");
-        return;
+        exit(1);
     }
 
     value1 = mapGet(&map, key1);
     if (value1 != NULL) {
         fprintf(stderr, "FAIL testMap: value1 != NULL\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
     if (value2 == NULL) {
         fprintf(stderr, "FAIL testMap: value2 == NULL\n");
-        return;
+        exit(1);
     }
 
     if (*value2 != string2) {
         fprintf(stderr, "FAIL testMap: *value2 != string2\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     /* Remove key2. */
 
     if (mapRemove(&map, key2) != string2) {
         fprintf(stderr, "FAIL testMap: mapRemove(&map, key2) != string2\n");
-        return;
+        exit(1);
     }
 
     value2 = mapGet(&map, key2);
     if (value2 != NULL) {
         fprintf(stderr, "FAIL testMap: value2 != NULL\n");
-        return;
+        exit(1);
     }
 
     value1 = mapGet(&map, key1);
     if (value1 != NULL) {
         fprintf(stderr, "FAIL testMap: value1 != NULL\n");
-        return;
+        exit(1);
     }
 
     value3 = mapGet(&map, key3);
     if (value3 != NULL) {
         fprintf(stderr, "FAIL testMap: value3 != NULL\n");
-        return;
+        exit(1);
     }
 
     /* Check that the map is empty. */
@@ -255,7 +255,7 @@ testMapOperations(void) {
         for (; bucketIndex < map.bucketCount; bucketIndex++) {
             if (map.buckets[bucketIndex] != NULL) {
                 fprintf(stderr, "FAIL testMap: map is not empty\n");
-                return;
+                exit(1);
             }
         }
     }
@@ -270,31 +270,31 @@ void
 testFreeValue(void* value) {
     if (value == NULL) {
         fprintf(stderr, "FAIL testMapFree: value == NULL\n");
-        return;
+        exit(1);
     }
 
     switch (freeCount) {
         case 0:
             if (strcmp(value, "B") != 0) {
                 fprintf(stderr, "FAIL testMapFree: value != \"B\"\n");
-                return;
+                exit(1);
             }
             break;
         case 1:
             if (strcmp(value, "C") != 0) {
                 fprintf(stderr, "FAIL testMapFree: value != \"C\"\n");
-                return;
+                exit(1);
             }
             break;
         case 2:
             if (strcmp(value, "A") != 0) {
                 fprintf(stderr, "FAIL testMapFree: value != \"A\"\n");
-                return;
+                exit(1);
             }
             break;
         default:
             fprintf(stderr, "FAIL testMapFree: freeCount > 2\n");
-            return;
+            exit(1);
     }
 
     freeCount++;
@@ -314,7 +314,7 @@ testMapFree(void) {
 
     if (freeCount != 3) {
         fprintf(stderr, "FAIL testMapFree: freeCount != 3\n");
-        return;
+        exit(1);
     }
 
     fprintf(stderr, "PASS testMapFree\n");

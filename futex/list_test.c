@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "list_test.h"
 #include "list.h"
@@ -34,23 +35,23 @@ testListOperations(void) {
 
     if (list != &element2.link) {
         fprintf(stderr, "FAIL testList: list != &element2.link\n");
-        return;
+        exit(1);
     }
     if (list->next != &element3.link) {
         fprintf(stderr, "FAIL testList: list->next != &element3.link\n");
-        return;
+        exit(1);
     }
     if (list->prev != NULL) {
         fprintf(stderr, "FAIL testList: list->prev != NULL\n");
-        return;
+        exit(1);
     }
     if (element3.link.next != NULL) {
         fprintf(stderr, "FAIL testList: element3.link.next != NULL\n");
-        return;
+        exit(1);
     }
     if (element3.link.prev != &element2.link) {
         fprintf(stderr, "FAIL testList: element3.link.prev != &element2.link\n");
-        return;
+        exit(1);
     }
 
     /*Prepend element1 to the list. */
@@ -59,31 +60,31 @@ testListOperations(void) {
 
     if (list != &element1.link) {
         fprintf(stderr, "FAIL testList: list != &element1.link\n");
-        return;
+        exit(1);
     }
     if (list->next != &element2.link) {
         fprintf(stderr, "FAIL testList: list->next != &element2.link\n");
-        return;
+        exit(1);
     }
     if (list->prev != NULL) {
         fprintf(stderr, "FAIL testList: list->prev != NULL\n");
-        return;
+        exit(1);
     }
     if (element2.link.next != &element3.link) {
         fprintf(stderr, "FAIL testList: element2.link.next != &element3.link\n");
-        return;
+        exit(1);
     }
     if (element2.link.prev != &element1.link) {
         fprintf(stderr, "FAIL testList: element2.link.prev != &element1.link\n");
-        return;
+        exit(1);
     }
     if (element3.link.next != NULL) {
         fprintf(stderr, "FAIL testList: element3.link.next != NULL\n");
-        return;
+        exit(1);
     }
     if (element3.link.prev != &element2.link) {
         fprintf(stderr, "FAIL testList: element3.link.prev != &element2.link\n");
-        return;
+        exit(1);
     }
 
     /* Remove element2 from the list. */
@@ -92,31 +93,31 @@ testListOperations(void) {
 
     if (list != &element1.link) {
         fprintf(stderr, "FAIL testList: list != &element1.link\n");
-        return;
+        exit(1);
     }
     if (list->next != &element3.link) {
         fprintf(stderr, "FAIL testList: list->next != &element3.link\n");
-        return;
+        exit(1);
     }
     if (list->prev != NULL) {
         fprintf(stderr, "FAIL testList: list->prev != NULL\n");
-        return;
+        exit(1);
     }
     if (element2.link.next != NULL) {
         fprintf(stderr, "FAIL testList: element2.link.next != NULL\n");
-        return;
+        exit(1);
     }
     if (element2.link.prev != NULL) {
         fprintf(stderr, "FAIL testList: element2.link.prev != NULL\n");
-        return;
+        exit(1);
     }
     if (element3.link.next != NULL) {
         fprintf(stderr, "FAIL testList: element3.link.next != NULL\n");
-        return;
+        exit(1);
     }
     if (element3.link.prev != &element1.link) {
         fprintf(stderr, "FAIL testList: element3.link.prev != &element1.link\n");
-        return;
+        exit(1);
     }
 
     /* Remove element1 from the list. */
@@ -125,23 +126,23 @@ testListOperations(void) {
 
     if (list != &element3.link) {
         fprintf(stderr, "FAIL testList: list != &element3.link\n");
-        return;
+        exit(1);
     }
     if (list->next != NULL) {
         fprintf(stderr, "FAIL testList: list->next != NULL\n");
-        return;
+        exit(1);
     }
     if (list->prev != NULL) {
         fprintf(stderr, "FAIL testList: list->prev != NULL\n");
-        return;
+        exit(1);
     }
     if (element1.link.next != NULL) {
         fprintf(stderr, "FAIL testList: element1.link.next != NULL\n");
-        return;
+        exit(1);
     }
     if (element1.link.prev != NULL) {
         fprintf(stderr, "FAIL testList: element1.link.prev != NULL\n");
-        return;
+        exit(1);
     }
 
     fprintf(stderr, "PASS testList\n");
@@ -158,24 +159,24 @@ testFreeLink(ListLink* link) {
         case 0:
             if (element->value != 1) {
                 fprintf(stderr, "FAIL testListFree: element->value != 1\n");
-                return;
+                exit(1);
             }
             break;
         case 1:
             if (element->value != 2) {
                 fprintf(stderr, "FAIL testListFree: element->value != 2\n");
-                return;
+                exit(1);
             }
             break;
         case 2:
             if (element->value != 3) {
                 fprintf(stderr, "FAIL testListFree: element->value != 3\n");
-                return;
+                exit(1);
             }
             break;
         default:
             fprintf(stderr, "FAIL testListFree: freeCount > 2\n");
-            return;
+            exit(1);
     }
 
     freeCount++;
@@ -217,7 +218,7 @@ testListFree(void) {
 
     if (freeCount != 3) {
         fprintf(stderr, "FAIL testListFree: freeCount != 3\n");
-        return;
+        exit(1);
     }
 
     fprintf(stderr, "PASS testListFree\n");
