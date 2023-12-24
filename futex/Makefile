@@ -63,9 +63,13 @@ libw2c2futex.a: $(TARGET_OBJECTS)
 	$(AR) qc $@ $^
 	ranlib $@
 
-test: $(TEST_OBJECTS)
+futex_test: $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+.PHONY: test
+test: futex_test
+	./futex_test
 
 clean:
 	-rm -f *.o *.a
-	-rm -f test
+	-rm -f futex_test

@@ -31,10 +31,10 @@ CFLAGS += -std=c89 $(WARNS)
 FEATURES ?= threads getopt unistd libgen strdup glob
 
 ifeq ($(UNAME),Windows)
-	OUTPUT := w2c2.exe
+	SUFFIX := .exe
 endif
 ifeq ($(UNAME),WASI)
-	OUTPUT := w2c2.wasm
+	SUFFIX := .wasm
 endif
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
@@ -79,10 +79,6 @@ ifneq (,$(findstring old_debugging,$(FEATURES)))
 	CFLAGS += -DHAS_OLD_LIBDWARF=1
 endif
 
-ifndef OUTPUT
-	OUTPUT := w2c2
-endif
-
 ifneq (,$(findstring base,$(SANITIZERS)))
 CFLAGS += -fsanitize=undefined
 endif
@@ -96,22 +92,23 @@ ifneq (,$(findstring thread,$(SANITIZERS)))
 CFLAGS += -fsanitize=thread
 endif
 
-.PHONY: all clean
-
-all: $(OUTPUT)
-
 TARGET_OBJECTS = $(patsubst %.c,%.o,$(filter-out %_test.c test.c,$(wildcard *.c)))
 TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
+
+w2c2$(SUFFIX): $(TARGET_OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUTPUT): $(TARGET_OBJECTS)
+w2c2_test$(SUFFIX): $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-w2c2_test: $(TEST_OBJECTS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+.PHONY: test
+test: w2c2_test$(SUFFIX)
+	./w2c2_test$(SUFFIX)
 
+.PHONY: clean
 clean:
 	-rm -f *.o
-	-rm -f $(OUTPUT) w2c2_test
+	-rm -f w2c2$(SUFFIX) w2c2_test$(SUFFIX)

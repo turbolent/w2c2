@@ -106,9 +106,13 @@ libw2c2wasi.a: $(OBJECTS)
 	$(AR) qc $@ $^
 	ranlib $@
 
-test: $(OBJECTS) test.c
+.PHONY: test
+test: wasi_test
+	./wasi_test
+
+wasi_test: $(OBJECTS) test.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
 	-rm -f *.o *.a
-	-rm -f test
+	-rm -f wasi_test

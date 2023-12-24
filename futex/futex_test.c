@@ -85,22 +85,22 @@ testFutex(void) {
 
     if (!WASM_THREAD_CREATE(&thread1, testThreadFunc, &arg1)) {
         fprintf(stderr, "FAIL testFutex: failed to create thread1\n");
-        return;
+        exit(1);
     }
 
     if (!WASM_THREAD_CREATE(&thread2, testThreadFunc, &arg2)) {
         fprintf(stderr, "FAIL testFutex: failed to create thread2\n");
-        return;
+        exit(1);
     }
 
     if (!WASM_THREAD_CREATE(&thread3, testThreadFunc, &arg3)) {
         fprintf(stderr, "FAIL testFutex: failed to create thread3\n");
-        return;
+        exit(1);
     }
 
     if (!WASM_THREAD_CREATE(&thread4, testThreadFunc, &arg4)) {
         fprintf(stderr, "FAIL testFutex: failed to create thread4\n");
-        return;
+        exit(1);
     }
 
     /* Wait for all threads to have started */

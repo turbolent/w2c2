@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 #include "stringbuilder_test.h"
 #include "stringbuilder.h"
 
@@ -9,13 +8,14 @@ testStringBuilder(void) {
     StringBuilder builder = emptyStringBuilder;
     if (!stringBuilderInitialize(&builder)) {
         fprintf(stderr, "FAIL testStringBuilder: failed to initialize\n");
+        exit(1);
     }
 
     {
         const size_t actualLength = builder.length;
         if (actualLength != 0) {
             fprintf(stderr, "FAIL testStringBuilder: incorrect length after initialize: %ld != %d\n", actualLength, 0);
-            return;
+            exit(1);
         }
     }
 
@@ -23,7 +23,7 @@ testStringBuilder(void) {
         const size_t actualSize = strlen(builder.string);
         if (actualSize != 0) {
             fprintf(stderr, "FAIL testStringBuilder: strlen after initialize failed: %ld != %d\n", actualSize, 0);
-            return;
+            exit(1);
         }
     }
 
@@ -34,7 +34,7 @@ testStringBuilder(void) {
         && stringBuilderAppend(&builder, "test")
     )) {
         fprintf(stderr, "FAIL testStringBuilder: failed to append\n");
-        return;
+        exit(1);
     }
 
     {
@@ -49,7 +49,7 @@ testStringBuilder(void) {
                 actualLength,
                 expectedLength
             );
-            return;
+            exit(1);
         }
 
         if (memcmp(builder.string, expected, actualLength) != 0) {
@@ -59,35 +59,35 @@ testStringBuilder(void) {
                 builder.string,
                 expected
             );
-            return;
+            exit(1);
         }
     }
 
     if (!(
         stringBuilderAppend(&builder, ". max U32: ")
-        && stringBuilderAppendU32(&builder, UINT_MAX)
+        && stringBuilderAppendU32(&builder, UINT32_MAX)
         && stringBuilderAppend(&builder, ". max I32: ")
-        && stringBuilderAppendI32(&builder, INT_MAX)
+        && stringBuilderAppendI32(&builder, INT32_MAX)
         && stringBuilderAppend(&builder, ". min I32 + 1: ")
-        && stringBuilderAppendI32(&builder, INT_MIN + 1)
+        && stringBuilderAppendI32(&builder, INT32_MIN + 1)
         && stringBuilderAppend(&builder, ". min I32: ")
-        && stringBuilderAppendI32(&builder, INT_MIN)
+        && stringBuilderAppendI32(&builder, INT32_MIN)
         && stringBuilderAppend(&builder, ". max U32 hex: ")
-        && stringBuilderAppendU32Hex(&builder, UINT_MAX)
+        && stringBuilderAppendU32Hex(&builder, UINT32_MAX)
 
         && stringBuilderAppend(&builder, ". max U64: ")
-        && stringBuilderAppendU64(&builder, ULLONG_MAX)
+        && stringBuilderAppendU64(&builder, UINT64_MAX)
         && stringBuilderAppend(&builder, ". max I64: ")
-        && stringBuilderAppendI64(&builder, LLONG_MAX)
+        && stringBuilderAppendI64(&builder, INT64_MAX)
         && stringBuilderAppend(&builder, ". min I64 + 1: ")
-        && stringBuilderAppendI64(&builder, LLONG_MIN + 1)
+        && stringBuilderAppendI64(&builder, INT64_MIN + 1)
         && stringBuilderAppend(&builder, ". min I64: ")
-        && stringBuilderAppendI64(&builder, LLONG_MIN)
+        && stringBuilderAppendI64(&builder, INT64_MIN)
         && stringBuilderAppend(&builder, ". max U64 hex: ")
-        && stringBuilderAppendU64Hex(&builder, ULLONG_MAX)
+        && stringBuilderAppendU64Hex(&builder, UINT64_MAX)
     )) {
         fprintf(stderr, "FAIL testStringBuilder: failed to append\n");
-        return;
+        exit(1);
     }
 
     {
@@ -116,7 +116,7 @@ testStringBuilder(void) {
                 actualLength,
                 expectedLength
             );
-            return;
+            exit(1);
         }
 
         if (memcmp(builder.string, expected, actualLength) != 0) {
@@ -126,7 +126,7 @@ testStringBuilder(void) {
                 builder.string,
                 expected
             );
-            return;
+            exit(1);
         }
     }
 
