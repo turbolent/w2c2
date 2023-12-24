@@ -1302,13 +1302,13 @@ DEFINE_ATOMIC_STORE(i64_atomic_store32, U32, U64)
 #define DEFINE_ATOMIC_RMW(name, op, op2, size, t)                   \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t value) { \
         U ## size old = 0;                                          \
+        U ## size wrapped = 0;                                      \
+        U ## size new = 0;                                          \
         WASM_MUTEX_LOCK(&mem->mutex);                               \
-        {                                                           \
-            old = readSwapU ## size(mem->data, addr);               \
-            U ## size wrapped = (U ## size)value;                   \
-            U ## size new = old op2 wrapped;                        \
-            writeSwapU ## size(mem->data, addr, new);               \
-        }                                                           \
+        old = readSwapU ## size(mem->data, addr);                   \
+        wrapped = (U ## size)value;                                 \
+        new = old op2 wrapped;                                      \
+        writeSwapU ## size(mem->data, addr, new);                   \
         WASM_MUTEX_UNLOCK(&mem->mutex);                             \
         return (t)old;                                              \
     }
@@ -1367,12 +1367,11 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, xor, ^, 64, U64)
 #define DEFINE_ATOMIC_RMW_XCHG(name, size, t)                       \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t value) { \
         U ## size old = 0;                                          \
+        U ## size wrapped = 0;                                      \
         WASM_MUTEX_LOCK(&mem->mutex);                               \
-        {                                                           \
-            old = readSwapU ## size(mem->data, addr);               \
-            U ## size wrapped = (U ## size)value;                   \
-            writeSwapU ## size(mem->data, addr, wrapped);           \
-        }                                                           \
+        old = readSwapU ## size(mem->data, addr);                   \
+        wrapped = (U ## size)value;                                 \
+        writeSwapU ## size(mem->data, addr, wrapped);               \
         WASM_MUTEX_UNLOCK(&mem->mutex);                             \
         return (t)old;                                              \
     }
@@ -1408,14 +1407,14 @@ DEFINE_ATOMIC_RMW_XCHG(i64_atomic_rmw_xchg, 64, U64)
 #define DEFINE_ATOMIC_RMW_CMPXCHG(name, size, t)                                      \
     static W2C2_INLINE t name(wasmMemory* mem, U64 addr, t expected, t replacement) { \
         U ## size old = 0;                                                            \
+        U ## size expected_wrapped = (U ## size)expected;                             \
+        U ## size replacement_wrapped = (U ## size)replacement;                       \
         WASM_MUTEX_LOCK(&mem->mutex);                                                 \
-        {                                                                             \
-            U ## size expected_wrapped = (U ## size)expected;                         \
-            U ## size replacement_wrapped = (U ## size)replacement;                   \
-            old = readSwapU ## size(mem->data, addr);                                 \
-            if (old == expected_wrapped) {                                            \
-                writeSwapU ## size(mem->data, addr, replacement_wrapped);             \
-            }                                                                         \
+        expected_wrapped = (U ## size)expected;                                       \
+        replacement_wrapped = (U ## size)replacement;                                 \
+        old = readSwapU ## size(mem->data, addr);                                     \
+        if (old == expected_wrapped) {                                                \
+            writeSwapU ## size(mem->data, addr, replacement_wrapped);                 \
         }                                                                             \
         WASM_MUTEX_UNLOCK(&mem->mutex);                                               \
         return (t)old;                                                                \
