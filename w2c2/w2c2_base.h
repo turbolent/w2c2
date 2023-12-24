@@ -1135,8 +1135,6 @@ typedef struct wasmModuleInstance {
 
 #endif
 
-#if WASM_ENDIAN == WASM_LITTLE_ENDIAN
-
 #if defined(_MSC_VER)
 
 #include <intrin.h>
@@ -1227,8 +1225,6 @@ typedef struct wasmModuleInstance {
     __atomic_compare_exchange_helper((U32*)(a), expected_ptr, desired)
 #define atomic_compare_exchange_U64(a, expected_ptr, desired) \
     __atomic_compare_exchange_helper((U64*)(a), expected_ptr, desired)
-
-#endif
 
 #endif
 
