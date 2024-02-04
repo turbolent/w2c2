@@ -1102,7 +1102,14 @@ typedef struct wasmModuleInstance {
     struct wasmModuleInstance* (*newChild)(struct wasmModuleInstance* self);
 } wasmModuleInstance;
 
-#if defined(_MSC_VER)
+
+#ifdef _MSC_VER
+#define WASM_ATOMICS_MSVC
+#elif defined(__GNUC__) && (defined(__clang__) || GCC_VERSION >= 40700)
+#define WASM_ATOMICS_GCC
+#endif
+
+#ifdef WASM_ATOMICS_MSVC
 
 #include <intrin.h>
 
@@ -1118,7 +1125,7 @@ typedef struct wasmModuleInstance {
 
 #define atomic_fence() _ReadWriteBarrier()
 
-#else
+#elif defined(WASM_ATOMICS_GCC)
 
 /* Use gcc/clang/icc intrinsics */
 #define atomic_load_U8(a) __atomic_load_n((U8*)(a), __ATOMIC_SEQ_CST)
@@ -1135,7 +1142,7 @@ typedef struct wasmModuleInstance {
 
 #endif
 
-#if defined(_MSC_VER)
+#ifdef WASM_ATOMICS_MSVC
 
 #include <intrin.h>
 
@@ -1178,7 +1185,7 @@ typedef struct wasmModuleInstance {
 #define atomic_compare_exchange_U64(a, expected_ptr, desired) \
     _InterlockedCompareExchange64(a, desired, *(expected_ptr))
 
-#else
+#elif defined(WASM_ATOMICS_GCC)
 
 /* Use gcc/clang/icc intrinsics */
 
@@ -1227,6 +1234,8 @@ typedef struct wasmModuleInstance {
     __atomic_compare_exchange_helper((U64*)(a), expected_ptr, desired)
 
 #endif
+
+#if defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC)
 
 #if WASM_ENDIAN == WASM_LITTLE_ENDIAN
 
@@ -1427,6 +1436,8 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw16_cmpxchg_u, 16, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw32_cmpxchg_u, 32, U64)
 DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
 #endif
+
+#endif /* WASM_ATOMICS_MSVC || WASM_ATOMICS_GCC */
 
 U32
 wasmMemoryAtomicWait(
