@@ -5117,13 +5117,8 @@ wasmCWriteDataSegments(
 
     {
         U32 dataSegmentIndex = 0;
-        U64 byteOffset = 0;
         for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
             const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
-
-            if (!dataSegment.bytes.length) {
-                continue;
-            }
 
             switch (mode) {
                 case wasmDataSegmentModeArrays: {
@@ -5155,15 +5150,10 @@ wasmCWriteDataSegments(
                 case wasmDataSegmentModeGNULD:
                 case wasmDataSegmentModeSectcreate1:
                 case wasmDataSegmentModeSectcreate2: {
-                    fputs("const U8* ", file);
+                    fputs("U8* ", file);
                     /* TODO: add support for multiple modules */
                     wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-                    if (pretty) {
-                        fprintf(file, " = ds + %llu", byteOffset);
-                    } else {
-                        fprintf(file, "=ds+%llu", byteOffset);
-                    }
-                    byteOffset += dataSegment.bytes.length;
+                    fputs(";\n", file);
                     break;
                 }
                 default: {
@@ -5386,39 +5376,52 @@ wasmCWriteInitMemories(
         {
             const U32 dataSegmentCount = module->dataSegments.count;
             U32 dataSegmentIndex = 0;
+            U64 byteOffset = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
                 const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
                 const size_t dataSegmentLength = dataSegment.bytes.length;
                 const Buffer code = dataSegment.offset;
 
-                if (!dataSegmentLength) {
-                    continue;
+                switch (dataSegmentMode) {
+                    case wasmDataSegmentModeGNULD:
+                    case wasmDataSegmentModeSectcreate1:
+                    case wasmDataSegmentModeSectcreate2: {
+                        /* TODO: add support for multiple modules */
+                        wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                        if (pretty) {
+                            fprintf(file, " = ds + %llu", byteOffset);
+                        } else {
+                            fprintf(file, "=ds+%llu", byteOffset);
+                        }
+                        fputs(";\n", file);
+                        break;
+                    }
                 }
 
-                /* Skip passive segments */
-                if (code.data == NULL) {
-                    continue;
+                /* Load active segments */
+                if (code.data != NULL) {
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
+                    fputs("LOAD_DATA(", file);
+                    wasmCWriteFileMemoryUse(
+                            file,
+                            module,
+                            dataSegment.memoryIndex,
+                            NULL,
+                            false
+                    );
+                    fputs(", ", file);
+                    MUST (stringBuilderReset(&stringBuilder))
+                    MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                    fputs(stringBuilder.string, file);
+                    fputs(", ", file);
+                    /* TODO: add support for multiple modules */
+                    wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                    fprintf(file, ", %lu);\n", (unsigned long) dataSegmentLength);
                 }
 
-                if (pretty) {
-                    fputs(indentation, file);
-                }
-                fputs("LOAD_DATA(", file);
-                wasmCWriteFileMemoryUse(
-                    file,
-                    module,
-                    dataSegment.memoryIndex,
-                    NULL,
-                    false
-                );
-                fputs(", ", file);
-                MUST (stringBuilderReset(&stringBuilder))
-                MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
-                fputs(stringBuilder.string, file);
-                fputs(", ", file);
-                /* TODO: add support for multiple modules */
-                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
-                fprintf(file, ", %lu);\n", (unsigned long) dataSegmentLength);
+                byteOffset += dataSegment.bytes.length;
             }
         }
 
