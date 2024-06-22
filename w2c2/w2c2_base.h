@@ -1103,9 +1103,16 @@ typedef struct wasmModuleInstance {
 } wasmModuleInstance;
 
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+#ifndef __has_extension
+#define __has_extension __has_feature
+#endif
+
 #ifdef _MSC_VER
 #define WASM_ATOMICS_MSVC
-#elif defined(__GNUC__) && (GCC_VERSION >= 40700 || (defined(__clang__) && defined(__has_extension) && __has_extension(c_atomic)))
+#elif defined(__GNUC__) && (GCC_VERSION >= 40700 || __has_extension(c_atomic))
 #define WASM_ATOMICS_GCC
 #endif
 
