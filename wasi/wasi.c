@@ -4124,6 +4124,8 @@ wasi__threadX2Dspawn(
 
     WASI_TRACE(("thread-spawn(startArg=%d)", startArg));
 
+#if defined(WASM_THREAD_TYPE) && (defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC))
+
     /* Find the thread start function that must be exported by the module */
     for (; funcExport->func != NULL; funcExport++) {
         if (strcmp(funcExport->name, "wasi_thread_start") == 0) {
@@ -4155,7 +4157,6 @@ wasi__threadX2Dspawn(
     threadStartArg->startFunc = (wasiThreadStartFunc)startFunc;
 
     /* Finally, start the thread */
-#ifdef WASM_THREAD_TYPE
     {
         WASM_THREAD_TYPE thread;
         if (!WASM_THREAD_CREATE(&thread, wasiThreadSpawn, threadStartArg)) {
@@ -4163,12 +4164,13 @@ wasi__threadX2Dspawn(
             return -1;
         }
     }
-#else
-    WASI_TRACE(("thread-spawn: missing threads implementation"))
-    return -1;
-#endif
 
     WASI_TRACE(("thread-spawn: threadID=%d", threadID));
+
+#else
+    WASI_TRACE(("thread-spawn: missing threads and atomics implementation"))
+    return -1;
+#endif
 
     return threadID;
 }
