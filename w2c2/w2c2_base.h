@@ -1105,7 +1105,7 @@ typedef struct wasmModuleInstance {
 
 #ifdef _MSC_VER
 #define WASM_ATOMICS_MSVC
-#elif defined(__GNUC__) && (defined(__clang__) || GCC_VERSION >= 40700)
+#elif defined(__GNUC__) && (GCC_VERSION >= 40700 || (defined(__clang__) && __has_extension(c_atomic)))
 #define WASM_ATOMICS_GCC
 #endif
 
