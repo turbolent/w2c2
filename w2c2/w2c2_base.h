@@ -5,7 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#ifndef __NeXT__
+#if !(defined(__NeXT__) || (defined(_MSC_VER) && _MSC_VER <= 1000))
 #include <stdint.h>
 #endif
 
@@ -35,8 +35,13 @@ typedef signed short I16;
 typedef unsigned int U32;
 typedef signed int I32;
 
+#if defined(_MSC_VER) && _MSC_VER <= 1000
+typedef unsigned __int64 U64;
+typedef signed __int64 I64;
+#else
 typedef unsigned long long int U64;
 typedef signed long long int I64;
+#endif
 
 typedef float F32;
 typedef double F64;
@@ -185,6 +190,12 @@ typedef double F64;
 #define UNUSED
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER <= 1000
+#define LLONG_MIN (-0x7fffffffffffffffi64-1)
+#define LLONG_MAX 0x7fffffffffffffffi64
+#define INT64_MAX 9223372036854775807i64
+#define UINT64_MAX 18446744073709551615Ui64
+#else /* defined(_MSC_VER) && _MSC_VER <= 1000 */
 #ifndef LLONG_MIN
 #define LLONG_MIN (-0x7fffffffffffffffLL-1)
 #endif
@@ -192,6 +203,15 @@ typedef double F64;
 #ifndef LLONG_MAX
 #define LLONG_MAX 0x7fffffffffffffffLL
 #endif
+
+#ifndef INT64_MAX
+#define INT64_MAX 9223372036854775807LL
+#endif
+
+#ifndef UINT64_MAX
+#define UINT64_MAX 18446744073709551615ULL
+#endif
+#endif /* defined(_MSC_VER) && _MSC_VER <= 1000 */
 
 #ifndef INT32_MAX
 #define INT32_MAX 2147483647
@@ -201,10 +221,6 @@ typedef double F64;
 #define INT32_MIN (-INT32_MAX - 1)
 #endif
 
-#ifndef INT64_MAX
-#define INT64_MAX 9223372036854775807LL
-#endif
-
 #ifndef INT64_MIN
 #define INT64_MIN (-INT64_MAX - 1)
 #endif
@@ -212,11 +228,6 @@ typedef double F64;
 #ifndef UINT32_MAX
 #define UINT32_MAX 4294967295U
 #endif
-
-#ifndef UINT64_MAX
-#define UINT64_MAX 18446744073709551615ULL
-#endif
-
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 
 /* disable warning C4756: overflow in constant arithmetic */
@@ -341,10 +352,17 @@ I32_POPCNT(
 static
 W2C2_INLINE
 U64 I64_POPCNT(U64 x) {
+#if defined(_MSC_VER) && _MSC_VER <= 1000
+    x -= ((x >> 1) & 0x5555555555555555ui64);
+    x = ((x >> 2) & 0x3333333333333333ui64) + (x & 0x3333333333333333ui64);
+    x = ((x >> 4) + x) & 0xf0f0f0f0f0f0f0fui64;
+    x *= 0x101010101010101ui64;
+#else
     x -= ((x >> 1) & 0x5555555555555555ull);
     x = ((x >> 2) & 0x3333333333333333ull) + (x & 0x3333333333333333ull);
     x = ((x >> 4) + x) & 0xf0f0f0f0f0f0f0full;
     x *= 0x101010101010101ull;
+#endif
     return (x >> 56);
 }
 #endif
@@ -1049,8 +1067,13 @@ DEFINE_SWAP(32, i, int)
 DEFINE_SWAP(32, I, unsigned int)
 DEFINE_SWAP(32, l, long)
 DEFINE_SWAP(32, L, unsigned long)
+#if defined(_MSC_VER) && _MSC_VER <= 1000
+DEFINE_SWAP(64, q, signed __int64)
+DEFINE_SWAP(64, Q, unsigned __int64)
+#else
 DEFINE_SWAP(64, q, long long)
 DEFINE_SWAP(64, Q, unsigned long long)
+#endif
 DEFINE_SWAP(32, f, float)
 DEFINE_SWAP(64, d, double)
 
@@ -1110,7 +1133,7 @@ typedef struct wasmModuleInstance {
 #define __has_extension __has_feature
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER >= 1500
 #define WASM_ATOMICS_MSVC
 #elif defined(__GNUC__) && (GCC_VERSION >= 40700 || __has_extension(c_atomic))
 #define WASM_ATOMICS_GCC
