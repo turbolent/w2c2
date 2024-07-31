@@ -1666,18 +1666,10 @@ WASI_IMPORT(U32, fd_close, (
 })
 
 #ifndef NSEC_PER_SEC
-#if defined(_MSC_VER) && _MSC_VER <= 1000
-#define NSEC_PER_SEC 1000000000i64
-#else
-#define NSEC_PER_SEC 1000000000LL
-#endif
+#define NSEC_PER_SEC W2C2_LL(1000000000)
 #endif
 #ifndef NSEC_PER_USEC
-#if defined(_MSC_VER) && _MSC_VER <= 1000
-#define NSEC_PER_USEC 1000i64
-#else
-#define NSEC_PER_USEC 1000LL
-#endif
+#define NSEC_PER_USEC W2C2_LL(1000)
 #endif
 
 static

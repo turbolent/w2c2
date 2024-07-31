@@ -46,6 +46,12 @@ typedef signed long long int I64;
 typedef float F32;
 typedef double F64;
 
+#if defined(_MSC_VER) && _MSC_VER <= 1000
+#define W2C2_LL(x) x ## i64
+#else
+#define W2C2_LL(x) x ## ll
+#endif
+
 #define MUST(_) { if (!(_)) { return false; }; }
 
 #define WASM_LITTLE_ENDIAN  0
@@ -149,14 +155,14 @@ typedef double F64;
                   | (((x) & 0x00FF0000) >> 8 ) \
                   | (((x) & 0x0000FF00) << 8 ) \
                   | (((x) & 0x000000FF) << 24))
-#define swapU64(x) ((((x) & 0xff00000000000000ull) >> 56) \
-                  | (((x) & 0x00ff000000000000ull) >> 40) \
-                  | (((x) & 0x0000ff0000000000ull) >> 24) \
-                  | (((x) & 0x000000ff00000000ull) >> 8 ) \
-                  | (((x) & 0x00000000ff000000ull) << 8 ) \
-                  | (((x) & 0x0000000000ff0000ull) << 24) \
-                  | (((x) & 0x000000000000ff00ull) << 40) \
-                  | (((x) & 0x00000000000000ffull) << 56))
+#define swapU64(x) ((((x) & W2C2_LL(0xff00000000000000u)) >> 56) \
+                  | (((x) & W2C2_LL(0x00ff000000000000u)) >> 40) \
+                  | (((x) & W2C2_LL(0x0000ff0000000000u)) >> 24) \
+                  | (((x) & W2C2_LL(0x000000ff00000000u)) >> 8 ) \
+                  | (((x) & W2C2_LL(0x00000000ff000000u)) << 8 ) \
+                  | (((x) & W2C2_LL(0x0000000000ff0000u)) << 24) \
+                  | (((x) & W2C2_LL(0x000000000000ff00u)) << 40) \
+                  | (((x) & W2C2_LL(0x00000000000000ffu)) << 56))
 
 #endif
 
@@ -190,28 +196,13 @@ typedef double F64;
 #define UNUSED
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER <= 1000
-#define LLONG_MIN (-0x7fffffffffffffffi64-1)
-#define LLONG_MAX 0x7fffffffffffffffi64
-#define INT64_MAX 9223372036854775807i64
-#define UINT64_MAX 18446744073709551615Ui64
-#else /* defined(_MSC_VER) && _MSC_VER <= 1000 */
 #ifndef LLONG_MIN
-#define LLONG_MIN (-0x7fffffffffffffffLL-1)
+#define LLONG_MIN (W2C2_LL(-0x7fffffffffffffff)-1)
 #endif
 
 #ifndef LLONG_MAX
-#define LLONG_MAX 0x7fffffffffffffffLL
+#define LLONG_MAX W2C2_LL(0x7fffffffffffffff)
 #endif
-
-#ifndef INT64_MAX
-#define INT64_MAX 9223372036854775807LL
-#endif
-
-#ifndef UINT64_MAX
-#define UINT64_MAX 18446744073709551615ULL
-#endif
-#endif /* defined(_MSC_VER) && _MSC_VER <= 1000 */
 
 #ifndef INT32_MAX
 #define INT32_MAX 2147483647
@@ -221,6 +212,10 @@ typedef double F64;
 #define INT32_MIN (-INT32_MAX - 1)
 #endif
 
+#ifndef INT64_MAX
+#define INT64_MAX W2C2_LL(9223372036854775807)
+#endif
+
 #ifndef INT64_MIN
 #define INT64_MIN (-INT64_MAX - 1)
 #endif
@@ -228,6 +223,11 @@ typedef double F64;
 #ifndef UINT32_MAX
 #define UINT32_MAX 4294967295U
 #endif
+
+#ifndef UINT64_MAX
+#define UINT64_MAX W2C2_LL(18446744073709551615U)
+#endif
+
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 
 /* disable warning C4756: overflow in constant arithmetic */
@@ -352,17 +352,10 @@ I32_POPCNT(
 static
 W2C2_INLINE
 U64 I64_POPCNT(U64 x) {
-#if defined(_MSC_VER) && _MSC_VER <= 1000
-    x -= ((x >> 1) & 0x5555555555555555ui64);
-    x = ((x >> 2) & 0x3333333333333333ui64) + (x & 0x3333333333333333ui64);
-    x = ((x >> 4) + x) & 0xf0f0f0f0f0f0f0fui64;
-    x *= 0x101010101010101ui64;
-#else
-    x -= ((x >> 1) & 0x5555555555555555ull);
-    x = ((x >> 2) & 0x3333333333333333ull) + (x & 0x3333333333333333ull);
-    x = ((x >> 4) + x) & 0xf0f0f0f0f0f0f0full;
-    x *= 0x101010101010101ull;
-#endif
+    x -= ((x >> 1) & W2C2_LL(0x5555555555555555u));
+    x = ((x >> 2) & W2C2_LL(0x3333333333333333u)) + (x & W2C2_LL(0x3333333333333333u));
+    x = ((x >> 4) + x) & W2C2_LL(0xf0f0f0f0f0f0f0fu);
+    x *= W2C2_LL(0x101010101010101u);
     return (x >> 56);
 }
 #endif

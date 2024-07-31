@@ -1045,8 +1045,9 @@ wasmCWriteLiteral(
             break;
         }
         case wasmValueTypeI64: {
+            MUST (stringBuilderAppend(builder, "W2C2_LL("))
             MUST (stringBuilderAppendI64(builder, value.i64))
-            MUST (stringBuilderAppend(builder, "ULL"))
+            MUST (stringBuilderAppend(builder, "U)"))
             break;
         }
         case wasmValueTypeF32: {
