@@ -10,8 +10,12 @@
 #endif /* HAS_UNISTD */
 
 #ifdef _MSC_VER
+#if _MSC_VER <= 1000
+typedef signed int ssize_t; /* assuming target machine is ILP32 ! */
+#else
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
+#endif
 #define INT64_C(val) val##i64
 #endif /* _MSC_VER */
 
@@ -1662,10 +1666,10 @@ WASI_IMPORT(U32, fd_close, (
 })
 
 #ifndef NSEC_PER_SEC
-#define NSEC_PER_SEC 1000000000LL
+#define NSEC_PER_SEC W2C2_LL(1000000000)
 #endif
 #ifndef NSEC_PER_USEC
-#define NSEC_PER_USEC 1000LL
+#define NSEC_PER_USEC W2C2_LL(1000)
 #endif
 
 static
@@ -3901,7 +3905,7 @@ wasiRandomGet(
 
     bufferStart = memory->data + bufferPointer;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !(defined(_MSC_VER) && _MSC_VER <= 1000)
 #include <wincrypt.h>
     {
         HCRYPTPROV provider;
@@ -3970,7 +3974,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-#if defined(__MWERKS__) && defined(macintosh)
+#if (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000)
     /* Fall back to rand */
     {
         U32 i = 0;
