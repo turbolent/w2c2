@@ -388,7 +388,7 @@ static
 int
 dwarfAccessGetSectionInfo(
     void* obj,
-    Dwarf_Half sectionIndex,
+    Dwarf_Unsigned sectionIndex,
     Dwarf_Obj_Access_Section_a *accessSection,
     int* UNUSED(error)
 ) {
@@ -453,7 +453,7 @@ static
 int
 dwarfAccessLoadSection(
     void* obj,
-    Dwarf_Half sectionIndex,
+    Dwarf_Unsigned sectionIndex,
     Dwarf_Small** sectionData,
     int* UNUSED(error)
 ) {
@@ -469,7 +469,7 @@ static
 int
 dwarfAccessRelocateASection(
     void* UNUSED(obj),
-    Dwarf_Half UNUSED(sectionIndex),
+    Dwarf_Unsigned UNUSED(sectionIndex),
     Dwarf_Debug UNUSED(debug),
     int* UNUSED(error)
 ) {
