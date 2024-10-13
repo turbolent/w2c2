@@ -33,26 +33,6 @@ void test() {
         "singular(4294967286u)"
     );
     assertEqualU32(
-        if0_multi(&instance, 0u),
-        9u,
-        "multi(0u)"
-    );
-    assertEqualU32(
-        if0_multi(&instance, 1u),
-        8u,
-        "multi(1u)"
-    );
-    assertEqualU32(
-        if0_multi(&instance, 13u),
-        8u,
-        "multi(13u)"
-    );
-    assertEqualU32(
-        if0_multi(&instance, 4294967291u),
-        8u,
-        "multi(4294967291u)"
-    );
-    assertEqualU32(
         if0_nested(&instance, 0u, 0u),
         11u,
         "nested(0u, 0u)"
@@ -403,4 +383,5 @@ void test() {
         4294967290u,
         "effects(0u)"
     );
+    if0_atypicalX2Dcondition(&instance);
 }
