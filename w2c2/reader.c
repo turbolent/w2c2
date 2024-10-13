@@ -1530,6 +1530,7 @@ wasmReadDataSegment(
     U8 kind = 0;
     bool readMemoryIndex = false;
     bool readOffsetExpression = false;
+    bool passive = false;
     U32 memoryIndex = 0;
     Buffer offset = {NULL, 0};
     Buffer bytes = {NULL, 0};
@@ -1546,15 +1547,18 @@ wasmReadDataSegment(
         case 0x0: {
             readMemoryIndex = false;
             readOffsetExpression = true;
+            passive = false;
             break;
         }
         case 0x1:
             readMemoryIndex = false;
             readOffsetExpression = false;
+            passive = true;
             break;
         case 0x2:
             readMemoryIndex = true;
             readOffsetExpression = true;
+            passive = false;
             break;
         default: {
             static WasmModuleReaderError wasmModuleReaderError = {
@@ -1603,6 +1607,7 @@ wasmReadDataSegment(
     result->memoryIndex = memoryIndex;
     result->offset = offset;
     result->bytes = bytes;
+    result->passive = passive;
 }
 
 static
