@@ -195,7 +195,12 @@ def gen(paths):
     wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
     has_new_wabt = compare_versions(wast2json_version, "1.0.25") > 0
 
-    memory_files = {'memory_copy.wast', 'memory_fill.wast', 'bulk.wast'}
+    memory_files = {
+        'memory_copy.wast',
+        'memory_fill.wast',
+        'memory_init.wast',
+        'bulk.wast'
+    }
 
     for wast_path in paths:
         print(wast_path)
