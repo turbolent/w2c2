@@ -1754,13 +1754,21 @@ wasiClockTimeGet(
                 break;
             }
 #endif
-#ifdef _POSIX_CPUTIME
+/* Don't check for _POSIX_CPUTIME, because e.g. WASI libc defines it,
+ * but it does not have CLOCK_PROCESS_CPUTIME_ID.
+ * See https://github.com/WebAssembly/wasi-libc/issues/513
+ */
+#ifdef CLOCK_PROCESS_CPUTIME_ID
             case WASI_CLOCK_PROCESS_CPUTIME_ID: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
-#ifdef _POSIX_THREAD_CPUTIME
+/* Don't check for _POSIX_THREAD_CPUTIME, because e.g. WASI libc defines it,
+ * but it does not have CLOCK_THREAD_CPUTIME_ID.
+ * See https://github.com/WebAssembly/wasi-libc/issues/513
+ */
+#ifdef CLOCK_THREAD_CPUTIME_ID
             case WASI_CLOCK_THREAD_CPUTIME_ID: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
@@ -2028,13 +2036,21 @@ wasiClockResGet(
                 break;
             }
 #endif
-#ifdef _POSIX_CPUTIME
+/* Don't check for _POSIX_CPUTIME, because e.g. WASI libc defines it,
+ * but it does not have CLOCK_PROCESS_CPUTIME_ID.
+ * See https://github.com/WebAssembly/wasi-libc/issues/513
+ */
+#ifdef CLOCK_PROCESS_CPUTIME_ID
             case WASI_CLOCK_PROCESS_CPUTIME_ID: {
                 nativeClockID = CLOCK_PROCESS_CPUTIME_ID;
                 break;
             }
 #endif
-#ifdef _POSIX_THREAD_CPUTIME
+/* Don't check for _POSIX_THREAD_CPUTIME, because e.g. WASI libc defines it,
+ * but it does not have CLOCK_THREAD_CPUTIME_ID.
+ * See https://github.com/WebAssembly/wasi-libc/issues/513
+ */
+#ifdef CLOCK_THREAD_CPUTIME_ID
             case WASI_CLOCK_THREAD_CPUTIME_ID: {
                 nativeClockID = CLOCK_THREAD_CPUTIME_ID;
                 break;
