@@ -58,6 +58,16 @@ struct timespec {
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
 
+#if HAS_GETENTROPY && defined(__APPLE__)
+#include <AvailabilityMacros.h>
+#ifndef MAC_OS_X_VERSION_10_12
+#define MAC_OS_X_VERSION_10_12 101200
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+#include <sys/random.h>
+#endif
+#endif
+
 #ifndef __MSL__
 #include <sys/stat.h>
 #endif
