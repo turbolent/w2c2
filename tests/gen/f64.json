@@ -2511,4 +2511,6 @@
   {"type": "assert_invalid", "line": 2530, "filename": "f64.8.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 2531, "filename": "f64.9.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 2532, "filename": "f64.10.wasm", "text": "type mismatch", "module_type": "binary"}, 
-  {"type": "assert_invalid", "line": 2533, "filename": "f64.11.wasm", "text": "type mismatch", "module_type": "binary"}]}
+  {"type": "assert_invalid", "line": 2533, "filename": "f64.11.wasm", "text": "type mismatch", "module_type": "binary"}, 
+  {"type": "assert_malformed", "line": 2537, "filename": "f64.12.wat", "text": "unexpected token", "module_type": "text"}, 
+  {"type": "assert_malformed", "line": 2541, "filename": "f64.13.wat", "text": "unexpected token", "module_type": "text"}]}

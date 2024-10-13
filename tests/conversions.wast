@@ -253,6 +253,13 @@
 (assert_trap (invoke "i64.trunc_f64_u" (f64.const -nan)) "invalid conversion to integer")
 (assert_trap (invoke "i64.trunc_f64_u" (f64.const -nan:0x4000000000000)) "invalid conversion to integer")
 
+(assert_return (invoke "f32.convert_i32_s" (i32.const 1)) (f32.const 1.0))
+(assert_return (invoke "f32.convert_i32_s" (i32.const -1)) (f32.const -1.0))
+(assert_return (invoke "f32.convert_i32_s" (i32.const 0)) (f32.const 0.0))
+(assert_return (invoke "f32.convert_i32_s" (i32.const 2147483647)) (f32.const 2147483648))
+(assert_return (invoke "f32.convert_i32_s" (i32.const -2147483648)) (f32.const -2147483648))
+(assert_return (invoke "f32.convert_i32_s" (i32.const 1234567890)) (f32.const 0x1.26580cp+30))
+
 ;; Saturating conversions: test all the same values as the non-saturating conversions.
 
 (assert_return (invoke "i32.trunc_sat_f32_s" (f32.const 0.0)) (i32.const 0))
@@ -443,12 +450,6 @@
 (assert_return (invoke "i64.trunc_sat_f64_u" (f64.const -nan)) (i64.const 0))
 (assert_return (invoke "i64.trunc_sat_f64_u" (f64.const -nan:0x4000000000000)) (i64.const 0))
 
-(assert_return (invoke "f32.convert_i32_s" (i32.const 1)) (f32.const 1.0))
-(assert_return (invoke "f32.convert_i32_s" (i32.const -1)) (f32.const -1.0))
-(assert_return (invoke "f32.convert_i32_s" (i32.const 0)) (f32.const 0.0))
-(assert_return (invoke "f32.convert_i32_s" (i32.const 2147483647)) (f32.const 2147483648))
-(assert_return (invoke "f32.convert_i32_s" (i32.const -2147483648)) (f32.const -2147483648))
-(assert_return (invoke "f32.convert_i32_s" (i32.const 1234567890)) (f32.const 0x1.26580cp+30))
 ;; Test rounding directions.
 (assert_return (invoke "f32.convert_i32_s" (i32.const 16777217)) (f32.const 16777216.0))
 (assert_return (invoke "f32.convert_i32_s" (i32.const -16777217)) (f32.const -16777216.0))

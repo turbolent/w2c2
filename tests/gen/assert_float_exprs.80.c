@@ -9,13 +9,13 @@ void test() {
     floatexprs80Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.80.wasm");
     assertEqualF32(
-        floatexprs80_f32X2Ecompute_radix(&instance, 1.0, 1.0),
-        2.0,
-        "f32.compute_radix(1.0, 1.0)"
+        floatexprs80_f32X2Eno_distribute_exact(&instance, -0.0),
+        0.0,
+        "f32.no_distribute_exact(-0.0)"
     );
     assertEqualF64(
-        floatexprs80_f64X2Ecompute_radix(&instance, 1.0, 1.0),
-        2.0,
-        "f64.compute_radix(1.0, 1.0)"
+        floatexprs80_f64X2Eno_distribute_exact(&instance, -0.0),
+        0.0,
+        "f64.no_distribute_exact(-0.0)"
     );
 }

@@ -9,53 +9,93 @@ void test() {
     floatexprs58Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.58.wasm");
     assertEqualF32(
-        floatexprs58_f32X2Eno_algebraic_factoring(&instance, 2.2102996109817433e-14, 3.146527526379228e-12),
-        -9.900147562538522e-24,
-        "f32.no_algebraic_factoring(2.2102996109817433e-14, 3.146527526379228e-12)"
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, -7.043578799867927e+19),
+        -7.043578360063276e+19,
+        "f32.no_fold_recip_recip(-7.043578799867927e+19)"
     );
     assertEqualF32(
-        floatexprs58_f32X2Eno_algebraic_factoring(&instance, -3289460768768.0, -15941538816.0),
-        1.082029860086528e+25,
-        "f32.no_algebraic_factoring(-3289460768768.0, -15941538816.0)"
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, 1.2466100672499874e-23),
+        1.2466099883638969e-23,
+        "f32.no_fold_recip_recip(1.2466100672499874e-23)"
     );
     assertEqualF32(
-        floatexprs58_f32X2Eno_algebraic_factoring(&instance, 0.00036497542168945074, -0.00016153714386746287),
-        1.0711280395980793e-07,
-        "f32.no_algebraic_factoring(0.00036497542168945074, -0.00016153714386746287)"
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, 9.718454544006024e-20),
+        9.718455190240878e-20,
+        "f32.no_fold_recip_recip(9.718454544006024e-20)"
     );
     assertEqualF32(
-        floatexprs58_f32X2Eno_algebraic_factoring(&instance, 6.538326602139807e-14, -2.7412772911545626e-14),
-        3.523511174043803e-27,
-        "f32.no_algebraic_factoring(6.538326602139807e-14, -2.7412772911545626e-14)"
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, -30.400758743286133),
+        -30.400760650634766,
+        "f32.no_fold_recip_recip(-30.400758743286133)"
     );
     assertEqualF32(
-        floatexprs58_f32X2Eno_algebraic_factoring(&instance, 3609681910038528.0, -5260104429469696.0),
-        -1.463889604789756e+31,
-        "f32.no_algebraic_factoring(3609681910038528.0, -5260104429469696.0)"
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, 2.3316591903901535e+21),
+        2.3316590496526652e+21,
+        "f32.no_fold_recip_recip(2.3316591903901535e+21)"
+    );
+    assertEqualF32(
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, -0.0),
+        -0.0,
+        "f32.no_fold_recip_recip(-0.0)"
+    );
+    assertEqualF32(
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, 0.0),
+        0.0,
+        "f32.no_fold_recip_recip(0.0)"
+    );
+    assertEqualF32(
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, -INFINITY),
+        -INFINITY,
+        "f32.no_fold_recip_recip(-INFINITY)"
+    );
+    assertEqualF32(
+        floatexprs58_f32X2Eno_fold_recip_recip(&instance, INFINITY),
+        INFINITY,
+        "f32.no_fold_recip_recip(INFINITY)"
     );
     assertEqualF64(
-        floatexprs58_f64X2Eno_algebraic_factoring(&instance, 2.136404543498951e+107, -2.928587558394428e+101),
-        4.564224373474385e+214,
-        "f64.no_algebraic_factoring(2.136404543498951e+107, -2.928587558394428e+101)"
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, -6.5797153436288686e+44),
+        -6.579715343628869e+44,
+        "f64.no_fold_recip_recip(-6.5797153436288686e+44)"
     );
     assertEqualF64(
-        floatexprs58_f64X2Eno_algebraic_factoring(&instance, -1.2290171159244358e+93, -8.2221589190166e+99),
-        -6.760389728956271e+199,
-        "f64.no_algebraic_factoring(-1.2290171159244358e+93, -8.2221589190166e+99)"
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, -1.4424693186857643e+20),
+        -1.4424693186857642e+20,
+        "f64.no_fold_recip_recip(-1.4424693186857643e+20)"
     );
     assertEqualF64(
-        floatexprs58_f64X2Eno_algebraic_factoring(&instance, 5477733829752.252, -970738900948.5906),
-        2.9063233895797397e+25,
-        "f64.no_algebraic_factoring(5477733829752.252, -970738900948.5906)"
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, 1.8499468920623135e+50),
+        1.8499468920623133e+50,
+        "f64.no_fold_recip_recip(1.8499468920623135e+50)"
     );
     assertEqualF64(
-        floatexprs58_f64X2Eno_algebraic_factoring(&instance, -1.0689141744923551e+55, -1.7337839359373804e+50),
-        1.1425775121300724e+110,
-        "f64.no_algebraic_factoring(-1.0689141744923551e+55, -1.7337839359373804e+50)"
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, 5.779584288006583e-207),
+        5.779584288006582e-207,
+        "f64.no_fold_recip_recip(5.779584288006583e-207)"
     );
     assertEqualF64(
-        floatexprs58_f64X2Eno_algebraic_factoring(&instance, -1.0295699877022106e-71, -8.952274637805908e-72),
-        2.5858214767010105e-143,
-        "f64.no_algebraic_factoring(-1.0295699877022106e-71, -8.952274637805908e-72)"
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, 5.150117869614164e+271),
+        5.1501178696141634e+271,
+        "f64.no_fold_recip_recip(5.150117869614164e+271)"
+    );
+    assertEqualF64(
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, -0.0),
+        -0.0,
+        "f64.no_fold_recip_recip(-0.0)"
+    );
+    assertEqualF64(
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, 0.0),
+        0.0,
+        "f64.no_fold_recip_recip(0.0)"
+    );
+    assertEqualF64(
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, -INFINITY),
+        -INFINITY,
+        "f64.no_fold_recip_recip(-INFINITY)"
+    );
+    assertEqualF64(
+        floatexprs58_f64X2Eno_fold_recip_recip(&instance, INFINITY),
+        INFINITY,
+        "f64.no_fold_recip_recip(INFINITY)"
     );
 }

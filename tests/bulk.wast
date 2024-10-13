@@ -3,7 +3,7 @@
   (memory 1)
   (data "foo"))
 
-;; TODO:
+;; W2C2: No support for reference types
 ;; (module
 ;;   (table 3 funcref)
 ;;   (elem funcref (ref.func 0) (ref.null func) (ref.func 1))
@@ -196,7 +196,7 @@
 ;; No memory is required for the data.drop instruction.
 (module (data "goodbye") (func (data.drop 0)))
 
-;; TODO:
+;; W2C2: No support for reference types
 ;; ;; table.init
 ;; (module
 ;;   (table 3 funcref)

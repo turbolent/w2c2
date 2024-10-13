@@ -713,6 +713,36 @@ void test() {
         9223372036854775808ull,
         "i64.trunc_f64_u(9.223372036854776e+18)"
     );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 1u),
+        1.0,
+        "f32.convert_i32_s(1u)"
+    );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 4294967295u),
+        -1.0,
+        "f32.convert_i32_s(4294967295u)"
+    );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 0u),
+        0.0,
+        "f32.convert_i32_s(0u)"
+    );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 2147483647u),
+        2147483648.0,
+        "f32.convert_i32_s(2147483647u)"
+    );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 2147483648u),
+        -2147483648.0,
+        "f32.convert_i32_s(2147483648u)"
+    );
+    assertEqualF32(
+        conversions0_f32X2Econvert_i32_s(&instance, 1234567890u),
+        1234567936.0,
+        "f32.convert_i32_s(1234567890u)"
+    );
     assertEqualU32(
         conversions0_i32X2Etrunc_sat_f32_s(&instance, 0.0),
         0u,
@@ -1452,36 +1482,6 @@ void test() {
         conversions0_i64X2Etrunc_sat_f64_u(&instance, -INFINITY),
         0ull,
         "i64.trunc_sat_f64_u(-INFINITY)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 1u),
-        1.0,
-        "f32.convert_i32_s(1u)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 4294967295u),
-        -1.0,
-        "f32.convert_i32_s(4294967295u)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 0u),
-        0.0,
-        "f32.convert_i32_s(0u)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 2147483647u),
-        2147483648.0,
-        "f32.convert_i32_s(2147483647u)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 2147483648u),
-        -2147483648.0,
-        "f32.convert_i32_s(2147483648u)"
-    );
-    assertEqualF32(
-        conversions0_f32X2Econvert_i32_s(&instance, 1234567890u),
-        1234567936.0,
-        "f32.convert_i32_s(1234567890u)"
     );
     assertEqualF32(
         conversions0_f32X2Econvert_i32_s(&instance, 16777217u),

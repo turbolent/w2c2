@@ -15,11 +15,6 @@ void test() {
         "singular()"
     );
     assertEqualU32(
-        block0_multi(&instance),
-        8u,
-        "multi()"
-    );
-    assertEqualU32(
         block0_nested(&instance),
         9u,
         "nested()"
