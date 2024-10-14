@@ -11,7 +11,7 @@ set(CMAKE_C_STANDARD 90)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
-if(NOT DWARF_FOUND)
+if((NOT DWARF_FOUND) AND (NOT CMAKE_CROSSCOMPILING))
     find_package(PkgConfig)
     if(PKG_CONFIG_FOUND)
         pkg_check_modules(DWARF libdwarf)
