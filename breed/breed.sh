@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
-WASI_SDK=/opt/wasi-sdk
-CC=${WASI_SDK}/bin/clang
+WASI_SDK_PATH=/opt/wasi-sdk
+CC=${WASI_SDK_PATH}/bin/clang
 
 cat >w2c2_main.c <<END
 #include <stdio.h>
@@ -56,12 +56,12 @@ if ! [ -d build ]; then
     cd build
     mkdir w2c2
     cd w2c2
-    cmake ../../../w2c2 -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK}/share/cmake/wasi-sdk.cmake -DCMAKE_BUILD_TYPE=Debug
+    CFLAGS="-Wl,--stack-first -Wl,-z,stack-size=1048576" cmake ../../../w2c2 -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK_PATH}/share/cmake/wasi-sdk.cmake -DCMAKE_BUILD_TYPE=Debug
     make
     cd ..
     mkdir wasi
     cd wasi
-    cmake ../../../wasi -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK}/share/cmake/wasi-sdk.cmake -DCMAKE_BUILD_TYPE=Debug
+    CFLAGS="-Wl,--stack-first -Wl,-z,stack-size=1048576" cmake ../../../wasi -DCMAKE_TOOLCHAIN_FILE=${WASI_SDK_PATH}/share/cmake/wasi-sdk.cmake -DCMAKE_BUILD_TYPE=Debug
     make
     cd ../..
 fi
@@ -77,7 +77,7 @@ function breed() {
 
     mkdir -p silly/${genY}
     wasmtime run --dir . "silly/${genX}/w2c2.wasm" "silly/${genX}/w2c2.wasm" "silly/${genY}/w2c2.c"
-    ${CC} -Iw2c2 -Iwasi -Isilly/${genY} build/wasi/libw2c2wasi.a silly/${genY}/w2c2.c w2c2_main.c -o silly/${genY}/w2c2.wasm
+    ${CC} -I../w2c2 -I../wasi -Isilly/${genY} build/wasi/libw2c2wasi.a silly/${genY}/w2c2.c w2c2_main.c -o silly/${genY}/w2c2.wasm
 }
 
 for gen in $(seq 1 10); do
