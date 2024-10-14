@@ -26,7 +26,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
   - [Non-trapping float-to-int conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)
 - Passes 99.9% of the WebAssembly core semantics test suite
-- Written in C89 and generates C89
+- Written in (mostly) C89 and generates (mostly) C89 (some common extensions are used and not all limits are followed, see e.g. #98)
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
 - Support for many architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
 - Support for big-endian systems (e.g. PowerPC, SPARC, PA-RISC, etc.)
