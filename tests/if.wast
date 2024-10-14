@@ -502,7 +502,7 @@
   ;;   )
   ;; )
 
-  ;; W2C2: No support for func block types
+  ;; W2C2: No support for func if types
   ;; ;; Block signature syntax
   ;;
   ;; (type $block-sig-1 (func))
@@ -740,7 +740,7 @@
 ;; (assert_return
 ;;   (invoke "add64_u_saturated" (i64.const 0x8000000000000000) (i64.const 0x8000000000000000)) (i64.const -1)
 ;; )
-;; W2C2: No support for func block types
+;; W2C2: No support for func if types
 ;; (assert_return (invoke "type-use"))
 
 (assert_return (invoke "atypical-condition"))

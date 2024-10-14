@@ -82,6 +82,28 @@ void test() {
         9.0,
         "get-8()"
     );
+    global0_setX2D7(&instance, 8.0);
+    global0_setX2D8(&instance, 9.0);
+    assertEqualU32(
+        global0_getX2Dx(&instance),
+        6u,
+        "get-x()"
+    );
+    assertEqualU64(
+        global0_getX2Dy(&instance),
+        7ull,
+        "get-y()"
+    );
+    assertEqualF32(
+        global0_getX2D7(&instance),
+        8.0,
+        "get-7()"
+    );
+    assertEqualF64(
+        global0_getX2D8(&instance),
+        9.0,
+        "get-8()"
+    );
     assertEqualU32(
         global0_asX2DselectX2Dfirst(&instance),
         6u,

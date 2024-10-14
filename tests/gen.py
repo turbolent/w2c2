@@ -199,7 +199,8 @@ def gen(paths):
         'memory_copy.wast',
         'memory_fill.wast',
         'memory_init.wast',
-        'bulk.wast'
+        'bulk.wast',
+        'binary-leb128.wast'
     }
 
     for wast_path in paths:
