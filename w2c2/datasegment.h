@@ -11,7 +11,7 @@ typedef struct WasmDataSegment {
     bool passive;
 } WasmDataSegment;
 
-static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}, {0, false}};
+static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}, {0, false}, false};
 
 typedef enum WasmDataSegmentMode {
     wasmDataSegmentModeArrays,
