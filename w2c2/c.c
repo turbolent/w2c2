@@ -5105,6 +5105,8 @@ wasmCWriteExports(
     }
 }
 
+#define DATA_SEGMENT_CHUNK_LENGTH 18
+
 /* TODO: add support for multiple modules */
 static
 void
@@ -5121,30 +5123,50 @@ wasmCWriteDataSegments(
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
                 const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
+                const size_t byteCount = dataSegment.bytes.length;
 
                 fputs("const U8 ", file);
                 /* TODO: add support for multiple modules */
                 wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
                 if (pretty) {
-                    fputs("[] = {\n", file);
+                    fputs("[] = {", file);
                 } else {
-                    fputs("[]={\n", file);
+                    fputs("[]={", file);
                 }
-                if (pretty) {
-                    fputs(indentation, file);
+                if (byteCount > DATA_SEGMENT_CHUNK_LENGTH) {
+                    fputc('\n', file);
+                    if (pretty) {
+                        fputs(indentation, file);
+                    }
                 }
                 {
                     U32 byteIndex = 0;
-                    for (; byteIndex < dataSegment.bytes.length; byteIndex++) {
-                        fprintf(file, "0x%x", dataSegment.bytes.data[byteIndex]);
-                        if (pretty) {
-                            fputs(", ", file);
+                    for (; byteIndex < byteCount; byteIndex++) {
+                        U8 value = dataSegment.bytes.data[byteIndex];
+                        if (byteIndex > 0) {
+                            if (pretty) {
+                                fputs(", ", file);
+                            } else {
+                                fputc(',', file);
+                            }
+                            if (byteIndex % DATA_SEGMENT_CHUNK_LENGTH == 0) {
+                                fputs("\n", file);
+                                if (pretty) {
+                                    fputs(indentation, file);
+                                }
+                            }
+                        }
+                        if (value < 10) {
+                            fprintf(file, "%u", value);
                         } else {
-                            fputc(',', file);
+                            fprintf(file, "0x%x", value);
                         }
                     }
                 }
-                fputs("\n};\n\n", file);
+                if (byteCount > DATA_SEGMENT_CHUNK_LENGTH) {
+                    fputc('\n', file);
+                }
+                fputs("};\n\n", file);
             }
             break;
         }
