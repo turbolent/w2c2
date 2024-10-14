@@ -113,26 +113,9 @@ stringBuilderAppendU32(
     StringBuilder* stringBuilder,
     U32 value
 ) {
-    char temp[10];
-    char* tempPointer = temp;
-    char* buffer = NULL;
-
-    MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 11))
-    buffer = stringBuilder->string + stringBuilder->length;
-
-    do {
-        *tempPointer++ = (char)(value % 10) + '0';
-        value /= 10;
-    } while (value > 0);
-
-    do {
-        *buffer++ = *--tempPointer;
-        stringBuilder->length++;
-    } while (tempPointer != temp);
-
-    *buffer = '\0';
-
-    return true;
+    char buffer[11];
+    const int length = sprintf(buffer, "%u", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -140,15 +123,9 @@ stringBuilderAppendI32(
     StringBuilder* stringBuilder,
     const I32 value
 ) {
-    U32 unsignedValue = (U32)value;
-    if (value < 0) {
-        MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 1))
-        stringBuilder->string[stringBuilder->length] = '-';
-        stringBuilder->length++;
-
-        unsignedValue = ~unsignedValue + 1;
-    }
-    return stringBuilderAppendU32(stringBuilder, unsignedValue);
+    char buffer[12];
+    const int length = sprintf(buffer, "%i", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -156,26 +133,9 @@ stringBuilderAppendU64(
     StringBuilder* stringBuilder,
     U64 value
 ) {
-    char temp[20];
-    char* tempPointer = temp;
-    char* buffer = NULL;
-
-    MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 21))
-    buffer = stringBuilder->string + stringBuilder->length;
-
-    do {
-        *tempPointer++ = (char)(value % 10) + '0';
-        value /= 10;
-    } while (value > 0);
-
-    do {
-        *buffer++ = *--tempPointer;
-        stringBuilder->length++;
-    } while (tempPointer != temp);
-
-    *buffer = '\0';
-
-    return true;
+    char buffer[21];
+    const int length = sprintf(buffer, "%llu", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
@@ -183,15 +143,9 @@ stringBuilderAppendI64(
     StringBuilder* stringBuilder,
     const I64 value
 ) {
-    U64 unsignedValue = (U64)value;
-    if (value < 0) {
-        MUST (stringBuilderEnsureCapacity(stringBuilder, stringBuilder->length + 1))
-        stringBuilder->string[stringBuilder->length] = '-';
-        stringBuilder->length++;
-
-        unsignedValue = ~unsignedValue + 1;
-    }
-    return stringBuilderAppendU64(stringBuilder, unsignedValue);
+    char buffer[22];
+    const int length = sprintf(buffer, "%lli", value);
+    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 
 bool
