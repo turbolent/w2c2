@@ -15,11 +15,6 @@ void test() {
         "singular()"
     );
     assertEqualU32(
-        loop0_multi(&instance),
-        8u,
-        "multi()"
-    );
-    assertEqualU32(
         loop0_nested(&instance),
         9u,
         "nested()"
@@ -157,16 +152,6 @@ void test() {
         loop0_breakX2Dbare(&instance),
         19u,
         "break-bare()"
-    );
-    assertEqualU32(
-        loop0_breakX2Dvalue(&instance),
-        18u,
-        "break-value()"
-    );
-    assertEqualU32(
-        loop0_breakX2Drepeated(&instance),
-        18u,
-        "break-repeated()"
     );
     assertEqualU32(
         loop0_breakX2Dinner(&instance),

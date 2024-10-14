@@ -9,53 +9,43 @@ void test() {
     floatexprs74Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.74.wasm");
     assertEqualF32(
-        floatexprs74_f32X2Eno_fold_mul_sqrt_div(&instance, -4.7285568066582555e+24, 8.677281708846403e+27),
-        -INFINITY,
-        "f32.no_fold_mul_sqrt_div(-4.7285568066582555e+24, 8.677281708846403e+27)"
+        floatexprs74_f32X2Eno_fold_mul_sqrts(&instance, 2.536590811126416e-28, 4.132067465967282e-10),
+        3.237493152183345e-19,
+        "f32.no_fold_mul_sqrts(2.536590811126416e-28, 4.132067465967282e-10)"
     );
     assertEqualF32(
-        floatexprs74_f32X2Eno_fold_mul_sqrt_div(&instance, -1.1776881788564836e-36, 9.805153097384004e-30),
-        -0.0,
-        "f32.no_fold_mul_sqrt_div(-1.1776881788564836e-36, 9.805153097384004e-30)"
+        floatexprs74_f32X2Eno_fold_mul_sqrts(&instance, 4.2144832231674335e-27, 97.24911499023438),
+        6.401990482879372e-13,
+        "f32.no_fold_mul_sqrts(4.2144832231674335e-27, 97.24911499023438)"
     );
     assertEqualF32(
-        floatexprs74_f32X2Eno_fold_mul_sqrt_div(&instance, 816717056.0, 3.323170900355518e-39),
-        1.416756814348236e+28,
-        "f32.no_fold_mul_sqrt_div(816717056.0, 3.323170900355518e-39)"
+        floatexprs74_f32X2Eno_fold_mul_sqrts(&instance, 3.7240763422782964e+30, 0.0029449081048369408),
+        104723751370752.0,
+        "f32.no_fold_mul_sqrts(3.7240763422782964e+30, 0.0029449081048369408)"
     );
     assertEqualF32(
-        floatexprs74_f32X2Eno_fold_mul_sqrt_div(&instance, -11932267446272.0, 8.637066802072802e+33),
-        -0.0001283925521420315,
-        "f32.no_fold_mul_sqrt_div(-11932267446272.0, 8.637066802072802e+33)"
-    );
-    assertEqualF32(
-        floatexprs74_f32X2Eno_fold_mul_sqrt_div(&instance, -401.02349853515625, 134.33021545410156),
-        -34.600547790527344,
-        "f32.no_fold_mul_sqrt_div(-401.02349853515625, 134.33021545410156)"
+        floatexprs74_f32X2Eno_fold_mul_sqrts(&instance, 1.8660559344485864e-17, 0.002111261012032628),
+        1.9848754584383954e-10,
+        "f32.no_fold_mul_sqrts(1.8660559344485864e-17, 0.002111261012032628)"
     );
     assertEqualF64(
-        floatexprs74_f64X2Eno_fold_mul_sqrt_div(&instance, 1.4681346229104905e+210, 2.466074582285183e+228),
-        INFINITY,
-        "f64.no_fold_mul_sqrt_div(1.4681346229104905e+210, 2.466074582285183e+228)"
+        floatexprs74_f64X2Eno_fold_mul_sqrts(&instance, 3.7082569269527534e-194, 4.7183002857015043e-122),
+        4.1829020688865954e-158,
+        "f64.no_fold_mul_sqrts(3.7082569269527534e-194, 4.7183002857015043e-122)"
     );
     assertEqualF64(
-        floatexprs74_f64X2Eno_fold_mul_sqrt_div(&instance, -1.7254022016758028e-249, 5.5835540747130025e-202),
-        -0.0,
-        "f64.no_fold_mul_sqrt_div(-1.7254022016758028e-249, 5.5835540747130025e-202)"
+        floatexprs74_f64X2Eno_fold_mul_sqrts(&instance, 2.329359505918655e-27, 2.0743399642806364e-275),
+        2.1981545701574452e-151,
+        "f64.no_fold_mul_sqrts(2.329359505918655e-27, 2.0743399642806364e-275)"
     );
     assertEqualF64(
-        floatexprs74_f64X2Eno_fold_mul_sqrt_div(&instance, 1.6812810256029166e-128, 7.362783602442129e+168),
-        6.196112486187196e-213,
-        "f64.no_fold_mul_sqrt_div(1.6812810256029166e-128, 7.362783602442129e+168)"
+        floatexprs74_f64X2Eno_fold_mul_sqrts(&instance, 1.0541899336289437e-109, 5.98123819872803e-173),
+        2.511047809129887e-141,
+        "f64.no_fold_mul_sqrts(1.0541899336289437e-109, 5.98123819872803e-173)"
     );
     assertEqualF64(
-        floatexprs74_f64X2Eno_fold_mul_sqrt_div(&instance, -1.0605483729939836e+106, 6.22591783694072e-146),
-        -4.2503900822233765e+178,
-        "f64.no_fold_mul_sqrt_div(-1.0605483729939836e+106, 6.22591783694072e-146)"
-    );
-    assertEqualF64(
-        floatexprs74_f64X2Eno_fold_mul_sqrt_div(&instance, 2.6336349695373093e+31, 3.07914132858533e+253),
-        4.746142447510695e-96,
-        "f64.no_fold_mul_sqrt_div(2.6336349695373093e+31, 3.07914132858533e+253)"
+        floatexprs74_f64X2Eno_fold_mul_sqrts(&instance, 25589482.717358638, 3.913891207119902e+154),
+        1.0007719590506955e+81,
+        "f64.no_fold_mul_sqrts(25589482.717358638, 3.913891207119902e+154)"
     );
 }

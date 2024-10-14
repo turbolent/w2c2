@@ -8,124 +8,54 @@ void test() {
     floatexprs42Instance instance;
     floatexprs42Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.42.wasm");
-    assertEqualU32(
-        floatexprs42_f32X2Eult(&instance, 3.0, 2.0),
-        0u,
-        "f32.ult(3.0, 2.0)"
+    floatexprs42_init(&instance, 0u, 15.100000381469727);
+    printOK("init(0u, 15.100000381469727)");
+    floatexprs42_init(&instance, 4u, 15.199999809265137);
+    printOK("init(4u, 15.199999809265137)");
+    floatexprs42_init(&instance, 8u, 15.300000190734863);
+    printOK("init(8u, 15.300000190734863)");
+    floatexprs42_init(&instance, 12u, 15.399999618530273);
+    printOK("init(12u, 15.399999618530273)");
+    assertEqualF32(
+        floatexprs42_check(&instance, 0u),
+        15.100000381469727,
+        "check(0u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eult(&instance, 2.0, 2.0),
-        0u,
-        "f32.ult(2.0, 2.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 4u),
+        15.199999809265137,
+        "check(4u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eult(&instance, 2.0, 3.0),
-        1u,
-        "f32.ult(2.0, 3.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 8u),
+        15.300000190734863,
+        "check(8u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eule(&instance, 3.0, 2.0),
-        0u,
-        "f32.ule(3.0, 2.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 12u),
+        15.399999618530273,
+        "check(12u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eule(&instance, 2.0, 2.0),
-        1u,
-        "f32.ule(2.0, 2.0)"
+    floatexprs42_run(&instance, 16u, 3.0);
+    printOK("run(16u, 3.0)");
+    assertEqualF32(
+        floatexprs42_check(&instance, 0u),
+        5.0333333015441895,
+        "check(0u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eule(&instance, 2.0, 3.0),
-        1u,
-        "f32.ule(2.0, 3.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 4u),
+        5.066666603088379,
+        "check(4u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eugt(&instance, 3.0, 2.0),
-        1u,
-        "f32.ugt(3.0, 2.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 8u),
+        5.099999904632568,
+        "check(8u)"
     );
-    assertEqualU32(
-        floatexprs42_f32X2Eugt(&instance, 2.0, 2.0),
-        0u,
-        "f32.ugt(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f32X2Eugt(&instance, 2.0, 3.0),
-        0u,
-        "f32.ugt(2.0, 3.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f32X2Euge(&instance, 3.0, 2.0),
-        1u,
-        "f32.uge(3.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f32X2Euge(&instance, 2.0, 2.0),
-        1u,
-        "f32.uge(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f32X2Euge(&instance, 2.0, 3.0),
-        0u,
-        "f32.uge(2.0, 3.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eult(&instance, 3.0, 2.0),
-        0u,
-        "f64.ult(3.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eult(&instance, 2.0, 2.0),
-        0u,
-        "f64.ult(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eult(&instance, 2.0, 3.0),
-        1u,
-        "f64.ult(2.0, 3.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eule(&instance, 3.0, 2.0),
-        0u,
-        "f64.ule(3.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eule(&instance, 2.0, 2.0),
-        1u,
-        "f64.ule(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eule(&instance, 2.0, 3.0),
-        1u,
-        "f64.ule(2.0, 3.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eugt(&instance, 3.0, 2.0),
-        1u,
-        "f64.ugt(3.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eugt(&instance, 2.0, 2.0),
-        0u,
-        "f64.ugt(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Eugt(&instance, 2.0, 3.0),
-        0u,
-        "f64.ugt(2.0, 3.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Euge(&instance, 3.0, 2.0),
-        1u,
-        "f64.uge(3.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Euge(&instance, 2.0, 2.0),
-        1u,
-        "f64.uge(2.0, 2.0)"
-    );
-    assertEqualU32(
-        floatexprs42_f64X2Euge(&instance, 2.0, 3.0),
-        0u,
-        "f64.uge(2.0, 3.0)"
+    assertEqualF32(
+        floatexprs42_check(&instance, 12u),
+        5.133333206176758,
+        "check(12u)"
     );
 }

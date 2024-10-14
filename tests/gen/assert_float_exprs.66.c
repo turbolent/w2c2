@@ -9,23 +9,43 @@ void test() {
     floatexprs66Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.66.wasm");
     assertEqualF32(
-        floatexprs66_f32X2Eno_fold_add_neg(&instance, 0.0),
+        floatexprs66_f32X2Eno_fold_neg_add(&instance, -0.0, -0.0),
         0.0,
-        "f32.no_fold_add_neg(0.0)"
+        "f32.no_fold_neg_add(-0.0, -0.0)"
     );
     assertEqualF32(
-        floatexprs66_f32X2Eno_fold_add_neg(&instance, -0.0),
-        0.0,
-        "f32.no_fold_add_neg(-0.0)"
+        floatexprs66_f32X2Eno_fold_neg_add(&instance, 0.0, -0.0),
+        -0.0,
+        "f32.no_fold_neg_add(0.0, -0.0)"
+    );
+    assertEqualF32(
+        floatexprs66_f32X2Eno_fold_neg_add(&instance, -0.0, 0.0),
+        -0.0,
+        "f32.no_fold_neg_add(-0.0, 0.0)"
+    );
+    assertEqualF32(
+        floatexprs66_f32X2Eno_fold_neg_add(&instance, 0.0, 0.0),
+        -0.0,
+        "f32.no_fold_neg_add(0.0, 0.0)"
     );
     assertEqualF64(
-        floatexprs66_f64X2Eno_fold_add_neg(&instance, 0.0),
+        floatexprs66_f64X2Eno_fold_neg_add(&instance, -0.0, -0.0),
         0.0,
-        "f64.no_fold_add_neg(0.0)"
+        "f64.no_fold_neg_add(-0.0, -0.0)"
     );
     assertEqualF64(
-        floatexprs66_f64X2Eno_fold_add_neg(&instance, -0.0),
-        0.0,
-        "f64.no_fold_add_neg(-0.0)"
+        floatexprs66_f64X2Eno_fold_neg_add(&instance, 0.0, -0.0),
+        -0.0,
+        "f64.no_fold_neg_add(0.0, -0.0)"
+    );
+    assertEqualF64(
+        floatexprs66_f64X2Eno_fold_neg_add(&instance, -0.0, 0.0),
+        -0.0,
+        "f64.no_fold_neg_add(-0.0, 0.0)"
+    );
+    assertEqualF64(
+        floatexprs66_f64X2Eno_fold_neg_add(&instance, 0.0, 0.0),
+        -0.0,
+        "f64.no_fold_neg_add(0.0, 0.0)"
     );
 }

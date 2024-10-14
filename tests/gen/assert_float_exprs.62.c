@@ -8,14 +8,25 @@ void test() {
     floatexprs62Instance instance;
     floatexprs62Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.62.wasm");
+    floatexprs62_f64X2Esimple_x4_sum(&instance, 0u, 32u, 64u);
     assertEqualF64(
-        floatexprs62_f64X2Ekahan_sum(&instance, 0u, 256u),
-        4.996401743142033e+300,
-        "f64.kahan_sum(0u, 256u)"
+        floatexprs62_f64X2Eload(&instance, 64u),
+        1e-323,
+        "f64.load(64u)"
     );
     assertEqualF64(
-        floatexprs62_f64X2Eplain_sum(&instance, 0u, 256u),
-        4.9964017432979576e+300,
-        "f64.plain_sum(0u, 256u)"
+        floatexprs62_f64X2Eload(&instance, 72u),
+        0.0,
+        "f64.load(72u)"
+    );
+    assertEqualF64(
+        floatexprs62_f64X2Eload(&instance, 80u),
+        5e-324,
+        "f64.load(80u)"
+    );
+    assertEqualF64(
+        floatexprs62_f64X2Eload(&instance, 88u),
+        -5e-324,
+        "f64.load(88u)"
     );
 }

@@ -114,6 +114,26 @@ void test() {
         "f32.trailing_dot()"
     );
     assertEqualU32(
+        floatliterals0_f32X2Emisc_int(&instance),
+        1200726656u,
+        "f32.misc_int()"
+    );
+    assertEqualU32(
+        floatliterals0_f32X2Elarge_int(&instance),
+        1736441856u,
+        "f32.large_int()"
+    );
+    assertEqualU32(
+        floatliterals0_f32X2Emin_int32(&instance),
+        3472883712u,
+        "f32.min_int32()"
+    );
+    assertEqualU32(
+        floatliterals0_f32X2Emin_int64(&instance),
+        3741319168u,
+        "f32.min_int64()"
+    );
+    assertEqualU32(
         floatliterals0_f32_decX2Ezero(&instance),
         0u,
         "f32_dec.zero()"
@@ -162,6 +182,26 @@ void test() {
         floatliterals0_f32_decX2Eroot_beer_float(&instance),
         1065353217u,
         "f32_dec.root_beer_float()"
+    );
+    assertEqualU32(
+        floatliterals0_f32_decX2Emisc_int(&instance),
+        1178657792u,
+        "f32_dec.misc_int()"
+    );
+    assertEqualU32(
+        floatliterals0_f32_decX2Elarge_int(&instance),
+        1621981420u,
+        "f32_dec.large_int()"
+    );
+    assertEqualU32(
+        floatliterals0_f32_decX2Emin_int32(&instance),
+        3472883712u,
+        "f32_dec.min_int32()"
+    );
+    assertEqualU32(
+        floatliterals0_f32_decX2Emin_int64(&instance),
+        3741319168u,
+        "f32_dec.min_int64()"
     );
     assertEqualU64(
         floatliterals0_f64X2Eall_ones_nan(&instance),
@@ -244,6 +284,26 @@ void test() {
         "f64.trailing_dot()"
     );
     assertEqualU64(
+        floatliterals0_f64X2Emisc_int(&instance),
+        4679860480993394688ull,
+        "f64.misc_int()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Elarge_int(&instance),
+        4967470388989657088ull,
+        "f64.large_int()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Emin_int32(&instance),
+        13970166044103278592ull,
+        "f64.min_int32()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Emin_int64(&instance),
+        14114281232179134464ull,
+        "f64.min_int64()"
+    );
+    assertEqualU64(
         floatliterals0_f64_decX2Ezero(&instance),
         0ull,
         "f64_dec.zero()"
@@ -292,6 +352,26 @@ void test() {
         floatliterals0_f64_decX2Eroot_beer_float(&instance),
         4607182419335945764ull,
         "f64_dec.root_beer_float()"
+    );
+    assertEqualU64(
+        floatliterals0_f64_decX2Emisc_int(&instance),
+        4668012349850910720ull,
+        "f64_dec.misc_int()"
+    );
+    assertEqualU64(
+        floatliterals0_f64_decX2Elarge_int(&instance),
+        4906019910204099648ull,
+        "f64_dec.large_int()"
+    );
+    assertEqualU64(
+        floatliterals0_f64_decX2Emin_int32(&instance),
+        13970166044103278592ull,
+        "f64_dec.min_int32()"
+    );
+    assertEqualU64(
+        floatliterals0_f64_decX2Emin_int64(&instance),
+        14114281232179134464ull,
+        "f64_dec.min_int64()"
     );
     assertEqualF32(
         floatliterals0_f32X2DdecX2Dsep1(&instance),

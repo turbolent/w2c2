@@ -156,6 +156,7 @@
 (module
   (type $proc (func))
   (table 1 funcref)
+
   (func
     (block i32.const 0 call_indirect)
     (loop i32.const 0 call_indirect)
@@ -193,6 +194,7 @@
       (then i32.const 0 call_indirect (type $proc) (param) (param) (result))
       (else i32.const 0 call_indirect (type $proc) (param) (result) (result))
     )
+
     block i32.const 0 call_indirect end
     loop i32.const 0 call_indirect end
     i32.const 0 if i32.const 0 call_indirect end

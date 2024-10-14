@@ -1527,7 +1527,7 @@ wasmReadDataSegment(
     WasmDataSegment* result,
     WasmModuleReaderError** error
 ) {
-    U8 kind = 0;
+    U32 kind = 0;
     bool readMemoryIndex = false;
     bool readOffsetExpression = false;
     bool passive = false;
@@ -1535,7 +1535,7 @@ wasmReadDataSegment(
     Buffer offset = {NULL, 0};
     Buffer bytes = {NULL, 0};
 
-    if (!bufferReadByte(&reader->buffer, &kind)) {
+    if (!leb128ReadU32(&reader->buffer, &kind)) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderInvalidDataSectionKind
         };
@@ -1749,7 +1749,7 @@ wasmReadElementSegment(
     U32 functionIndexCount;
     U32* functionIndices;
 
-    /* Read element count */
+    /* Read table index */
     if (leb128ReadU32(&reader->buffer, &tableIndex) == 0) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderInvalidElementSectionTableIndex
