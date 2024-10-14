@@ -1,4 +1,4 @@
-START: float_exprs.87.wasm
+START: float_exprs.89.wasm
 OK: f32.arithmetic_nan_bitpattern(2139107856u, 2139107856u)
 OK: f32.canonical_nan_bitpattern(0u, 0u)
 OK: f32.canonical_nan_bitpattern(2143289344u, 2143289344u)

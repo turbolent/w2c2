@@ -1,4 +1,4 @@
-START: float_exprs.87.wasm
+START: float_exprs.89.wasm
 FAIL: f32.arithmetic_nan_bitpattern(2139107856u, 2139107856u): 2139095040 != 2143289344
 FAIL: f32.canonical_nan_bitpattern(0u, 0u): 2143289343 != 2143289344
 FAIL: f32.canonical_nan_bitpattern(2143289344u, 2143289344u): 2143289343 != 2143289344
