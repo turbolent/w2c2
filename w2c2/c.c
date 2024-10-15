@@ -556,6 +556,7 @@ typedef struct WasmCFunctionWriter {
     const char* moduleName;
     WasmFunction function;
     Buffer* code;
+    U8* codeStart;
     U32 indent;
     bool ignore;
     bool pretty;
@@ -4425,6 +4426,7 @@ wasmCWriteFunctionBody(
         writer.moduleName = moduleName;
         writer.function = function;
         writer.code = &code;
+        writer.codeStart = code.data;
         writer.indent = 0;
         writer.ignore = false;
         writer.pretty = pretty;
