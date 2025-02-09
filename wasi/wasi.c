@@ -467,21 +467,6 @@ bool WARN_UNUSED_RESULT wasiFileDescriptorAdd(int nativeFD, char *path,
   return true;
 }
 
-bool WARN_UNUSED_RESULT
-wasiFileDescriptorAddStruct(WasiFileDescriptor descriptor, U32 *wasiFD) {
-  WasiFileDescriptors *descriptors = &wasi.fds;
-  descriptors->length++;
-  if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
-    // free(path);
-    return false;
-  }
-  descriptors->fds[descriptors->length - 1] = descriptor;
-  if (wasiFD != NULL) {
-    *wasiFD = descriptors->length - 1;
-  }
-  return true;
-}
-
 bool WARN_UNUSED_RESULT wasiFileDescriptorSet(U32 wasiFD, int nativeFD) {
   MUST(wasiFD < wasi.fds.length)
   wasi.fds.fds[wasiFD].fd = nativeFD;

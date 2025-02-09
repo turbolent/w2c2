@@ -68,9 +68,6 @@ bool WARN_UNUSED_RESULT wasiInit(int argc, char *argv[], char **envp);
 bool WARN_UNUSED_RESULT wasiFileDescriptorAdd(int nativeFD, char *path,
                                               U32 *wasiFD);
 
-bool WARN_UNUSED_RESULT wasiFileDescriptorAddStruct(WasiFileDescriptor impl,
-                                              U32 *wasiFD);
-
 bool WARN_UNUSED_RESULT wasiFileDescriptorSet(U32 wasiFD, int nativeFD);
 
 bool WARN_UNUSED_RESULT wasiFileDescriptorGet(U32 wasiFD,
