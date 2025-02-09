@@ -503,6 +503,25 @@ wasiFileDescriptorAdd(
     return true;
 }
 
+bool 
+WARN_UNUSED_RESULT
+wasiFileDescriptorAddStruct(
+    WasiFileDescriptor descriptor, 
+    U32 *wasiFD
+) {
+  WasiFileDescriptors *descriptors = &wasi.fds;
+  descriptors->length++;
+  if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+    // free(path);
+    return false;
+  }
+  descriptors->fds[descriptors->length - 1] = descriptor;
+  if (wasiFD != NULL) {
+    *wasiFD = descriptors->length - 1;
+  }
+  return true;
+}
+
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorSet(
@@ -544,15 +563,18 @@ wasiFileDescriptorClose(
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     MUST (wasiFileDescriptorGet(wasiFD, &descriptor))
-
+    if(wasiIsNative(descriptor)){
     if (descriptor.dir != NULL) {
-        MUST (closedir(descriptor.dir) == 0)
-    } else if (descriptor.fd >= 0) {
-        MUST (close(descriptor.fd) == 0)
-    }
+            MUST (closedir(descriptor.dir) == 0)
+        } else if (descriptor.fd >= 0) {
+            MUST (close(descriptor.fd) == 0)
+        }
 
-    if (descriptor.path != NULL) {
-        free(descriptor.path);
+        if (descriptor.path != NULL) {
+            free(descriptor.path);
+        }
+    }else{
+        (descriptor.close)(descriptor.udata);
     }
 
     MUST (wasiFileDescriptorSet(wasiFD, -1))
@@ -759,45 +781,64 @@ wasiFDWrite(
         WASI_TRACE(("fd_write: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if(wasiIsNative(descriptor)){
 
-    if (descriptor.fd < 0) {
-        /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
-        return WASI_ERRNO_BADF;
-    }
+        if (descriptor.fd < 0) {
+            /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
+            return WASI_ERRNO_BADF;
+        }
 
-    iovecs = malloc(ciovecsCount * sizeof(struct iovec));
-    if (iovecs == NULL) {
-        WASI_TRACE(("fd_write: no mem"));
-        return WASI_ERRNO_NOMEM;
-    }
+        iovecs = malloc(ciovecsCount * sizeof(struct iovec));
+        if (iovecs == NULL) {
+            WASI_TRACE(("fd_write: no mem"));
+            return WASI_ERRNO_NOMEM;
+        }
 
-    /* Convert WASI ciovecs to native iovecs */
-    {
+        /* Convert WASI ciovecs to native iovecs */
+        {
+            U32 ciovecIndex = 0;
+            for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+                U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+                U32 bufferPointer = i32_load(memory, ciovecPointer);
+                U32 length = i32_load(memory, ciovecPointer + 4);
+
+                if (wasiFD > 2) {
+                    WASI_TRACE((
+                        "fd_write: "
+                        "length=%d, "
+                        "bufferPointer=0x%x",
+                        length,
+                        bufferPointer
+                    ));
+                }
+
+                iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+                iovecs[ciovecIndex].iov_len = length;
+            }
+        }
+
+        /* Perform the writes */
+        total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
+
+        free(iovecs);
+    } else{
+        total = 0;
         U32 ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
-            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 bufferPointer = i32_load(memory, ciovecPointer);
-            U32 length = i32_load(memory, ciovecPointer + 4);
-
-            if (wasiFD > 2) {
-                WASI_TRACE((
-                    "fd_write: "
-                    "length=%d, "
-                    "bufferPointer=0x%x",
-                    length,
-                    bufferPointer
-                ));
-            }
-
-            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
-            iovecs[ciovecIndex].iov_len = length;
-        }
+          U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+          U32 bufferPointer = i32_load(memory, ciovecPointer);
+          U32 length = i32_load(memory, ciovecPointer + 4);
+    
+          if (wasiFD > 2) {
+            WASI_TRACE(("fd_write: "
+                        "length=%d, "
+                        "bufferPointer=0x%x",
+                        length, bufferPointer));
+          }
+    
+          total += (descriptor.write)(descriptor.udata,
+                                      memory->data + bufferPointer, length);
     }
-
-    /* Perform the writes */
-    total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
-
-    free(iovecs);
 
     if (total < 0) {
         WASI_TRACE(("fd_write: writev failed: %s", strerror(errno)));
@@ -943,41 +984,61 @@ wasiFDRead(
         WASI_TRACE(("fd_[p]read: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if(wasiIsNative(descriptor)){
+        if (descriptor.fd < 0) {
+            /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
+            return WASI_ERRNO_BADF;
+        }
 
-    if (descriptor.fd < 0) {
-        /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
-        return WASI_ERRNO_BADF;
-    }
+        iovecs = malloc(iovecsCount * sizeof(struct iovec));
+        if (iovecs == NULL) {
+            WASI_TRACE(("fd_[p]read: no mem"));
+            return WASI_ERRNO_NOMEM;
+        }
 
-    iovecs = malloc(iovecsCount * sizeof(struct iovec));
-    if (iovecs == NULL) {
-        WASI_TRACE(("fd_[p]read: no mem"));
-        return WASI_ERRNO_NOMEM;
-    }
+        /* Convert WASI iovecs to native iovecs */
+        {
+            U32 iovecIndex = 0;
+            for (; iovecIndex < iovecsCount; iovecIndex++) {
+                U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
+                U32 bufferPointer = i32_load(memory, iovecPointer);
+                U32 length = i32_load(memory, iovecPointer + 4);
+                iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
+                iovecs[iovecIndex].iov_len = length;
+            }
+        }
 
-    /* Convert WASI iovecs to native iovecs */
-    {
-        U32 iovecIndex = 0;
-        for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
-            U32 bufferPointer = i32_load(memory, iovecPointer);
-            U32 length = i32_load(memory, iovecPointer + 4);
-            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
-            iovecs[iovecIndex].iov_len = length;
+        /* Perform the reads */
+        total = readFunc(descriptor.fd, iovecs, (int)iovecsCount, offset);
+
+        if (total < 0) {
+            free(iovecs);
+
+            WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+        free(iovecs);
+    }else{
+        total = 0;
+        U32 ciovecIndex = 0;
+        for (; ciovecIndex < iovecsCount; ciovecIndex++) {
+          U64 ciovecPointer = iovecsPointer + ciovecIndex * ciovecSize;
+          U32 bufferPointer = i32_load(memory, ciovecPointer);
+          U32 length = i32_load(memory, ciovecPointer + 4);
+    
+          if (wasiFD > 2) {
+            WASI_TRACE(("fd_writereadgth=%d, "
+                        "bufferPointer=0x%x",
+                        length, bufferPointer));
+          }
+    
+          total += (descriptor.read)(descriptor.udata, memory->data + bufferPointer,
+                                     length);
+          // iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+          // iovecs[ciovecIndex].iov_len = length;
         }
     }
-
-    /* Perform the reads */
-    total = readFunc(descriptor.fd, iovecs, (int)iovecsCount, offset);
-
-    if (total < 0) {
-        free(iovecs);
-
-        WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
-        return wasiErrno();
-    }
-
-    free(iovecs);
 
     /* Store the amount of read bytes at the result pointer */
     i32_store(memory, resultPointer, total);

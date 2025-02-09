@@ -30,9 +30,21 @@ extern "C" {
 
 typedef struct WasiFileDescriptor {
     int fd;
-    DIR* dir;
-    char* path;
+    union {
+      struct {
+        DIR *dir;
+        char *path;
+      };
+      struct {
+        void *udata;
+        void (*close)(void *);
+        size_t (*read)(void *, uint8_t *a, size_t len);
+        size_t (*write)(void *, uint8_t *a, size_t len);
+      };
+    };
 } WasiFileDescriptor;
+
+#define wasiIsNative(d) d.fd != -2
 
 static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
 
@@ -64,6 +76,13 @@ wasiFileDescriptorAdd(
     int nativeFD,
     char* path,
     U32* wasiFD
+);
+
+bool 
+WARN_UNUSED_RESULT 
+wasiFileDescriptorAddStruct(
+  WasiFileDescriptor impl,
+  U32 *wasiFD
 );
 
 bool
