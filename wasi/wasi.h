@@ -29,51 +29,62 @@ extern "C" {
 #endif
 
 typedef struct WasiFileDescriptor {
-  int fd;
-  union {
-    struct {
-      DIR *dir;
-      char *path;
-    };
-    struct {
-      void *udata;
-      void (*close)(void *);
-      size_t (*read)(void *, uint8_t *a, size_t len);
-      size_t (*write)(void *, uint8_t *a, size_t len);
-    };
-  };
-
+    int fd;
+    DIR* dir;
+    char* path;
 } WasiFileDescriptor;
-
-bool wasiIsNative(WasiFileDescriptor *fd);
 
 static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
 
 typedef struct WasiFileDescriptors {
-  WasiFileDescriptor *fds;
-  size_t length;
-  size_t capacity;
+    WasiFileDescriptor* fds;
+    size_t length;
+    size_t capacity;
 } WasiFileDescriptors;
 
 typedef struct WASI {
-  int envc;
-  char **envp;
-  int argc;
-  char **argv;
-  WasiFileDescriptors fds;
+    int envc;
+    char** envp;
+    int argc;
+    char** argv;
+    WasiFileDescriptors fds;
 } WASI;
 
-bool WARN_UNUSED_RESULT wasiInit(int argc, char *argv[], char **envp);
+bool
+WARN_UNUSED_RESULT
+wasiInit(
+    int argc,
+    char* argv[],
+    char** envp
+);
 
-bool WARN_UNUSED_RESULT wasiFileDescriptorAdd(int nativeFD, char *path,
-                                              U32 *wasiFD);
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorAdd(
+    int nativeFD,
+    char* path,
+    U32* wasiFD
+);
 
-bool WARN_UNUSED_RESULT wasiFileDescriptorSet(U32 wasiFD, int nativeFD);
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorSet(
+    U32 wasiFD,
+    int nativeFD
+);
 
-bool WARN_UNUSED_RESULT wasiFileDescriptorGet(U32 wasiFD,
-                                              WasiFileDescriptor *result);
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorGet(
+    U32 wasiFD,
+    WasiFileDescriptor* result
+);
 
-bool WARN_UNUSED_RESULT wasiFileDescriptorClose(U32 wasiFD);
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorClose(
+    U32 wasiFD
+);
 
 typedef U8 WasiPreopenType;
 
@@ -83,8 +94,7 @@ typedef U8 WasiPreopenType;
 /* The type of a file descriptor or file */
 typedef U8 WasiFileType;
 
-/* The type of the file descriptor or file is unknown or is different from any
- * of the other types specified */
+/* The type of the file descriptor or file is unknown or is different from any of the other types specified */
 #define WASI_FILE_TYPE_UNKNOWN 0
 
 /* The file descriptor or file refers to a block device inode */
@@ -144,8 +154,7 @@ typedef U16 WasiOflags;
 
 typedef U32 WasiLookupFlags;
 
-/* As long as the resolved path corresponds to a symbolic link, it is expanded
- */
+/* As long as the resolved path corresponds to a symbolic link, it is expanded */
 #define WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW (1 << 0)
 
 /* File descriptor rights, determining which actions may be performed */
@@ -273,58 +282,99 @@ typedef U64 WasiRights;
  */
 #define WASI_RIGHTS_POLL_FD_READWRITE (1 << 27)
 
-#define WASI_RIGHTS_ALL                                                        \
-  (WASI_RIGHTS_FD_DATASYNC | WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_SEEK |       \
-   WASI_RIGHTS_FD_FDSTAT_SET_FLAGS | WASI_RIGHTS_FD_SYNC |                     \
-   WASI_RIGHTS_FD_TELL | WASI_RIGHTS_FD_WRITE | WASI_RIGHTS_FD_ADVISE |        \
-   WASI_RIGHTS_FD_ALLOCATE | WASI_RIGHTS_PATH_CREATE_DIRECTORY |               \
-   WASI_RIGHTS_PATH_CREATE_FILE | WASI_RIGHTS_PATH_LINK_SOURCE |               \
-   WASI_RIGHTS_PATH_LINK_TARGET | WASI_RIGHTS_PATH_OPEN |                      \
-   WASI_RIGHTS_FD_READDIR | WASI_RIGHTS_PATH_READLINK |                        \
-   WASI_RIGHTS_PATH_RENAME_SOURCE | WASI_RIGHTS_PATH_RENAME_TARGET |           \
-   WASI_RIGHTS_PATH_FILESTAT_GET | WASI_RIGHTS_PATH_FILESTAT_SET_SIZE |        \
-   WASI_RIGHTS_PATH_FILESTAT_SET_TIMES | WASI_RIGHTS_FD_FILESTAT_GET |         \
-   WASI_RIGHTS_FD_FILESTAT_SET_SIZE | WASI_RIGHTS_FD_FILESTAT_SET_TIMES |      \
-   WASI_RIGHTS_PATH_SYMLINK | WASI_RIGHTS_PATH_REMOVE_DIRECTORY |              \
-   WASI_RIGHTS_PATH_UNLINK_FILE | WASI_RIGHTS_POLL_FD_READWRITE)
 
-#define WASI_RIGHTS_REGULAR_FILE_BASE                                          \
-  (WASI_RIGHTS_FD_DATASYNC | WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_SEEK |       \
-   WASI_RIGHTS_FD_FDSTAT_SET_FLAGS | WASI_RIGHTS_FD_SYNC |                     \
-   WASI_RIGHTS_FD_TELL | WASI_RIGHTS_FD_WRITE | WASI_RIGHTS_FD_ADVISE |        \
-   WASI_RIGHTS_FD_ALLOCATE | WASI_RIGHTS_FD_FILESTAT_GET |                     \
-   WASI_RIGHTS_FD_FILESTAT_SET_SIZE | WASI_RIGHTS_FD_FILESTAT_SET_TIMES |      \
-   WASI_RIGHTS_POLL_FD_READWRITE)
+#define WASI_RIGHTS_ALL (                  \
+    WASI_RIGHTS_FD_DATASYNC                \
+    | WASI_RIGHTS_FD_READ                  \
+    | WASI_RIGHTS_FD_SEEK                  \
+    | WASI_RIGHTS_FD_FDSTAT_SET_FLAGS      \
+    | WASI_RIGHTS_FD_SYNC                  \
+    | WASI_RIGHTS_FD_TELL                  \
+    | WASI_RIGHTS_FD_WRITE                 \
+    | WASI_RIGHTS_FD_ADVISE                \
+    | WASI_RIGHTS_FD_ALLOCATE              \
+    | WASI_RIGHTS_PATH_CREATE_DIRECTORY    \
+    | WASI_RIGHTS_PATH_CREATE_FILE         \
+    | WASI_RIGHTS_PATH_LINK_SOURCE         \
+    | WASI_RIGHTS_PATH_LINK_TARGET         \
+    | WASI_RIGHTS_PATH_OPEN                \
+    | WASI_RIGHTS_FD_READDIR               \
+    | WASI_RIGHTS_PATH_READLINK            \
+    | WASI_RIGHTS_PATH_RENAME_SOURCE       \
+    | WASI_RIGHTS_PATH_RENAME_TARGET       \
+    | WASI_RIGHTS_PATH_FILESTAT_GET        \
+    | WASI_RIGHTS_PATH_FILESTAT_SET_SIZE   \
+    | WASI_RIGHTS_PATH_FILESTAT_SET_TIMES  \
+    | WASI_RIGHTS_FD_FILESTAT_GET          \
+    | WASI_RIGHTS_FD_FILESTAT_SET_SIZE     \
+    | WASI_RIGHTS_FD_FILESTAT_SET_TIMES    \
+    | WASI_RIGHTS_PATH_SYMLINK             \
+    | WASI_RIGHTS_PATH_REMOVE_DIRECTORY    \
+    | WASI_RIGHTS_PATH_UNLINK_FILE         \
+    | WASI_RIGHTS_POLL_FD_READWRITE        \
+)
+
+#define WASI_RIGHTS_REGULAR_FILE_BASE (  \
+    WASI_RIGHTS_FD_DATASYNC              \
+    | WASI_RIGHTS_FD_READ                \
+    | WASI_RIGHTS_FD_SEEK                \
+    | WASI_RIGHTS_FD_FDSTAT_SET_FLAGS    \
+    | WASI_RIGHTS_FD_SYNC                \
+    | WASI_RIGHTS_FD_TELL                \
+    | WASI_RIGHTS_FD_WRITE               \
+    | WASI_RIGHTS_FD_ADVISE              \
+    | WASI_RIGHTS_FD_ALLOCATE            \
+    | WASI_RIGHTS_FD_FILESTAT_GET        \
+    | WASI_RIGHTS_FD_FILESTAT_SET_SIZE   \
+    | WASI_RIGHTS_FD_FILESTAT_SET_TIMES  \
+    | WASI_RIGHTS_POLL_FD_READWRITE      \
+)
 
 #define WASI_RIGHTS_REGULAR_FILE_INHERITING 0
 
-#define WASI_RIGHTS_DIRECTORY_BASE                                             \
-  (WASI_RIGHTS_FD_FDSTAT_SET_FLAGS | WASI_RIGHTS_FD_SYNC |                     \
-   WASI_RIGHTS_FD_ADVISE | WASI_RIGHTS_PATH_CREATE_DIRECTORY |                 \
-   WASI_RIGHTS_PATH_CREATE_FILE | WASI_RIGHTS_PATH_LINK_SOURCE |               \
-   WASI_RIGHTS_PATH_LINK_TARGET | WASI_RIGHTS_PATH_OPEN |                      \
-   WASI_RIGHTS_FD_READDIR | WASI_RIGHTS_PATH_READLINK |                        \
-   WASI_RIGHTS_PATH_RENAME_SOURCE | WASI_RIGHTS_PATH_RENAME_TARGET |           \
-   WASI_RIGHTS_PATH_FILESTAT_GET | WASI_RIGHTS_PATH_FILESTAT_SET_SIZE |        \
-   WASI_RIGHTS_PATH_FILESTAT_SET_TIMES | WASI_RIGHTS_FD_FILESTAT_GET |         \
-   WASI_RIGHTS_FD_FILESTAT_SET_TIMES | WASI_RIGHTS_PATH_SYMLINK |              \
-   WASI_RIGHTS_PATH_UNLINK_FILE | WASI_RIGHTS_PATH_REMOVE_DIRECTORY |          \
-   WASI_RIGHTS_POLL_FD_READWRITE)
+#define WASI_RIGHTS_DIRECTORY_BASE (       \
+    WASI_RIGHTS_FD_FDSTAT_SET_FLAGS        \
+    | WASI_RIGHTS_FD_SYNC                  \
+    | WASI_RIGHTS_FD_ADVISE                \
+    | WASI_RIGHTS_PATH_CREATE_DIRECTORY    \
+    | WASI_RIGHTS_PATH_CREATE_FILE         \
+    | WASI_RIGHTS_PATH_LINK_SOURCE         \
+    | WASI_RIGHTS_PATH_LINK_TARGET         \
+    | WASI_RIGHTS_PATH_OPEN                \
+    | WASI_RIGHTS_FD_READDIR               \
+    | WASI_RIGHTS_PATH_READLINK            \
+    | WASI_RIGHTS_PATH_RENAME_SOURCE       \
+    | WASI_RIGHTS_PATH_RENAME_TARGET       \
+    | WASI_RIGHTS_PATH_FILESTAT_GET        \
+    | WASI_RIGHTS_PATH_FILESTAT_SET_SIZE   \
+    | WASI_RIGHTS_PATH_FILESTAT_SET_TIMES  \
+    | WASI_RIGHTS_FD_FILESTAT_GET          \
+    | WASI_RIGHTS_FD_FILESTAT_SET_TIMES    \
+    | WASI_RIGHTS_PATH_SYMLINK             \
+    | WASI_RIGHTS_PATH_UNLINK_FILE         \
+    | WASI_RIGHTS_PATH_REMOVE_DIRECTORY    \
+    | WASI_RIGHTS_POLL_FD_READWRITE        \
+)
 
-#define WASI_RIGHTS_DIRECTORY_INHERITING                                       \
-  (WASI_RIGHTS_DIRECTORY_BASE | WASI_RIGHTS_REGULAR_FILE_BASE)
+#define WASI_RIGHTS_DIRECTORY_INHERITING (  \
+    WASI_RIGHTS_DIRECTORY_BASE              \
+    | WASI_RIGHTS_REGULAR_FILE_BASE         \
+)
 
-#define WASI_RIGHTS_TTY_BASE                                                   \
-  (WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_FDSTAT_SET_FLAGS |                     \
-   WASI_RIGHTS_FD_WRITE | WASI_RIGHTS_FD_FILESTAT_GET |                        \
-   WASI_RIGHTS_POLL_FD_READWRITE)
+#define WASI_RIGHTS_TTY_BASE (         \
+    WASI_RIGHTS_FD_READ                \
+    | WASI_RIGHTS_FD_FDSTAT_SET_FLAGS  \
+    | WASI_RIGHTS_FD_WRITE             \
+    | WASI_RIGHTS_FD_FILESTAT_GET      \
+    | WASI_RIGHTS_POLL_FD_READWRITE    \
+)
 
 #define WASI_RIGHTS_TTY_INHERITING 0
 
 /* Error codes returned by functions.
- * Not all of these error codes are returned by the functions provided by this
- * API; some are used in higher-level library layers, and others are provided
- * merely for alignment with POSIX.
+ * Not all of these error codes are returned by the functions provided by this API;
+ * some are used in higher-level library layers,
+ * and others are provided merely for alignment with POSIX.
  */
 typedef U16 WasiErrno;
 
@@ -561,15 +611,14 @@ typedef U16 WasiErrno;
 
 typedef U32 WasiClock;
 
-/* The clock measuring real time. Time value zero corresponds with
- * 1970-01-01T00:00:00Z */
+/* The clock measuring real time. Time value zero corresponds with 1970-01-01T00:00:00Z */
 #define WASI_CLOCK_REALTIME 0
 
 /*
- * The store-wide monotonic clock, which is defined as a clock measuring real
- * time, whose value cannot be adjusted and which cannot have negative clock
- * jumps. The epoch of this clock is undefined. The absolute time value of this
- * clock therefore has no meaning
+ * The store-wide monotonic clock, which is defined as a clock measuring real time,
+ * whose value cannot be adjusted and which cannot have negative clock jumps.
+ * The epoch of this clock is undefined.
+ * The absolute time value of this clock therefore has no meaning
  */
 #define WASI_CLOCK_MONOTONIC 1
 
@@ -582,9 +631,15 @@ typedef U32 WasiClock;
 /* Permanent reference to the first directory entry within a directory */
 #define WASI_DIRCOOKIE_START 0
 
-void wasiToNativePath(char *path);
+void
+wasiToNativePath(
+    char *path
+);
 
-void wasiFromNativePath(char *path);
+void
+wasiFromNativePath(
+    char *path
+);
 
 #ifdef __cplusplus
 }
