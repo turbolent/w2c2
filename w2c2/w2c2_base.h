@@ -627,6 +627,7 @@ typedef struct wasmWin32ThreadStartArg {
 
 static
 DWORD
+__stdcall
 wasmWin32ThreadStart(
     void *arg
 ) {
