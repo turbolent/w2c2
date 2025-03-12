@@ -18,9 +18,9 @@
 #define SHA1_BLOCK_LENGTH 64
 
 typedef struct {
-    uint32_t state[5];
-    uint64_t count;
-    uint8_t buffer[SHA1_BLOCK_LENGTH];
+    U32 state[5];
+    U64 count;
+    U8 buffer[SHA1_BLOCK_LENGTH];
 } SHA1_CTX;
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -49,8 +49,8 @@ typedef struct {
 #define R4(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
 
 typedef union {
-    uint8_t c[64];
-    uint32_t l[16];
+    U8 c[64];
+    U32 l[16];
 } CHAR64LONG16;
 
 /*
@@ -58,10 +58,10 @@ typedef union {
  */
 static
 void
-SHA1Transform(uint32_t state[5], const uint8_t buffer[SHA1_BLOCK_LENGTH])
+SHA1Transform(U32 state[5], const U8 buffer[SHA1_BLOCK_LENGTH])
 {
-    uint32_t a, b, c, d, e;
-    uint8_t workspace[SHA1_BLOCK_LENGTH];
+    U32 a, b, c, d, e;
+    U8 workspace[SHA1_BLOCK_LENGTH];
     CHAR64LONG16 *block = (CHAR64LONG16 *)workspace;
 
     (void)memcpy(block, buffer, SHA1_BLOCK_LENGTH);
@@ -128,17 +128,17 @@ SHA1Init(SHA1_CTX *context)
  */
 static
 void
-SHA1Update(SHA1_CTX *context, const uint8_t *data, size_t len)
+SHA1Update(SHA1_CTX *context, const U8 *data, size_t len)
 {
     size_t i, j;
 
     j = (size_t)((context->count >> 3) & 63);
-    context->count += ((uint64_t)len << 3);
+    context->count += ((U64)len << 3);
     if ((j + len) > 63) {
         (void)memcpy(&context->buffer[j], data, (i = 64-j));
         SHA1Transform(context->state, context->buffer);
         for ( ; i + 63 < len; i += 64)
-            SHA1Transform(context->state, (uint8_t *)&data[i]);
+            SHA1Transform(context->state, (U8 *)&data[i]);
         j = 0;
     } else {
         i = 0;
@@ -153,34 +153,34 @@ static
 void
 SHA1Pad(SHA1_CTX *context)
 {
-    uint8_t finalcount[8];
+    U8 finalcount[8];
     unsigned int i;
 
     for (i = 0; i < 8; i++) {
-        finalcount[i] = (uint8_t)((context->count >>
+        finalcount[i] = (U8)((context->count >>
             ((7 - (i & 7)) * 8)) & 255);    /* Endian independent */
     }
-    SHA1Update(context, (uint8_t *)"\200", 1);
+    SHA1Update(context, (U8 *)"\200", 1);
     while ((context->count & 504) != 448)
-        SHA1Update(context, (uint8_t *)"\0", 1);
+        SHA1Update(context, (U8 *)"\0", 1);
     SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform() */
 }
 
 static
 void
-SHA1Final(uint8_t digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
+SHA1Final(U8 digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 {
     unsigned int i;
 
     SHA1Pad(context);
     for (i = 0; i < SHA1_DIGEST_LENGTH; i++) {
-        digest[i] = (uint8_t)
+        digest[i] = (U8)
            ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
     }
     memset(context, 0, sizeof(*context));
 }
 
-void SHA1(const uint8_t *data, size_t count, uint8_t *result) {
+void SHA1(const U8 *data, size_t count, U8 *result) {
     SHA1_CTX context;
     SHA1Init(&context);
     SHA1Update(&context, data, count);
