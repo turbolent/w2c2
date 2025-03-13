@@ -41,8 +41,8 @@ void* testThreadFunc(void* arg) {
 void
 testFutex(void) {
     const U32 initAddress = 0;
-    const U32 waitAddress1 = 42;
-    const U32 waitAddress2 = 99;
+    const U32 waitAddress1 = 10 * sizeof(U32);
+    const U32 waitAddress2 = 20 * sizeof(U32);
 
     wasmMemory* mem = NULL;
 
