@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8.12...3.5)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -11,7 +11,7 @@ set(CMAKE_C_STANDARD 90)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
-if(NOT DWARF_FOUND)
+if((NOT DWARF_FOUND) AND (NOT CMAKE_CROSSCOMPILING))
     find_package(PkgConfig)
     if(PKG_CONFIG_FOUND)
         pkg_check_modules(DWARF libdwarf)
@@ -22,6 +22,7 @@ include(CheckIncludeFile)
 check_include_file(getopt.h HAVE_GETOPT_H)
 check_include_file(libgen.h HAVE_LIBGEN_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(glob.h HAVE_GLOB_H)
 
 include(CheckSymbolExists)
 check_symbol_exists(strdup string.h HAVE_STRDUP)
@@ -36,17 +37,21 @@ list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
 add_executable(w2c2 ${SOURCES})
 
 list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.c)
-add_executable(test ${TEST_SOURCES} ${SOURCES})
+add_executable(w2c2_test ${TEST_SOURCES} ${SOURCES})
 
-foreach(TARGET w2c2 test)
+foreach(TARGET w2c2 w2c2_test)
 
     target_compile_options(${TARGET} PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
-        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Werror=conversion -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>
     )
 
     if(DWARF_FOUND)
+        if(DWARF_OLD)
+            target_compile_definitions(${TARGET} PUBLIC HAS_OLD_LIBDWARF=1)
+        else()
         target_compile_definitions(${TARGET} PUBLIC HAS_LIBDWARF=1)
+        endif()
         target_include_directories(${TARGET} PUBLIC ${DWARF_INCLUDE_DIRS})
         target_link_directories(${TARGET} PUBLIC ${DWARF_LIBRARY_DIRS})
         target_link_libraries(${TARGET} PUBLIC ${DWARF_LIBRARIES})
@@ -71,6 +76,10 @@ foreach(TARGET w2c2 test)
 
     if(HAVE_STRDUP)
         target_compile_definitions(${TARGET} PUBLIC HAS_STRDUP=1)
+    endif()
+
+    if(HAVE_GLOB_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_GLOB=1)
     endif()
 
     if(MSVC)

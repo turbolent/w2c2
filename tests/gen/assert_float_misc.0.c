@@ -1904,6 +1904,156 @@ void test() {
         "f64.sqrt(0.9999999999999997)"
     );
     assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.2499999850988388),
+        0.4999999701976776,
+        "f32.sqrt(0.2499999850988388)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.25),
+        0.5,
+        "f32.sqrt(0.25)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.2500000298023224),
+        0.5,
+        "f32.sqrt(0.2500000298023224)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.2500000596046448),
+        0.5000000596046448,
+        "f32.sqrt(0.2500000596046448)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.24999999999999997),
+        0.49999999999999994,
+        "f64.sqrt(0.24999999999999997)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.25),
+        0.5,
+        "f64.sqrt(0.25)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.25000000000000006),
+        0.5,
+        "f64.sqrt(0.25000000000000006)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.2500000000000001),
+        0.5000000000000001,
+        "f64.sqrt(0.2500000000000001)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 272331603968.0),
+        521854.0,
+        "f32.sqrt(272331603968.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 272331606109.83676),
+        521854.0084255718,
+        "f64.sqrt(272331606109.83676)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 10616005632.0),
+        103034.0,
+        "f32.sqrt(10616005632.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 3014768273129472.0),
+        54906904.0,
+        "f32.sqrt(3014768273129472.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 24597323841536.0),
+        4959569.0,
+        "f32.sqrt(24597323841536.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 1234567936.0),
+        35136.41796875,
+        "f32.sqrt(1234567936.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 10616005156.0),
+        103034.0,
+        "f64.sqrt(10616005156.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 3014768326492836.0),
+        54906906.0,
+        "f64.sqrt(3014768326492836.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 24597324665761.0),
+        4959569.0,
+        "f64.sqrt(24597324665761.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 1234567891.0),
+        35136.41830067487,
+        "f64.sqrt(1234567891.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.5158079862594604),
+        0.718197762966156,
+        "f32.sqrt(0.5158079862594604)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 0.5028960704803467),
+        0.7091516852378845,
+        "f32.sqrt(0.5028960704803467)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.5158079862594604),
+        0.7181977347913737,
+        "f64.sqrt(0.5158079862594604)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 0.5028960704803467),
+        0.7091516554872778,
+        "f64.sqrt(0.5028960704803467)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 9.0),
+        3.0,
+        "f32.sqrt(9.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 137.0),
+        11.704699516296387,
+        "f32.sqrt(137.0)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 1.7737711668014526),
+        1.3318300247192383,
+        "f32.sqrt(1.7737711668014526)"
+    );
+    assertEqualF32(
+        floatmisc0_f32X2Esqrt(&instance, 1000.0),
+        31.62277603149414,
+        "f32.sqrt(1000.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 9.0),
+        3.0,
+        "f64.sqrt(9.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 137.0),
+        11.704699910719626,
+        "f64.sqrt(137.0)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 1.7737712281864233),
+        1.3318300297659695,
+        "f64.sqrt(1.7737712281864233)"
+    );
+    assertEqualF64(
+        floatmisc0_f64X2Esqrt(&instance, 1000.0),
+        31.622776601683793,
+        "f64.sqrt(1000.0)"
+    );
+    assertEqualF32(
         floatmisc0_f32X2Eceil(&instance, 0.9999999403953552),
         1.0,
         "f32.ceil(0.9999999403953552)"

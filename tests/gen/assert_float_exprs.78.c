@@ -8,14 +8,69 @@ void test() {
     floatexprs78Instance instance;
     floatexprs78Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.78.wasm");
-    assertEqualF32(
-        floatexprs78_f32X2EnoX5FdistributeX5Fexact(&instance, -0.0),
-        0.0,
-        "f32.no_distribute_exact(-0.0)"
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_eq(&instance, -INFINITY, 3.0),
+        1u,
+        "f32.recoding_eq(-INFINITY, 3.0)"
     );
-    assertEqualF64(
-        floatexprs78_f64X2EnoX5FdistributeX5Fexact(&instance, -0.0),
-        0.0,
-        "f64.no_distribute_exact(-0.0)"
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_le(&instance, -INFINITY, 3.0),
+        1u,
+        "f32.recoding_le(-INFINITY, 3.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_lt(&instance, -INFINITY, 3.0),
+        0u,
+        "f32.recoding_lt(-INFINITY, 3.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_eq(&instance, 0.0, 1.0),
+        1u,
+        "f32.recoding_eq(0.0, 1.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_le(&instance, 0.0, 1.0),
+        1u,
+        "f32.recoding_le(0.0, 1.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f32X2Erecoding_lt(&instance, 0.0, 1.0),
+        0u,
+        "f32.recoding_lt(0.0, 1.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_eq(&instance, -INFINITY, 3.0),
+        1u,
+        "f64.recoding_eq(-INFINITY, 3.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_le(&instance, -INFINITY, 3.0),
+        1u,
+        "f64.recoding_le(-INFINITY, 3.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_lt(&instance, -INFINITY, 3.0),
+        0u,
+        "f64.recoding_lt(-INFINITY, 3.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_eq(&instance, 0.0, 1.0),
+        1u,
+        "f64.recoding_eq(0.0, 1.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_le(&instance, 0.0, 1.0),
+        1u,
+        "f64.recoding_le(0.0, 1.0)"
+    );
+    assertEqualU32(
+        floatexprs78_f64X2Erecoding_lt(&instance, 0.0, 1.0),
+        0u,
+        "f64.recoding_lt(0.0, 1.0)"
+    );
+    assertEqualF32(
+        floatexprs78_recoding_demote(&instance, 2.3860049081905093e-40, 1221.0),
+        2.913312062965535e-37,
+        "recoding_demote(2.3860049081905093e-40, 1221.0)"
     );
 }

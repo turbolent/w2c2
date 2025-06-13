@@ -24,20 +24,20 @@ testResolvePath(
 ) {
     char result[PATH_MAX];
     if (resolvePath(directory, path, strlen(path), result) != valid) {
-        fprintf(stderr, "FAIL: resolvePath(%s, %s): should succeed\n", directory, path);
-        return;
+        fprintf(stderr, "FAIL resolvePath(%s, %s): should succeed\n", directory, path);
+        exit(1);
     }
 
-    if (!valid) {
-        return;
-    }
+    if (valid) {
+        if (strcmp(result, expected) != 0) {
+            fprintf(stderr, "FAIL resolvePath(%s, %s): %s != %s\n", directory, path, result, expected);
+            exit(1);
+        }
 
-    if (strcmp(result, expected) != 0) {
-        fprintf(stderr, "FAIL: resolvePath(%s, %s): %s != %s\n", directory, path, result, expected);
-        return;
+        fprintf(stderr, "OK resolvePath(%s, %s) == %s\n", directory, path, expected);
+    } else {
+        fprintf(stderr, "OK resolvePath(%s, %s) is invalid as expected\n", directory, path);
     }
-
-    fprintf(stderr, "OK: resolvePath(%s, %s) == %s\n", directory, path, expected);
 }
 
 void
@@ -51,11 +51,11 @@ testMacToPosixPath(
     macToPosixPath(result);
 
     if (strcmp(result, expected) != 0) {
-        fprintf(stderr, "FAIL: macToPosixPath(%s): %s != %s\n", path, result, expected);
-        return;
+        fprintf(stderr, "FAIL macToPosixPath(%s): %s != %s\n", path, result, expected);
+        exit(1);
     }
 
-    fprintf(stderr, "OK: macToPosixPath(%s) == %s\n", path, expected);
+    fprintf(stderr, "OK macToPosixPath(%s) == %s\n", path, expected);
 }
 
 void
@@ -69,11 +69,11 @@ testPosixToMacPath(
     posixToMacPath(result);
 
     if (strcmp(result, expected) != 0) {
-        fprintf(stderr, "FAIL: posixToMacPath(%s): %s != %s\n", path, result, expected);
-        return;
+        fprintf(stderr, "FAIL posixToMacPath(%s): %s != %s\n", path, result, expected);
+        exit(1);
     }
 
-    fprintf(stderr, "OK: posixToMacPath(%s) == %s\n", path, expected);
+    fprintf(stderr, "OK posixToMacPath(%s) == %s\n", path, expected);
 }
 
 /* Unused but expected by the WASI implementation */
@@ -83,11 +83,9 @@ wasmMemory* wasiMemory(void* instance) {
 
 int
 main(int argc, char* argv[]) {
-    wasmMemory m;
-    wasmMemoryAllocate(&m, 2, 65535);
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
-        return 1;
+        exit(1);
     }
 
     testResolvePath("/", "", "", false);

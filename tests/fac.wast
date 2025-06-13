@@ -79,6 +79,25 @@
     )
     (local.get 1)
   )
+
+  ;; W2C2: No support for functions with multiple return values
+  ;; ;; Iterative factorial without locals.
+  ;; (func $pick0 (param i64) (result i64 i64)
+  ;;   (local.get 0) (local.get 0)
+  ;; )
+  ;; (func $pick1 (param i64 i64) (result i64 i64 i64)
+  ;;   (local.get 0) (local.get 1) (local.get 0)
+  ;; )
+  ;; (func (export "fac-ssa") (param i64) (result i64)
+  ;;   (i64.const 1) (local.get 0)
+  ;;   (loop $l (param i64 i64) (result i64)
+  ;;     (call $pick1) (call $pick1) (i64.mul)
+  ;;     (call $pick1) (i64.const 1) (i64.sub)
+  ;;     (call $pick0) (i64.const 0) (i64.gt_u)
+  ;;     (br_if $l)
+  ;;     (drop) (return)
+  ;;   )
+  ;; )
 )
 
 (assert_return (invoke "fac-rec" (i64.const 25)) (i64.const 7034535277573963776))
@@ -86,4 +105,7 @@
 (assert_return (invoke "fac-rec-named" (i64.const 25)) (i64.const 7034535277573963776))
 (assert_return (invoke "fac-iter-named" (i64.const 25)) (i64.const 7034535277573963776))
 (assert_return (invoke "fac-opt" (i64.const 25)) (i64.const 7034535277573963776))
+;; W2C2: No support for functions with multiple return values
+;; (assert_return (invoke "fac-ssa" (i64.const 25)) (i64.const 7034535277573963776))
+
 (assert_exhaustion (invoke "fac-rec" (i64.const 1073741824)) "call stack exhausted")

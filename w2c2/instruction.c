@@ -5,13 +5,11 @@
 bool
 wasmLocalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmLocalInstruction* result
 ) {
     U32 localIndex = 0;
     MUST (leb128ReadU32(buffer, &localIndex) > 0)
 
-    result->opcode = opcode;
     result->localIndex = localIndex;
 
     return true;
@@ -22,13 +20,11 @@ wasmLocalInstructionRead(
 bool
 wasmGlobalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmGlobalInstruction* result
 ) {
     U32 globalIndex = 0;
     MUST (leb128ReadU32(buffer, &globalIndex) > 0)
 
-    result->opcode = opcode;
     result->globalIndex = globalIndex;
 
     return true;
@@ -39,31 +35,29 @@ wasmGlobalInstructionRead(
 bool
 wasmConstInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
+    const WasmOpcode opcode,
     WasmConstInstruction* result
 ) {
-    result->opcode = opcode;
     switch (opcode) {
         case wasmOpcodeI32Const:
             return leb128ReadI32(buffer, &result->value.i32) > 0;
         case wasmOpcodeI64Const:
             return leb128ReadI64(buffer, &result->value.i64) > 0;
         case wasmOpcodeF32Const:
-            return bufferReadF32(buffer, &result->value.f32) > 0;
+            return bufferReadF32(buffer, &result->value.i32) > 0;
         case wasmOpcodeF64Const:
-            return bufferReadF64(buffer, &result->value.f64) > 0;
+            return bufferReadF64(buffer, &result->value.i64) > 0;
         default:
             return false;
     }
 }
 
-/* WasmLoadStoreInstruction */
+/* WasmMemoryArgumentInstruction */
 
 bool
-wasmLoadStoreInstructionRead(
+wasmMemoryArgumentInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
-    WasmLoadStoreInstruction* result
+    WasmMemoryArgumentInstruction* result
 ) {
     U32 align = 0;
     U32 offset = 0;
@@ -71,7 +65,6 @@ wasmLoadStoreInstructionRead(
     MUST (leb128ReadU32(buffer, &align) > 0)
     MUST (leb128ReadU32(buffer, &offset) > 0)
 
-    result->opcode = opcode;
     result->align = align;
     result->offset = offset;
 
@@ -117,13 +110,11 @@ wasmCallIndirectInstructionRead(
 bool
 wasmBranchInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmBranchInstruction* result
 ) {
     U32 labelIndex = 0;
     MUST(leb128ReadU32(buffer, &labelIndex) > 0)
 
-    result->opcode = opcode;
     result->labelIndex = labelIndex;
 
     return true;
@@ -142,7 +133,7 @@ wasmBranchTableInstructionRead(
 
     MUST(leb128ReadU32(buffer, &labelIndexCount) > 0)
 
-    labelIndices = calloc(sizeof(U32) * labelIndexCount, 1);
+    labelIndices = calloc( labelIndexCount, sizeof(U32));
     {
         U32 labelIndex = 0;
         for (; labelIndex < labelIndexCount; labelIndex++) {
@@ -161,7 +152,7 @@ wasmBranchTableInstructionRead(
 
 void
 wasmBranchTableInstructionFree(
-    WasmBranchTableInstruction instruction
+    const WasmBranchTableInstruction instruction
 ) {
     free(instruction.labelIndices);
 }
@@ -171,31 +162,11 @@ wasmBranchTableInstructionFree(
 bool
 wasmMemoryInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmMemoryInstruction* result
 ) {
     U32 memoryIndex = 0;
     MUST(leb128ReadU32(buffer, &memoryIndex) > 0)
 
-    result->opcode = opcode;
-    result->memoryIndex = memoryIndex;
-
-    return true;
-}
-
-/* WasmMiscMemoryInstruction */
-
-bool
-WARN_UNUSED_RESULT
-wasmMiscMemoryInstructionRead(
-    Buffer* buffer,
-    WasmMiscOpcode opcode,
-    WasmMiscMemoryInstruction* result
-) {
-    U32 memoryIndex = 0;
-    MUST(leb128ReadU32(buffer, &memoryIndex) > 0)
-
-    result->opcode = opcode;
     result->memoryIndex = memoryIndex;
 
     return true;
@@ -209,10 +180,10 @@ wasmMemoryCopyInstructionRead(
     Buffer* buffer,
     WasmMemoryCopyInstruction* result
 ) {
-    U8 memoryIndex1 = 0;
-    U8 memoryIndex2 = 0;
-    MUST (bufferReadByte(buffer, &memoryIndex1) > 0)
-    MUST (bufferReadByte(buffer, &memoryIndex2) > 0)
+    U32 memoryIndex1 = 0;
+    U32 memoryIndex2 = 0;
+    MUST (leb128ReadU32(buffer, &memoryIndex1) > 0)
+    MUST (leb128ReadU32(buffer, &memoryIndex2) > 0)
 
     result->memoryIndex1 = memoryIndex1;
     result->memoryIndex2 = memoryIndex2;
@@ -220,3 +191,22 @@ wasmMemoryCopyInstructionRead(
     return true;
 }
 
+/* WasmMemoryInitInstruction */
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryInitInstructionRead(
+    Buffer* buffer,
+    WasmMemoryInitInstruction* result
+) {
+    U32 dataSegmentIndex = 0;
+    U32 memoryIndex = 0;
+
+    MUST (leb128ReadU32(buffer, &dataSegmentIndex) > 0)
+    MUST (leb128ReadU32(buffer, &memoryIndex) > 0)
+
+    result->dataSegmentIndex = dataSegmentIndex;
+    result->memoryIndex = memoryIndex;
+
+    return true;
+}

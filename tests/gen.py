@@ -25,8 +25,13 @@ def compare_versions(a, b):
 def export_name(name):
     escape_char = 'X'
     res = ""
-    for c in name:
-        if c.isalnum() and c != escape_char:
+    for i, c in enumerate(name):
+        if c == '_':
+            if i > 0 and name[i-1] == '_':
+                res += "__"
+            else:
+                res += c
+        elif c != escape_char and c.isalnum():
             res += c
         else:
             res += escape_char + "{:02X}".format(ord(c))
@@ -99,7 +104,7 @@ void test() {{
         test_file.write(test_preamble)
 
     def close_test_file():
-        nonlocal test_file 
+        nonlocal test_file
         if not test_file:
             return
         test_file.write('}\n')
@@ -190,12 +195,18 @@ def gen(paths):
     wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
     has_new_wabt = compare_versions(wast2json_version, "1.0.25") > 0
 
-    memory_files = {'memory_copy.wast', 'memory_fill.wast'}
+    memory_files = {
+        'memory_copy.wast',
+        'memory_fill.wast',
+        'memory_init.wast',
+        'bulk.wast',
+        'binary-leb128.wast'
+    }
 
     for wast_path in paths:
         print(wast_path)
 
-        wast2json_opts = []
+        wast2json_opts = ['--enable-threads']
 
         if has_new_wabt:
             if wast_path not in memory_files:

@@ -6,25 +6,9 @@
 #define INPUT mem->data[0]
 #define FP(o) (mem->data[0x5000 + (o)] / 8)
 
-static
 F32
-Math_random() {
+Math__random() {
     return (F32)rand()/(F32)(RAND_MAX);
-}
-
-static
-void*
-resolveImport(
-    const char* module,
-    const char* name
-) {
-    if (strcmp(module, "Math") == 0
-        && strcmp(name, "random") == 0
-        ) {
-        return (void*)Math_random;
-    }
-
-    return NULL;
 }
 
 void
@@ -36,7 +20,7 @@ trap(
 
 int main(int argc, char* argv[]) {
     dinoInstance instance;
-    dinoInstantiate(&instance, resolveImport);
+    dinoInstantiate(&instance, NULL);
     wasmMemory* mem = dino_mem(&instance);
 
     /* Set up the interrupt handlers */

@@ -1,8 +1,6 @@
 #ifndef W2C2_COMPAT_H
 #define W2C2_COMPAT_H
 
-#include <string.h>
-
 #if HAS_LIBGEN
 #include <libgen.h>
 #else

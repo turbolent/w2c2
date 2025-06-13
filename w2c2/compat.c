@@ -1,3 +1,4 @@
+#include <string.h>
 #include "compat.h"
 #include "path.h"
 
@@ -11,16 +12,16 @@ char*
 basename(
     char* s
 ) {
-	size_t i;
+    size_t i;
     if (!s || !*s) {
         return ".";
     }
-	i = strlen(s)-1;
+    i = strlen(s)-1;
     for (; i && s[i] == PATH_SEPARATOR; i--) {
         s[i] = 0;
     }
     for (; i && s[i - 1] != PATH_SEPARATOR; i--) { }
-	return s+i;
+    return s+i;
 }
 
 /*
@@ -31,17 +32,17 @@ char*
 dirname(
     char* s
 ) {
-	size_t i;
-	if (!s || !*s) {
+    size_t i;
+    if (!s || !*s) {
         return ".";
     }
-	i = strlen(s)-1;
-	for (; s[i] == PATH_SEPARATOR; i--) {
+    i = strlen(s)-1;
+    for (; s[i] == PATH_SEPARATOR; i--) {
         if (!i) {
             return PATH_SEPARATOR_STRING;
         }
     }
-	for (; s[i] != PATH_SEPARATOR; i--) {
+    for (; s[i] != PATH_SEPARATOR; i--) {
         if (!i) {
             return ".";
         }
@@ -51,8 +52,8 @@ dirname(
             return PATH_SEPARATOR_STRING;
         }
     }
-	s[i+1] = 0;
-	return s;
+    s[i+1] = 0;
+    return s;
 }
 
 #endif /* !HAS_LIBGEN */

@@ -64,17 +64,17 @@ void test() {
         "as-br-value(8u)"
     );
     assertEqualU32(
-        localget0_asX2DbrX5FifX2Dvalue(&instance, 9u),
+        localget0_asX2Dbr_ifX2Dvalue(&instance, 9u),
         9u,
         "as-br_if-value(9u)"
     );
     assertEqualU32(
-        localget0_asX2DbrX5FifX2DvalueX2Dcond(&instance, 10u),
+        localget0_asX2Dbr_ifX2DvalueX2Dcond(&instance, 10u),
         10u,
         "as-br_if-value-cond(10u)"
     );
     assertEqualU32(
-        localget0_asX2DbrX5FtableX2Dvalue(&instance, 1u),
+        localget0_asX2Dbr_tableX2Dvalue(&instance, 1u),
         2u,
         "as-br_table-value(1u)"
     );

@@ -8,14 +8,14 @@ void test() {
     floatexprs84Instance instance;
     floatexprs84Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.84.wasm");
-    assertEqualF32(
-        floatexprs84_f32X2Eepsilon(&instance),
-        -1.1920928955078125e-07,
-        "f32.epsilon()"
+    assertEqualU32(
+        floatexprs84_f32X2Eno_fold_add_le_monotonicity(&instance, INFINITY, -INFINITY, INFINITY),
+        0u,
+        "f32.no_fold_add_le_monotonicity(INFINITY, -INFINITY, INFINITY)"
     );
-    assertEqualF64(
-        floatexprs84_f64X2Eepsilon(&instance),
-        2.220446049250313e-16,
-        "f64.epsilon()"
+    assertEqualU32(
+        floatexprs84_f64X2Eno_fold_add_le_monotonicity(&instance, INFINITY, -INFINITY, INFINITY),
+        0u,
+        "f64.no_fold_add_le_monotonicity(INFINITY, -INFINITY, INFINITY)"
     );
 }

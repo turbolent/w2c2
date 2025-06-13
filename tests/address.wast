@@ -608,4 +608,3 @@
 
 (assert_trap (invoke "64_bad" (i32.const 0)) "out of bounds memory access")
 (assert_trap (invoke "64_bad" (i32.const 1)) "out of bounds memory access")
-

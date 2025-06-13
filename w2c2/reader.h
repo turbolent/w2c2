@@ -39,7 +39,7 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidExportSectionExportCount,
     wasmModuleReaderInvalidExportSectionExportName,
     wasmModuleReaderInvalidExportSectionExportKind,
-    wasmModuleReaderInvalidExportSectionIndex,
+    wasmModuleReaderInvalidExportSectionExportIndex,
     wasmModuleReaderInvalidGlobalSectionGlobalCount,
     wasmModuleReaderInvalidGlobalSectionMutabilityIndicator,
     wasmModuleReaderInvalidGlobalSectionInitExpression,
@@ -48,9 +48,11 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidLimitMinimum,
     wasmModuleReaderInvalidLimitMaximum,
     wasmModuleReaderInvalidDataSectionDataSegmentCount,
+    wasmModuleReaderInvalidDataSectionKind,
     wasmModuleReaderInvalidDataSectionMemoryIndex,
     wasmModuleReaderInvalidDataSectionOffsetExpression,
     wasmModuleReaderInvalidDataSectionBytes,
+    wasmModuleReaderInvalidDataCountSectionDataCount,
     wasmModuleReaderInvalidTableSectionTableCount,
     wasmModuleReaderInvalidTableSectionTableType,
     wasmModuleReaderInvalidElementSectionElementSegmentCount,
@@ -70,7 +72,7 @@ typedef struct WasmModuleReaderError {
 
 const char*
 wasmModuleReaderErrorMessage(
-    WasmModuleReaderError* error
+    const WasmModuleReaderError* error
 );
 
 void

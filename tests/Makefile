@@ -5,6 +5,15 @@ CFLAGS ?= -I../w2c2 -O0 -g
 
 EXE =
 
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -DWASM_THREADS_WIN32
+else
+	CFLAGS += -DWASM_THREADS_PTHREADS
+	LDFLAGS += -lm
+endif
+
+LDFLAGS := -lw2c2futex -L../futex $(LDFLAGS)
+
 ifeq ($(TARGET),Wii)
 
 ifeq ($(strip $(DEVKITPRO)),)
@@ -28,8 +37,6 @@ EXECUTE ?= $(DOLPHIN) -b -e
 
 endif
 
-LDFLAGS += -lm
-
 .SILENT:
 
 .PHONY: run-tests gen clean clean-wasm-json clean-assertions clean-compiled
@@ -41,11 +48,11 @@ run-tests-%:
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
-	$(EXECUTE) ./$<
+	$(PYTHON3) run.py $(if $(EXECUTE),-e $(EXECUTE),) $(if $(ARCH),-a $(ARCH),) $<
 	echo
 
 test_%$(EXE): test_%.o main.o
-	$(CC) $< main.o -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< main.o -o $@ $(LDFLAGS)
 
 test_%.c: gen/%.wasm
 	echo "#include \"test.h\"" > $@
@@ -62,4 +69,4 @@ gen-%:
 	$(PYTHON3) gen.py $*
 
 clean:
-	-rm -f main.o test_*
+	-rm -f main.o test_*.o test_*.h

@@ -4,12 +4,27 @@
 #include "w2c2_base.h"
 
 bool
-arrayEnsureCapacity(
+arrayEnsureCapacitySlowPath(
     void** items,
     size_t length,
     size_t* capacity,
     size_t itemSize
 );
+
+static
+W2C2_INLINE
+bool
+arrayEnsureCapacity(
+    void** items,
+    const size_t length,
+    size_t* capacity,
+    const size_t itemSize
+) {
+    if (length <= *capacity) {
+        return true;
+    }
+    return arrayEnsureCapacitySlowPath(items, length, capacity, itemSize);
+}
 
 #define ARRAY_TYPE(NAME, TYPE, INSTANCE, ITEMS, ITEM)         \
 typedef struct NAME {                                         \
@@ -27,7 +42,7 @@ INSTANCE ## EnsureCapacity(                                   \
         (void**)&INSTANCE->ITEMS,                             \
         length,                                               \
         &INSTANCE->capacity,                                  \
-        sizeof(NAME)                                          \
+        sizeof(TYPE)                                          \
     );                                                        \
 }                                                             \
                                                               \

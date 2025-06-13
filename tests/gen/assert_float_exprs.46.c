@@ -9,83 +9,83 @@ void test() {
     floatexprs46Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.46.wasm");
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FltX5FifX5FtoX5Fabs(&instance, 0.0),
-        0.0,
-        "f32.no_fold_lt_if_to_abs(0.0)"
+        floatexprs46_f32X2Eno_fold_lt_if(&instance, 0.0, -0.0),
+        -0.0,
+        "f32.no_fold_lt_if(0.0, -0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FltX5FifX5FtoX5Fabs(&instance, -0.0),
-        -0.0,
-        "f32.no_fold_lt_if_to_abs(-0.0)"
+        floatexprs46_f32X2Eno_fold_lt_if(&instance, -0.0, 0.0),
+        0.0,
+        "f32.no_fold_lt_if(-0.0, 0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FleX5FifX5FtoX5Fabs(&instance, 0.0),
-        -0.0,
-        "f32.no_fold_le_if_to_abs(0.0)"
+        floatexprs46_f32X2Eno_fold_le_if(&instance, 0.0, -0.0),
+        0.0,
+        "f32.no_fold_le_if(0.0, -0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FleX5FifX5FtoX5Fabs(&instance, -0.0),
-        0.0,
-        "f32.no_fold_le_if_to_abs(-0.0)"
+        floatexprs46_f32X2Eno_fold_le_if(&instance, -0.0, 0.0),
+        -0.0,
+        "f32.no_fold_le_if(-0.0, 0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FgtX5FifX5FtoX5Fabs(&instance, 0.0),
+        floatexprs46_f32X2Eno_fold_gt_if(&instance, 0.0, -0.0),
         -0.0,
-        "f32.no_fold_gt_if_to_abs(0.0)"
+        "f32.no_fold_gt_if(0.0, -0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FgtX5FifX5FtoX5Fabs(&instance, -0.0),
+        floatexprs46_f32X2Eno_fold_gt_if(&instance, -0.0, 0.0),
         0.0,
-        "f32.no_fold_gt_if_to_abs(-0.0)"
+        "f32.no_fold_gt_if(-0.0, 0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FgeX5FifX5FtoX5Fabs(&instance, 0.0),
+        floatexprs46_f32X2Eno_fold_ge_if(&instance, 0.0, -0.0),
         0.0,
-        "f32.no_fold_ge_if_to_abs(0.0)"
+        "f32.no_fold_ge_if(0.0, -0.0)"
     );
     assertEqualF32(
-        floatexprs46_f32X2EnoX5FfoldX5FgeX5FifX5FtoX5Fabs(&instance, -0.0),
+        floatexprs46_f32X2Eno_fold_ge_if(&instance, -0.0, 0.0),
         -0.0,
-        "f32.no_fold_ge_if_to_abs(-0.0)"
+        "f32.no_fold_ge_if(-0.0, 0.0)"
     );
     assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FltX5FifX5FtoX5Fabs(&instance, 0.0),
+        floatexprs46_f64X2Eno_fold_lt_if(&instance, 0.0, -0.0),
+        -0.0,
+        "f64.no_fold_lt_if(0.0, -0.0)"
+    );
+    assertEqualF64(
+        floatexprs46_f64X2Eno_fold_lt_if(&instance, -0.0, 0.0),
         0.0,
-        "f64.no_fold_lt_if_to_abs(0.0)"
+        "f64.no_fold_lt_if(-0.0, 0.0)"
     );
     assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FltX5FifX5FtoX5Fabs(&instance, -0.0),
-        -0.0,
-        "f64.no_fold_lt_if_to_abs(-0.0)"
-    );
-    assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FleX5FifX5FtoX5Fabs(&instance, 0.0),
-        -0.0,
-        "f64.no_fold_le_if_to_abs(0.0)"
-    );
-    assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FleX5FifX5FtoX5Fabs(&instance, -0.0),
+        floatexprs46_f64X2Eno_fold_le_if(&instance, 0.0, -0.0),
         0.0,
-        "f64.no_fold_le_if_to_abs(-0.0)"
+        "f64.no_fold_le_if(0.0, -0.0)"
     );
     assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FgtX5FifX5FtoX5Fabs(&instance, 0.0),
+        floatexprs46_f64X2Eno_fold_le_if(&instance, -0.0, 0.0),
         -0.0,
-        "f64.no_fold_gt_if_to_abs(0.0)"
+        "f64.no_fold_le_if(-0.0, 0.0)"
     );
     assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FgtX5FifX5FtoX5Fabs(&instance, -0.0),
-        0.0,
-        "f64.no_fold_gt_if_to_abs(-0.0)"
-    );
-    assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FgeX5FifX5FtoX5Fabs(&instance, 0.0),
-        0.0,
-        "f64.no_fold_ge_if_to_abs(0.0)"
-    );
-    assertEqualF64(
-        floatexprs46_f64X2EnoX5FfoldX5FgeX5FifX5FtoX5Fabs(&instance, -0.0),
+        floatexprs46_f64X2Eno_fold_gt_if(&instance, 0.0, -0.0),
         -0.0,
-        "f64.no_fold_ge_if_to_abs(-0.0)"
+        "f64.no_fold_gt_if(0.0, -0.0)"
+    );
+    assertEqualF64(
+        floatexprs46_f64X2Eno_fold_gt_if(&instance, -0.0, 0.0),
+        0.0,
+        "f64.no_fold_gt_if(-0.0, 0.0)"
+    );
+    assertEqualF64(
+        floatexprs46_f64X2Eno_fold_ge_if(&instance, 0.0, -0.0),
+        0.0,
+        "f64.no_fold_ge_if(0.0, -0.0)"
+    );
+    assertEqualF64(
+        floatexprs46_f64X2Eno_fold_ge_if(&instance, -0.0, 0.0),
+        -0.0,
+        "f64.no_fold_ge_if(-0.0, 0.0)"
     );
 }

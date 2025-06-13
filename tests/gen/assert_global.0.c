@@ -82,6 +82,28 @@ void test() {
         9.0,
         "get-8()"
     );
+    global0_setX2D7(&instance, 8.0);
+    global0_setX2D8(&instance, 9.0);
+    assertEqualU32(
+        global0_getX2Dx(&instance),
+        6u,
+        "get-x()"
+    );
+    assertEqualU64(
+        global0_getX2Dy(&instance),
+        7ull,
+        "get-y()"
+    );
+    assertEqualF32(
+        global0_getX2D7(&instance),
+        8.0,
+        "get-7()"
+    );
+    assertEqualF64(
+        global0_getX2D8(&instance),
+        9.0,
+        "get-8()"
+    );
     assertEqualU32(
         global0_asX2DselectX2Dfirst(&instance),
         6u,
@@ -128,32 +150,32 @@ void test() {
         "as-if-else()"
     );
     assertEqualU32(
-        global0_asX2DbrX5FifX2Dfirst(&instance),
+        global0_asX2Dbr_ifX2Dfirst(&instance),
         6u,
         "as-br_if-first()"
     );
     assertEqualU32(
-        global0_asX2DbrX5FifX2Dlast(&instance),
+        global0_asX2Dbr_ifX2Dlast(&instance),
         2u,
         "as-br_if-last()"
     );
     assertEqualU32(
-        global0_asX2DbrX5FtableX2Dfirst(&instance),
+        global0_asX2Dbr_tableX2Dfirst(&instance),
         6u,
         "as-br_table-first()"
     );
     assertEqualU32(
-        global0_asX2DbrX5FtableX2Dlast(&instance),
+        global0_asX2Dbr_tableX2Dlast(&instance),
         2u,
         "as-br_table-last()"
     );
     assertEqualU32(
-        global0_asX2DcallX5FindirectX2Dfirst(&instance),
+        global0_asX2Dcall_indirectX2Dfirst(&instance),
         6u,
         "as-call_indirect-first()"
     );
     assertEqualU32(
-        global0_asX2DcallX5FindirectX2Dmid(&instance),
+        global0_asX2Dcall_indirectX2Dmid(&instance),
         2u,
         "as-call_indirect-mid()"
     );

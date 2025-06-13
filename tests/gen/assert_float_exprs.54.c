@@ -9,8 +9,8 @@ void test() {
     floatexprs54Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.54.wasm");
     assertEqualF32(
-        floatexprs54_inverse(&instance, 96.0),
-        0.010416666977107525,
-        "inverse(96.0)"
+        floatexprs54_llvm_pr27036(&instance, 4269932491u, 14942208u),
+        -10092596.0,
+        "llvm_pr27036(4269932491u, 14942208u)"
     );
 }

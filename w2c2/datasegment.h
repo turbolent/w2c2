@@ -3,15 +3,15 @@
 
 #include "w2c2_base.h"
 #include "buffer.h"
-#include "valuetype.h"
 
 typedef struct WasmDataSegment {
     U32 memoryIndex;
     Buffer offset;
     Buffer bytes;
+    bool passive;
 } WasmDataSegment;
 
-static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}, {0, false}};
+static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}, {0, false}, false};
 
 typedef enum WasmDataSegmentMode {
     wasmDataSegmentModeArrays,

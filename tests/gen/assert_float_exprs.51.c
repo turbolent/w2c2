@@ -8,9 +8,9 @@ void test() {
     floatexprs51Instance instance;
     floatexprs51Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.51.wasm");
-    assertEqualF32(
-        floatexprs51_llvmX5Fpr27153(&instance, 33554434u),
-        25165824.0,
-        "llvm_pr27153(33554434u)"
+    assertEqualF64(
+        floatexprs51_calculate(&instance),
+        -466.926956301738,
+        "calculate()"
     );
 }

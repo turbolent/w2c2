@@ -457,4 +457,6 @@
   {"type": "assert_invalid", "line": 973, "filename": "i32.80.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 974, "filename": "i32.81.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 975, "filename": "i32.82.wasm", "text": "type mismatch", "module_type": "binary"}, 
-  {"type": "assert_invalid", "line": 976, "filename": "i32.83.wasm", "text": "type mismatch", "module_type": "binary"}]}
+  {"type": "assert_invalid", "line": 976, "filename": "i32.83.wasm", "text": "type mismatch", "module_type": "binary"}, 
+  {"type": "assert_malformed", "line": 979, "filename": "i32.84.wat", "text": "unexpected token", "module_type": "text"}, 
+  {"type": "assert_malformed", "line": 983, "filename": "i32.85.wat", "text": "unexpected token", "module_type": "text"}]}

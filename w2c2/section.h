@@ -18,7 +18,8 @@ typedef enum WasmSectionID {
     wasmSectionIDStart = 8,
     wasmSectionIDElement = 9,
     wasmSectionIDCode = 10,
-    wasmSectionIDData = 11
+    wasmSectionIDData = 11,
+    wasmSectionIDDataCount = 12
 } WasmSectionID;
 
 const char*
@@ -29,13 +30,25 @@ wasmSectionIDDescription(
 /*
  * WasmNameSubsectionID is the subsection ID of a name section in the WASM binary.
  *
- * See https://webassembly.github.io/spec/core/appendix/custom.html#subsections:
+ * See https://webassembly.github.io/spec/core/appendix/custom.html#subsections
+ * and https://github.com/WebAssembly/extended-name-section/blob/main/proposals/extended-name-section/Overview.md
  */
 typedef enum WasmNameSubsectionID {
     wasmNameSubsectionIDModuleName = 0,
     wasmNameSubsectionIDFunctionNames = 1,
     wasmNameSubsectionIDLocalNames = 2,
-    wasmNameSubsection_count = 3
+    wasmNameSubsectionIDLabelNames = 3,
+    wasmNameSubsectionIDTypeNames = 4,
+    wasmNameSubsectionIDTableNames = 5,
+    wasmNameSubsectionIDMemoryNames = 6,
+    wasmNameSubsectionIDGlobalNames = 7,
+    wasmNameSubsectionIDElemSegmentNames = 8,
+    wasmNameSubsectionIDDataSegmentNames = 9
 } WasmNameSubsectionID;
+
+const char*
+wasmNameSubsectionIDDescription(
+    WasmNameSubsectionID subsectionID
+);
 
 #endif /* W2C2_SECTION_H */

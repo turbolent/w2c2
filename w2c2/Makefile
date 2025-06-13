@@ -11,7 +11,7 @@ ifndef UNAME
 	UNAME := $(shell uname -s)
 endif
 
-WARNS ?= -Wunused-result -Wall -Wpedantic -Wno-long-long -Wno-unused-function
+WARNS ?= -Wunused-result -Wall -Wpedantic -Werror=conversion -Wno-long-long -Wno-unused-function
 
 ifeq ($(BUILD),release)
 	CFLAGS += -O3
@@ -27,16 +27,20 @@ CFLAGS += -std=c89 $(WARNS)
 # - unistd.h
 # - libgen.h
 # - strdup
-FEATURES ?= threads getopt unistd libgen strdup
+# - glob
+FEATURES ?= threads getopt unistd libgen strdup glob
 
 ifeq ($(UNAME),Windows)
-	OUTPUT := w2c2.exe
+	SUFFIX := .exe
 endif
 ifeq ($(UNAME),WASI)
-	OUTPUT := w2c2.wasm
+	SUFFIX := .wasm
 endif
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
+ifneq (,$(findstring debugging,$(FEATURES)))
+	CFLAGS += -I/usr/include/libdwarf
+endif
 	ifneq (,$(findstring threads,$(FEATURES)))
 	CFLAGS += -pthread
 	endif
@@ -62,6 +66,10 @@ ifneq (,$(findstring strdup,$(FEATURES)))
 	CFLAGS += -DHAS_STRDUP=1
 endif
 
+ifneq (,$(findstring glob,$(FEATURES)))
+	CFLAGS += -DHAS_GLOB=1
+endif
+
 ifneq (,$(findstring debugging,$(FEATURES)))
 	CFLAGS += -DHAS_LIBDWARF=1
 	LDFLAGS += -ldwarf
@@ -69,10 +77,6 @@ endif
 
 ifneq (,$(findstring old_debugging,$(FEATURES)))
 	CFLAGS += -DHAS_OLD_LIBDWARF=1
-endif
-
-ifndef OUTPUT
-	OUTPUT := w2c2
 endif
 
 ifneq (,$(findstring base,$(SANITIZERS)))
@@ -88,22 +92,23 @@ ifneq (,$(findstring thread,$(SANITIZERS)))
 CFLAGS += -fsanitize=thread
 endif
 
-.PHONY: all clean
-
-all: $(OUTPUT)
-
 TARGET_OBJECTS = $(patsubst %.c,%.o,$(filter-out %_test.c test.c,$(wildcard *.c)))
 TEST_OBJECTS = $(patsubst %.c,%.o,$(filter-out main.c,$(wildcard *.c)))
+
+w2c2$(SUFFIX): $(TARGET_OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUTPUT): $(TARGET_OBJECTS)
+w2c2_test$(SUFFIX): $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-w2c2_test: $(TEST_OBJECTS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+.PHONY: test
+test: w2c2_test$(SUFFIX)
+	./w2c2_test$(SUFFIX)
 
+.PHONY: clean
 clean:
 	-rm -f *.o
-	-rm -f $(OUTPUT) w2c2_test
+	-rm -f w2c2$(SUFFIX) w2c2_test$(SUFFIX)

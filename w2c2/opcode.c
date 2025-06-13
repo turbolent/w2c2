@@ -3,7 +3,7 @@
 
 const char*
 wasmOpcodeDescription(
-    WasmOpcode opcode
+    const WasmOpcode opcode
 ) {
     switch (opcode) {
         case wasmOpcodeUnreachable:
@@ -780,7 +780,7 @@ wasmOpcodeParameter1Type(
 
 const char*
 wasmMiscOpcodeDescription(
-    WasmMiscOpcode miscOpcode
+    const WasmMiscOpcode miscOpcode
 ) {
     switch (miscOpcode) {
     case wasmMiscOpcodeI32TruncSatF32S:
@@ -819,6 +819,150 @@ wasmMiscOpcodeDescription(
         return "table.size";
     case wasmMiscOpcodeTableFill:
         return "table.fill";
+    default:
+        return "unknown";
+    }
+}
+
+const char*
+wasmThreadsOpcodeDescription(
+    const WasmThreadsOpcode threadsOpcode
+) {
+    switch (threadsOpcode) {
+    case wasmThreadsOpcodeMemoryAtomicNotify:
+        return "memory.atomic.notify";
+    case wasmThreadsOpcodeMemoryAtomicWait32:
+        return "memory.atomic.wait32";
+    case wasmThreadsOpcodeMemoryAtomicWait64:
+        return "memory.atomic.wait64";
+    case wasmThreadsOpcodeAtomicFence:
+        return "atomic.fence";
+    case wasmThreadsOpcodeI32AtomicLoad:
+        return "i32.atomic.load";
+    case wasmThreadsOpcodeI64AtomicLoad:
+        return "i64.atomic.load";
+    case wasmThreadsOpcodeI32AtomicLoad8U:
+        return "i32.atomic.load8_u";
+    case wasmThreadsOpcodeI32AtomicLoad16U:
+        return "i32.atomic.load16_u";
+    case wasmThreadsOpcodeI64AtomicLoad8U:
+        return "i64.atomic.load8_u";
+    case wasmThreadsOpcodeI64AtomicLoad16U:
+        return "i64.atomic.load16_u";
+    case wasmThreadsOpcodeI64AtomicLoad32U:
+        return "i64.atomic.load32_u";
+    case wasmThreadsOpcodeI32AtomicStore:
+        return "i32.atomic.store";
+    case wasmThreadsOpcodeI64AtomicStore:
+        return "i64.atomic.store";
+    case wasmThreadsOpcodeI32AtomicStore8:
+        return "i32.atomic.store8";
+    case wasmThreadsOpcodeI32AtomicStore16:
+        return "i32.atomic.store16";
+    case wasmThreadsOpcodeI64AtomicStore8:
+        return "i64.atomic.store8";
+    case wasmThreadsOpcodeI64AtomicStore16:
+        return "i64.atomic.store16";
+    case wasmThreadsOpcodeI64AtomicStore32:
+        return "i64.atomic.store32";
+    case wasmThreadsOpcodeI32AtomicRMWAdd:
+        return "i32.atomic.rmw.add";
+    case wasmThreadsOpcodeI64AtomicRMWAdd:
+        return "i64.atomic.rmw.add";
+    case wasmThreadsOpcodeI32AtomicRMW8AddU:
+        return "i32.atomic.rmw8.add_u";
+    case wasmThreadsOpcodeI32AtomicRMW16AddU:
+        return "i32.atomic.rmw16.add_u";
+    case wasmThreadsOpcodeI64AtomicRMW8AddU:
+        return "i64.atomic.rmw8.add_u";
+    case wasmThreadsOpcodeI64AtomicRMW16AddU:
+        return "i64.atomic.rmw16.add_u";
+    case wasmThreadsOpcodeI64AtomicRMW32AddU:
+        return "i64.atomic.rmw32.add_u";
+    case wasmThreadsOpcodeI32AtomicRMWSub:
+        return "i32.atomic.rmw.sub";
+    case wasmThreadsOpcodeI64AtomicRMWSub:
+        return "i64.atomic.rmw.sub";
+    case wasmThreadsOpcodeI32AtomicRMW8SubU:
+        return "i32.atomic.rmw8.sub_u";
+    case wasmThreadsOpcodeI32AtomicRMW16SubU:
+        return "i32.atomic.rmw16.sub_u";
+    case wasmThreadsOpcodeI64AtomicRMW8SubU:
+        return "i64.atomic.rmw8.sub_u";
+    case wasmThreadsOpcodeI64AtomicRMW16SubU:
+        return "i64.atomic.rmw16.sub_u";
+    case wasmThreadsOpcodeI64AtomicRMW32SubU:
+        return "i64.atomic.rmw32.sub_u";
+    case wasmThreadsOpcodeI32AtomicRMWAnd:
+        return "i32.atomic.rmw.and";
+    case wasmThreadsOpcodeI64AtomicRMWAnd:
+        return "i64.atomic.rmw.and";
+    case wasmThreadsOpcodeI32AtomicRMW8AndU:
+        return "i32.atomic.rmw8.and_u";
+    case wasmThreadsOpcodeI32AtomicRMW16AndU:
+        return "i32.atomic.rmw16.and_u";
+    case wasmThreadsOpcodeI64AtomicRMW8AndU:
+        return "i64.atomic.rmw8.and_u";
+    case wasmThreadsOpcodeI64AtomicRMW16AndU:
+        return "i64.atomic.rmw16.and_u";
+    case wasmThreadsOpcodeI64AtomicRMW32AndU:
+        return "i64.atomic.rmw32.and_u";
+    case wasmThreadsOpcodeI32AtomicRMWOr:
+        return "i32.atomic.rmw.or";
+    case wasmThreadsOpcodeI64AtomicRMWOr:
+        return "i64.atomic.rmw.or";
+    case wasmThreadsOpcodeI32AtomicRMW8OrU:
+        return "i32.atomic.rmw8.or_u";
+    case wasmThreadsOpcodeI32AtomicRMW16OrU:
+        return "i32.atomic.rmw16.or_u";
+    case wasmThreadsOpcodeI64AtomicRMW8OrU:
+        return "i64.atomic.rmw8.or_u";
+    case wasmThreadsOpcodeI64AtomicRMW16OrU:
+        return "i64.atomic.rmw16.or_u";
+    case wasmThreadsOpcodeI64AtomicRMW32OrU:
+        return "i64.atomic.rmw32.or_u";
+    case wasmThreadsOpcodeI32AtomicRMWXor:
+        return "i32.atomic.rmw.xor";
+    case wasmThreadsOpcodeI64AtomicRMWXor:
+        return "i64.atomic.rmw.xor";
+    case wasmThreadsOpcodeI32AtomicRMW8XorU:
+        return "i32.atomic.rmw8.xor_u";
+    case wasmThreadsOpcodeI32AtomicRMW16XorU:
+        return "i32.atomic.rmw16.xor_u";
+    case wasmThreadsOpcodeI64AtomicRMW8XorU:
+        return "i64.atomic.rmw8.xor_u";
+    case wasmThreadsOpcodeI64AtomicRMW16XorU:
+        return "i64.atomic.rmw16.xor_u";
+    case wasmThreadsOpcodeI64AtomicRMW32XorU:
+        return "i64.atomic.rmw32.xor_u";
+    case wasmThreadsOpcodeI32AtomicRMWXchg:
+        return "i32.atomic.rmw.xchg";
+    case wasmThreadsOpcodeI64AtomicRMWXchg:
+        return "i64.atomic.rmw.xchg";
+    case wasmThreadsOpcodeI32AtomicRMW8XchgU:
+        return "i32.atomic.rmw8.xchg_u";
+    case wasmThreadsOpcodeI32AtomicRMW16XchgU:
+        return "i32.atomic.rmw16.xchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW8XchgU:
+        return "i64.atomic.rmw8.xchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW16XchgU:
+        return "i64.atomic.rmw16.xchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW32XchgU:
+        return "i64.atomic.rmw32.xchg_u";
+    case wasmThreadsOpcodeI32AtomicRMWCmpxchg:
+        return "i32.atomic.rmw.cmpxchg";
+    case wasmThreadsOpcodeI64AtomicRMWCmpxchg:
+        return "i64.atomic.rmw.cmpxchg";
+    case wasmThreadsOpcodeI32AtomicRMW8CmpxchgU:
+        return "i32.atomic.rmw8.cmpxchg_u";
+    case wasmThreadsOpcodeI32AtomicRMW16CmpxchgU:
+        return "i32.atomic.rmw16.cmpxchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW8CmpxchgU:
+        return "i64.atomic.rmw8.cmpxchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW16CmpxchgU:
+        return "i64.atomic.rmw16.cmpxchg_u";
+    case wasmThreadsOpcodeI64AtomicRMW32CmpxchgU:
+        return "i64.atomic.rmw32.cmpxchg_u";
     default:
         return "unknown";
     }

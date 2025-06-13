@@ -8,14 +8,14 @@ void test() {
     floatexprs90Instance instance;
     floatexprs90Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.90.wasm");
-    assertEqualF32(
-        floatexprs90_f32X2EdivisionX5FbyX5FsmallX5Fnumber(&instance, 112000000.0, 100000.0, 0.0008999999845400453),
-        888888.0,
-        "f32.division_by_small_number(112000000.0, 100000.0, 0.0008999999845400453)"
+    assertEqualF64(
+        floatexprs90_dot_product_example(&instance, 32000000.0, 1.0, -1.0, 80000000.0, 40000000.0, 1.0, -1.0, -16000000.0),
+        2.0,
+        "dot_product_example(32000000.0, 1.0, -1.0, 80000000.0, 40000000.0, 1.0, -1.0, -16000000.0)"
     );
     assertEqualF64(
-        floatexprs90_f64X2EdivisionX5FbyX5FsmallX5Fnumber(&instance, 112000000.0, 100000.0, 0.0009),
-        888888.8888888806,
-        "f64.division_by_small_number(112000000.0, 100000.0, 0.0009)"
+        floatexprs90_with_binary_sum_collapse(&instance, 32000000.0, 1.0, -1.0, 80000000.0, 40000000.0, 1.0, -1.0, -16000000.0),
+        2.0,
+        "with_binary_sum_collapse(32000000.0, 1.0, -1.0, 80000000.0, 40000000.0, 1.0, -1.0, -16000000.0)"
     );
 }

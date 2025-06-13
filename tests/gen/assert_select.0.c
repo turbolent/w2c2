@@ -9,44 +9,44 @@ void test() {
     select0Instantiate(&instance, resolveTestImports);
     printStart("select.0.wasm");
     assertEqualU32(
-        select0_selectX5Fi32(&instance, 1u, 2u, 1u),
+        select0_selectX2Di32(&instance, 1u, 2u, 1u),
         1u,
-        "select_i32(1u, 2u, 1u)"
+        "select-i32(1u, 2u, 1u)"
     );
     assertEqualU64(
-        select0_selectX5Fi64(&instance, 2ull, 1ull, 1u),
+        select0_selectX2Di64(&instance, 2ull, 1ull, 1u),
         2ull,
-        "select_i64(2ull, 1ull, 1u)"
+        "select-i64(2ull, 1ull, 1u)"
     );
     assertEqualF32(
-        select0_selectX5Ff32(&instance, 1.0, 2.0, 1u),
+        select0_selectX2Df32(&instance, 1.0, 2.0, 1u),
         1.0,
-        "select_f32(1.0, 2.0, 1u)"
+        "select-f32(1.0, 2.0, 1u)"
     );
     assertEqualF64(
-        select0_selectX5Ff64(&instance, 1.0, 2.0, 1u),
+        select0_selectX2Df64(&instance, 1.0, 2.0, 1u),
         1.0,
-        "select_f64(1.0, 2.0, 1u)"
+        "select-f64(1.0, 2.0, 1u)"
     );
     assertEqualU32(
-        select0_selectX5Fi32(&instance, 1u, 2u, 0u),
+        select0_selectX2Di32(&instance, 1u, 2u, 0u),
         2u,
-        "select_i32(1u, 2u, 0u)"
+        "select-i32(1u, 2u, 0u)"
     );
     assertEqualU32(
-        select0_selectX5Fi32(&instance, 2u, 1u, 0u),
+        select0_selectX2Di32(&instance, 2u, 1u, 0u),
         1u,
-        "select_i32(2u, 1u, 0u)"
+        "select-i32(2u, 1u, 0u)"
     );
     assertEqualU64(
-        select0_selectX5Fi64(&instance, 2ull, 1ull, 4294967295u),
+        select0_selectX2Di64(&instance, 2ull, 1ull, 4294967295u),
         2ull,
-        "select_i64(2ull, 1ull, 4294967295u)"
+        "select-i64(2ull, 1ull, 4294967295u)"
     );
     assertEqualU64(
-        select0_selectX5Fi64(&instance, 2ull, 1ull, 4042322160u),
+        select0_selectX2Di64(&instance, 2ull, 1ull, 4042322160u),
         2ull,
-        "select_i64(2ull, 1ull, 4042322160u)"
+        "select-i64(2ull, 1ull, 4042322160u)"
     );
     assertEqualU32(
         select0_asX2DselectX2Dfirst(&instance, 0u),
@@ -131,64 +131,44 @@ void test() {
         "as-if-else(1u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FifX2Dfirst(&instance, 0u),
+        select0_asX2Dbr_ifX2Dfirst(&instance, 0u),
         3u,
         "as-br_if-first(0u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FifX2Dfirst(&instance, 1u),
+        select0_asX2Dbr_ifX2Dfirst(&instance, 1u),
         2u,
         "as-br_if-first(1u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FifX2Dlast(&instance, 0u),
+        select0_asX2Dbr_ifX2Dlast(&instance, 0u),
         2u,
         "as-br_if-last(0u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FifX2Dlast(&instance, 1u),
+        select0_asX2Dbr_ifX2Dlast(&instance, 1u),
         2u,
         "as-br_if-last(1u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FtableX2Dfirst(&instance, 0u),
+        select0_asX2Dbr_tableX2Dfirst(&instance, 0u),
         3u,
         "as-br_table-first(0u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FtableX2Dfirst(&instance, 1u),
+        select0_asX2Dbr_tableX2Dfirst(&instance, 1u),
         2u,
         "as-br_table-first(1u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FtableX2Dlast(&instance, 0u),
+        select0_asX2Dbr_tableX2Dlast(&instance, 0u),
         2u,
         "as-br_table-last(0u)"
     );
     assertEqualU32(
-        select0_asX2DbrX5FtableX2Dlast(&instance, 1u),
+        select0_asX2Dbr_tableX2Dlast(&instance, 1u),
         2u,
         "as-br_table-last(1u)"
-    );
-    assertEqualU32(
-        select0_asX2DcallX5FindirectX2Dfirst(&instance, 0u),
-        3u,
-        "as-call_indirect-first(0u)"
-    );
-    assertEqualU32(
-        select0_asX2DcallX5FindirectX2Dfirst(&instance, 1u),
-        2u,
-        "as-call_indirect-first(1u)"
-    );
-    assertEqualU32(
-        select0_asX2DcallX5FindirectX2Dmid(&instance, 0u),
-        1u,
-        "as-call_indirect-mid(0u)"
-    );
-    assertEqualU32(
-        select0_asX2DcallX5FindirectX2Dmid(&instance, 1u),
-        1u,
-        "as-call_indirect-mid(1u)"
     );
     select0_asX2DstoreX2Dfirst(&instance, 0u);
     select0_asX2DstoreX2Dfirst(&instance, 1u);

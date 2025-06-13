@@ -10,33 +10,33 @@ testTypeStack(void) {
         const size_t actualLength = typeStack.length;
         if (actualLength != 0) {
             fprintf(stderr, "FAIL testTypeStack: incorrect length: %ld != %d\n", actualLength, 0);
-            return;
+            exit(1);
         }
     }
 
     if (!wasmTypeStackSet(&typeStack, 1, wasmValueTypeI64)) {
         fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        return;
+        exit(1);
     }
 
     if (!wasmTypeStackSet(&typeStack, 5, wasmValueTypeI32)) {
         fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        return;
+        exit(1);
     }
 
     if (!wasmTypeStackSet(&typeStack, 0, wasmValueTypeF64)) {
         fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        return;
+        exit(1);
     }
 
     if (!wasmTypeStackSet(&typeStack, 3, wasmValueTypeF32)) {
         fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        return;
+        exit(1);
     }
 
     if (!wasmTypeStackSet(&typeStack, 1, wasmValueTypeI32)) {
         fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        return;
+        exit(1);
     }
 
     {
@@ -50,7 +50,7 @@ testTypeStack(void) {
                 actualLength,
                 expectedLength
             );
-            return;
+            exit(1);
         }
 
         {
@@ -76,7 +76,7 @@ testTypeStack(void) {
                         actual,
                         expected
                     );
-                    return;
+                    exit(1);
                 }
             }
         }

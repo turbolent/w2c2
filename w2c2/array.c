@@ -1,22 +1,21 @@
+#include <assert.h>
 #include "array.h"
 
 bool
-arrayEnsureCapacity(
+arrayEnsureCapacitySlowPath(
     void** items,
-    size_t length,
+    const size_t length,
     size_t* capacity,
-    size_t itemSize
+    const size_t itemSize
 ) {
     size_t newCapacity = 0;
     void* newItems = NULL;
 
-    if (length <= *capacity) {
-        return true;
-    }
+    assert(length > *capacity);
 
-    newCapacity = length + (*capacity >> 1u);
+    newCapacity = length + (*capacity >> 1U);
     if (*items == NULL) {
-        newItems = calloc(newCapacity * itemSize, 1);
+        newItems = calloc(newCapacity, itemSize);
     } else {
         newItems = realloc(*items, newCapacity * itemSize);
     }

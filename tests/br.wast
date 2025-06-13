@@ -25,6 +25,12 @@
   (func (export "type-f64-value") (result f64)
     (block (result f64) (f64.neg (br 0 (f64.const 4))))
   )
+  ;; W2C2: No support for blocks with multiple return values
+  ;; (func (export "type-f64-f64-value") (result f64 f64)
+  ;;   (block (result f64 f64)
+  ;;     (f64.add (br 0 (f64.const 4) (f64.const 5))) (f64.const 6)
+  ;;   )
+  ;; )
 
   (func (export "as-block-first")
     (block (br 0) (call $dummy))
@@ -88,6 +94,11 @@
   (func (export "as-return-value") (result i64)
     (block (result i64) (return (br 0 (i64.const 7))))
   )
+  ;; W2C2: No support for functions with multiple return values
+  ;; (func (export "as-return-values") (result i32 i64)
+  ;;   (i32.const 2)
+  ;;   (block (result i64) (return (br 0 (i32.const 1) (i64.const 7))))
+  ;; )
 
   (func (export "as-if-cond") (result i32)
     (block (result i32)
@@ -373,6 +384,7 @@
 (assert_return (invoke "type-i64-value") (i64.const 2))
 (assert_return (invoke "type-f32-value") (f32.const 3))
 (assert_return (invoke "type-f64-value") (f64.const 4))
+;; W2C2: No support for blocks with multiple return values
 ;; (assert_return (invoke "type-f64-f64-value") (f64.const 4) (f64.const 5))
 
 (assert_return (invoke "as-block-first"))
@@ -395,6 +407,7 @@
 (assert_return (invoke "as-br_table-value-index") (i32.const 11))
 
 (assert_return (invoke "as-return-value") (i64.const 7))
+;; W2C2: No support for functions with multiple return values
 ;; (assert_return (invoke "as-return-values") (i32.const 2) (i64.const 7))
 
 (assert_return (invoke "as-if-cond") (i32.const 2))

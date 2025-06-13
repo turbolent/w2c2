@@ -129,312 +129,312 @@ void test() {
         "mul(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 1u, 1u),
+        i320_div_s(&instance, 1u, 1u),
         1u,
         "div_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 0u, 1u),
+        i320_div_s(&instance, 0u, 1u),
         0u,
         "div_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 0u, 4294967295u),
+        i320_div_s(&instance, 0u, 4294967295u),
         0u,
         "div_s(0u, 4294967295u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_div_s(&instance, 4294967295u, 4294967295u),
         1u,
         "div_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 2147483648u, 2u),
+        i320_div_s(&instance, 2147483648u, 2u),
         3221225472u,
         "div_s(2147483648u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 2147483649u, 1000u),
+        i320_div_s(&instance, 2147483649u, 1000u),
         4292819813u,
         "div_s(2147483649u, 1000u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 5u, 2u),
+        i320_div_s(&instance, 5u, 2u),
         2u,
         "div_s(5u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 4294967291u, 2u),
+        i320_div_s(&instance, 4294967291u, 2u),
         4294967294u,
         "div_s(4294967291u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 5u, 4294967294u),
+        i320_div_s(&instance, 5u, 4294967294u),
         4294967294u,
         "div_s(5u, 4294967294u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 4294967291u, 4294967294u),
+        i320_div_s(&instance, 4294967291u, 4294967294u),
         2u,
         "div_s(4294967291u, 4294967294u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 7u, 3u),
+        i320_div_s(&instance, 7u, 3u),
         2u,
         "div_s(7u, 3u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 4294967289u, 3u),
+        i320_div_s(&instance, 4294967289u, 3u),
         4294967294u,
         "div_s(4294967289u, 3u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 7u, 4294967293u),
+        i320_div_s(&instance, 7u, 4294967293u),
         4294967294u,
         "div_s(7u, 4294967293u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 4294967289u, 4294967293u),
+        i320_div_s(&instance, 4294967289u, 4294967293u),
         2u,
         "div_s(4294967289u, 4294967293u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 11u, 5u),
+        i320_div_s(&instance, 11u, 5u),
         2u,
         "div_s(11u, 5u)"
     );
     assertEqualU32(
-        i320_divX5Fs(&instance, 17u, 7u),
+        i320_div_s(&instance, 17u, 7u),
         2u,
         "div_s(17u, 7u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 1u, 1u),
+        i320_div_u(&instance, 1u, 1u),
         1u,
         "div_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 0u, 1u),
+        i320_div_u(&instance, 0u, 1u),
         0u,
         "div_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_div_u(&instance, 4294967295u, 4294967295u),
         1u,
         "div_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_div_u(&instance, 2147483648u, 4294967295u),
         0u,
         "div_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 2147483648u, 2u),
+        i320_div_u(&instance, 2147483648u, 2u),
         1073741824u,
         "div_u(2147483648u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 2414874608u, 65537u),
+        i320_div_u(&instance, 2414874608u, 65537u),
         36847u,
         "div_u(2414874608u, 65537u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 2147483649u, 1000u),
+        i320_div_u(&instance, 2147483649u, 1000u),
         2147483u,
         "div_u(2147483649u, 1000u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 5u, 2u),
+        i320_div_u(&instance, 5u, 2u),
         2u,
         "div_u(5u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 4294967291u, 2u),
+        i320_div_u(&instance, 4294967291u, 2u),
         2147483645u,
         "div_u(4294967291u, 2u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 5u, 4294967294u),
+        i320_div_u(&instance, 5u, 4294967294u),
         0u,
         "div_u(5u, 4294967294u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 4294967291u, 4294967294u),
+        i320_div_u(&instance, 4294967291u, 4294967294u),
         0u,
         "div_u(4294967291u, 4294967294u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 7u, 3u),
+        i320_div_u(&instance, 7u, 3u),
         2u,
         "div_u(7u, 3u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 11u, 5u),
+        i320_div_u(&instance, 11u, 5u),
         2u,
         "div_u(11u, 5u)"
     );
     assertEqualU32(
-        i320_divX5Fu(&instance, 17u, 7u),
+        i320_div_u(&instance, 17u, 7u),
         2u,
         "div_u(17u, 7u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 2147483647u, 4294967295u),
+        i320_rem_s(&instance, 2147483647u, 4294967295u),
         0u,
         "rem_s(2147483647u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 1u, 1u),
+        i320_rem_s(&instance, 1u, 1u),
         0u,
         "rem_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 0u, 1u),
+        i320_rem_s(&instance, 0u, 1u),
         0u,
         "rem_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 0u, 4294967295u),
+        i320_rem_s(&instance, 0u, 4294967295u),
         0u,
         "rem_s(0u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_rem_s(&instance, 4294967295u, 4294967295u),
         0u,
         "rem_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 2147483648u, 4294967295u),
+        i320_rem_s(&instance, 2147483648u, 4294967295u),
         0u,
         "rem_s(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 2147483648u, 2u),
+        i320_rem_s(&instance, 2147483648u, 2u),
         0u,
         "rem_s(2147483648u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 2147483649u, 1000u),
+        i320_rem_s(&instance, 2147483649u, 1000u),
         4294966649u,
         "rem_s(2147483649u, 1000u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 5u, 2u),
+        i320_rem_s(&instance, 5u, 2u),
         1u,
         "rem_s(5u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 4294967291u, 2u),
+        i320_rem_s(&instance, 4294967291u, 2u),
         4294967295u,
         "rem_s(4294967291u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 5u, 4294967294u),
+        i320_rem_s(&instance, 5u, 4294967294u),
         1u,
         "rem_s(5u, 4294967294u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 4294967291u, 4294967294u),
+        i320_rem_s(&instance, 4294967291u, 4294967294u),
         4294967295u,
         "rem_s(4294967291u, 4294967294u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 7u, 3u),
+        i320_rem_s(&instance, 7u, 3u),
         1u,
         "rem_s(7u, 3u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 4294967289u, 3u),
+        i320_rem_s(&instance, 4294967289u, 3u),
         4294967295u,
         "rem_s(4294967289u, 3u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 7u, 4294967293u),
+        i320_rem_s(&instance, 7u, 4294967293u),
         1u,
         "rem_s(7u, 4294967293u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 4294967289u, 4294967293u),
+        i320_rem_s(&instance, 4294967289u, 4294967293u),
         4294967295u,
         "rem_s(4294967289u, 4294967293u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 11u, 5u),
+        i320_rem_s(&instance, 11u, 5u),
         1u,
         "rem_s(11u, 5u)"
     );
     assertEqualU32(
-        i320_remX5Fs(&instance, 17u, 7u),
+        i320_rem_s(&instance, 17u, 7u),
         3u,
         "rem_s(17u, 7u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 1u, 1u),
+        i320_rem_u(&instance, 1u, 1u),
         0u,
         "rem_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 0u, 1u),
+        i320_rem_u(&instance, 0u, 1u),
         0u,
         "rem_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_rem_u(&instance, 4294967295u, 4294967295u),
         0u,
         "rem_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_rem_u(&instance, 2147483648u, 4294967295u),
         2147483648u,
         "rem_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 2147483648u, 2u),
+        i320_rem_u(&instance, 2147483648u, 2u),
         0u,
         "rem_u(2147483648u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 2414874608u, 65537u),
+        i320_rem_u(&instance, 2414874608u, 65537u),
         32769u,
         "rem_u(2414874608u, 65537u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 2147483649u, 1000u),
+        i320_rem_u(&instance, 2147483649u, 1000u),
         649u,
         "rem_u(2147483649u, 1000u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 5u, 2u),
+        i320_rem_u(&instance, 5u, 2u),
         1u,
         "rem_u(5u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 4294967291u, 2u),
+        i320_rem_u(&instance, 4294967291u, 2u),
         1u,
         "rem_u(4294967291u, 2u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 5u, 4294967294u),
+        i320_rem_u(&instance, 5u, 4294967294u),
         5u,
         "rem_u(5u, 4294967294u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 4294967291u, 4294967294u),
+        i320_rem_u(&instance, 4294967291u, 4294967294u),
         4294967291u,
         "rem_u(4294967291u, 4294967294u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 7u, 3u),
+        i320_rem_u(&instance, 7u, 3u),
         1u,
         "rem_u(7u, 3u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 11u, 5u),
+        i320_rem_u(&instance, 11u, 5u),
         1u,
         "rem_u(11u, 5u)"
     );
     assertEqualU32(
-        i320_remX5Fu(&instance, 17u, 7u),
+        i320_rem_u(&instance, 17u, 7u),
         3u,
         "rem_u(17u, 7u)"
     );
@@ -624,172 +624,172 @@ void test() {
         "shl(1u, 2147483647u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 1u),
+        i320_shr_s(&instance, 1u, 1u),
         0u,
         "shr_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 0u),
+        i320_shr_s(&instance, 1u, 0u),
         1u,
         "shr_s(1u, 0u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 1u),
+        i320_shr_s(&instance, 4294967295u, 1u),
         4294967295u,
         "shr_s(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 2147483647u, 1u),
+        i320_shr_s(&instance, 2147483647u, 1u),
         1073741823u,
         "shr_s(2147483647u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 2147483648u, 1u),
+        i320_shr_s(&instance, 2147483648u, 1u),
         3221225472u,
         "shr_s(2147483648u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1073741824u, 1u),
+        i320_shr_s(&instance, 1073741824u, 1u),
         536870912u,
         "shr_s(1073741824u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 32u),
+        i320_shr_s(&instance, 1u, 32u),
         1u,
         "shr_s(1u, 32u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 33u),
+        i320_shr_s(&instance, 1u, 33u),
         0u,
         "shr_s(1u, 33u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 4294967295u),
+        i320_shr_s(&instance, 1u, 4294967295u),
         0u,
         "shr_s(1u, 4294967295u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 2147483647u),
+        i320_shr_s(&instance, 1u, 2147483647u),
         0u,
         "shr_s(1u, 2147483647u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 1u, 2147483648u),
+        i320_shr_s(&instance, 1u, 2147483648u),
         1u,
         "shr_s(1u, 2147483648u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 2147483648u, 31u),
+        i320_shr_s(&instance, 2147483648u, 31u),
         4294967295u,
         "shr_s(2147483648u, 31u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 32u),
+        i320_shr_s(&instance, 4294967295u, 32u),
         4294967295u,
         "shr_s(4294967295u, 32u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 33u),
+        i320_shr_s(&instance, 4294967295u, 33u),
         4294967295u,
         "shr_s(4294967295u, 33u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_shr_s(&instance, 4294967295u, 4294967295u),
         4294967295u,
         "shr_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 2147483647u),
+        i320_shr_s(&instance, 4294967295u, 2147483647u),
         4294967295u,
         "shr_s(4294967295u, 2147483647u)"
     );
     assertEqualU32(
-        i320_shrX5Fs(&instance, 4294967295u, 2147483648u),
+        i320_shr_s(&instance, 4294967295u, 2147483648u),
         4294967295u,
         "shr_s(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 1u),
+        i320_shr_u(&instance, 1u, 1u),
         0u,
         "shr_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 0u),
+        i320_shr_u(&instance, 1u, 0u),
         1u,
         "shr_u(1u, 0u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 1u),
+        i320_shr_u(&instance, 4294967295u, 1u),
         2147483647u,
         "shr_u(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 2147483647u, 1u),
+        i320_shr_u(&instance, 2147483647u, 1u),
         1073741823u,
         "shr_u(2147483647u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 2147483648u, 1u),
+        i320_shr_u(&instance, 2147483648u, 1u),
         1073741824u,
         "shr_u(2147483648u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1073741824u, 1u),
+        i320_shr_u(&instance, 1073741824u, 1u),
         536870912u,
         "shr_u(1073741824u, 1u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 32u),
+        i320_shr_u(&instance, 1u, 32u),
         1u,
         "shr_u(1u, 32u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 33u),
+        i320_shr_u(&instance, 1u, 33u),
         0u,
         "shr_u(1u, 33u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 4294967295u),
+        i320_shr_u(&instance, 1u, 4294967295u),
         0u,
         "shr_u(1u, 4294967295u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 2147483647u),
+        i320_shr_u(&instance, 1u, 2147483647u),
         0u,
         "shr_u(1u, 2147483647u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 1u, 2147483648u),
+        i320_shr_u(&instance, 1u, 2147483648u),
         1u,
         "shr_u(1u, 2147483648u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 2147483648u, 31u),
+        i320_shr_u(&instance, 2147483648u, 31u),
         1u,
         "shr_u(2147483648u, 31u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 32u),
+        i320_shr_u(&instance, 4294967295u, 32u),
         4294967295u,
         "shr_u(4294967295u, 32u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 33u),
+        i320_shr_u(&instance, 4294967295u, 33u),
         2147483647u,
         "shr_u(4294967295u, 33u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_shr_u(&instance, 4294967295u, 4294967295u),
         1u,
         "shr_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 2147483647u),
+        i320_shr_u(&instance, 4294967295u, 2147483647u),
         1u,
         "shr_u(4294967295u, 2147483647u)"
     );
     assertEqualU32(
-        i320_shrX5Fu(&instance, 4294967295u, 2147483648u),
+        i320_shr_u(&instance, 4294967295u, 2147483648u),
         4294967295u,
         "shr_u(4294967295u, 2147483648u)"
     );
@@ -1034,72 +1034,72 @@ void test() {
         "popcnt(3735928559u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 0u),
+        i320_extend8_s(&instance, 0u),
         0u,
         "extend8_s(0u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 127u),
+        i320_extend8_s(&instance, 127u),
         127u,
         "extend8_s(127u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 128u),
+        i320_extend8_s(&instance, 128u),
         4294967168u,
         "extend8_s(128u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 255u),
+        i320_extend8_s(&instance, 255u),
         4294967295u,
         "extend8_s(255u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 19088640u),
+        i320_extend8_s(&instance, 19088640u),
         0u,
         "extend8_s(19088640u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 4275878528u),
+        i320_extend8_s(&instance, 4275878528u),
         4294967168u,
         "extend8_s(4275878528u)"
     );
     assertEqualU32(
-        i320_extend8X5Fs(&instance, 4294967295u),
+        i320_extend8_s(&instance, 4294967295u),
         4294967295u,
         "extend8_s(4294967295u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 0u),
+        i320_extend16_s(&instance, 0u),
         0u,
         "extend16_s(0u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 32767u),
+        i320_extend16_s(&instance, 32767u),
         32767u,
         "extend16_s(32767u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 32768u),
+        i320_extend16_s(&instance, 32768u),
         4294934528u,
         "extend16_s(32768u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 65535u),
+        i320_extend16_s(&instance, 65535u),
         4294967295u,
         "extend16_s(65535u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 19070976u),
+        i320_extend16_s(&instance, 19070976u),
         0u,
         "extend16_s(19070976u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 4275863552u),
+        i320_extend16_s(&instance, 4275863552u),
         4294934528u,
         "extend16_s(4275863552u)"
     );
     assertEqualU32(
-        i320_extend16X5Fs(&instance, 4294967295u),
+        i320_extend16_s(&instance, 4294967295u),
         4294967295u,
         "extend16_s(4294967295u)"
     );
@@ -1269,562 +1269,562 @@ void test() {
         "ne(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 0u, 0u),
+        i320_lt_s(&instance, 0u, 0u),
         0u,
         "lt_s(0u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 1u, 1u),
+        i320_lt_s(&instance, 1u, 1u),
         0u,
         "lt_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 4294967295u, 1u),
+        i320_lt_s(&instance, 4294967295u, 1u),
         1u,
         "lt_s(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483648u, 2147483648u),
+        i320_lt_s(&instance, 2147483648u, 2147483648u),
         0u,
         "lt_s(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483647u, 2147483647u),
+        i320_lt_s(&instance, 2147483647u, 2147483647u),
         0u,
         "lt_s(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_lt_s(&instance, 4294967295u, 4294967295u),
         0u,
         "lt_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 1u, 0u),
+        i320_lt_s(&instance, 1u, 0u),
         0u,
         "lt_s(1u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 0u, 1u),
+        i320_lt_s(&instance, 0u, 1u),
         1u,
         "lt_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483648u, 0u),
+        i320_lt_s(&instance, 2147483648u, 0u),
         1u,
         "lt_s(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 0u, 2147483648u),
+        i320_lt_s(&instance, 0u, 2147483648u),
         0u,
         "lt_s(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483648u, 4294967295u),
+        i320_lt_s(&instance, 2147483648u, 4294967295u),
         1u,
         "lt_s(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 4294967295u, 2147483648u),
+        i320_lt_s(&instance, 4294967295u, 2147483648u),
         0u,
         "lt_s(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483648u, 2147483647u),
+        i320_lt_s(&instance, 2147483648u, 2147483647u),
         1u,
         "lt_s(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_ltX5Fs(&instance, 2147483647u, 2147483648u),
+        i320_lt_s(&instance, 2147483647u, 2147483648u),
         0u,
         "lt_s(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 0u, 0u),
+        i320_lt_u(&instance, 0u, 0u),
         0u,
         "lt_u(0u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 1u, 1u),
+        i320_lt_u(&instance, 1u, 1u),
         0u,
         "lt_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 4294967295u, 1u),
+        i320_lt_u(&instance, 4294967295u, 1u),
         0u,
         "lt_u(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483648u, 2147483648u),
+        i320_lt_u(&instance, 2147483648u, 2147483648u),
         0u,
         "lt_u(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483647u, 2147483647u),
+        i320_lt_u(&instance, 2147483647u, 2147483647u),
         0u,
         "lt_u(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_lt_u(&instance, 4294967295u, 4294967295u),
         0u,
         "lt_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 1u, 0u),
+        i320_lt_u(&instance, 1u, 0u),
         0u,
         "lt_u(1u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 0u, 1u),
+        i320_lt_u(&instance, 0u, 1u),
         1u,
         "lt_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483648u, 0u),
+        i320_lt_u(&instance, 2147483648u, 0u),
         0u,
         "lt_u(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 0u, 2147483648u),
+        i320_lt_u(&instance, 0u, 2147483648u),
         1u,
         "lt_u(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_lt_u(&instance, 2147483648u, 4294967295u),
         1u,
         "lt_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 4294967295u, 2147483648u),
+        i320_lt_u(&instance, 4294967295u, 2147483648u),
         0u,
         "lt_u(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483648u, 2147483647u),
+        i320_lt_u(&instance, 2147483648u, 2147483647u),
         0u,
         "lt_u(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_ltX5Fu(&instance, 2147483647u, 2147483648u),
+        i320_lt_u(&instance, 2147483647u, 2147483648u),
         1u,
         "lt_u(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 0u, 0u),
+        i320_le_s(&instance, 0u, 0u),
         1u,
         "le_s(0u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 1u, 1u),
+        i320_le_s(&instance, 1u, 1u),
         1u,
         "le_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 4294967295u, 1u),
+        i320_le_s(&instance, 4294967295u, 1u),
         1u,
         "le_s(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483648u, 2147483648u),
+        i320_le_s(&instance, 2147483648u, 2147483648u),
         1u,
         "le_s(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483647u, 2147483647u),
+        i320_le_s(&instance, 2147483647u, 2147483647u),
         1u,
         "le_s(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_le_s(&instance, 4294967295u, 4294967295u),
         1u,
         "le_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 1u, 0u),
+        i320_le_s(&instance, 1u, 0u),
         0u,
         "le_s(1u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 0u, 1u),
+        i320_le_s(&instance, 0u, 1u),
         1u,
         "le_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483648u, 0u),
+        i320_le_s(&instance, 2147483648u, 0u),
         1u,
         "le_s(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 0u, 2147483648u),
+        i320_le_s(&instance, 0u, 2147483648u),
         0u,
         "le_s(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483648u, 4294967295u),
+        i320_le_s(&instance, 2147483648u, 4294967295u),
         1u,
         "le_s(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 4294967295u, 2147483648u),
+        i320_le_s(&instance, 4294967295u, 2147483648u),
         0u,
         "le_s(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483648u, 2147483647u),
+        i320_le_s(&instance, 2147483648u, 2147483647u),
         1u,
         "le_s(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_leX5Fs(&instance, 2147483647u, 2147483648u),
+        i320_le_s(&instance, 2147483647u, 2147483648u),
         0u,
         "le_s(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 0u, 0u),
+        i320_le_u(&instance, 0u, 0u),
         1u,
         "le_u(0u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 1u, 1u),
+        i320_le_u(&instance, 1u, 1u),
         1u,
         "le_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 4294967295u, 1u),
+        i320_le_u(&instance, 4294967295u, 1u),
         0u,
         "le_u(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483648u, 2147483648u),
+        i320_le_u(&instance, 2147483648u, 2147483648u),
         1u,
         "le_u(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483647u, 2147483647u),
+        i320_le_u(&instance, 2147483647u, 2147483647u),
         1u,
         "le_u(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_le_u(&instance, 4294967295u, 4294967295u),
         1u,
         "le_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 1u, 0u),
+        i320_le_u(&instance, 1u, 0u),
         0u,
         "le_u(1u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 0u, 1u),
+        i320_le_u(&instance, 0u, 1u),
         1u,
         "le_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483648u, 0u),
+        i320_le_u(&instance, 2147483648u, 0u),
         0u,
         "le_u(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 0u, 2147483648u),
+        i320_le_u(&instance, 0u, 2147483648u),
         1u,
         "le_u(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_le_u(&instance, 2147483648u, 4294967295u),
         1u,
         "le_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 4294967295u, 2147483648u),
+        i320_le_u(&instance, 4294967295u, 2147483648u),
         0u,
         "le_u(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483648u, 2147483647u),
+        i320_le_u(&instance, 2147483648u, 2147483647u),
         0u,
         "le_u(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_leX5Fu(&instance, 2147483647u, 2147483648u),
+        i320_le_u(&instance, 2147483647u, 2147483648u),
         1u,
         "le_u(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 0u, 0u),
+        i320_gt_s(&instance, 0u, 0u),
         0u,
         "gt_s(0u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 1u, 1u),
+        i320_gt_s(&instance, 1u, 1u),
         0u,
         "gt_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 4294967295u, 1u),
+        i320_gt_s(&instance, 4294967295u, 1u),
         0u,
         "gt_s(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483648u, 2147483648u),
+        i320_gt_s(&instance, 2147483648u, 2147483648u),
         0u,
         "gt_s(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483647u, 2147483647u),
+        i320_gt_s(&instance, 2147483647u, 2147483647u),
         0u,
         "gt_s(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_gt_s(&instance, 4294967295u, 4294967295u),
         0u,
         "gt_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 1u, 0u),
+        i320_gt_s(&instance, 1u, 0u),
         1u,
         "gt_s(1u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 0u, 1u),
+        i320_gt_s(&instance, 0u, 1u),
         0u,
         "gt_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483648u, 0u),
+        i320_gt_s(&instance, 2147483648u, 0u),
         0u,
         "gt_s(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 0u, 2147483648u),
+        i320_gt_s(&instance, 0u, 2147483648u),
         1u,
         "gt_s(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483648u, 4294967295u),
+        i320_gt_s(&instance, 2147483648u, 4294967295u),
         0u,
         "gt_s(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 4294967295u, 2147483648u),
+        i320_gt_s(&instance, 4294967295u, 2147483648u),
         1u,
         "gt_s(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483648u, 2147483647u),
+        i320_gt_s(&instance, 2147483648u, 2147483647u),
         0u,
         "gt_s(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_gtX5Fs(&instance, 2147483647u, 2147483648u),
+        i320_gt_s(&instance, 2147483647u, 2147483648u),
         1u,
         "gt_s(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 0u, 0u),
+        i320_gt_u(&instance, 0u, 0u),
         0u,
         "gt_u(0u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 1u, 1u),
+        i320_gt_u(&instance, 1u, 1u),
         0u,
         "gt_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 4294967295u, 1u),
+        i320_gt_u(&instance, 4294967295u, 1u),
         1u,
         "gt_u(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483648u, 2147483648u),
+        i320_gt_u(&instance, 2147483648u, 2147483648u),
         0u,
         "gt_u(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483647u, 2147483647u),
+        i320_gt_u(&instance, 2147483647u, 2147483647u),
         0u,
         "gt_u(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_gt_u(&instance, 4294967295u, 4294967295u),
         0u,
         "gt_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 1u, 0u),
+        i320_gt_u(&instance, 1u, 0u),
         1u,
         "gt_u(1u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 0u, 1u),
+        i320_gt_u(&instance, 0u, 1u),
         0u,
         "gt_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483648u, 0u),
+        i320_gt_u(&instance, 2147483648u, 0u),
         1u,
         "gt_u(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 0u, 2147483648u),
+        i320_gt_u(&instance, 0u, 2147483648u),
         0u,
         "gt_u(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_gt_u(&instance, 2147483648u, 4294967295u),
         0u,
         "gt_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 4294967295u, 2147483648u),
+        i320_gt_u(&instance, 4294967295u, 2147483648u),
         1u,
         "gt_u(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483648u, 2147483647u),
+        i320_gt_u(&instance, 2147483648u, 2147483647u),
         1u,
         "gt_u(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_gtX5Fu(&instance, 2147483647u, 2147483648u),
+        i320_gt_u(&instance, 2147483647u, 2147483648u),
         0u,
         "gt_u(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 0u, 0u),
+        i320_ge_s(&instance, 0u, 0u),
         1u,
         "ge_s(0u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 1u, 1u),
+        i320_ge_s(&instance, 1u, 1u),
         1u,
         "ge_s(1u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 4294967295u, 1u),
+        i320_ge_s(&instance, 4294967295u, 1u),
         0u,
         "ge_s(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483648u, 2147483648u),
+        i320_ge_s(&instance, 2147483648u, 2147483648u),
         1u,
         "ge_s(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483647u, 2147483647u),
+        i320_ge_s(&instance, 2147483647u, 2147483647u),
         1u,
         "ge_s(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 4294967295u, 4294967295u),
+        i320_ge_s(&instance, 4294967295u, 4294967295u),
         1u,
         "ge_s(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 1u, 0u),
+        i320_ge_s(&instance, 1u, 0u),
         1u,
         "ge_s(1u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 0u, 1u),
+        i320_ge_s(&instance, 0u, 1u),
         0u,
         "ge_s(0u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483648u, 0u),
+        i320_ge_s(&instance, 2147483648u, 0u),
         0u,
         "ge_s(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 0u, 2147483648u),
+        i320_ge_s(&instance, 0u, 2147483648u),
         1u,
         "ge_s(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483648u, 4294967295u),
+        i320_ge_s(&instance, 2147483648u, 4294967295u),
         0u,
         "ge_s(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 4294967295u, 2147483648u),
+        i320_ge_s(&instance, 4294967295u, 2147483648u),
         1u,
         "ge_s(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483648u, 2147483647u),
+        i320_ge_s(&instance, 2147483648u, 2147483647u),
         0u,
         "ge_s(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_geX5Fs(&instance, 2147483647u, 2147483648u),
+        i320_ge_s(&instance, 2147483647u, 2147483648u),
         1u,
         "ge_s(2147483647u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 0u, 0u),
+        i320_ge_u(&instance, 0u, 0u),
         1u,
         "ge_u(0u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 1u, 1u),
+        i320_ge_u(&instance, 1u, 1u),
         1u,
         "ge_u(1u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 4294967295u, 1u),
+        i320_ge_u(&instance, 4294967295u, 1u),
         1u,
         "ge_u(4294967295u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483648u, 2147483648u),
+        i320_ge_u(&instance, 2147483648u, 2147483648u),
         1u,
         "ge_u(2147483648u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483647u, 2147483647u),
+        i320_ge_u(&instance, 2147483647u, 2147483647u),
         1u,
         "ge_u(2147483647u, 2147483647u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 4294967295u, 4294967295u),
+        i320_ge_u(&instance, 4294967295u, 4294967295u),
         1u,
         "ge_u(4294967295u, 4294967295u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 1u, 0u),
+        i320_ge_u(&instance, 1u, 0u),
         1u,
         "ge_u(1u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 0u, 1u),
+        i320_ge_u(&instance, 0u, 1u),
         0u,
         "ge_u(0u, 1u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483648u, 0u),
+        i320_ge_u(&instance, 2147483648u, 0u),
         1u,
         "ge_u(2147483648u, 0u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 0u, 2147483648u),
+        i320_ge_u(&instance, 0u, 2147483648u),
         0u,
         "ge_u(0u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483648u, 4294967295u),
+        i320_ge_u(&instance, 2147483648u, 4294967295u),
         0u,
         "ge_u(2147483648u, 4294967295u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 4294967295u, 2147483648u),
+        i320_ge_u(&instance, 4294967295u, 2147483648u),
         1u,
         "ge_u(4294967295u, 2147483648u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483648u, 2147483647u),
+        i320_ge_u(&instance, 2147483648u, 2147483647u),
         1u,
         "ge_u(2147483648u, 2147483647u)"
     );
     assertEqualU32(
-        i320_geX5Fu(&instance, 2147483647u, 2147483648u),
+        i320_ge_u(&instance, 2147483647u, 2147483648u),
         0u,
         "ge_u(2147483647u, 2147483648u)"
     );

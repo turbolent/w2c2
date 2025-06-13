@@ -3,7 +3,7 @@
 #include "leb128.h"
 
 void
-testReadU32LEB128() {
+testReadU32LEB128(void) {
     typedef struct {
         U32 expected;
         U8 data[int32LEB128MaxByteCount];
@@ -26,6 +26,7 @@ testReadU32LEB128() {
         {12857, {57 + 0x80, 100}},
     };
 
+    bool success = true;
     I32 i = 0;
     for (; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
         U32 actual;
@@ -42,15 +43,20 @@ testReadU32LEB128() {
 
         if (count == 0 || actual != testCase.expected) {
             fprintf(stderr, "FAIL testReadU32LEB128: %u != %u\n", actual, testCase.expected);
-        } else {
+            success = false;
+
         }
     }
 
-    fprintf(stderr, "PASS testReadU32LEB128\n");
+    if (success) {
+        fprintf(stderr, "PASS testReadU32LEB128\n");
+    } else {
+        exit(1);
+    }
 }
 
 void
-testReadI32LEB128() {
+testReadI32LEB128(void) {
     typedef struct {
         I32 expected;
         U8 data[int32LEB128MaxByteCount];
@@ -76,6 +82,7 @@ testReadI32LEB128() {
         {-12345, {0xc7,        0x9f, 0x7f}},
     };
 
+    bool success = true;
     I32 i = 0;
     for (; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
         I32 actual;
@@ -92,8 +99,13 @@ testReadI32LEB128() {
 
         if (count == 0 || actual != testCase.expected) {
             fprintf(stderr, "FAIL testReadI32LEB128: %u != %u\n", actual, testCase.expected);
+            success = false;
         }
     }
 
-    fprintf(stderr, "PASS testReadI32LEB128\n");
+    if (success) {
+        fprintf(stderr, "PASS testReadI32LEB128\n");
+    } else {
+        exit(1);
+    }
 }

@@ -15,11 +15,6 @@ void test() {
         "singular()"
     );
     assertEqualU32(
-        loop0_multi(&instance),
-        8u,
-        "multi()"
-    );
-    assertEqualU32(
         loop0_nested(&instance),
         9u,
         "nested()"
@@ -56,37 +51,37 @@ void test() {
         "as-if-else()"
     );
     assertEqualU32(
-        loop0_asX2DbrX5FifX2Dfirst(&instance),
+        loop0_asX2Dbr_ifX2Dfirst(&instance),
         1u,
         "as-br_if-first()"
     );
     assertEqualU32(
-        loop0_asX2DbrX5FifX2Dlast(&instance),
+        loop0_asX2Dbr_ifX2Dlast(&instance),
         2u,
         "as-br_if-last()"
     );
     assertEqualU32(
-        loop0_asX2DbrX5FtableX2Dfirst(&instance),
+        loop0_asX2Dbr_tableX2Dfirst(&instance),
         1u,
         "as-br_table-first()"
     );
     assertEqualU32(
-        loop0_asX2DbrX5FtableX2Dlast(&instance),
+        loop0_asX2Dbr_tableX2Dlast(&instance),
         2u,
         "as-br_table-last()"
     );
     assertEqualU32(
-        loop0_asX2DcallX5FindirectX2Dfirst(&instance),
+        loop0_asX2Dcall_indirectX2Dfirst(&instance),
         1u,
         "as-call_indirect-first()"
     );
     assertEqualU32(
-        loop0_asX2DcallX5FindirectX2Dmid(&instance),
+        loop0_asX2Dcall_indirectX2Dmid(&instance),
         2u,
         "as-call_indirect-mid()"
     );
     assertEqualU32(
-        loop0_asX2DcallX5FindirectX2Dlast(&instance),
+        loop0_asX2Dcall_indirectX2Dlast(&instance),
         1u,
         "as-call_indirect-last()"
     );
@@ -157,16 +152,6 @@ void test() {
         loop0_breakX2Dbare(&instance),
         19u,
         "break-bare()"
-    );
-    assertEqualU32(
-        loop0_breakX2Dvalue(&instance),
-        18u,
-        "break-value()"
-    );
-    assertEqualU32(
-        loop0_breakX2Drepeated(&instance),
-        18u,
-        "break-repeated()"
     );
     assertEqualU32(
         loop0_breakX2Dinner(&instance),

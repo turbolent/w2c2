@@ -201,63 +201,63 @@ void test() {
         77u,
         "break-block-i32()"
     );
-    func0_breakX2DbrX5FifX2Dempty(&instance, 0u);
-    func0_breakX2DbrX5FifX2Dempty(&instance, 2u);
+    func0_breakX2Dbr_ifX2Dempty(&instance, 0u);
+    func0_breakX2Dbr_ifX2Dempty(&instance, 2u);
     assertEqualU32(
-        func0_breakX2DbrX5FifX2Dnum(&instance, 0u),
+        func0_breakX2Dbr_ifX2Dnum(&instance, 0u),
         51u,
         "break-br_if-num(0u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FifX2Dnum(&instance, 1u),
+        func0_breakX2Dbr_ifX2Dnum(&instance, 1u),
         50u,
         "break-br_if-num(1u)"
     );
-    func0_breakX2DbrX5FtableX2Dempty(&instance, 0u);
-    func0_breakX2DbrX5FtableX2Dempty(&instance, 1u);
-    func0_breakX2DbrX5FtableX2Dempty(&instance, 5u);
-    func0_breakX2DbrX5FtableX2Dempty(&instance, 4294967295u);
+    func0_breakX2Dbr_tableX2Dempty(&instance, 0u);
+    func0_breakX2Dbr_tableX2Dempty(&instance, 1u);
+    func0_breakX2Dbr_tableX2Dempty(&instance, 5u);
+    func0_breakX2Dbr_tableX2Dempty(&instance, 4294967295u);
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2Dnum(&instance, 0u),
+        func0_breakX2Dbr_tableX2Dnum(&instance, 0u),
         50u,
         "break-br_table-num(0u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2Dnum(&instance, 1u),
+        func0_breakX2Dbr_tableX2Dnum(&instance, 1u),
         50u,
         "break-br_table-num(1u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2Dnum(&instance, 10u),
+        func0_breakX2Dbr_tableX2Dnum(&instance, 10u),
         50u,
         "break-br_table-num(10u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2Dnum(&instance, 4294967196u),
+        func0_breakX2Dbr_tableX2Dnum(&instance, 4294967196u),
         50u,
         "break-br_table-num(4294967196u)"
     );
-    func0_breakX2DbrX5FtableX2DnestedX2Dempty(&instance, 0u);
-    func0_breakX2DbrX5FtableX2DnestedX2Dempty(&instance, 1u);
-    func0_breakX2DbrX5FtableX2DnestedX2Dempty(&instance, 3u);
-    func0_breakX2DbrX5FtableX2DnestedX2Dempty(&instance, 4294967294u);
+    func0_breakX2Dbr_tableX2DnestedX2Dempty(&instance, 0u);
+    func0_breakX2Dbr_tableX2DnestedX2Dempty(&instance, 1u);
+    func0_breakX2Dbr_tableX2DnestedX2Dempty(&instance, 3u);
+    func0_breakX2Dbr_tableX2DnestedX2Dempty(&instance, 4294967294u);
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2DnestedX2Dnum(&instance, 0u),
+        func0_breakX2Dbr_tableX2DnestedX2Dnum(&instance, 0u),
         52u,
         "break-br_table-nested-num(0u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2DnestedX2Dnum(&instance, 1u),
+        func0_breakX2Dbr_tableX2DnestedX2Dnum(&instance, 1u),
         50u,
         "break-br_table-nested-num(1u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2DnestedX2Dnum(&instance, 2u),
+        func0_breakX2Dbr_tableX2DnestedX2Dnum(&instance, 2u),
         52u,
         "break-br_table-nested-num(2u)"
     );
     assertEqualU32(
-        func0_breakX2DbrX5FtableX2DnestedX2Dnum(&instance, 4294967293u),
+        func0_breakX2Dbr_tableX2DnestedX2Dnum(&instance, 4294967293u),
         52u,
         "break-br_table-nested-num(4294967293u)"
     );

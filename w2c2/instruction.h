@@ -8,7 +8,6 @@
 /* WasmLocalInstruction */
 
 typedef struct WasmLocalInstruction {
-    WasmOpcode opcode;
     U32 localIndex;
 } WasmLocalInstruction;
 
@@ -16,14 +15,12 @@ bool
 WARN_UNUSED_RESULT
 wasmLocalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmLocalInstruction* result
 );
 
 /* WasmGlobalInstruction */
 
 typedef struct WasmGlobalInstruction {
-    WasmOpcode opcode;
     U32 globalIndex;
 } WasmGlobalInstruction;
 
@@ -31,7 +28,6 @@ bool
 WARN_UNUSED_RESULT
 wasmGlobalInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmGlobalInstruction* result
 );
 
@@ -45,7 +41,6 @@ typedef union WasmValue {
 } WasmValue;
 
 typedef struct WasmConstInstruction {
-    WasmOpcode opcode;
     WasmValue value;
 } WasmConstInstruction;
 
@@ -57,21 +52,72 @@ wasmConstInstructionRead(
     WasmConstInstruction* result
 );
 
-/* WasmLoadStoreInstruction */
+/* WasmMemoryArgumentInstruction */
 
-typedef struct WasmLoadStoreInstruction {
-    WasmOpcode opcode;
+typedef struct WasmMemoryArgumentInstruction {
     U32 align;
     U32 offset;
-} WasmLoadStoreInstruction;
+} WasmMemoryArgumentInstruction;
 
 bool
 WARN_UNUSED_RESULT
-wasmLoadStoreInstructionRead(
+wasmMemoryArgumentInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
-    WasmLoadStoreInstruction* result
+    WasmMemoryArgumentInstruction* result
 );
+
+#define WASM_MEMARG8_ALIGN  0
+#define WASM_MEMARG16_ALIGN 1
+#define WASM_MEMARG32_ALIGN 2
+#define WASM_MEMARG64_ALIGN 3
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument8InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG8_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument16InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG16_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument32InstructionRead(
+    Buffer* buffer,
+    WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG32_ALIGN;
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmMemoryArgument64InstructionRead(
+        Buffer* buffer,
+        WasmMemoryArgumentInstruction* result
+) {
+    MUST (wasmMemoryArgumentInstructionRead(buffer, result))
+    return result->align == WASM_MEMARG64_ALIGN;
+}
 
 /* WasmCallInstruction */
 
@@ -103,7 +149,6 @@ wasmCallIndirectInstructionRead(
 /* WasmBranchInstruction */
 
 typedef struct WasmBranchInstruction {
-    WasmOpcode opcode;
     U32 labelIndex;
 } WasmBranchInstruction;
 
@@ -111,7 +156,6 @@ bool
 WARN_UNUSED_RESULT
 wasmBranchInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmBranchInstruction* result
 );
 
@@ -138,7 +182,6 @@ wasmBranchTableInstructionRead(
 /* WasmMemoryInstruction */
 
 typedef struct WasmMemoryInstruction {
-    WasmOpcode opcode;
     U32 memoryIndex;
 } WasmMemoryInstruction;
 
@@ -146,23 +189,7 @@ bool
 WARN_UNUSED_RESULT
 wasmMemoryInstructionRead(
     Buffer* buffer,
-    WasmOpcode opcode,
     WasmMemoryInstruction* result
-);
-
-/* WasmMiscMemoryInstruction */
-
-typedef struct WasmMiscMemoryInstruction {
-    WasmMiscOpcode opcode;
-    U32 memoryIndex;
-} WasmMiscMemoryInstruction;
-
-bool
-WARN_UNUSED_RESULT
-wasmMiscMemoryInstructionRead(
-    Buffer* buffer,
-    WasmMiscOpcode opcode,
-    WasmMiscMemoryInstruction* result
 );
 
 /* WasmMemoryCopyInstruction */
@@ -177,6 +204,20 @@ WARN_UNUSED_RESULT
 wasmMemoryCopyInstructionRead(
     Buffer* buffer,
     WasmMemoryCopyInstruction* result
+);
+
+/* WasmMemoryInitInstruction */
+
+typedef struct WasmMemoryInitInstruction {
+    U32 dataSegmentIndex;
+    U32 memoryIndex;
+} WasmMemoryInitInstruction;
+
+bool
+WARN_UNUSED_RESULT
+wasmMemoryInitInstructionRead(
+    Buffer* buffer,
+    WasmMemoryInitInstruction* result
 );
 
 #endif /* W2C2_INSTRUCTION_H */

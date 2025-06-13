@@ -26,7 +26,7 @@ extern char** environ;
 
 int main(int argc, char** argv) {
     lsInstance instance;
-    lsInstantiate(&instance, wasiResolveImport);
+    lsInstantiate(&instance, NULL);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     }
 
 
-    ls_X5Fstart(&instance);
+    ls__start(&instance);
 
     lsFreeInstance(&instance);
 
