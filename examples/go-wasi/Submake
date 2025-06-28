@@ -1,0 +1,11 @@
+OBJLIST=$(filter-out gowasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+go-wasi: gowasi.o
+	$(MAKE) -f Submake $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) gowasi.o -o go-wasi $(LDFLAGS)
+
+datasegments.o: gowasi.c
+	ld -r -b binary -o datasegments.o datasegments
+
+%.o: %.c
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
