@@ -513,6 +513,7 @@ wasmCGetReturnType(
             /* TODO: add support for multiple result values */
             fprintf(stderr, "w2c2: unsupported function with multiple result values\n");
             abort();
+			return NULL;
     }
 }
 

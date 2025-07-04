@@ -789,7 +789,7 @@ wasiFDWrite(
                 ));
             }
 
-            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[ciovecIndex].iov_len = length;
         }
     }
@@ -962,7 +962,8 @@ wasiFDRead(
             U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
             U32 bufferPointer = i32_load(memory, iovecPointer);
             U32 length = i32_load(memory, iovecPointer + 4);
-            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
+
+            iovecs[iovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[iovecIndex].iov_len = length;
         }
     }
@@ -1490,7 +1491,7 @@ wasiFDReaddir(
         }
     }
 
-#if !defined(_WIN32) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
@@ -1520,7 +1521,7 @@ wasiFDReaddir(
             break;
         }
 
-#if !defined(_WIN32) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
@@ -1529,7 +1530,7 @@ wasiFDReaddir(
 #endif
 
         next = (U64)tell;
-#if (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
         inode = 0;
 #else
         inode = entry->d_ino;
@@ -4000,7 +4001,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-#if (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000)
+#if (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000) || defined(PLAN9)
     /* Fall back to rand */
     {
         U32 i = 0;
