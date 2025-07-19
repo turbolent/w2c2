@@ -52,6 +52,12 @@ typedef double F64;
 #define W2C2_LL(x) x ## ll
 #endif
 
+#if defined(__clang__) && __clang_major__ <= 12
+#define W2C2_PRE_BB do{__asm__ volatile()}while(0)
+#else
+#define W2C2_PRE_BB do{}while(0)
+#endif
+
 #define MUST(_) { if (!(_)) { return false; }; }
 
 #define WASM_LITTLE_ENDIAN  0

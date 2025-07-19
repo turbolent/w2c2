@@ -2048,7 +2048,7 @@ wasmCWriteLabel(
 ) {
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringLabelName(writer->builder, labelIndex))
-    MUST (wasmCWrite(writer, ":;\n"))
+    MUST (wasmCWrite(writer, ":;\nW2C2_PRE_BB\n"))
 
     return true;
 }
