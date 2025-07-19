@@ -22,9 +22,9 @@
 #include "compat.h"
 
 #if HAS_PTHREAD
-static char* const optString = "t:f:d:r:pgmch";
+static char* const optString = "t:f:d:r:C:pgmch";
 #else
-static char* const optString = "f:d:r:pgmch";
+static char* const optString = "f:d:r:C:pgmch";
 #endif /* HAS_PTHREAD */
 
 #if HAS_GLOB
@@ -298,6 +298,7 @@ main(
     bool pretty = false;
     bool debug = false;
     bool multipleModules = false;
+    bool oldClangBugFix = false;
     WasmDataSegmentMode dataSegmentMode = wasmDataSegmentModeArrays;
     char moduleName[PATH_MAX];
     bool clean = false;
@@ -409,6 +410,12 @@ main(
                 }
                 return 1;
             }
+            case 'C': {
+                if(strcmp(optarg,"oldClangBugFix") == 0){
+                    oldClangBugFix = true;
+                }
+                break;
+            }
             default:
                 abort();
         }
@@ -519,6 +526,7 @@ main(
         writeOptions.debug = debug;
         writeOptions.multipleModules = multipleModules;
         writeOptions.dataSegmentMode = dataSegmentMode;
+        writeOptions.oldClangBugFix = oldClangBugFix;
 
         if (!wasmCWriteModule(
             reader.module,
