@@ -2265,7 +2265,7 @@ wasmCWriteLoopExpr(
         ))
 
         MUST (wasmCWriteLabel(writer, label.index))
-        MUST(wasmCWrite(writer, "W2C2_PRE_BB\n"))
+        MUST(wasmCWrite(writer, "W2C2_LOOP_START\n"))
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "{\n"))
