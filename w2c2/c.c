@@ -562,7 +562,6 @@ typedef struct WasmCFunctionWriter {
     bool pretty;
     bool debug;
     bool multipleModules;
-    bool oldClangBugFix;
     WasmDebugLines* debugLines;
 } WasmCFunctionWriter;
 
@@ -2050,9 +2049,7 @@ wasmCWriteLabel(
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStringLabelName(writer->builder, labelIndex))
     MUST (wasmCWrite(writer, ":;\n"))
-    if(writer->oldClangBugFix){
-        MUST (wasmCWrite(writer,"__asm__ volatile(\"\");"))
-    }
+
     return true;
 }
 
@@ -4395,8 +4392,7 @@ wasmCWriteFunctionBody(
     WasmDebugLines* debugLines,
     const bool pretty,
     const bool debug,
-    const bool multipleModules,
-    const bool oldClangBugFix
+    const bool multipleModules
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -4437,7 +4433,6 @@ wasmCWriteFunctionBody(
         writer.debug = debug;
         writer.multipleModules = multipleModules;
         writer.debugLines = debugLines;
-        writer.oldClangBugFix = oldClangBugFix;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
         MUST (wasmCWriteFunctionCode(&writer, &opcode))
@@ -4585,8 +4580,7 @@ wasmCWriteFunctionImplementations(
     const WasmFunctionIDs functionIDs,
     const bool pretty,
     const bool debug,
-    const bool multipleModules,
-    const bool oldClangBugFix
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
 
@@ -4633,8 +4627,7 @@ wasmCWriteFunctionImplementations(
             debugLines,
             pretty,
             debug,
-            multipleModules,
-            oldClangBugFix
+            multipleModules
         ))
         fputs("\n", file);
     }
@@ -6083,8 +6076,7 @@ wasmCWriteImplementationFile(
     const WasmFunctionIDs functionIDs,
     const bool pretty,
     const bool debug,
-    const bool multipleModules,
-    const bool oldClangBugFix
+    const bool multipleModules
 ) {
     FILE* file = NULL;
     char filename[W2C2_IMPL_FILENAME_LENGTH+1];
@@ -6124,8 +6116,7 @@ wasmCWriteImplementationFile(
         functionIDs,
         pretty,
         debug,
-        multipleModules,
-        oldClangBugFix
+        multipleModules
     ))
 
     if (fclose(file) != 0) {
@@ -6371,8 +6362,7 @@ wasmCWriteModuleImplementationFiles(
                 functionIDs,
                 options.pretty,
                 options.debug,
-                options.multipleModules,
-                options.oldClangBugFix
+                options.multipleModules
             ))
 #endif /* HAS_PTHREAD */
         }
@@ -6480,8 +6470,7 @@ wasmCWriteModuleImplementation(
             staticFunctionIDs,
             options.pretty,
             options.debug,
-            options.multipleModules,
-            options.oldClangBugFix
+            options.multipleModules
         ))
     } else {
 
