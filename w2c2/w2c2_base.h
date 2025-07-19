@@ -52,7 +52,7 @@ typedef double F64;
 #define W2C2_LL(x) x ## ll
 #endif
 
-// Prevent LLVM/Clang <=12 from optimizing away infinite loops
+/* Prevent LLVM/Clang <=12 from optimizing away infinite loops */
 #if defined(__clang__) && __clang_major__ <= 12
 #define W2C2_LOOP_START __asm__ volatile();
 #else
