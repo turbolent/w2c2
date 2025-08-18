@@ -1517,7 +1517,7 @@ wasiFDReaddir(
         bufferUsedPointer
     ));
 
-    if (!wasiFileDescriptorGet(wasiDirFD, &descriptor) || !wasiIsNative(descriptor)) {
+    if ((!wasiFileDescriptorGet(wasiDirFD, &descriptor)) || !wasiIsNative(descriptor)) {
         WASI_TRACE(("fd_readdir: bad FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3299,12 +3299,12 @@ wasiPathRename(
         newPathLength
     ));
 
-    if (!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor) || !wasiIsNative(oldPreopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor)) || !wasiIsNative(oldPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad old preopen fd"));
         return WASI_ERRNO_BADF;
     }
 
-    if (!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor) || !wasiIsNative(newPreopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor)) || !wasiIsNative(newPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad new preopen fd"));
         return WASI_ERRNO_BADF;
     }
@@ -3425,7 +3425,7 @@ wasiPathUnlinkFile(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_unlink_file: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3518,7 +3518,7 @@ wasiPathRemoveDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3611,7 +3611,7 @@ wasiPathCreateDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3725,7 +3725,7 @@ wasiPathSymlink(
     return WASI_ERRNO_NOSYS;
 #else
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_symlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3881,7 +3881,7 @@ wasiPathReadlink(
     WASI_TRACE(("path_readlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
