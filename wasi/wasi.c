@@ -2929,7 +2929,7 @@ wasiFDFilestatGet(
         }
     }else{
         /*make an empty stat*/
-        memset(st,0,sizeof(strust stat));
+        memset(st,0,sizeof(struct stat));
     }
 
     WASI_TRACE((
@@ -3131,7 +3131,7 @@ wasiPathFilestatGet(
 
     }else{
         /*make an empty stat*/
-        memset(st,0,sizeof(strust stat));
+        memset(st,0,sizeof(struct stat));
     }
 
     WASI_TRACE((
