@@ -44,7 +44,7 @@ typedef struct WasiFileDescriptor {
     };
 } WasiFileDescriptor;
 #define wasiNonNativeFd -2
-#define wasiIsNative(d) d.fd != wasiNonNativeFd
+#define wasiIsNative(d) (d.fd != wasiNonNativeFd)
 
 static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
 
