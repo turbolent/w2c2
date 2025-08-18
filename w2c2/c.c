@@ -1075,9 +1075,9 @@ wasmCWriteLiteral(
         }
         case wasmValueTypeF64: {
             const U64 bits = (U64) value.i64;
-            if ((bits & 0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) {
-                const bool isNegative = (bits & 0x8000000000000000ULL) != 0;
-                const U64 significand = bits & 0x7fffffULL;
+            if ((bits & W2C2_LL(0x7ff0000000000000U)) == W2C2_LL(0x7ff0000000000000U)) {
+                const bool isNegative = (bits & W2C2_LL(0x8000000000000000U)) != 0;
+                const U64 significand = bits & W2C2_LL(0x7fffffU);
                 if (significand == 0) {
                     if (isNegative) {
                         MUST (stringBuilderAppendChar(builder, '-'))
@@ -1088,7 +1088,7 @@ wasmCWriteLiteral(
                     MUST (stringBuilderAppendU64Hex(builder, bits))
                     MUST (stringBuilderAppendChar(builder, ')'))
                 }
-            } else if (bits == 0x8000000000000000ULL) {
+            } else if (bits == W2C2_LL(0x8000000000000000U)) {
                 MUST (stringBuilderAppend(builder, "-0.f"))
             } else {
                 MUST (stringBuilderAppendF64(builder, value.f64))
@@ -2265,6 +2265,7 @@ wasmCWriteLoopExpr(
         ))
 
         MUST (wasmCWriteLabel(writer, label.index))
+        MUST(wasmCWrite(writer, "W2C2_LOOP_START\n"))
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "{\n"))

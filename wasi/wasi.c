@@ -2479,7 +2479,7 @@ WASI_IMPORT(U32, fd_prestat_get, (
         return WASI_ERRNO_BADF;
     }
 
-    length = strlen(path) + 1;
+    length = strlen(path);
     i32_store(memory, prestatPointer, WASI_PREOPEN_TYPE_DIRECTORY);
     i32_store(memory, prestatPointer + 4, length);
 
@@ -2524,7 +2524,7 @@ wasiFdPrestatDirName(
         return WASI_ERRNO_BADF;
     }
 
-    length = strlen(path) + 1;
+    length = strlen(path);
     if (length >= pathLength) {
         length = pathLength;
     }

@@ -52,6 +52,13 @@ typedef double F64;
 #define W2C2_LL(x) x ## ll
 #endif
 
+/* Prevent infinite loops from being optimized out when compiled as C++ */
+#ifdef __cplusplus
+#define W2C2_LOOP_START __asm__ volatile("");
+#else
+#define W2C2_LOOP_START
+#endif
+
 #define MUST(_) { if (!(_)) { return false; }; }
 
 #define WASM_LITTLE_ENDIAN  0
@@ -627,6 +634,7 @@ typedef struct wasmWin32ThreadStartArg {
 
 static
 DWORD
+__stdcall
 wasmWin32ThreadStart(
     void *arg
 ) {
