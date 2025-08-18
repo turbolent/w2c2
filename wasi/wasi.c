@@ -833,8 +833,11 @@ wasiFDWrite(
                         length, bufferPointer));
           }
     
-          total += (descriptor.write)(descriptor.udata,
-                                      memory->data + bufferPointer, length);
+          total += (descriptor.write)(
+            descriptor.udata,
+            memory->data + bufferPointer, 
+            length
+          );
     }
 
     if (total < 0) {
@@ -1030,10 +1033,11 @@ wasiFDRead(
                         length, bufferPointer));
           }
     
-          total += (descriptor.read)(descriptor.udata, memory->data + bufferPointer,
-                                     length);
-          // iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
-          // iovecs[ciovecIndex].iov_len = length;
+          total += (descriptor.read)(
+            descriptor.udata, 
+            memory->data + bufferPointer,
+            length
+          );
         }
     }
 
