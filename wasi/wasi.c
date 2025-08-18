@@ -562,7 +562,7 @@ wasiFileDescriptorClose(
     MUST (wasiFileDescriptorGet(wasiFD, &descriptor))
     if(wasiIsNative(descriptor)){
     if (descriptor.body.native.dir != NULL) {
-            MUST (closedir(descriptor.dir) == 0)
+            MUST (closedir(descriptor.body.native.dir) == 0)
         } else if (descriptor.fd >= 0) {
             MUST (close(descriptor.fd) == 0)
         }
@@ -965,6 +965,7 @@ wasiFDRead(
     struct iovec* iovecs = NULL;
     I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 ciovecIndex = 0;
 
     WASI_TRACE((
         "fd_[p]read("
@@ -1022,7 +1023,7 @@ wasiFDRead(
         free(iovecs);
     }else{
         total = 0;
-        U32 ciovecIndex = 0;
+
         for (; ciovecIndex < iovecsCount; ciovecIndex++) {
           U64 ciovecPointer = iovecsPointer + ciovecIndex * ciovecSize;
           U32 bufferPointer = i32_load(memory, ciovecPointer);
