@@ -43,8 +43,8 @@ typedef struct WasiFileDescriptor {
       };
     };
 } WasiFileDescriptor;
-
-#define wasiIsNative(d) d.fd != -2
+#define wasiNonNativeFd -2
+#define wasiIsNative(d) d.fd != wasiNonNativeFd
 
 static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
 
