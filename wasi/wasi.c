@@ -838,6 +838,7 @@ wasiFDWrite(
             memory->data + bufferPointer, 
             length
           );
+        }
     }
 
     if (total < 0) {
