@@ -758,6 +758,7 @@ wasiFDWrite(
     struct iovec* iovecs = NULL;
     I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 ciovecIndex = 0;
 
     if (wasiFD > 2) {
         WASI_TRACE((
@@ -793,7 +794,6 @@ wasiFDWrite(
 
         /* Convert WASI ciovecs to native iovecs */
         {
-            U32 ciovecIndex = 0;
             for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
                 U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
                 U32 bufferPointer = i32_load(memory, ciovecPointer);
@@ -820,7 +820,7 @@ wasiFDWrite(
         free(iovecs);
     } else{
         total = 0;
-        U32 ciovecIndex = 0;
+
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
           U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
           U32 bufferPointer = i32_load(memory, ciovecPointer);
@@ -2752,7 +2752,7 @@ wasiPathOpen(
     }
 
     /* Register the WASI file descriptor */
-    if (!wasiFileDescriptorAdd(nativeFD, resolvedPath, &wasiFD)) {
+    if (!wasiFileDescriptorAddNative(nativeFD, resolvedPath, &wasiFD)) {
         WASI_TRACE(("path_open: adding FD failed"));
         return WASI_ERRNO_BADF;
     }

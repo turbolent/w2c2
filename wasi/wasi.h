@@ -30,18 +30,18 @@ extern "C" {
 
 typedef struct WasiFileDescriptor {
     int fd;
-    union {
-      struct {
+    union WasiFileDescriptor$Body {
+      struct WasiFileDescriptor$Native{
         DIR *dir;
         char *path;
-      };
-      struct {
+      } native;
+      struct WasiFileDescriptor$External{
         void *udata;
         void (*close)(void *);
         size_t (*read)(void *, uint8_t *a, size_t len);
         size_t (*write)(void *, uint8_t *a, size_t len);
-      };
-    };
+      } external;
+    } body;
 } WasiFileDescriptor;
 #define wasiNonNativeFd -2
 #define wasiIsNative(d) (d.fd != wasiNonNativeFd)
