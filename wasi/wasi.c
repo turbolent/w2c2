@@ -552,6 +552,7 @@ wasiDirectorySet(
     DIR* nativeDir
 ) {
     MUST (wasiFD < wasi.fds.length)
+    MUST (wasiIsNative(wasi.fds.fds[wasiFD]))
     wasi.fds.fds[wasiFD].dir = nativeDir;
     return true;
 }
@@ -1515,7 +1516,7 @@ wasiFDReaddir(
         bufferUsedPointer
     ));
 
-    if (!wasiFileDescriptorGet(wasiDirFD, &descriptor)) {
+    if (!wasiFileDescriptorGet(wasiDirFD, &descriptor) || !wasiIsNative(descriptor)) {
         WASI_TRACE(("fd_readdir: bad FD"));
         return WASI_ERRNO_BADF;
     }
@@ -2909,7 +2910,7 @@ wasiFDFilestatGet(
             WASI_TRACE(("fd_filestat_get: fstat failed: %s", strerror(errno)));
             return wasiErrno();
         }
-    } else {
+    }else if (wasiIsNative(descriptor)){
         char nativePath[PATH_MAX];
         strcpy(nativePath, descriptor.path);
 #if HAS_NONPOSIXPATH
@@ -2925,6 +2926,9 @@ wasiFDFilestatGet(
             WASI_TRACE(("fd_filestat_get: stat failed: %s", strerror(errno)));
             return wasiErrno();
         }
+    }else{
+        /*make an empty stat*/
+        memset(st,0,sizeof(strust stat));
     }
 
     WASI_TRACE((
@@ -3082,43 +3086,51 @@ wasiPathFilestatGet(
         return WASI_ERRNO_BADF;
     }
 
-    WASI_TRACE((
-        "path_filestat_get: "
-        "path=%.*s",
-        pathLength,
-        path
-    ));
+    if(wasiIsNative(preopenFileDescriptor)){
 
-    preopenPath = preopenFileDescriptor.path;
-    if (preopenPath == NULL) {
-        WASI_TRACE(("path_filestat_get: bad preopen FD"));
-        return WASI_ERRNO_BADF;
-    }
+        WASI_TRACE((
+            "path_filestat_get: "
+            "path=%.*s",
+            pathLength,
+            path
+        ));
 
-    if (!resolvePath(preopenPath, path, pathLength, resolvedPath)) {
-        WASI_TRACE(("path_filestat_get: path resolution failed"));
-        return WASI_ERRNO_INVAL;
-    }
+        preopenPath = preopenFileDescriptor.path;
+        if (preopenPath == NULL) {
+            WASI_TRACE(("path_filestat_get: bad preopen FD"));
+            return WASI_ERRNO_BADF;
+        }
 
-    WASI_TRACE(("path_filestat_get: resolvedPath=%s", resolvedPath));
+        if (!resolvePath(preopenPath, path, pathLength, resolvedPath)) {
+            WASI_TRACE(("path_filestat_get: path resolution failed"));
+            return WASI_ERRNO_INVAL;
+        }
 
-    strcpy(nativeResolvedPath, resolvedPath);
-#if HAS_NONPOSIXPATH
-    wasiToNativePath(nativeResolvedPath);
-#endif
+        WASI_TRACE(("path_filestat_get: resolvedPath=%s", resolvedPath));
 
-    WASI_TRACE((
-        "path_filestat_get: "
-        "stat(%s)",
-        nativeResolvedPath
-    ));
+        strcpy(nativeResolvedPath, resolvedPath);
+    #if HAS_NONPOSIXPATH
+        wasiToNativePath(nativeResolvedPath);
+    #endif
 
-    /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
-    res = stat(nativeResolvedPath, st);
+        WASI_TRACE((
+            "path_filestat_get: "
+            "stat(%s)",
+            nativeResolvedPath
+        ));
 
-    if (res != 0) {
-        WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
-        return wasiErrno();
+        /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
+        res = stat(nativeResolvedPath, st);
+
+        if (res != 0) {
+            WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+
+    }else{
+        /*make an empty stat*/
+        memset(st,0,sizeof(strust stat));
     }
 
     WASI_TRACE((
@@ -3286,12 +3298,12 @@ wasiPathRename(
         newPathLength
     ));
 
-    if (!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor) || !wasiIsNative(oldPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad old preopen fd"));
         return WASI_ERRNO_BADF;
     }
 
-    if (!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor) || !wasiIsNative(newPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad new preopen fd"));
         return WASI_ERRNO_BADF;
     }
@@ -3412,7 +3424,7 @@ wasiPathUnlinkFile(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_unlink_file: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3505,7 +3517,7 @@ wasiPathRemoveDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3598,7 +3610,7 @@ wasiPathCreateDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3712,7 +3724,7 @@ wasiPathSymlink(
     return WASI_ERRNO_NOSYS;
 #else
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_symlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3868,7 +3880,7 @@ wasiPathReadlink(
     WASI_TRACE(("path_readlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
