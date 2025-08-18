@@ -597,9 +597,9 @@ wasiInit(
     wasi.argc = argc;
     wasi.argv = argv;
 
-    MUST (wasiFileDescriptorAdd(STDIN_FILENO, NULL, NULL))
-    MUST (wasiFileDescriptorAdd(STDOUT_FILENO, NULL, NULL))
-    MUST (wasiFileDescriptorAdd(STDERR_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDIN_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDOUT_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDERR_FILENO, NULL, NULL))
 
     return true;
 }
