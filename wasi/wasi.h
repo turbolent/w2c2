@@ -72,7 +72,7 @@ wasiInit(
 
 bool
 WARN_UNUSED_RESULT
-wasiFileDescriptorAdd(
+wasiFileDescriptorAddNative(
     int nativeFD,
     char* path,
     U32* wasiFD
@@ -80,7 +80,7 @@ wasiFileDescriptorAdd(
 
 bool 
 WARN_UNUSED_RESULT 
-wasiFileDescriptorAddStruct(
+wasiFileDescriptorAdd(
   WasiFileDescriptor impl,
   U32 *wasiFD
 );

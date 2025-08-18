@@ -466,10 +466,11 @@ static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
-wasiFileDescriptorsAdd(
+wasiFileDescriptorsAddNative(
     WasiFileDescriptors* descriptors,
     int fd,
-    char* path
+    char* path,
+    U32 *wasiFD
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     descriptor.fd = fd;
@@ -481,38 +482,33 @@ wasiFileDescriptorsAdd(
     }
     descriptor.path = path;
     descriptors->length++;
-    if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+    if(!wasiFileDescriptorAdd(descriptor, wasiFD)){
         free(path);
         return false;
     }
-    descriptors->fds[descriptors->length - 1] = descriptor;
     return true;
 }
 
 bool
 WARN_UNUSED_RESULT
-wasiFileDescriptorAdd(
+wasiFileDescriptorAddNative(
     int nativeFD,
     char* path,
     U32* wasiFD
 ) {
-    MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path))
-    if (wasiFD != NULL) {
-        *wasiFD = wasi.fds.length - 1;
-    }
+    MUST (wasiFileDescriptorsAddNative(&wasi.fds, nativeFD, path,wasiFD))
     return true;
 }
 
 bool 
 WARN_UNUSED_RESULT
-wasiFileDescriptorAddStruct(
+wasiFileDescriptorAdd(
     WasiFileDescriptor descriptor, 
     U32 *wasiFD
 ) {
   WasiFileDescriptors *descriptors = &wasi.fds;
   descriptors->length++;
   if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
-    // free(path);
     return false;
   }
   descriptors->fds[descriptors->length - 1] = descriptor;
