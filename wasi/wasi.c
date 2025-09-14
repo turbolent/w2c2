@@ -3072,12 +3072,34 @@ wasiPathFilestatGet(
 
 WASI_IMPORT(U32, fd_filestat_set_size, (
     void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U64 UNUSED(size)
+    U32 wasiFD,
+    U64 size
 ), {
-    /* TODO: */
-    WASI_TRACE(("fd_filestat_set_size: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+
+    WASI_TRACE((
+        "fd_filestat_set_size("
+        "wasiFD=%d, "
+        "size=%llu"
+        ")",
+        wasiFD,
+        size
+    ));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        WASI_TRACE(("fd_filestat_set_size: bad FD"));
+        return WASI_ERRNO_BADF;
+    }
+
+    if (descriptor.fd < 0) {
+        return WASI_ERRNO_INVAL;
+    }
+
+    if (ftruncate(descriptor.fd, (off_t)size) != 0) {
+        return wasiErrno();
+    }
+
+    return WASI_ERRNO_SUCCESS;
 })
 
 WASI_IMPORT(U32, fd_filestat_set_times, (
