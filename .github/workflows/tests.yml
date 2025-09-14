@@ -185,7 +185,7 @@ jobs:
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
 
   windows-msvc:
-    runs-on: windows-2019
+    runs-on: windows-latest
     name: "Windows (MSVC)"
 
     steps:
