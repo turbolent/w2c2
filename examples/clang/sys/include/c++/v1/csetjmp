@@ -1,10 +1,9 @@
 // -*- C++ -*-
-//===--------------------------- csetjmp ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -32,17 +31,24 @@ void longjmp(jmp_buf env, int val);
 */
 
 #include <__config>
-#include <setjmp.h>
+
+// <setjmp.h> is not provided by libc++
+#if __has_include(<setjmp.h>)
+#  include <setjmp.h>
+#  ifdef _LIBCPP_SETJMP_H
+#    error "If libc++ starts defining <setjmp.h>, the __has_include check should move to libc++'s <setjmp.h>"
+#  endif
+#endif
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-using ::jmp_buf;
-using ::longjmp;
+using ::jmp_buf _LIBCPP_USING_IF_EXISTS;
+using ::longjmp _LIBCPP_USING_IF_EXISTS;
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_CSETJMP
+#endif // _LIBCPP_CSETJMP
