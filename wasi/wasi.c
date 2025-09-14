@@ -97,17 +97,18 @@ struct timespec {
 #define O_TRUNC  _O_TRUNC
 #define O_EXCL   _O_EXCL
 
-#define open    _open
-#define read    _read
-#define write   _write
-#define close   _close
-#define mkdir   _mkdir
-#define rmdir   _rmdir
-#define unlink  _unlink
-#define stat    _stat
-#define fstat   _fstat
-#define lseek   _lseek
-#define isatty  _isatty
+#define open      _open
+#define read      _read
+#define write     _write
+#define close     _close
+#define mkdir     _mkdir
+#define rmdir     _rmdir
+#define unlink    _unlink
+#define stat      _stat
+#define fstat     _fstat
+#define lseek     _lseek
+#define isatty    _isatty
+#define ftruncate _chsize
 
 /* TODO: could be redirected, use _fileno */
 #define STDIN_FILENO  0
@@ -3070,11 +3071,17 @@ wasiPathFilestatGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, fd_filestat_set_size, (
-    void* UNUSED(instance),
+static
+W2C2_INLINE
+U32
+wasiFdFilestatSetSize(
     U32 wasiFD,
     U64 size
-), {
+) {
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)) || \
+    defined(_BSD_SOURCE) || defined(_WIN32)
+
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
@@ -3100,6 +3107,17 @@ WASI_IMPORT(U32, fd_filestat_set_size, (
     }
 
     return WASI_ERRNO_SUCCESS;
+#else
+    return WASI_ERRNO_NOSYS;
+#endif
+}
+
+WASI_IMPORT(U32, fd_filestat_set_size, (
+    void* UNUSED(instance),
+    U32 wasiFD,
+    U64 size
+), {
+    return wasiFdFilestatSetSize(wasiFD, size);
 })
 
 WASI_IMPORT(U32, fd_filestat_set_times, (
