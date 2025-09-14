@@ -11,12 +11,12 @@ ifeq ($(MODE),gnu-ld)
     OBJS += datasegments.o
 endif
 
-clang: clang.o
+sys/bin/llvm: llvm.o
 	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
-clang.c: clang.wasm
+llvm.c: llvm.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .PHONY: clean
 clean:
-	rm -f clang clang.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f sys/bin/llvm llvm.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o

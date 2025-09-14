@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "../../w2c2/w2c2_base.h"
 #include "../../wasi/wasi.h"
-#include "clang.h"
+#include "llvm.h"
 
 void
 trap(
@@ -15,7 +15,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return clang_memory((clangInstance*)instance);
+    return llvm_memory((llvmInstance*)instance);
 }
 
 extern char** environ;
@@ -35,10 +35,10 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        clangInstance instance;
-        clangInstantiate(&instance, NULL);
-        clang__start(&instance);
-        clangFreeInstance(&instance);
+        llvmInstance instance;
+        llvmInstantiate(&instance, NULL);
+        llvm__start(&instance);
+        llvmFreeInstance(&instance);
     }
 
     return 0;
