@@ -30,7 +30,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
 - Support for many architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
 - Support for big-endian systems (e.g. PowerPC, SPARC, PA-RISC, etc.)
-- Support for various compilers (e.g. old GCC, MSVC, CodeWarrior, etc.) 
+- Support for various compilers (e.g. old GCC, MSVC, CodeWarrior, etc.)
 - Streaming/single-pass compilation, low memory usage
 - Separate compilation into multiple files
 - Parallel compilation
@@ -138,7 +138,7 @@ make run-tests
 - [ ] `fd_fdstat_set_flags`
 - [ ] `fd_fdstat_set_rights`
 - [x] `fd_filestat_get`
-- [ ] `fd_filestat_set_size`
+- [x] `fd_filestat_set_size`
 - [ ] `fd_filestat_set_times`
 - [x] `fd_pread`
 - [x] `fd_prestat_get`
