@@ -48,7 +48,7 @@ run-tests-%:
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
-	$(PYTHON3) run.py $(if $(EXECUTE),-e $(EXECUTE),) $(if $(ARCH),-a $(ARCH),) $<
+	$(PYTHON3) run.py $(if $(EXECUTE),-e "$(EXECUTE)",) $(if $(ARCH),-a $(ARCH),) $<
 	echo
 
 test_%$(EXE): test_%.o main.o

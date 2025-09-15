@@ -871,13 +871,38 @@ load_data(
 
 #else
 
-#define readSwapU16(base, offset) swapU16(*(U16*)((base) + (offset)))
-#define readSwapU32(base, offset) swapU32(*(U32*)((base) + (offset)))
-#define readSwapU64(base, offset) swapU64(*(U64*)((base) + (offset)))
+static W2C2_INLINE U16 readSwapU16(const void* address, U32 offset) {
+    U16 result;
+    memcpy(&result, address + offset, sizeof(U16));
+    return swapU16(result);
+}
 
-#define writeSwapU16(base, offset, value) (*(U16*)((base) + (offset)) = swapU16(value))
-#define writeSwapU32(base, offset, value) (*(U32*)((base) + (offset)) = swapU32(value))
-#define writeSwapU64(base, offset, value) (*(U64*)((base) + (offset)) = swapU64(value))
+static W2C2_INLINE U32 readSwapU32(const void* address, U32 offset) {
+    U32 result;
+    memcpy(&result, address + offset, sizeof(U32));
+    return swapU32(result);
+}
+
+static W2C2_INLINE U64 readSwapU64(const void* address, U32 offset) {
+    U64 result;
+    memcpy(&result, address + offset, sizeof(U64));
+    return swapU64(result);
+}
+
+static W2C2_INLINE void writeSwapU16(void* address, U32 offset, U16 v) {
+    v = swapU16(v);
+    memcpy(address + offset, &v, sizeof(U16));
+}
+
+static W2C2_INLINE void writeSwapU32(void* address, U32 offset, U32 v) {
+    v = swapU32(v);
+    memcpy(address + offset, &v, sizeof(U32));
+}
+
+static W2C2_INLINE void writeSwapU64(void* address, U32 offset, U64 v) {
+    v = swapU64(v);
+    memcpy(address + offset, &v, sizeof(U64));
+}
 
 #endif
 
