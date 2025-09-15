@@ -1155,7 +1155,6 @@ wasmCWriteLoad(
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWrite(writer, "(U64)"))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex0,
@@ -1304,7 +1303,6 @@ wasmCWriteStore(
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWrite(writer, "(U64)"))
     MUST (wasmCWriteStringStackName(
         writer->builder,
         stackIndex1,
@@ -3265,7 +3263,6 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)"))
             MUST (wasmCWriteStringStackName(
                     writer->builder,
                 stackIndex1,
@@ -3391,7 +3388,6 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, "(U64)"))
             MUST (wasmCWriteStringStackName(
                     writer->builder,
                     stackIndex2,
