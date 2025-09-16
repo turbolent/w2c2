@@ -584,6 +584,13 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
 #define NS_PER_S 1000000000
 
+#include <unistd.h>
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+#include <time.h>
+#else
+#include <sys/time.h>
+#endif
+
 static
 W2C2_INLINE
 bool
@@ -594,7 +601,17 @@ wasmCondRelativeWait(
     I64 relativeTimeout
 ) {
     struct timespec absoluteTimeout;
-    clock_gettime(CLOCK_REALTIME, &absoluteTimeout);
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+    if (clock_gettime(CLOCK_REALTIME, &absoluteTimeout) != 0) {
+        return false;
+    }
+#else
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) != 0) {
+	    return false;
+    }
+    TIMEVAL_TO_TIMESPEC(&tv, &absoluteTimeout);
+#endif
     absoluteTimeout.tv_sec += (time_t)relativeTimeout / NS_PER_S;
     absoluteTimeout.tv_nsec += (long int)relativeTimeout % NS_PER_S;
     if (absoluteTimeout.tv_nsec >= NS_PER_S) {
