@@ -61,7 +61,7 @@ futexMapFree(
 U32
 wasmMemoryAtomicWait(
     wasmMemory* mem,
-    U32 address,
+    WasmPtr address,
     U64 expect,
     I64 timeout,
     bool wait64
@@ -186,7 +186,7 @@ wasmMemoryAtomicWait(
 U32
 wasmMemoryAtomicNotify(
     wasmMemory *mem,
-    U32 address,
+    WasmPtr address,
     U32 count
 ) {
     void** value = NULL;
