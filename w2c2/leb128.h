@@ -17,7 +17,7 @@
 
 /*
  * leb128ReadU32 reads and decodes an unsigned 32-bit integer
- * from the given buffer and stores the value in result.
+ * from the given buffer and stores the value in `result`.
  * Returns the number of read bytes.
  */
 static
@@ -32,11 +32,11 @@ leb128ReadU32(
     size_t count = 0;
     U8 byte = 0;
 
-    /* Only read up to maximum number of bytes */
+    /* Only read up to the maximum number of bytes */
     while (count < int32LEB128MaxByteCount && bufferReadByte(buffer, &byte)) {
         count++;
 
-        value |= ((U32) (byte & 0x7F)) << shift;
+        value |= (U32)(byte & 0x7F) << shift;
 
         shift += 7;
 
@@ -53,7 +53,7 @@ leb128ReadU32(
 
 /*
  * leb128ReadI32 reads and decodes a signed 32-bit integer
- * from the given buffer and stores the value in result.
+ * from the given buffer and stores the value in `result`.
  * Returns the number of read bytes.
  */
 static
@@ -72,7 +72,7 @@ leb128ReadI32(
     while (count < int32LEB128MaxByteCount && bufferReadByte(buffer, &byte)) {
         count++;
 
-        value |= (I32) (((U32) (byte & 0x7F)) << shift);
+        value |= (I32)((U32)(byte & 0x7F) << shift);
 
         shift += 7;
 
@@ -82,8 +82,9 @@ leb128ReadI32(
         }
     }
 
+    /* If the sign bit of the last byte is set, sign-extend */
     if ((shift < 8 * sizeof(I32)) && (byte & 0x40)) {
-        value |= -((I32) 1 << shift);
+        value |= (I32)(~(U32)0 << shift);
     }
 
     *result = value;
@@ -102,8 +103,8 @@ leb128ReadI32(
 #define int64LEB128MaxByteCount 10
 
 /*
- * leb128ReadU64 reads and decodes an unsigned 32-bit integer
- * from the given buffer and stores the value in result.
+ * leb128ReadU64 reads and decodes an unsigned 64-bit integer
+ * from the given buffer and stores the value in `result`.
  * Returns the number of read bytes.
  */
 static
@@ -118,11 +119,11 @@ leb128ReadU64(
     size_t count = 0;
     U8 byte = 0;
 
-    /* Only read up to maximum number of bytes */
+    /* Only read up to the maximum number of bytes */
     while (count < int64LEB128MaxByteCount && bufferReadByte(buffer, &byte)) {
         count++;
 
-        value |= ((U64) (byte & 0x7F)) << shift;
+        value |= (U64)(byte & 0x7F) << shift;
 
         shift += 7;
 
@@ -138,8 +139,8 @@ leb128ReadU64(
 }
 
 /*
- * leb128ReadI64 reads and decodes a signed 32-bit integer
- * from the given buffer and stores the value in result.
+ * leb128ReadI64 reads and decodes a signed 64-bit integer
+ * from the given buffer and stores the value in `result`.
  * Returns the number of read bytes.
  */
 static
@@ -154,11 +155,11 @@ leb128ReadI64(
     size_t count = 0;
     U8 byte = 0;
 
-    /* Only read up to maximum number of bytes */
+    /* Only read up to the maximum number of bytes */
     while (count < int64LEB128MaxByteCount && bufferReadByte(buffer, &byte)) {
         count++;
 
-        value |= (I64) (((U64) (byte & 0x7F)) << shift);
+        value |= (I64)((U64)(byte & 0x7F) << shift);
 
         shift += 7;
 
@@ -168,8 +169,9 @@ leb128ReadI64(
         }
     }
 
+    /* If the sign bit of the last byte is set, sign-extend */
     if ((shift < 8 * sizeof(I64)) && (byte & 0x40)) {
-        value |= -((I64) 1 << shift);
+        value |= (I64)(~(U64)0 << shift);
     }
 
     *result = value;
