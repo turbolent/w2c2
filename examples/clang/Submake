@@ -7,7 +7,5 @@ sys/bin/llvm: llvm.o
 datasegments.o: llvm.c
 	ld -r -b binary -o datasegments.o datasegments
 
-llvm.o: CFLAGS += -O3
-
 %.o: %.c
-	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
+	$(CC) -I.. $(CFLAGS) -c $< -o $@
