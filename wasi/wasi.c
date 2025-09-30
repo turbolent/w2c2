@@ -467,10 +467,11 @@ static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
-wasiFileDescriptorsAdd(
+wasiFileDescriptorsAddNative(
     WasiFileDescriptors* descriptors,
     int fd,
-    char* path
+    char* path,
+    U32 *wasiFD
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     descriptor.fd = fd;
@@ -480,28 +481,42 @@ wasiFileDescriptorsAdd(
         path = strndup(path, length);
         MUST (path != NULL)
     }
-    descriptor.path = path;
+    descriptor.body.native.path = path;
     descriptors->length++;
-    if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+    if(!wasiFileDescriptorAdd(descriptor, wasiFD)){
         free(path);
         return false;
     }
-    descriptors->fds[descriptors->length - 1] = descriptor;
     return true;
 }
 
 bool
 WARN_UNUSED_RESULT
-wasiFileDescriptorAdd(
+wasiFileDescriptorAddNative(
     int nativeFD,
     char* path,
     U32* wasiFD
 ) {
-    MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path))
-    if (wasiFD != NULL) {
-        *wasiFD = wasi.fds.length - 1;
-    }
+    MUST (wasiFileDescriptorsAddNative(&wasi.fds, nativeFD, path,wasiFD))
     return true;
+}
+
+bool 
+WARN_UNUSED_RESULT
+wasiFileDescriptorAdd(
+    WasiFileDescriptor descriptor, 
+    U32 *wasiFD
+) {
+  WasiFileDescriptors *descriptors = &wasi.fds;
+  descriptors->length++;
+  if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+    return false;
+  }
+  descriptors->fds[descriptors->length - 1] = descriptor;
+  if (wasiFD != NULL) {
+    *wasiFD = descriptors->length - 1;
+  }
+  return true;
 }
 
 bool
@@ -534,7 +549,8 @@ wasiDirectorySet(
     DIR* nativeDir
 ) {
     MUST (wasiFD < wasi.fds.length)
-    wasi.fds.fds[wasiFD].dir = nativeDir;
+    MUST (wasiIsNative(wasi.fds.fds[wasiFD]))
+    wasi.fds.fds[wasiFD].body.native.dir = nativeDir;
     return true;
 }
 
@@ -545,15 +561,18 @@ wasiFileDescriptorClose(
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     MUST (wasiFileDescriptorGet(wasiFD, &descriptor))
+    if(wasiIsNative(descriptor)){
+    if (descriptor.body.native.dir != NULL) {
+            MUST (closedir(descriptor.body.native.dir) == 0)
+        } else if (descriptor.fd >= 0) {
+            MUST (close(descriptor.fd) == 0)
+        }
 
-    if (descriptor.dir != NULL) {
-        MUST (closedir(descriptor.dir) == 0)
-    } else if (descriptor.fd >= 0) {
-        MUST (close(descriptor.fd) == 0)
-    }
-
-    if (descriptor.path != NULL) {
-        free(descriptor.path);
+        if (descriptor.body.native.path != NULL) {
+            free(descriptor.body.native.path);
+        }
+    }else{
+        (descriptor.body.external.close)(descriptor.body.external.udata);
     }
 
     MUST (wasiFileDescriptorSet(wasiFD, -1))
@@ -579,9 +598,9 @@ wasiInit(
     wasi.argc = argc;
     wasi.argv = argv;
 
-    MUST (wasiFileDescriptorAdd(STDIN_FILENO, NULL, NULL))
-    MUST (wasiFileDescriptorAdd(STDOUT_FILENO, NULL, NULL))
-    MUST (wasiFileDescriptorAdd(STDERR_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDIN_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDOUT_FILENO, NULL, NULL))
+    MUST (wasiFileDescriptorAddNative(STDERR_FILENO, NULL, NULL))
 
     return true;
 }
@@ -740,6 +759,7 @@ wasiFDWrite(
     struct iovec* iovecs = NULL;
     I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 ciovecIndex = 0;
 
     if (wasiFD > 2) {
         WASI_TRACE((
@@ -760,45 +780,67 @@ wasiFDWrite(
         WASI_TRACE(("fd_write: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if(wasiIsNative(descriptor)){
 
-    if (descriptor.fd < 0) {
-        /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
-        return WASI_ERRNO_BADF;
-    }
+        if (descriptor.fd < 0) {
+            /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
+            return WASI_ERRNO_BADF;
+        }
 
-    iovecs = malloc(ciovecsCount * sizeof(struct iovec));
-    if (iovecs == NULL) {
-        WASI_TRACE(("fd_write: no mem"));
-        return WASI_ERRNO_NOMEM;
-    }
+        iovecs = malloc(ciovecsCount * sizeof(struct iovec));
+        if (iovecs == NULL) {
+            WASI_TRACE(("fd_write: no mem"));
+            return WASI_ERRNO_NOMEM;
+        }
 
-    /* Convert WASI ciovecs to native iovecs */
-    {
-        U32 ciovecIndex = 0;
-        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
-            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
-            U32 bufferPointer = i32_load(memory, ciovecPointer);
-            U32 length = i32_load(memory, ciovecPointer + 4);
+        /* Convert WASI ciovecs to native iovecs */
+        {
+            for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+                U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+                U32 bufferPointer = i32_load(memory, ciovecPointer);
+                U32 length = i32_load(memory, ciovecPointer + 4);
 
-            if (wasiFD > 2) {
-                WASI_TRACE((
-                    "fd_write: "
-                    "length=%d, "
-                    "bufferPointer=0x%x",
-                    length,
-                    bufferPointer
-                ));
+                if (wasiFD > 2) {
+                    WASI_TRACE((
+                        "fd_write: "
+                        "length=%d, "
+                        "bufferPointer=0x%x",
+                        length,
+                        bufferPointer
+                    ));
+                }
+
+                iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+                iovecs[ciovecIndex].iov_len = length;
             }
+        }
 
-            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
-            iovecs[ciovecIndex].iov_len = length;
+        /* Perform the writes */
+        total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
+
+        free(iovecs);
+    } else{
+        total = 0;
+
+        for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
+          U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+          U32 bufferPointer = i32_load(memory, ciovecPointer);
+          U32 length = i32_load(memory, ciovecPointer + 4);
+    
+          if (wasiFD > 2) {
+            WASI_TRACE(("fd_write: "
+                        "length=%d, "
+                        "bufferPointer=0x%x",
+                        length, bufferPointer));
+          }
+    
+          total += (descriptor.body.external.write)(
+            descriptor.body.external.udata,
+            memory->data + bufferPointer, 
+            length
+          );
         }
     }
-
-    /* Perform the writes */
-    total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
-
-    free(iovecs);
 
     if (total < 0) {
         WASI_TRACE(("fd_write: writev failed: %s", strerror(errno)));
@@ -924,6 +966,7 @@ wasiFDRead(
     struct iovec* iovecs = NULL;
     I64 total = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 ciovecIndex = 0;
 
     WASI_TRACE((
         "fd_[p]read("
@@ -944,41 +987,62 @@ wasiFDRead(
         WASI_TRACE(("fd_[p]read: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if(wasiIsNative(descriptor)){
+        if (descriptor.fd < 0) {
+            /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
+            return WASI_ERRNO_BADF;
+        }
 
-    if (descriptor.fd < 0) {
-        /* TODO: WASI_ERRNO_ISDIR for directory / preopen */
-        return WASI_ERRNO_BADF;
-    }
+        iovecs = malloc(iovecsCount * sizeof(struct iovec));
+        if (iovecs == NULL) {
+            WASI_TRACE(("fd_[p]read: no mem"));
+            return WASI_ERRNO_NOMEM;
+        }
 
-    iovecs = malloc(iovecsCount * sizeof(struct iovec));
-    if (iovecs == NULL) {
-        WASI_TRACE(("fd_[p]read: no mem"));
-        return WASI_ERRNO_NOMEM;
-    }
+        /* Convert WASI iovecs to native iovecs */
+        {
+            U32 iovecIndex = 0;
+            for (; iovecIndex < iovecsCount; iovecIndex++) {
+                U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
+                U32 bufferPointer = i32_load(memory, iovecPointer);
+                U32 length = i32_load(memory, iovecPointer + 4);
+                iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
+                iovecs[iovecIndex].iov_len = length;
+            }
+        }
 
-    /* Convert WASI iovecs to native iovecs */
-    {
-        U32 iovecIndex = 0;
-        for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
-            U32 bufferPointer = i32_load(memory, iovecPointer);
-            U32 length = i32_load(memory, iovecPointer + 4);
-            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
-            iovecs[iovecIndex].iov_len = length;
+        /* Perform the reads */
+        total = readFunc(descriptor.fd, iovecs, (int)iovecsCount, offset);
+
+        if (total < 0) {
+            free(iovecs);
+
+            WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+        free(iovecs);
+    }else{
+        total = 0;
+
+        for (; ciovecIndex < iovecsCount; ciovecIndex++) {
+          U64 ciovecPointer = iovecsPointer + ciovecIndex * ciovecSize;
+          U32 bufferPointer = i32_load(memory, ciovecPointer);
+          U32 length = i32_load(memory, ciovecPointer + 4);
+    
+          if (wasiFD > 2) {
+            WASI_TRACE(("fd_writereadgth=%d, "
+                        "bufferPointer=0x%x",
+                        length, bufferPointer));
+          }
+    
+          total += (descriptor.body.external.read)(
+            descriptor.body.external.udata, 
+            memory->data + bufferPointer,
+            length
+          );
         }
     }
-
-    /* Perform the reads */
-    total = readFunc(descriptor.fd, iovecs, (int)iovecsCount, offset);
-
-    if (total < 0) {
-        free(iovecs);
-
-        WASI_TRACE(("fd_[p]read: read failed: %s", strerror(errno)));
-        return wasiErrno();
-    }
-
-    free(iovecs);
 
     /* Store the amount of read bytes at the result pointer */
     i32_store(memory, resultPointer, total);
@@ -1455,14 +1519,14 @@ wasiFDReaddir(
         bufferUsedPointer
     ));
 
-    if (!wasiFileDescriptorGet(wasiDirFD, &descriptor)) {
+    if ((!wasiFileDescriptorGet(wasiDirFD, &descriptor)) || !wasiIsNative(descriptor)) {
         WASI_TRACE(("fd_readdir: bad FD"));
         return WASI_ERRNO_BADF;
     }
 
-    if (descriptor.dir == NULL) {
+    if (descriptor.body.native.dir == NULL) {
         char nativePath[PATH_MAX];
-        strcpy(nativePath, descriptor.path);
+        strcpy(nativePath, descriptor.body.native.path);
 #if HAS_NONPOSIXPATH
         wasiToNativePath(nativePath);
 #endif
@@ -1478,14 +1542,14 @@ wasiFDReaddir(
             nativePath
         ));
 
-        descriptor.dir = opendir(nativePath);
+        descriptor.body.native.dir = opendir(nativePath);
 
-        if (descriptor.dir == NULL) {
+        if (descriptor.body.native.dir == NULL) {
             WASI_TRACE(("fd_readdir: opendir failed: %s", strerror(errno)));
             return wasiErrno();
         }
 
-        if (!wasiDirectorySet(wasiDirFD, descriptor.dir)) {
+        if (!wasiDirectorySet(wasiDirFD, descriptor.body.native.dir)) {
             WASI_TRACE(("fd_readdir: setting DIR failed"));
             return WASI_ERRNO_BADF;
         }
@@ -1493,7 +1557,7 @@ wasiFDReaddir(
 
 #if !defined(_WIN32) && !defined(macintosh)
     if (cookie != WASI_DIRCOOKIE_START) {
-        seekdir(descriptor.dir, (long)cookie);
+        seekdir(descriptor.body.native.dir, (long)cookie);
     }
 #endif
 
@@ -1511,7 +1575,7 @@ wasiFDReaddir(
         WASI_TRACE(("fd_readdir: bufferRemaining=%ld", bufferRemaining));
 
         errno = 0;
-        entry = readdir(descriptor.dir);
+        entry = readdir(descriptor.body.native.dir);
         if (entry == NULL) {
             if (errno != 0) {
                 WASI_TRACE(("fd_readdir: readdir failed: %s", strerror(errno)));
@@ -1522,7 +1586,7 @@ wasiFDReaddir(
         }
 
 #if !defined(_WIN32) && !defined(macintosh)
-        tell = telldir(descriptor.dir);
+        tell = telldir(descriptor.body.native.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
             return wasiErrno();
@@ -1555,7 +1619,7 @@ wasiFDReaddir(
             struct stat entryStat;
 
             char nativePath[PATH_MAX];
-            strcpy(nativePath, descriptor.path);
+            strcpy(nativePath, descriptor.body.native.path);
 #if HAS_NONPOSIXPATH
             wasiToNativePath(nativePath);
 #endif
@@ -2175,7 +2239,7 @@ wasiFdFdstatGet(
         }
     } else {
         char nativePath[PATH_MAX];
-        strcpy(nativePath, descriptor.path);
+        strcpy(nativePath, descriptor.body.native.path);
 #if HAS_NONPOSIXPATH
         wasiToNativePath(nativePath);
 #endif
@@ -2411,7 +2475,7 @@ WASI_IMPORT(U32, fd_prestat_get, (
         return WASI_ERRNO_BADF;
     }
 
-    path = fileDescriptor.path;
+    path = fileDescriptor.body.native.path;
 
     if (path == NULL) {
         WASI_TRACE(("fd_prestat_get: bad FD"));
@@ -2456,7 +2520,7 @@ wasiFdPrestatDirName(
         return WASI_ERRNO_BADF;
     }
 
-    path = fileDescriptor.path;
+    path = fileDescriptor.body.native.path;
 
     if (path == NULL) {
         WASI_TRACE(("fd_prestat_dir_name: bad FD"));
@@ -2562,7 +2626,7 @@ wasiPathOpen(
         return WASI_ERRNO_BADF;
     }
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
 
     if (preopenPath == NULL) {
         WASI_TRACE(("path_open: bad preopen FD"));
@@ -2690,7 +2754,7 @@ wasiPathOpen(
     }
 
     /* Register the WASI file descriptor */
-    if (!wasiFileDescriptorAdd(nativeFD, resolvedPath, &wasiFD)) {
+    if (!wasiFileDescriptorAddNative(nativeFD, resolvedPath, &wasiFD)) {
         WASI_TRACE(("path_open: adding FD failed"));
         return WASI_ERRNO_BADF;
     }
@@ -2849,9 +2913,9 @@ wasiFDFilestatGet(
             WASI_TRACE(("fd_filestat_get: fstat failed: %s", strerror(errno)));
             return wasiErrno();
         }
-    } else {
+    }else if (wasiIsNative(descriptor)){
         char nativePath[PATH_MAX];
-        strcpy(nativePath, descriptor.path);
+        strcpy(nativePath, descriptor.body.native.path);
 #if HAS_NONPOSIXPATH
         wasiToNativePath(nativePath);
 #endif
@@ -2865,6 +2929,9 @@ wasiFDFilestatGet(
             WASI_TRACE(("fd_filestat_get: stat failed: %s", strerror(errno)));
             return wasiErrno();
         }
+    }else{
+        /*make an empty stat*/
+        memset(st,0,sizeof(struct stat));
     }
 
     WASI_TRACE((
@@ -3022,43 +3089,51 @@ wasiPathFilestatGet(
         return WASI_ERRNO_BADF;
     }
 
-    WASI_TRACE((
-        "path_filestat_get: "
-        "path=%.*s",
-        pathLength,
-        path
-    ));
+    if(wasiIsNative(preopenFileDescriptor)){
 
-    preopenPath = preopenFileDescriptor.path;
-    if (preopenPath == NULL) {
-        WASI_TRACE(("path_filestat_get: bad preopen FD"));
-        return WASI_ERRNO_BADF;
-    }
+        WASI_TRACE((
+            "path_filestat_get: "
+            "path=%.*s",
+            pathLength,
+            path
+        ));
 
-    if (!resolvePath(preopenPath, path, pathLength, resolvedPath)) {
-        WASI_TRACE(("path_filestat_get: path resolution failed"));
-        return WASI_ERRNO_INVAL;
-    }
+        preopenPath = preopenFileDescriptor.body.native.path;
+        if (preopenPath == NULL) {
+            WASI_TRACE(("path_filestat_get: bad preopen FD"));
+            return WASI_ERRNO_BADF;
+        }
 
-    WASI_TRACE(("path_filestat_get: resolvedPath=%s", resolvedPath));
+        if (!resolvePath(preopenPath, path, pathLength, resolvedPath)) {
+            WASI_TRACE(("path_filestat_get: path resolution failed"));
+            return WASI_ERRNO_INVAL;
+        }
 
-    strcpy(nativeResolvedPath, resolvedPath);
-#if HAS_NONPOSIXPATH
-    wasiToNativePath(nativeResolvedPath);
-#endif
+        WASI_TRACE(("path_filestat_get: resolvedPath=%s", resolvedPath));
 
-    WASI_TRACE((
-        "path_filestat_get: "
-        "stat(%s)",
-        nativeResolvedPath
-    ));
+        strcpy(nativeResolvedPath, resolvedPath);
+    #if HAS_NONPOSIXPATH
+        wasiToNativePath(nativeResolvedPath);
+    #endif
 
-    /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
-    res = stat(nativeResolvedPath, st);
+        WASI_TRACE((
+            "path_filestat_get: "
+            "stat(%s)",
+            nativeResolvedPath
+        ));
 
-    if (res != 0) {
-        WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
-        return wasiErrno();
+        /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
+        res = stat(nativeResolvedPath, st);
+
+        if (res != 0) {
+            WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+
+
+    }else{
+        /*make an empty stat*/
+        memset(st,0,sizeof(struct stat));
     }
 
     WASI_TRACE((
@@ -3265,12 +3340,12 @@ wasiPathRename(
         newPathLength
     ));
 
-    if (!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(oldDirFD, &oldPreopenFileDescriptor)) || !wasiIsNative(oldPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad old preopen fd"));
         return WASI_ERRNO_BADF;
     }
 
-    if (!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor)) || !wasiIsNative(newPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad new preopen fd"));
         return WASI_ERRNO_BADF;
     }
@@ -3285,7 +3360,7 @@ wasiPathRename(
         newPath
     ));
 
-    oldPreopenPath = oldPreopenFileDescriptor.path;
+    oldPreopenPath = oldPreopenFileDescriptor.body.native.path;
     if (oldPreopenPath == NULL) {
         WASI_TRACE(("path_rename: bad old preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3296,7 +3371,7 @@ wasiPathRename(
         return WASI_ERRNO_INVAL;
     }
 
-    newPreopenPath = newPreopenFileDescriptor.path;
+    newPreopenPath = newPreopenFileDescriptor.body.native.path;
     if (newPreopenPath == NULL) {
         WASI_TRACE(("path_rename: bad new preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3391,7 +3466,7 @@ wasiPathUnlinkFile(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_unlink_file: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3403,7 +3478,7 @@ wasiPathUnlinkFile(
         path
     ));
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
     if (preopenPath == NULL) {
         WASI_TRACE(("path_rename: bad preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3484,7 +3559,7 @@ wasiPathRemoveDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3496,7 +3571,7 @@ wasiPathRemoveDirectory(
         path
     ));
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
     if (preopenPath == NULL) {
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3577,7 +3652,7 @@ wasiPathCreateDirectory(
         pathLength
     ));
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3589,7 +3664,7 @@ wasiPathCreateDirectory(
         path
     ));
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
     if (preopenPath == NULL) {
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3691,7 +3766,7 @@ wasiPathSymlink(
     return WASI_ERRNO_NOSYS;
 #else
 
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_symlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3717,7 +3792,7 @@ wasiPathSymlink(
         newPath
     ));
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
     if (preopenPath == NULL) {
         WASI_TRACE(("path_symlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
@@ -3847,7 +3922,7 @@ wasiPathReadlink(
     WASI_TRACE(("path_readlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+    if ((!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) || !wasiIsNative(preopenFileDescriptor)) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
@@ -3859,7 +3934,7 @@ wasiPathReadlink(
         path
     ));
 
-    preopenPath = preopenFileDescriptor.path;
+    preopenPath = preopenFileDescriptor.body.native.path;
     if (preopenPath == NULL) {
         WASI_TRACE(("path_readlink: bad preopen FD"));
         return WASI_ERRNO_BADF;
