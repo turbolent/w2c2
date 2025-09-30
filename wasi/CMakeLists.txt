@@ -30,6 +30,10 @@ check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
 set(CMAKE_C_FLAGS_DEBUG "-g -O1")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
+if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+add_definitions(-D_BSD_SOURCE=1)
+endif()
+
 FILE(GLOB SOURCES *.c)
 FILE(GLOB TEST_SOURCES test.c *_test.c)
 list(REMOVE_ITEM SOURCES ${TEST_SOURCES})
