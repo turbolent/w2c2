@@ -17,6 +17,10 @@ endif
 
 CFLAGS += -std=c89 $(WARNS)
 
+ifeq ($(UNAME),Darwin)
+	CFLAGS += -D_BSD_SOURCE=1
+endif
+
 # By default assume the system has
 # - unistd.h
 # - sys/uio.h
