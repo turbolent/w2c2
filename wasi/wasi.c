@@ -58,6 +58,10 @@ struct timespec {
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
 
+#if HAS_POLL
+#include <poll.h>
+#endif /* HAS_POLL */
+
 #if HAS_GETENTROPY && defined(__APPLE__)
 #include <AvailabilityMacros.h>
 #ifndef MAC_OS_X_VERSION_10_12
@@ -1727,26 +1731,11 @@ addTimevals(
 static
 W2C2_INLINE
 U32
-wasiClockTimeGet(
-    void* instance,
+wasiClockTime(
     U32 clockID,
-    U64 UNUSED(precision),
-    U32 resultPointer
+    I64* timestamp
 ) {
-    wasmMemory* memory = wasiMemory(instance);
-
     I64 result = 0;
-
-    WASI_TRACE((
-        "clock_time_get("
-        "clockID=%d, "
-        "precision=%lld, "
-        "resultPointer=0x%x"
-        ")",
-        clockID,
-        precision,
-        resultPointer
-    ));
 
 #if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !WASI_FALLBACK_TIMERS_ENABLED && !defined(__wii__)
 
@@ -1978,6 +1967,40 @@ wasiClockTimeGet(
         }
     }
 #endif
+
+    *timestamp = result;
+
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+U32
+wasiClockTimeGet(
+    void* instance,
+    U32 clockID,
+    U64 UNUSED(precision),
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+    I64 result = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    WASI_TRACE((
+        "clock_time_get("
+        "clockID=%d, "
+        "precision=%lld, "
+        "resultPointer=0x%x"
+        ")",
+        clockID,
+        precision,
+        resultPointer
+    ));
+
+    error = wasiClockTime(clockID, &result);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
 
     WASI_TRACE((
         "clock_time_get: "
@@ -3936,16 +3959,452 @@ WASI_IMPORT(U32, fd_fdstat_set_flags, (
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, poll_oneoff, (
+#if HAS_POLL
+
+static const U32 wasiSubscriptionSize = 48;
+static const U32 wasiSubscriptionUserdataOffset = 0;
+static const U32 wasiSubscriptionTypeOffset = 8;
+static const U32 wasiSubscriptionClockIDOffset = 16;
+static const U32 wasiSubscriptionClockTimeoutOffset = 24;
+static const U32 wasiSubscriptionClockFlagsOffset = 40;
+static const U32 wasiSubscriptionFDOffset = 16;
+
+static const U32 wasiEventSize = 32;
+static const U32 wasiEventUserdataOffset = 0;
+static const U32 wasiEventErrorOffset = 8;
+static const U32 wasiEventTypeOffset = 10;
+static const U32 wasiEventFDReadwriteOffset = 16;
+static const U32 wasiEventFDReadwriteFlagsOffset = 24;
+
+#ifndef NSEC_PER_MSEC
+#define NSEC_PER_MSEC W2C2_LL(1000000)
+#endif
+
+typedef struct WasiPollSubscription {
+    U64 userdata;
+    U64 deadline;
+    U32 clockID;
+    U16 error;
+    WasiEventType type;
+} WasiPollSubscription;
+
+static
+W2C2_INLINE
+bool
+wasiMemoryRangeIsValid(
+    wasmMemory* memory,
+    U32 pointer,
+    U32 count,
+    U32 size
+) {
+    U64 length = (U64)count * size;
+    U64 end = (U64)pointer + length;
+
+    return memory != NULL
+           && length <= UINT32_MAX
+           && end <= memory->size;
+}
+
+static
+W2C2_INLINE
+U32
+wasiPollClockTime(
+    U32 clockID,
+    U64* timestamp
+) {
+    I64 result = 0;
+    U32 error = wasiClockTime(clockID, &result);
+
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    if (result < 0) {
+        return WASI_ERRNO_INVAL;
+    }
+
+    *timestamp = (U64)result;
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+U32
+wasiPollTimeout(
+    WasiPollSubscription* subscriptions,
+    U32 subscriptionCount,
+    bool hasImmediateEvent,
+    int* timeout
+) {
+    U64 minimum = UINT64_MAX;
+    U32 i = 0;
+
+    if (hasImmediateEvent) {
+        minimum = 0;
+    }
+
+    for (i = 0; i < subscriptionCount; i++) {
+        WasiPollSubscription* subscription = &subscriptions[i];
+        U64 now = 0;
+        U64 remaining = 0;
+        U32 error = WASI_ERRNO_SUCCESS;
+
+        if (subscription->type != WASI_EVENT_TYPE_CLOCK) {
+            continue;
+        }
+
+        error = wasiPollClockTime(subscription->clockID, &now);
+        if (error != WASI_ERRNO_SUCCESS) {
+            return error;
+        }
+
+        if (subscription->deadline > now) {
+            remaining = subscription->deadline - now;
+        }
+        if (remaining < minimum) {
+            minimum = remaining;
+        }
+    }
+
+    if (minimum == UINT64_MAX) {
+        *timeout = -1;
+    } else {
+        U64 milliseconds = minimum / NSEC_PER_MSEC;
+
+        if (minimum % NSEC_PER_MSEC != 0) {
+            milliseconds++;
+        }
+        if (milliseconds > INT_MAX) {
+            milliseconds = INT_MAX;
+        }
+        *timeout = (int)milliseconds;
+    }
+
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+void
+wasiPollWriteEvent(
+    wasmMemory* memory,
+    U32 outPointer,
+    U32 eventIndex,
+    WasiPollSubscription* subscription,
+    U16 error,
+    WasiEventRwFlags flags
+) {
+    U32 eventPointer = outPointer + eventIndex * wasiEventSize;
+
+    memset(memory->data + eventPointer, 0, wasiEventSize);
+    i64_store(
+        memory,
+        eventPointer + wasiEventUserdataOffset,
+        subscription->userdata
+    );
+    i32_store16(
+        memory,
+        eventPointer + wasiEventErrorOffset,
+        error
+    );
+    i32_store8(
+        memory,
+        eventPointer + wasiEventTypeOffset,
+        subscription->type
+    );
+    i64_store(
+        memory,
+        eventPointer + wasiEventFDReadwriteOffset,
+        0
+    );
+    i32_store16(
+        memory,
+        eventPointer + wasiEventFDReadwriteFlagsOffset,
+        flags
+    );
+}
+
+#endif /* HAS_POLL */
+
+static
+W2C2_INLINE
+U32
+wasiPollOneoff(
     void* UNUSED(instance),
     U32 UNUSED(inPointer),
     U32 UNUSED(outPointer),
     U32 UNUSED(subscriptionCount),
-    U32 UNUSED(eventCount)
-), {
-    /* TODO: */
-    WASI_TRACE(("poll_oneoff: unimplemented function"));
+    U32 UNUSED(eventCountPointer)
+) {
+#if HAS_POLL
+    wasmMemory* memory = wasiMemory(instance);
+    WasiPollSubscription* subscriptions = NULL;
+    struct pollfd* pollFDs = NULL;
+    U32 result = WASI_ERRNO_SUCCESS;
+    U32 i = 0;
+    U32 eventCount = 0;
+    bool hasImmediateEvent = false;
+
+    WASI_TRACE((
+        "poll_oneoff("
+        "inPointer=0x%x, "
+        "outPointer=0x%x, "
+        "subscriptionCount=%d, "
+        "eventCountPointer=0x%x"
+        ")",
+        inPointer,
+        outPointer,
+        subscriptionCount,
+        eventCountPointer
+    ));
+
+    if (subscriptionCount == 0) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!wasiMemoryRangeIsValid(
+        memory,
+        inPointer,
+        subscriptionCount,
+        wasiSubscriptionSize
+    ) || !wasiMemoryRangeIsValid(
+        memory,
+        outPointer,
+        subscriptionCount,
+        wasiEventSize
+    ) || !wasiMemoryRangeIsValid(
+        memory,
+        eventCountPointer,
+        1,
+        sizeof(U32)
+    )) {
+        return WASI_ERRNO_FAULT;
+    }
+
+    subscriptions = (WasiPollSubscription*)calloc(
+        subscriptionCount,
+        sizeof(WasiPollSubscription)
+    );
+    pollFDs = (struct pollfd*)calloc(
+        subscriptionCount,
+        sizeof(struct pollfd)
+    );
+    if (subscriptions == NULL || pollFDs == NULL) {
+        result = WASI_ERRNO_NOMEM;
+        goto done;
+    }
+
+    for (i = 0; i < subscriptionCount; i++) {
+        U32 subscriptionPointer = inPointer + i * wasiSubscriptionSize;
+        WasiPollSubscription* subscription = &subscriptions[i];
+        struct pollfd* pollFD = &pollFDs[i];
+
+        subscription->userdata = i64_load(
+            memory,
+            subscriptionPointer + wasiSubscriptionUserdataOffset
+        );
+        subscription->type = (WasiEventType)i32_load8_u(
+            memory,
+            subscriptionPointer + wasiSubscriptionTypeOffset
+        );
+        pollFD->fd = -1;
+
+        switch (subscription->type) {
+            case WASI_EVENT_TYPE_CLOCK: {
+                U64 timeout = i64_load(
+                    memory,
+                    subscriptionPointer
+                    + wasiSubscriptionClockTimeoutOffset
+                );
+                WasiSubclockFlags flags = (WasiSubclockFlags)i32_load16_u(
+                    memory,
+                    subscriptionPointer
+                    + wasiSubscriptionClockFlagsOffset
+                );
+
+                subscription->clockID = i32_load(
+                    memory,
+                    subscriptionPointer + wasiSubscriptionClockIDOffset
+                );
+                if (subscription->clockID != WASI_CLOCK_REALTIME
+                    && subscription->clockID != WASI_CLOCK_MONOTONIC) {
+                    result = WASI_ERRNO_NOTSUP;
+                    goto done;
+                }
+                if ((flags & ~WASI_SUBCLOCK_FLAGS_ABSTIME) != 0) {
+                    result = WASI_ERRNO_INVAL;
+                    goto done;
+                }
+
+                if ((flags & WASI_SUBCLOCK_FLAGS_ABSTIME) != 0) {
+                    subscription->deadline = timeout;
+                } else {
+                    U64 now = 0;
+
+                    result = wasiPollClockTime(
+                        subscription->clockID,
+                        &now
+                    );
+                    if (result != WASI_ERRNO_SUCCESS) {
+                        goto done;
+                    }
+                    if (timeout > UINT64_MAX - now) {
+                        subscription->deadline = UINT64_MAX;
+                    } else {
+                        subscription->deadline = now + timeout;
+                    }
+                }
+                break;
+            }
+            case WASI_EVENT_TYPE_FD_READ:
+            case WASI_EVENT_TYPE_FD_WRITE: {
+                U32 wasiFD = i32_load(
+                    memory,
+                    subscriptionPointer + wasiSubscriptionFDOffset
+                );
+
+                if (wasiFD >= wasi.fds.length
+                    || wasi.fds.fds[wasiFD].fd < 0) {
+                    subscription->error = WASI_ERRNO_BADF;
+                    hasImmediateEvent = true;
+                } else {
+                    pollFD->fd = wasi.fds.fds[wasiFD].fd;
+                }
+
+                if (subscription->type == WASI_EVENT_TYPE_FD_READ) {
+                    pollFD->events = POLLIN;
+                } else {
+                    pollFD->events = POLLOUT;
+                }
+                break;
+            }
+            default: {
+                result = WASI_ERRNO_INVAL;
+                goto done;
+            }
+        }
+    }
+
+    for (;;) {
+        int timeout = -1;
+        int pollResult = 0;
+
+        result = wasiPollTimeout(
+            subscriptions,
+            subscriptionCount,
+            hasImmediateEvent,
+            &timeout
+        );
+        if (result != WASI_ERRNO_SUCCESS) {
+            goto done;
+        }
+
+        pollResult = poll(pollFDs, subscriptionCount, timeout);
+        if (pollResult < 0) {
+            result = wasiErrno();
+            goto done;
+        }
+
+        eventCount = 0;
+        for (i = 0; i < subscriptionCount; i++) {
+            WasiPollSubscription* subscription = &subscriptions[i];
+            struct pollfd* pollFD = &pollFDs[i];
+
+            if (subscription->type == WASI_EVENT_TYPE_CLOCK) {
+                U64 now = 0;
+
+                result = wasiPollClockTime(
+                    subscription->clockID,
+                    &now
+                );
+                if (result != WASI_ERRNO_SUCCESS) {
+                    goto done;
+                }
+                if (subscription->deadline > now) {
+                    continue;
+                }
+
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    WASI_ERRNO_SUCCESS,
+                    0
+                );
+                eventCount++;
+                continue;
+            }
+
+            if (subscription->error != WASI_ERRNO_SUCCESS) {
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    subscription->error,
+                    0
+                );
+                eventCount++;
+                continue;
+            }
+
+            if (pollFD->revents != 0) {
+                U16 error = WASI_ERRNO_SUCCESS;
+                WasiEventRwFlags flags = 0;
+
+                if ((pollFD->revents & POLLNVAL) != 0) {
+                    error = WASI_ERRNO_BADF;
+                } else if ((pollFD->revents & POLLHUP) != 0) {
+                    error = WASI_ERRNO_PIPE;
+                } else if ((pollFD->revents & POLLERR) != 0) {
+                    error = WASI_ERRNO_IO;
+                }
+                if ((pollFD->revents & POLLHUP) != 0) {
+                    flags |= WASI_EVENT_RW_FLAGS_HANGUP;
+                }
+
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    error,
+                    flags
+                );
+                eventCount++;
+            }
+        }
+
+        if (eventCount > 0) {
+            break;
+        }
+    }
+
+    i32_store(memory, eventCountPointer, eventCount);
+
+done:
+    free(pollFDs);
+    free(subscriptions);
+    return result;
+#else
+    WASI_TRACE(("poll_oneoff: not supported on this host"));
     return WASI_ERRNO_NOSYS;
+#endif /* HAS_POLL */
+}
+
+WASI_IMPORT(U32, poll_oneoff, (
+    void* instance,
+    U32 inPointer,
+    U32 outPointer,
+    U32 subscriptionCount,
+    U32 eventCountPointer
+), {
+    return wasiPollOneoff(
+        instance,
+        inPointer,
+        outPointer,
+        subscriptionCount,
+        eventCountPointer
+    );
 })
 
 static

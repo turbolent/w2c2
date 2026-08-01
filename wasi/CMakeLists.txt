@@ -23,6 +23,7 @@ check_symbol_exists(strndup string.h HAVE_STRNDUP)
 check_symbol_exists(fcntl fcntl.h HAVE_FCNTL)
 check_symbol_exists(lstat "sys/stat.h" HAVE_LSTAT)
 check_symbol_exists(getentropy "unistd.h;sys/random.h" HAVE_GETENTROPY)
+check_symbol_exists(poll poll.h HAVE_POLL)
 
 include(CheckStructHasMember)
 check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
@@ -91,6 +92,10 @@ foreach(TARGET w2c2wasi w2c2wasi_test)
 
     if(HAVE_GETENTROPY)
         target_compile_definitions(${TARGET} PUBLIC HAS_GETENTROPY=1)
+    endif()
+
+    if(HAVE_POLL)
+        target_compile_definitions(${TARGET} PUBLIC HAS_POLL=1)
     endif()
 
     if(HAVE_TIMESPEC)

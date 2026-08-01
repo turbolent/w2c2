@@ -177,12 +177,12 @@ jobs:
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
 
       - if: steps.changes.outputs.wasi == 'true'
         name: Test wasi
         working-directory: ./wasi
-        run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
+        run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
 
   windows-msvc:
     runs-on: windows-latest

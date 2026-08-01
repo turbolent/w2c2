@@ -7,6 +7,26 @@
 extern char** environ;
 
 extern
+U32
+wasi_snapshot_preview1__poll_oneoff(
+    void* instance,
+    U32 inPointer,
+    U32 outPointer,
+    U32 subscriptionCount,
+    U32 eventCountPointer
+);
+
+#define TEST_MEMORY_SIZE 4096
+#define TEST_SUBSCRIPTION_SIZE 48
+#define TEST_EVENT_SIZE 32
+#define TEST_IN_POINTER 0
+#define TEST_OUT_POINTER 1024
+#define TEST_EVENT_COUNT_POINTER 3072
+
+static U8 testMemoryData[TEST_MEMORY_SIZE];
+static wasmMemory testMemory;
+
+extern
 bool
 resolvePath(
     char* directory,
@@ -77,12 +97,504 @@ testPosixToMacPath(
 }
 
 /* Unused but expected by the WASI implementation */
-wasmMemory* wasiMemory(void* instance) {
-    return NULL;
+wasmMemory* wasiMemory(void* UNUSED(instance)) {
+    return &testMemory;
 }
+
+#if HAS_POLL
+
+void
+failPollTest(
+    const char* name,
+    const char* field
+) {
+    fprintf(stderr, "FAIL %s: unexpected %s\n", name, field);
+    exit(1);
+}
+
+void
+expectPollU32(
+    const char* name,
+    const char* field,
+    U32 actual,
+    U32 expected
+) {
+    if (actual != expected) {
+        fprintf(
+            stderr,
+            "FAIL %s: %s: %lu != %lu\n",
+            name,
+            field,
+            (unsigned long)actual,
+            (unsigned long)expected
+        );
+        exit(1);
+    }
+}
+
+void
+expectPollU64(
+    const char* name,
+    const char* field,
+    U64 actual,
+    U64 expected
+) {
+    if (actual != expected) {
+        failPollTest(name, field);
+    }
+}
+
+void
+resetPollMemory(void) {
+    memset(testMemory.data, 0, testMemory.size);
+}
+
+U32
+pollSubscriptionPointer(
+    U32 index
+) {
+    return TEST_IN_POINTER + index * TEST_SUBSCRIPTION_SIZE;
+}
+
+U32
+pollEventPointer(
+    U32 index
+) {
+    return TEST_OUT_POINTER + index * TEST_EVENT_SIZE;
+}
+
+void
+setPollSubscription(
+    U32 index,
+    U64 userdata,
+    WasiEventType type
+) {
+    U32 pointer = pollSubscriptionPointer(index);
+
+    memset(testMemory.data + pointer, 0, TEST_SUBSCRIPTION_SIZE);
+    i64_store(&testMemory, pointer, userdata);
+    i32_store8(&testMemory, pointer + 8, type);
+}
+
+void
+setPollClockSubscription(
+    U32 index,
+    U64 userdata,
+    U32 clockID,
+    U64 timeout,
+    WasiSubclockFlags flags
+) {
+    U32 pointer = pollSubscriptionPointer(index);
+
+    setPollSubscription(index, userdata, WASI_EVENT_TYPE_CLOCK);
+    i32_store(&testMemory, pointer + 16, clockID);
+    i64_store(&testMemory, pointer + 24, timeout);
+    i64_store(&testMemory, pointer + 32, 0);
+    i32_store16(&testMemory, pointer + 40, flags);
+}
+
+void
+setPollFDSubscription(
+    U32 index,
+    U64 userdata,
+    WasiEventType type,
+    U32 wasiFD
+) {
+    U32 pointer = pollSubscriptionPointer(index);
+
+    setPollSubscription(index, userdata, type);
+    i32_store(&testMemory, pointer + 16, wasiFD);
+}
+
+U32
+callPollOneoff(
+    U32 subscriptionCount
+) {
+    return wasi_snapshot_preview1__poll_oneoff(
+        NULL,
+        TEST_IN_POINTER,
+        TEST_OUT_POINTER,
+        subscriptionCount,
+        TEST_EVENT_COUNT_POINTER
+    );
+}
+
+void
+expectPollEvent(
+    const char* name,
+    U32 index,
+    U64 userdata,
+    WasiErrno error,
+    WasiEventType type,
+    WasiEventRwFlags flags
+) {
+    U32 pointer = pollEventPointer(index);
+
+    expectPollU64(
+        name,
+        "userdata",
+        i64_load(&testMemory, pointer),
+        userdata
+    );
+    expectPollU32(
+        name,
+        "error",
+        i32_load16_u(&testMemory, pointer + 8),
+        error
+    );
+    expectPollU32(
+        name,
+        "type",
+        i32_load8_u(&testMemory, pointer + 10),
+        type
+    );
+    expectPollU64(
+        name,
+        "nbytes",
+        i64_load(&testMemory, pointer + 16),
+        0
+    );
+    expectPollU32(
+        name,
+        "flags",
+        i32_load16_u(&testMemory, pointer + 24),
+        flags
+    );
+}
+
+void
+testPollOneoffValidation(void) {
+    const char* name = "poll_oneoff validation";
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    resetPollMemory();
+    error = callPollOneoff(0);
+    expectPollU32(name, "zero subscriptions", error, WASI_ERRNO_INVAL);
+
+    resetPollMemory();
+    setPollSubscription(0, 1, 255);
+    error = callPollOneoff(1);
+    expectPollU32(name, "invalid event type", error, WASI_ERRNO_INVAL);
+
+    resetPollMemory();
+    setPollClockSubscription(
+        0,
+        2,
+        WASI_CLOCK_PROCESS_CPUTIME_ID,
+        0,
+        0
+    );
+    error = callPollOneoff(1);
+    expectPollU32(name, "unsupported clock", error, WASI_ERRNO_NOTSUP);
+
+    resetPollMemory();
+    setPollClockSubscription(0, 3, WASI_CLOCK_REALTIME, 0, 2);
+    error = callPollOneoff(1);
+    expectPollU32(name, "invalid clock flags", error, WASI_ERRNO_INVAL);
+
+    error = wasi_snapshot_preview1__poll_oneoff(
+        NULL,
+        TEST_MEMORY_SIZE - 1,
+        TEST_OUT_POINTER,
+        1,
+        TEST_EVENT_COUNT_POINTER
+    );
+    expectPollU32(name, "invalid memory", error, WASI_ERRNO_FAULT);
+
+    fprintf(stderr, "OK %s\n", name);
+}
+
+void
+testPollOneoffClocks(void) {
+    const char* name = "poll_oneoff clocks";
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    resetPollMemory();
+    setPollClockSubscription(0, 11, WASI_CLOCK_MONOTONIC, 1000000, 0);
+    error = callPollOneoff(1);
+    expectPollU32(name, "relative result", error, WASI_ERRNO_SUCCESS);
+    expectPollU32(
+        name,
+        "relative event count",
+        i32_load(&testMemory, TEST_EVENT_COUNT_POINTER),
+        1
+    );
+    expectPollEvent(
+        name,
+        0,
+        11,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_CLOCK,
+        0
+    );
+
+    resetPollMemory();
+    setPollClockSubscription(
+        0,
+        12,
+        WASI_CLOCK_MONOTONIC,
+        0,
+        WASI_SUBCLOCK_FLAGS_ABSTIME
+    );
+    error = callPollOneoff(1);
+    expectPollU32(name, "absolute result", error, WASI_ERRNO_SUCCESS);
+    expectPollEvent(
+        name,
+        0,
+        12,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_CLOCK,
+        0
+    );
+
+    resetPollMemory();
+    setPollClockSubscription(0, 13, WASI_CLOCK_REALTIME, 0, 0);
+    setPollClockSubscription(1, 14, WASI_CLOCK_MONOTONIC, 0, 0);
+    error = callPollOneoff(2);
+    expectPollU32(name, "multiple result", error, WASI_ERRNO_SUCCESS);
+    expectPollU32(
+        name,
+        "multiple event count",
+        i32_load(&testMemory, TEST_EVENT_COUNT_POINTER),
+        2
+    );
+    expectPollEvent(
+        name,
+        0,
+        13,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_CLOCK,
+        0
+    );
+    expectPollEvent(
+        name,
+        1,
+        14,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_CLOCK,
+        0
+    );
+
+    fprintf(stderr, "OK %s\n", name);
+}
+
+#if HAS_UNISTD
+
+void
+testPollOneoffFDRead(void) {
+    const char* name = "poll_oneoff FD read";
+    int paddingPipe[2];
+    int eventPipe[2];
+    U32 wasiFD = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+    char value = 'x';
+
+    if (pipe(paddingPipe) != 0 || pipe(eventPipe) != 0) {
+        failPollTest(name, "pipe creation");
+    }
+    if (!wasiFileDescriptorAdd(eventPipe[0], NULL, &wasiFD)) {
+        failPollTest(name, "descriptor creation");
+    }
+    close(paddingPipe[0]);
+    close(paddingPipe[1]);
+
+    if ((int)wasiFD == eventPipe[0]) {
+        failPollTest(name, "guest descriptor mapping");
+    }
+    if (write(eventPipe[1], &value, 1) != 1) {
+        failPollTest(name, "pipe write");
+    }
+
+    resetPollMemory();
+    setPollFDSubscription(0, 21, WASI_EVENT_TYPE_FD_READ, wasiFD);
+    error = callPollOneoff(1);
+    expectPollU32(name, "result", error, WASI_ERRNO_SUCCESS);
+    expectPollU32(
+        name,
+        "event count",
+        i32_load(&testMemory, TEST_EVENT_COUNT_POINTER),
+        1
+    );
+    expectPollEvent(
+        name,
+        0,
+        21,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_FD_READ,
+        0
+    );
+
+    if (!wasiFileDescriptorClose(wasiFD)) {
+        failPollTest(name, "descriptor close");
+    }
+    close(eventPipe[1]);
+    fprintf(stderr, "OK %s\n", name);
+}
+
+void
+testPollOneoffFDWrite(void) {
+    const char* name = "poll_oneoff FD write";
+    int eventPipe[2];
+    U32 wasiFD = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    if (pipe(eventPipe) != 0) {
+        failPollTest(name, "pipe creation");
+    }
+    if (!wasiFileDescriptorAdd(eventPipe[1], NULL, &wasiFD)) {
+        failPollTest(name, "descriptor creation");
+    }
+
+    resetPollMemory();
+    setPollFDSubscription(0, 22, WASI_EVENT_TYPE_FD_WRITE, wasiFD);
+    error = callPollOneoff(1);
+    expectPollU32(name, "result", error, WASI_ERRNO_SUCCESS);
+    expectPollEvent(
+        name,
+        0,
+        22,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_FD_WRITE,
+        0
+    );
+
+    if (!wasiFileDescriptorClose(wasiFD)) {
+        failPollTest(name, "descriptor close");
+    }
+    close(eventPipe[0]);
+    fprintf(stderr, "OK %s\n", name);
+}
+
+void
+testPollOneoffCompaction(void) {
+    const char* name = "poll_oneoff compaction";
+    int eventPipe[2];
+    U32 wasiFD = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    if (pipe(eventPipe) != 0) {
+        failPollTest(name, "pipe creation");
+    }
+    if (!wasiFileDescriptorAdd(eventPipe[0], NULL, &wasiFD)) {
+        failPollTest(name, "descriptor creation");
+    }
+
+    resetPollMemory();
+    setPollFDSubscription(0, 23, WASI_EVENT_TYPE_FD_READ, wasiFD);
+    setPollClockSubscription(1, 24, WASI_CLOCK_MONOTONIC, 0, 0);
+    error = callPollOneoff(2);
+    expectPollU32(name, "result", error, WASI_ERRNO_SUCCESS);
+    expectPollU32(
+        name,
+        "event count",
+        i32_load(&testMemory, TEST_EVENT_COUNT_POINTER),
+        1
+    );
+    expectPollEvent(
+        name,
+        0,
+        24,
+        WASI_ERRNO_SUCCESS,
+        WASI_EVENT_TYPE_CLOCK,
+        0
+    );
+
+    if (!wasiFileDescriptorClose(wasiFD)) {
+        failPollTest(name, "descriptor close");
+    }
+    close(eventPipe[1]);
+    fprintf(stderr, "OK %s\n", name);
+}
+
+void
+testPollOneoffInvalidFD(void) {
+    const char* name = "poll_oneoff invalid FD";
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    resetPollMemory();
+    setPollFDSubscription(
+        0,
+        25,
+        WASI_EVENT_TYPE_FD_READ,
+        UINT32_MAX
+    );
+    error = callPollOneoff(1);
+    expectPollU32(name, "result", error, WASI_ERRNO_SUCCESS);
+    expectPollU32(
+        name,
+        "event count",
+        i32_load(&testMemory, TEST_EVENT_COUNT_POINTER),
+        1
+    );
+    expectPollEvent(
+        name,
+        0,
+        25,
+        WASI_ERRNO_BADF,
+        WASI_EVENT_TYPE_FD_READ,
+        0
+    );
+
+    fprintf(stderr, "OK %s\n", name);
+}
+
+void
+testPollOneoffHangup(void) {
+    const char* name = "poll_oneoff hangup";
+    int eventPipe[2];
+    U32 wasiFD = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    if (pipe(eventPipe) != 0) {
+        failPollTest(name, "pipe creation");
+    }
+    if (!wasiFileDescriptorAdd(eventPipe[0], NULL, &wasiFD)) {
+        failPollTest(name, "descriptor creation");
+    }
+    close(eventPipe[1]);
+
+    resetPollMemory();
+    setPollFDSubscription(0, 26, WASI_EVENT_TYPE_FD_READ, wasiFD);
+    error = callPollOneoff(1);
+    expectPollU32(name, "result", error, WASI_ERRNO_SUCCESS);
+    expectPollEvent(
+        name,
+        0,
+        26,
+        WASI_ERRNO_PIPE,
+        WASI_EVENT_TYPE_FD_READ,
+        WASI_EVENT_RW_FLAGS_HANGUP
+    );
+
+    if (!wasiFileDescriptorClose(wasiFD)) {
+        failPollTest(name, "descriptor close");
+    }
+    fprintf(stderr, "OK %s\n", name);
+}
+
+#endif /* HAS_UNISTD */
+
+void
+testPollOneoff(void) {
+    testPollOneoffValidation();
+    testPollOneoffClocks();
+#if HAS_UNISTD
+    testPollOneoffFDRead();
+    testPollOneoffFDWrite();
+    testPollOneoffCompaction();
+    testPollOneoffInvalidFD();
+    testPollOneoffHangup();
+#endif /* HAS_UNISTD */
+}
+
+#endif /* HAS_POLL */
 
 int
 main(int argc, char* argv[]) {
+    memset(&testMemory, 0, sizeof(testMemory));
+    testMemory.data = testMemoryData;
+    testMemory.size = TEST_MEMORY_SIZE;
+
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         exit(1);
@@ -131,6 +643,17 @@ main(int argc, char* argv[]) {
         "Volume::::foo:bar:::more:yes::last:::",
         "/Volume/../../../foo/bar/../../more/yes/../last/../../"
     );
+
+#if HAS_POLL
+    testPollOneoff();
+#else
+    if (wasi_snapshot_preview1__poll_oneoff(NULL, 0, 0, 0, 0)
+        != WASI_ERRNO_NOSYS) {
+        fprintf(stderr, "FAIL poll_oneoff fallback\n");
+        exit(1);
+    }
+    fprintf(stderr, "OK poll_oneoff fallback\n");
+#endif /* HAS_POLL */
 
     return 0;
 }
