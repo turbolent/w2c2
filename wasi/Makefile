@@ -31,8 +31,13 @@ endif
 # - timespec
 # - lstat
 # - getentropy
+# - poll
 # - threads
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
+DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
+ifneq ($(UNAME),Windows)
+DEFAULT_FEATURES += poll
+endif
+FEATURES ?= $(DEFAULT_FEATURES)
 
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
@@ -72,6 +77,10 @@ endif
 
 ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
+endif
+
+ifneq (,$(findstring poll,$(FEATURES)))
+	CFLAGS += -DHAS_POLL=1
 endif
 
 ifneq (,$(findstring threads,$(FEATURES)))

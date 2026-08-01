@@ -161,7 +161,7 @@ make run-tests
 - [x] `path_rename`
 - [x] `path_symlink`
 - [x] `path_unlink_file`
-- [ ] `poll_oneoff`
+- [x] `poll_oneoff`
 - [x] `proc_exit`
 - [x] `random_get`
 - [ ] `sched_yield`
@@ -200,4 +200,3 @@ To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e
   ```
   -DDWARF_FOUND=1 -DDWARF_LIBRARIES=-ldwarf -DDWARF_LIBRARY_DIRS=/usr/lib -DDWARF_INCLUDE_DIRS=/usr/include/libdwarf
   ```
-
