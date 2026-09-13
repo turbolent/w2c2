@@ -14,7 +14,7 @@ testStringBuilder(void) {
     {
         const size_t actualLength = builder.length;
         if (actualLength != 0) {
-            fprintf(stderr, "FAIL testStringBuilder: incorrect length after initialize: %ld != %d\n", actualLength, 0);
+            fprintf(stderr, "FAIL testStringBuilder: incorrect length after initialize: %llu != %d\n", (U64)actualLength, 0);
             exit(1);
         }
     }
@@ -22,7 +22,7 @@ testStringBuilder(void) {
     {
         const size_t actualSize = strlen(builder.string);
         if (actualSize != 0) {
-            fprintf(stderr, "FAIL testStringBuilder: strlen after initialize failed: %ld != %d\n", actualSize, 0);
+            fprintf(stderr, "FAIL testStringBuilder: strlen after initialize failed: %llu != %d\n", (U64)actualSize, 0);
             exit(1);
         }
     }
@@ -45,9 +45,9 @@ testStringBuilder(void) {
         if (actualLength != expectedLength) {
             fprintf(
                 stderr,
-                "FAIL testStringBuilder: incorrect length after appends: %ld != %ld\n",
-                actualLength,
-                expectedLength
+                "FAIL testStringBuilder: incorrect length after appends: %llu != %llu\n",
+                (U64)actualLength,
+                (U64)expectedLength
             );
             exit(1);
         }
@@ -112,9 +112,9 @@ testStringBuilder(void) {
         if (actualLength != expectedLength) {
             fprintf(
                 stderr,
-                "FAIL testStringBuilder: incorrect length after appends: %ld != %ld\n",
-                actualLength,
-                expectedLength
+                "FAIL testStringBuilder: incorrect length after appends: %llu != %llu\n",
+                (U64)actualLength,
+                (U64)expectedLength
             );
             exit(1);
         }

@@ -1650,6 +1650,8 @@ wasmCWriteMemoryFillExpr(
     const WasmMiscOpcode miscOpcode
 ) {
     WasmMemoryInstruction instruction;
+    UNUSED_PARAMETER(miscOpcode);
+
     if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid memory.fill instruction encoding\n");
         return false;
@@ -5988,6 +5990,8 @@ wasmCWriteModuleFunctionExportsArray(
     const bool multipleModules
 ) {
     U32 functionExportCount = 0;
+    UNUSED_PARAMETER(pretty);
+
     {
         U32 exportIndex = 0;
         for (; exportIndex < module->exports.count; exportIndex++) {

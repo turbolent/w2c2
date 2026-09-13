@@ -27,7 +27,7 @@ testReadU32LEB128(void) {
     };
 
     bool success = true;
-    I32 i = 0;
+    size_t i = 0;
     for (; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
         U32 actual;
         size_t count;
@@ -83,7 +83,7 @@ testReadI32LEB128(void) {
     };
 
     bool success = true;
-    I32 i = 0;
+    size_t i = 0;
     for (; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
         I32 actual;
         size_t count;

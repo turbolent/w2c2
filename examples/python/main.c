@@ -126,9 +126,10 @@ U32 exitCode = 0;
 
 void
 procExit(
-    struct pythonInstance* UNUSED(instance),
+    struct pythonInstance* instance,
     U32 code
 ) {
+    UNUSED_PARAMETER(instance);
 #ifdef __wii__
     VIDEO_WaitVSync();
 #endif

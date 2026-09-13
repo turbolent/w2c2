@@ -58,7 +58,7 @@ typedef union {
  */
 static
 void
-SHA1Transform(U32 state[5], const U8 buffer[SHA1_BLOCK_LENGTH])
+SHA1Transform(U32 state[5], const U8* buffer)
 {
     U32 a, b, c, d, e;
     U8 workspace[SHA1_BLOCK_LENGTH];
