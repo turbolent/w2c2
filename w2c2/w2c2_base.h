@@ -769,6 +769,8 @@ wasmMemoryFree(
     }
     memory->futex = NULL;
     memory->futexFree = NULL;
+
+    free(memory);
 }
 
 static
