@@ -269,7 +269,7 @@ readdir(
         }
     }
     strcpy(d->ret.d_name, fd.cFileName); /* Both strings are MAX_PATH long */
-    d->ret.d_namlen = strlen(d->ret.d_name);
+    d->ret.d_namlen = (unsigned short)strlen(d->ret.d_name);
 
     /*
      * For reparse points dwReserved0 field will contain the ReparseTag.  We

@@ -43,7 +43,7 @@ testResolvePath(
     bool valid
 ) {
     char result[PATH_MAX];
-    if (resolvePath(directory, path, strlen(path), result) != valid) {
+    if (resolvePath(directory, path, (U32)strlen(path), result) != valid) {
         fprintf(stderr, "FAIL resolvePath(%s, %s): should succeed\n", directory, path);
         exit(1);
     }
@@ -97,7 +97,8 @@ testPosixToMacPath(
 }
 
 /* Unused but expected by the WASI implementation */
-wasmMemory* wasiMemory(void* UNUSED(instance)) {
+wasmMemory* wasiMemory(void* instance) {
+    UNUSED_PARAMETER(instance);
     return &testMemory;
 }
 

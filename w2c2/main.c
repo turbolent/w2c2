@@ -196,7 +196,7 @@ static
 void
 cleanImplementationFiles(void) {
     char* path = NULL;
-    int pathCharIndex = 0;
+    size_t pathCharIndex = 0;
     bool allDigits = true;
     size_t pathLength = 0;
 
@@ -277,7 +277,11 @@ changeToOutputDirectory(
     strcpy(outputDir, outputPath);
     strcpy(outputDir, dirname(outputDir));
 
+#if _WIN32
+    if (_chdir(outputDir) < 0) {
+#else
     if (chdir(outputDir) < 0) {
+#endif
         fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputDir);
         return false;
     }
@@ -371,8 +375,7 @@ main(
                 break;
             }
             case 'h': {
-                fprintf(
-                    stderr,
+                fputs(
                     "w2c2\n"
                     "  Compiles a WebAssembly module in binary format to a C source file and header\n"
                     "\n"
@@ -389,11 +392,15 @@ main(
                     "  -t N       Number of threads\n"
 #endif /* HAS_PTHREAD */
                     "  -f N       Number of functions per file. 0 (default) writes all functions into one file\n"
-                    "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n"
+                    "  -d MODE    Data segment mode. Default: arrays. Use 'help' to print available modes\n",
+                    stderr
+                );
+                fputs(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -m         Support multiple modules (prefixes function names)\n"
-                    "  -r         Reference module\n"
+                    "  -r         Reference module\n",
+                    stderr
                 );
                 return 0;
             }
@@ -490,9 +497,9 @@ main(
 
             fprintf(
                 stderr,
-                "w2c2: %lu of %lu functions are dynamic (%.2f%%)\n",
-                dynamicFunctionIDs.length,
-                total,
+                "w2c2: %llu of %llu functions are dynamic (%.2f%%)\n",
+                (U64)dynamicFunctionIDs.length,
+                (U64)total,
                 (float)dynamicFunctionIDs.length / (float)total * 100.0
             );
         } else {

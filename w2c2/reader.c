@@ -559,12 +559,13 @@ static
 void
 wasmReadTypeSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 typeCount = 0;
     U32 typeIndex = 0;
     WasmFunctionType* functionTypes = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read type count */
     if (leb128ReadU32(&reader->buffer, &typeCount) == 0) {
@@ -977,10 +978,11 @@ static
 void
 wasmReadImportSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 importCount = 0;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read import count */
     if (leb128ReadU32(&reader->buffer, &importCount) == 0) {
@@ -1009,12 +1011,13 @@ static
 void
 wasmReadFunctionSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 functionCount = 0;
     U32 functionIndex = 0;
     WasmFunction* functions = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read function count */
     if (leb128ReadU32(&reader->buffer, &functionCount) == 0) {
@@ -1112,12 +1115,13 @@ static
 void
 wasmReadMemorySection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 memoryCount = 0;
     U32 memoryIndex = 0;
     WasmMemory* memories = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read memory count */
     if (leb128ReadU32(&reader->buffer, &memoryCount) == 0) {
@@ -1195,12 +1199,13 @@ static
 void
 wasmReadGlobalSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 globalCount = 0;
     U32 globalIndex = 0;
     WasmGlobal* globals = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read global count */
     if (leb128ReadU32(&reader->buffer, &globalCount) == 0) {
@@ -1298,11 +1303,12 @@ static
 void
 wasmReadExportSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 exportCount = 0;
     WasmExport* exports = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read export count */
     if (leb128ReadU32(&reader->buffer, &exportCount) == 0) {
@@ -1414,13 +1420,14 @@ static
 void
 wasmReadCodeSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 functionCount = 0;
     U32 functionIndex = 0;
 
     const size_t codeStart = reader->module->length - reader->buffer.length;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read function count */
     if (leb128ReadU32(&reader->buffer, &functionCount) == 0) {
@@ -1614,11 +1621,12 @@ static
 void
 wasmReadDataSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 dataSegmentCount = 0;
     WasmDataSegment* dataSegments = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read data count */
     if (leb128ReadU32(&reader->buffer, &dataSegmentCount) == 0) {
@@ -1667,10 +1675,11 @@ static
 void
 wasmReadDataCountSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 dataCount = 0;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read export count */
     if (leb128ReadU32(&reader->buffer, &dataCount) == 0) {
@@ -1688,11 +1697,12 @@ static
 void
 wasmReadTableSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 tableCount = 0;
     WasmTable* tables = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read table count */
     if (leb128ReadU32(&reader->buffer, &tableCount) == 0) {
@@ -1821,11 +1831,12 @@ static
 void
 wasmReadElementSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 elementSegmentCount = 0;
     WasmElementSegment* elementSegments = NULL;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read element count */
     if (leb128ReadU32(&reader->buffer, &elementSegmentCount) == 0) {
@@ -1874,10 +1885,11 @@ static
 void
 wasmReadStartSection(
     WasmModuleReader* reader,
-    U32 UNUSED(sectionSize),
+    U32 sectionSize,
     WasmModuleReaderError** error
 ) {
     U32 functionIndex = 0;
+    UNUSED_PARAMETER(sectionSize);
 
     /* Read export count */
     if (leb128ReadU32(&reader->buffer, &functionIndex) == 0) {
@@ -1919,7 +1931,8 @@ wasmModuleReadSection(
     U8 rawSectionID = 0;
     WasmSectionID sectionID = 0;
     U32 sectionSize = 0;
-    const U32 sectionParsersCount = sizeof(wasmSectionReaders) / sizeof(wasmSectionReaders[0]);
+    const size_t sectionParsersCount =
+        sizeof(wasmSectionReaders) / sizeof(wasmSectionReaders[0]);
 
     /* Read section ID */
     if (!bufferReadByte(&reader->buffer, &rawSectionID)) {
@@ -1941,8 +1954,9 @@ wasmModuleReadSection(
         return;
     }
 
-    if (sectionID < sectionParsersCount) {
-        const WasmSectionReader wasmSectionReader = wasmSectionReaders[sectionID];
+    if ((size_t)rawSectionID < sectionParsersCount) {
+        const WasmSectionReader wasmSectionReader =
+            wasmSectionReaders[rawSectionID];
         if (wasmSectionReader != NULL) {
             const U8* start = reader->buffer.data;
             const U8* end = NULL;

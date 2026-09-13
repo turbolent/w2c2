@@ -13,11 +13,35 @@
 
 #include <errno.h>
 
+#ifdef WASM_THREADS_PTHREADS
+#include <pthread.h>
+#elif defined(WASM_THREADS_WIN32)
+#include <windows.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #else
 
-#ifndef __bool_true_false_are_defined
+/*
+ * Some system headers define bool as _Bool even in C89 mode.
+ * Use the C89-compatible enum consistently.
+ */
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+#ifdef bool
+#undef bool
+#endif
+#ifdef false
+#undef false
+#endif
+#ifdef true
+#undef true
+#endif
+typedef enum bool {
+    false = 0,
+    true = 1
+} bool;
+#elif !defined(__bool_true_false_are_defined)
 typedef enum bool {
     false = 0,
     true = 1
@@ -200,11 +224,7 @@ typedef U32 WasmPtr;
 #define NORETURN
 #endif
 
-#if defined(__GNUC__) && GCC_VERSION >= 20905
-#define UNUSED __attribute__((unused))
-#else
-#define UNUSED
-#endif
+#define UNUSED_PARAMETER(value) ((void)(value))
 
 #ifndef LLONG_MIN
 #define LLONG_MIN (W2C2_LL(-0x7fffffffffffffff)-1)
@@ -566,8 +586,6 @@ DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
 #ifdef WASM_THREADS_PTHREADS
-#include <pthread.h>
-
 #define WASM_THREAD_TYPE pthread_t
 #define WASM_THREAD_CREATE(thread, func, arg) (pthread_create(thread, NULL, func, arg) == 0)
 #define WASM_THREAD_JOIN(thread) ((void)pthread_join(thread, NULL))
@@ -625,8 +643,6 @@ wasmCondRelativeWait(
 }
 
 #elif defined(WASM_THREADS_WIN32)
-
-#include <windows.h>
 
 #define NS_PER_MS 100000
 
@@ -875,8 +891,8 @@ load_data(
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
 
-#define readSwapU8(base, offset) (*(U8*)((base) + (offset)))
-#define writeSwapU8(base, offset, value) (*(U8*)((base) + (offset)) = (value))
+#define readSwapU8(base, offset) (*((const U8*)(base) + (offset)))
+#define writeSwapU8(base, offset, value) (*((U8*)(base) + (offset)) = (value))
 
 #if defined(__APPLE__)
 
@@ -893,35 +909,35 @@ load_data(
 
 static W2C2_INLINE U16 readSwapU16(const void* address, WasmPtr offset) {
     U16 result;
-    memcpy(&result, address + offset, sizeof(U16));
+    memcpy(&result, (const U8*)address + offset, sizeof(U16));
     return swapU16(result);
 }
 
 static W2C2_INLINE U32 readSwapU32(const void* address, WasmPtr offset) {
     U32 result;
-    memcpy(&result, address + offset, sizeof(U32));
+    memcpy(&result, (const U8*)address + offset, sizeof(U32));
     return swapU32(result);
 }
 
 static W2C2_INLINE U64 readSwapU64(const void* address, WasmPtr offset) {
     U64 result;
-    memcpy(&result, address + offset, sizeof(U64));
+    memcpy(&result, (const U8*)address + offset, sizeof(U64));
     return swapU64(result);
 }
 
 static W2C2_INLINE void writeSwapU16(void* address, WasmPtr offset, U16 v) {
     v = swapU16(v);
-    memcpy(address + offset, &v, sizeof(U16));
+    memcpy((U8*)address + offset, &v, sizeof(U16));
 }
 
 static W2C2_INLINE void writeSwapU32(void* address, WasmPtr offset, U32 v) {
     v = swapU32(v);
-    memcpy(address + offset, &v, sizeof(U32));
+    memcpy((U8*)address + offset, &v, sizeof(U32));
 }
 
 static W2C2_INLINE void writeSwapU64(void* address, WasmPtr offset, U64 v) {
     v = swapU64(v);
-    memcpy(address + offset, &v, sizeof(U64));
+    memcpy((U8*)address + offset, &v, sizeof(U64));
 }
 
 #endif
@@ -1227,10 +1243,10 @@ typedef struct wasmModuleInstance {
 #define atomic_add_U32(a, v) _InterlockedExchangeAdd((volatile long*)(a), (long)(v))
 #define atomic_add_U64(a, v) _InterlockedExchangeAdd64((volatile __int64*)(a), (__int64)(v))
 
-#define atomic_sub_U8(a, v) _InterlockedExchangeAdd8((volatile char*)(a), (char)(-(v)))
-#define atomic_sub_U16(a, v) _InterlockedExchangeAdd16((volatile short*)(a), (short)(-(v)))
-#define atomic_sub_U32(a, v) _InterlockedExchangeAdd((volatile long*)(a), (long)(-(v)))
-#define atomic_sub_U64(a, v) _InterlockedExchangeAdd64((volatile __int64*)(a), (__int64)(-(v)))
+#define atomic_sub_U8(a, v) _InterlockedExchangeAdd8((volatile char*)(a), (char)(U8)(0U - (U8)(v)))
+#define atomic_sub_U16(a, v) _InterlockedExchangeAdd16((volatile short*)(a), (short)(U16)(0U - (U16)(v)))
+#define atomic_sub_U32(a, v) _InterlockedExchangeAdd((volatile long*)(a), (long)(U32)(0U - (U32)(v)))
+#define atomic_sub_U64(a, v) _InterlockedExchangeAdd64((volatile __int64*)(a), (__int64)((U64)0 - (U64)(v)))
 
 #define atomic_and_U8(a, v) _InterlockedAnd8((volatile char*)(a), (char)(v))
 #define atomic_and_U16(a, v) _InterlockedAnd16((volatile short*)(a), (short)(v))

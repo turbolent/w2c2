@@ -390,10 +390,11 @@ dwarfAccessGetSectionInfo(
     void* obj,
     Dwarf_Unsigned sectionIndex,
     Dwarf_Obj_Access_Section_a *accessSection,
-    int* UNUSED(error)
+    int* error
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
     WasmDebugSection section = sections->debugSections[sectionIndex];
+    UNUSED_PARAMETER(error);
 
     accessSection->as_addr = 0;
     accessSection->as_name = section.name;
@@ -411,32 +412,36 @@ static const bool isInfo = true;
 static
 Dwarf_Small
 dwarfAccessGetByteOrder(
-    void* UNUSED(obj)
+    void* obj
 ) {
+    UNUSED_PARAMETER(obj);
     return DW_END_little;
 }
 
 static
 Dwarf_Small
 dwarfAccessGetPointerSize(
-    void* UNUSED(obj)
+    void* obj
 ) {
+    UNUSED_PARAMETER(obj);
     return 4;
 }
 
 static
 Dwarf_Unsigned
 dwarfAccessGetFileSize(
-    void* UNUSED(obj)
+    void* obj
 ) {
+    UNUSED_PARAMETER(obj);
     return 0;
 }
 
 static
 Dwarf_Small
 dwarfAccessGetLengthSize(
-    void* UNUSED(obj)
+    void* obj
 ) {
+    UNUSED_PARAMETER(obj);
     return 4;
 }
 
@@ -455,10 +460,11 @@ dwarfAccessLoadSection(
     void* obj,
     Dwarf_Unsigned sectionIndex,
     Dwarf_Small** sectionData,
-    int* UNUSED(error)
+    int* error
 ) {
     WasmDebugSections* sections = (WasmDebugSections*) obj;
     WasmDebugSection section = sections->debugSections[sectionIndex];
+    UNUSED_PARAMETER(error);
 
     *sectionData = section.buffer.data;
 
@@ -468,11 +474,15 @@ dwarfAccessLoadSection(
 static
 int
 dwarfAccessRelocateASection(
-    void* UNUSED(obj),
-    Dwarf_Unsigned UNUSED(sectionIndex),
-    Dwarf_Debug UNUSED(debug),
-    int* UNUSED(error)
+    void* obj,
+    Dwarf_Unsigned sectionIndex,
+    Dwarf_Debug debug,
+    int* error
 ) {
+    UNUSED_PARAMETER(obj);
+    UNUSED_PARAMETER(sectionIndex);
+    UNUSED_PARAMETER(debug);
+    UNUSED_PARAMETER(error);
     return DW_DLV_NO_ENTRY;
 }
 
@@ -781,8 +791,8 @@ WasmDebugLines
 wasmParseDebugInfo(
     WasmDebugSections sections
 ) {
+    UNUSED_PARAMETER(sections);
     return emptyWasmDebugLines;
 }
 
 #endif /* HAS_LIBDWARF */
-
