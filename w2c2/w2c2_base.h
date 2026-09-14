@@ -571,6 +571,7 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 #define WASM_THREAD_TYPE pthread_t
 #define WASM_THREAD_CREATE(thread, func, arg) (pthread_create(thread, NULL, func, arg) == 0)
 #define WASM_THREAD_JOIN(thread) ((void)pthread_join(thread, NULL))
+#define WASM_THREAD_DETACH(thread) ((void)pthread_detach(thread))
 
 #define WASM_MUTEX_TYPE pthread_mutex_t
 #define WASM_MUTEX_INIT(mutex) (pthread_mutex_init(mutex, NULL) == 0)
@@ -633,6 +634,7 @@ wasmCondRelativeWait(
 #define WASM_THREAD_TYPE HANDLE
 #define WASM_THREAD_CREATE(thread, func, arg) wasmThreadCreate(thread, func, arg)
 #define WASM_THREAD_JOIN(thread) (WaitForSingleObject(thread, INFINITE), (void)CloseHandle(thread))
+#define WASM_THREAD_DETACH(thread) ((void)CloseHandle(thread))
 
 #define WASM_MUTEX_TYPE CRITICAL_SECTION
 #define WASM_MUTEX_INIT(mutex) (InitializeCriticalSection(mutex), true)
@@ -753,6 +755,10 @@ void
 wasmMemoryFree(
     wasmMemory* memory
 ) {
+    if (memory == NULL) {
+        return;
+    }
+
     free(memory->data);
 
     memory->size = 0;
@@ -1157,7 +1163,9 @@ wasmTableFree(
 
     free(table->data);
 
+    table->data = NULL;
     table->size = 0;
+    table->maxSize = 0;
 }
 
 #define TF(table, index, t) ((t)((table).data[index]))
@@ -1171,6 +1179,7 @@ typedef struct wasmModuleInstance {
     wasmFuncExport* funcExports;
     void* (*resolveImports)(const char* module, const char* name);
     struct wasmModuleInstance* (*newChild)(struct wasmModuleInstance* self);
+    void (*freeChild)(struct wasmModuleInstance* child);
 } wasmModuleInstance;
 
 

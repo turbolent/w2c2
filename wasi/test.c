@@ -27,6 +27,13 @@ static U8 testMemoryData[TEST_MEMORY_SIZE];
 static wasmMemory testMemory;
 
 extern
+U32
+wasi__threadX2Dspawn(
+    wasmModuleInstance* instance,
+    U32 startArg
+);
+
+extern
 bool
 resolvePath(
     char* directory,
@@ -589,6 +596,116 @@ testPollOneoff(void) {
 
 #endif /* HAS_POLL */
 
+#if defined(WASM_THREAD_TYPE) && (defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC))
+
+typedef struct TestThreadInstance {
+    wasmModuleInstance common;
+} TestThreadInstance;
+
+static WASM_MUTEX_TYPE testThreadMutex;
+static WASM_COND_TYPE testThreadCondition;
+static bool testThreadStarted = false;
+static bool testThreadFreed = false;
+static U32 testThreadStartArg = 0;
+
+static
+void
+testThreadStart(
+    void* UNUSED(instance),
+    U32 UNUSED(threadID),
+    U32 startArg
+) {
+    WASM_MUTEX_LOCK(&testThreadMutex);
+    testThreadStarted = true;
+    testThreadStartArg = startArg;
+    WASM_MUTEX_UNLOCK(&testThreadMutex);
+}
+
+static wasmFuncExport testThreadFuncExports[] = {
+    {(wasmFunc)testThreadStart, "wasi_thread_start"},
+    {NULL, NULL}
+};
+
+static
+wasmModuleInstance*
+newTestThreadChild(
+    wasmModuleInstance* self
+) {
+    TestThreadInstance* child = (TestThreadInstance*)calloc(
+        1,
+        sizeof(TestThreadInstance)
+    );
+    if (child == NULL) {
+        abort();
+    }
+    child->common = *self;
+    return &child->common;
+}
+
+static
+void
+freeTestThreadChild(
+    wasmModuleInstance* child
+) {
+    free(child);
+
+    WASM_MUTEX_LOCK(&testThreadMutex);
+    testThreadFreed = true;
+    WASM_COND_SIGNAL(&testThreadCondition);
+    WASM_MUTEX_UNLOCK(&testThreadMutex);
+}
+
+static
+void
+testThreadSpawnCleanup(void) {
+    TestThreadInstance root;
+    U32 threadID;
+
+    memset(&root, 0, sizeof(root));
+    root.common.funcExports = testThreadFuncExports;
+    root.common.newChild = newTestThreadChild;
+    root.common.freeChild = freeTestThreadChild;
+
+    if (!WASM_MUTEX_INIT(&testThreadMutex)) {
+        fprintf(stderr, "FAIL thread-spawn: mutex initialization failed\n");
+        exit(1);
+    }
+    if (!WASM_COND_INIT(&testThreadCondition)) {
+        fprintf(stderr, "FAIL thread-spawn: condition initialization failed\n");
+        exit(1);
+    }
+
+    threadID = wasi__threadX2Dspawn(&root.common, 42);
+    if (threadID == (U32)-1) {
+        fprintf(stderr, "FAIL thread-spawn: thread creation failed\n");
+        exit(1);
+    }
+
+    WASM_MUTEX_LOCK(&testThreadMutex);
+    while (!testThreadFreed) {
+        if (!WASM_COND_RELATIVE_WAIT(
+                &testThreadCondition,
+                &testThreadMutex,
+                W2C2_LL(5000000000)
+            )) {
+            fprintf(stderr, "FAIL thread-spawn: child cleanup timed out\n");
+            exit(1);
+        }
+    }
+    if (!testThreadStarted || testThreadStartArg != 42) {
+        fprintf(stderr, "FAIL thread-spawn: start function was not called\n");
+        exit(1);
+    }
+    WASM_MUTEX_UNLOCK(&testThreadMutex);
+
+    WASM_COND_FREE(&testThreadCondition);
+    WASM_MUTEX_FREE(&testThreadMutex);
+
+    fprintf(stderr, "OK thread-spawn cleanup\n");
+}
+
+#endif
+
 int
 main(int argc, char* argv[]) {
     memset(&testMemory, 0, sizeof(testMemory));
@@ -654,6 +771,10 @@ main(int argc, char* argv[]) {
     }
     fprintf(stderr, "OK poll_oneoff fallback\n");
 #endif /* HAS_POLL */
+
+#if defined(WASM_THREAD_TYPE) && (defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC))
+    testThreadSpawnCleanup();
+#endif
 
     return 0;
 }

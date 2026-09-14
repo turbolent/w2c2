@@ -1,0 +1,5 @@
+{"source_filename": "runtime_lifecycle.wast",
+ "commands": [
+  {"type": "module", "line": 1, "filename": "runtime_lifecycle.0.wasm"}, 
+  {"type": "module", "line": 6, "filename": "runtime_lifecycle.1.wasm"}, 
+  {"type": "module", "line": 10, "filename": "runtime_lifecycle.2.wasm"}]}
