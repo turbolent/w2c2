@@ -80,6 +80,7 @@ jobs:
             wasi:
               - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
@@ -95,19 +96,12 @@ jobs:
         working-directory: ./w2c2
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Build futex
         working-directory: ./futex
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
-        name: Test futex
-        env:
-          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
-        working-directory: ./futex
-        run: make test BUILD=${{ matrix.build }}
-
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Run WebAssembly tests
         env:
           LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
@@ -116,17 +110,47 @@ jobs:
         shell: bash
         run: make run-tests
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target != 'clang'
+        name: Test futex
+        env:
+          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
+        working-directory: ./futex
+        run: make test BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target == 'clang'
+        name: Test futex with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./futex
+        run: |
+          make clean
+          make test BUILD=${{ matrix.build }} SANITIZERS=address
+
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target == 'clang' && matrix.build == 'debug'
+        name: Test runtime ownership with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./tests
+        run: make runtime-lifecycle-test SANITIZERS=address
+
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target != 'clang'
         name: Build wasi
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target != 'clang'
         name: Test wasi
         env:
           LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target == 'clang'
+        name: Test WASI with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./wasi
+        run: make test BUILD=${{ matrix.build }} SANITIZERS=address
   macos:
     runs-on: macos-latest
     name: "macOS (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
@@ -155,6 +179,7 @@ jobs:
             wasi:
               - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
@@ -166,28 +191,28 @@ jobs:
         working-directory: ./w2c2
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Build futex
         working-directory: ./futex
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Test futex
         working-directory: ./futex
         run: make test BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Run WebAssembly tests
         working-directory: ./tests
         shell: bash
         run: make run-tests
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Build wasi
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Test wasi
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
@@ -208,6 +233,7 @@ jobs:
             wasi:
               - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2

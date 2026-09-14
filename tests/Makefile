@@ -8,11 +8,15 @@ EXE =
 ifeq ($(OS),Windows_NT)
 	CFLAGS += -DWASM_THREADS_WIN32
 else
-	CFLAGS += -DWASM_THREADS_PTHREADS
+	CFLAGS += -pthread -DWASM_THREADS_PTHREADS
 	LDFLAGS += -lm
 endif
 
 LDFLAGS := -lw2c2futex -L../futex $(LDFLAGS)
+
+ifneq (,$(findstring address,$(SANITIZERS)))
+CFLAGS += -fsanitize=address -fno-omit-frame-pointer
+endif
 
 ifeq ($(TARGET),Wii)
 
@@ -39,7 +43,28 @@ endif
 
 .SILENT:
 
-.PHONY: run-tests gen clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: run-tests runtime-lifecycle-test gen clean clean-wasm-json clean-assertions clean-compiled
+
+RUNTIME_LIFECYCLE_SOURCES = \
+	test_runtime_lifecycle_owned.c \
+	test_runtime_lifecycle_shared.c \
+	test_runtime_lifecycle_imports.c
+RUNTIME_LIFECYCLE_LDFLAGS = $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+runtime-lifecycle-test: test_runtime_lifecycle
+	./test_runtime_lifecycle
+
+test_runtime_lifecycle: runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@ $(RUNTIME_LIFECYCLE_LDFLAGS)
+
+test_runtime_lifecycle_owned.c: gen/runtime_lifecycle.0.wasm
+	$(W2C2) -m $< $@
+
+test_runtime_lifecycle_shared.c: gen/runtime_lifecycle.1.wasm
+	$(W2C2) -m $< $@
+
+test_runtime_lifecycle_imports.c: gen/runtime_lifecycle.2.wasm
+	$(W2C2) -m $< $@
 
 run-tests: $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
@@ -70,3 +95,5 @@ gen-%:
 
 clean:
 	-rm -f main.o test_*.o test_*.h
+	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
+	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)

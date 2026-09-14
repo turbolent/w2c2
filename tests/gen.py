@@ -14,7 +14,11 @@ gen_dir = Path('gen')
 
 
 def compare_versions(a, b):
-    for [a, b] in zip(*[[int(s) for s in v.split('.')] for v in [a, b]]):
+    versions = [
+        [int(s) for s in re.match(r'\d+(?:\.\d+)*', v).group(0).split('.')]
+        for v in [a, b]
+    ]
+    for [a, b] in zip(*versions):
         if a < b:
             return -1
         elif a > b:

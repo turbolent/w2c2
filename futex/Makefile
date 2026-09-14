@@ -45,7 +45,7 @@ ifneq (,$(findstring clang,$(SANITIZERS)))
 CFLAGS += -fsanitize=integer -fsanitize=implicit-conversion
 endif
 ifneq (,$(findstring address,$(SANITIZERS)))
-CFLAGS += -fsanitize=address
+CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 ifneq (,$(findstring thread,$(SANITIZERS)))
 CFLAGS += -fsanitize=thread

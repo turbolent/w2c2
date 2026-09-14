@@ -5490,19 +5490,33 @@ void
 wasmCWriteFreeMemories(
     FILE* file,
     const WasmModule* module,
-    const bool pretty
+    const bool pretty,
+    const bool freeShared
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryCount; memoryIndex++) {
+        const WasmMemory memory = module->memories.memories[memoryIndex];
         U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
+        if (!freeShared && memory.shared) {
+            continue;
+        }
         if (pretty) {
             fputs(indentation, file);
         }
         fputs("wasmMemoryFree(", file);
         wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
         fputs(");\n", file);
+        if (pretty) {
+            fputs(indentation, file);
+        }
+        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+        if (pretty) {
+            fputs(" = NULL;\n", file);
+        } else {
+            fputs("=NULL;\n", file);
+        }
     }
 }
 
@@ -5741,6 +5755,35 @@ wasmCWriteModuleDeclarations(
     wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules);
 }
 
+static
+void
+wasmCWriteFreeChildFunction(
+    FILE* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool pretty
+) {
+    fprintf(
+        file,
+        "static void %sFreeChild(wasmModuleInstance* child) {\n",
+        moduleName
+    );
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInstance* i = (%sInstance*)child;\n", moduleName, moduleName);
+
+    wasmCWriteFreeMemories(file, module, pretty, false);
+    wasmCWriteFreeTables(file, module, pretty);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("free(i);\n", file);
+    fputs("}\n\n", file);
+}
+
 /* TODO: verify */
 static
 void
@@ -5753,13 +5796,16 @@ wasmCWriteNewChildFunction(
 ) {
     fprintf(
         file,
-        "%sInstance* %sNewChild(%sInstance* self) {\n",
-        moduleName,
-        moduleName,
+        "static wasmModuleInstance* %sNewChild(wasmModuleInstance* instance) {\n",
         moduleName
     );
 
     /* TODO: clean up */
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "%sInstance* self = (%sInstance*)instance;\n", moduleName, moduleName);
+
     if (pretty) {
         fputs(indentation, file);
     }
@@ -5785,6 +5831,11 @@ wasmCWriteNewChildFunction(
         fputs(indentation, file);
     }
     fputs("child->common.newChild = self->common.newChild;\n", file);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fputs("child->common.freeChild = self->common.freeChild;\n", file);
 
     if (pretty) {
         fputs(indentation, file);
@@ -5825,7 +5876,7 @@ wasmCWriteNewChildFunction(
     if (pretty) {
         fputs(indentation, file);
     }
-    fputs("return child;\n", file);
+    fputs("return &child->common;\n", file);
 
     fputs("}\n\n", file);
 }
@@ -5860,7 +5911,12 @@ wasmCWriteInstantiateFunction(
     if (pretty) {
         fputs(indentation, file);
     }
-    fprintf(file, "i->common.newChild = (struct wasmModuleInstance* (*)(struct wasmModuleInstance*))%sNewChild;\n", moduleName);
+    fprintf(file, "i->common.newChild = %sNewChild;\n", moduleName);
+
+    if (pretty) {
+        fputs(indentation, file);
+    }
+    fprintf(file, "i->common.freeChild = %sFreeChild;\n", moduleName);
 
     if (pretty) {
         fputs(indentation, file);
@@ -5911,7 +5967,7 @@ wasmCWriteFreeFunction(
 ) {
     fprintf(file, "void %sFreeInstance(%sInstance* i) {\n", moduleName, moduleName);
 
-    wasmCWriteFreeMemories(file, module, pretty);
+    wasmCWriteFreeMemories(file, module, pretty, true);
     wasmCWriteFreeTables(file, module, pretty);
 
     fputs("}\n\n", file);
@@ -6055,6 +6111,7 @@ wasmCWriteInits(
 
     wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules);
 
+    wasmCWriteFreeChildFunction(file, module, moduleName, pretty);
     wasmCWriteNewChildFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteInstantiateFunction(file, module, moduleName, pretty, multipleModules);
     wasmCWriteFreeFunction(file, module, moduleName, pretty);

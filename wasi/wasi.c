@@ -4756,7 +4756,7 @@ WASI_IMPORT(U32, sock_shutdown, (
 typedef void (*wasiThreadStartFunc)(void* instance, U32 threadID, U32 startArg);
 
 typedef struct ThreadStartArg {
-    void* instance;
+    wasmModuleInstance* instance;
     U32 startArg;
     U32 threadID;
     wasiThreadStartFunc startFunc;
@@ -4768,13 +4768,14 @@ wasiThreadSpawn(
     void* arg
 ) {
     ThreadStartArg* threadStartArg = (ThreadStartArg*) arg;
-    void* instance = threadStartArg->instance;
+    wasmModuleInstance* instance = threadStartArg->instance;
     U32 threadID = threadStartArg->threadID;
     U32 startArg = threadStartArg->startArg;
     wasiThreadStartFunc startFunc = threadStartArg->startFunc;
     free(threadStartArg);
 
     startFunc(instance, threadID, startArg);
+    instance->freeChild(instance);
 
     return NULL;
 }
@@ -4819,7 +4820,6 @@ wasi__threadX2Dspawn(
 
     threadID = atomic_add_U32(&nextThreadID, 1);
 
-    /* TODO: schedule free/cleanup of child instance */
     threadStartArg->instance = instance->newChild(instance);
     threadStartArg->startArg = startArg;
     threadStartArg->threadID = threadID;
@@ -4830,8 +4830,11 @@ wasi__threadX2Dspawn(
         WASM_THREAD_TYPE thread;
         if (!WASM_THREAD_CREATE(&thread, wasiThreadSpawn, threadStartArg)) {
             WASI_TRACE(("thread-spawn: pthread_create failed"));
+            threadStartArg->instance->freeChild(threadStartArg->instance);
+            free(threadStartArg);
             return UINT32_MAX;
         }
+        WASM_THREAD_DETACH(thread);
     }
 
     WASI_TRACE(("thread-spawn: threadID=%d", threadID));
