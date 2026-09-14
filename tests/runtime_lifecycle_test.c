@@ -160,8 +160,10 @@ testImportedResourceLifecycle(void) {
 static
 void*
 testRuntimeLifecycle(
-    void* UNUSED(argument)
+    void* argument
 ) {
+    UNUSED_PARAMETER(argument);
+
     testMemoryLifecycle();
     testTableLifecycle();
     testOwnedInstanceLifecycle();

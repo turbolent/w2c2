@@ -612,10 +612,13 @@ static U32 testThreadStartArg = 0;
 static
 void
 testThreadStart(
-    void* UNUSED(instance),
-    U32 UNUSED(threadID),
+    void* instance,
+    U32 threadID,
     U32 startArg
 ) {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(threadID);
+
     WASM_MUTEX_LOCK(&testThreadMutex);
     testThreadStarted = true;
     testThreadStartArg = startArg;
