@@ -96,7 +96,7 @@ stringBuilderAppendSized(
     const size_t newLength = stringBuilder->length + length;
     MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
 
-    strncpy(
+    memcpy(
         stringBuilder->string + stringBuilder->length,
         string,
         length

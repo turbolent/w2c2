@@ -110,7 +110,11 @@ endif
 
 .PHONY: clean
 
-OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
+SOURCES := $(filter-out test.c,$(wildcard *.c))
+ifneq ($(UNAME),Windows)
+SOURCES := $(filter-out win32.c,$(SOURCES))
+endif
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

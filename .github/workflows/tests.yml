@@ -35,7 +35,7 @@ jobs:
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static                        }
 
           # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
-          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true }
+          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true, cflags: -Wno-atomic-alignment }
           - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static                         }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static,       linkAtomic: true }
           - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static,     linkAtomic: true }
@@ -52,6 +52,7 @@ jobs:
 
     env:
       CC: ${{ matrix.system.cc }}
+      CFLAGS: -Werror ${{ matrix.system.cflags }}
 
     steps:
       - uses: actions/checkout@v3
@@ -72,10 +73,12 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
               - 'w2c2/w2c2_base.h'
 
@@ -158,6 +161,9 @@ jobs:
         build: [release, debug]
         threads: [true, false]
 
+    env:
+      CFLAGS: -Werror
+
     steps:
       - uses: actions/checkout@v3
 
@@ -166,10 +172,12 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
               - 'w2c2/w2c2_base.h'
 
@@ -220,8 +228,10 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
               - 'w2c2/w2c2_base.h'
 
@@ -229,12 +239,12 @@ jobs:
         name: Build w2c2
         working-directory: ./w2c2
         run: |
-          cmake -Bbuild
+          cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
 
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
         run: |
-          cmake -Bbuild
+          cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
