@@ -645,7 +645,7 @@ wasmCondRelativeWait(
 
 #elif defined(WASM_THREADS_WIN32)
 
-#define NS_PER_MS 100000
+#define NS_PER_MS 1000000
 
 #define WASM_THREAD_TYPE HANDLE
 #define WASM_THREAD_CREATE(thread, func, arg) wasmThreadCreate(thread, func, arg)
@@ -662,7 +662,8 @@ wasmCondRelativeWait(
 #define WASM_COND_INIT(cond) (InitializeConditionVariable(cond), true)
 #define WASM_COND_FREE(cond) ((void)cond) /* NO-OP */
 #define WASM_COND_WAIT(cond, mutex) ((void)SleepConditionVariableCS(cond, mutex, INFINITE))
-#define WASM_COND_RELATIVE_WAIT(cond, signal, timeout) SleepConditionVariableCS(cond, signal, (DWORD)timeout / NS_PER_MS)
+#define WASM_COND_RELATIVE_WAIT(cond, signal, timeout) \
+    SleepConditionVariableCS(cond, signal, (DWORD)((timeout) / NS_PER_MS))
 #define WASM_COND_SIGNAL(cond) WakeConditionVariable(cond)
 
 typedef struct wasmWin32ThreadStartArg {
