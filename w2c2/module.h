@@ -75,6 +75,15 @@ typedef struct WasmModule {
     WasmNames functionNames;
 } WasmModule;
 
+/*
+ * Frees translator-owned module storage.
+ * Buffers borrowed from the reader input remain caller-owned.
+ */
+void
+wasmModuleFree(
+    WasmModule* module
+);
+
 static
 W2C2_INLINE
 bool

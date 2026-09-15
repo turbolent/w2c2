@@ -184,8 +184,10 @@ To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e
 
 - On Linux, try installing a package named like `libdwarf-dev`
 - On macOS, you can use [Homebrew](https://brew.sh/) and install `libdwarf` (not `dwarf`!)
-- w2c2 currently defaults to using the libdwarf API of >=v0.4.2. v0.6.0 has been tested to work successfully too.
-- If using a version <0.4.2, try passing `-DDWARF_OLD=1` to CMake. Version 20200114 is known to work.
+- w2c2 currently defaults to using the libdwarf API of >=v0.4.2.
+  v0.6.0 has been tested to work successfully too.
+- If using a version <0.4.2, try passing `-DDWARF_OLD=1` to CMake.
+  Version 20201020 or later is required.
 - Since version 0.1.1, libdwarf ships with a pkg-config file, which CMake should be able to detect automatically.
 
   If libdwarf cannot be automatically found by CMake, you get the following message:

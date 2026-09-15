@@ -96,6 +96,16 @@ jobs:
         working-directory: ./w2c2
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
 
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.system.target == 'clang' && matrix.build == 'debug'
+        name: Test w2c2 with ASan
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./w2c2
+        run: |
+          make clean
+          make BUILD=debug SANITIZERS=address FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+          make test BUILD=debug SANITIZERS=address FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+
       - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Build futex
         working-directory: ./futex
