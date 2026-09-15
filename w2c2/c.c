@@ -6736,7 +6736,14 @@ wasmCWriteModule(
     }
 
     strcpy(outputName, outputPath);
-    strcpy(outputName, basename(outputName));
+    {
+        char* outputBaseName = basename(outputName);
+        memmove(
+            outputName,
+            outputBaseName,
+            strlen(outputBaseName) + 1
+        );
+    }
 
     strcpy(headerName, outputName);
 
