@@ -8,6 +8,7 @@
 
 typedef struct WasmCWriteModuleOptions {
     const char* outputPath;
+    /* A zero thread count selects one worker. */
     U32 threadCount;
     U32 functionsPerFile;
     bool pretty;

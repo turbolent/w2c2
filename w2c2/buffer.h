@@ -9,6 +9,18 @@ typedef struct Buffer {
     size_t length;
 } Buffer;
 
+static const Buffer emptyBuffer = {NULL, 0};
+
+static
+W2C2_INLINE
+void
+bufferFree(
+    Buffer* buffer
+) {
+    free(buffer->data);
+    *buffer = emptyBuffer;
+}
+
 static
 W2C2_INLINE
 void

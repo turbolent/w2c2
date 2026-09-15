@@ -130,5 +130,6 @@ testStringBuilder(void) {
         }
     }
 
+    stringBuilderFree(&builder);
     fprintf(stderr, "PASS testStringBuilder\n");
 }

@@ -2469,6 +2469,7 @@ wasmCWriteBranchTableExpr(
     WasmCFunctionWriter* writer
 ) {
     WasmBranchTableInstruction instruction;
+    bool result = false;
     if (!wasmBranchTableInstructionRead(writer->code, &instruction)) {
         fprintf(stderr, "w2c2: invalid br_table instruction encoding\n");
         return false;
@@ -2477,21 +2478,21 @@ wasmCWriteBranchTableExpr(
     if (!writer->ignore) {
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-        MUST (wasmCWriteIndent(writer))
+        MUST_OR_GOTO (cleanup, wasmCWriteIndent(writer))
         if (writer->pretty) {
-            MUST (wasmCWrite(writer, "switch ("))
+            MUST_OR_GOTO (cleanup, wasmCWrite(writer, "switch ("))
         } else {
-            MUST (wasmCWrite(writer, "switch("))
+            MUST_OR_GOTO (cleanup, wasmCWrite(writer, "switch("))
         }
-        MUST (wasmCWriteStringStackName(
+        MUST_OR_GOTO (cleanup, wasmCWriteStringStackName(
             writer->builder,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
         if (writer->pretty) {
-            MUST (wasmCWrite(writer, ") {\n"))
+            MUST_OR_GOTO (cleanup, wasmCWrite(writer, ") {\n"))
         } else {
-            MUST (wasmCWrite(writer, "){\n"))
+            MUST_OR_GOTO (cleanup, wasmCWrite(writer, "){\n"))
         }
 
         wasmTypeStackDrop(writer->typeStack, 1);
@@ -2499,41 +2500,43 @@ wasmCWriteBranchTableExpr(
         {
             U32 index = 0;
             for (; index < instruction.labelIndexCount; index++) {
-                MUST (wasmCWriteIndent(writer))
-                MUST (wasmCWrite(writer, "case "))
-                MUST (stringBuilderAppendU32(writer->builder, index))
-                MUST (wasmCWrite(writer, ":\n"))
+                MUST_OR_GOTO (cleanup, wasmCWriteIndent(writer))
+                MUST_OR_GOTO (cleanup, wasmCWrite(writer, "case "))
+                MUST_OR_GOTO (cleanup, stringBuilderAppendU32(writer->builder, index))
+                MUST_OR_GOTO (cleanup, wasmCWrite(writer, ":\n"))
                 writer->indent++;
                 {
                     const U32 labelIndex = wasmLabelStackGetTopIndex(
                         writer->labelStack,
                         instruction.labelIndices[index]
                     );
-                    MUST (wasmCWriteGoto(writer, labelIndex))
+                    MUST_OR_GOTO (cleanup, wasmCWriteGoto(writer, labelIndex))
                 }
                 writer->indent--;
             }
         }
 
-        MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "default:\n"))
+        MUST_OR_GOTO (cleanup, wasmCWriteIndent(writer))
+        MUST_OR_GOTO (cleanup, wasmCWrite(writer, "default:\n"))
         writer->indent++;
         {
             const U32 labelIndex = wasmLabelStackGetTopIndex(
                 writer->labelStack,
                 instruction.defaultLabelIndex
             );
-            MUST (wasmCWriteGoto(writer, labelIndex))
+            MUST_OR_GOTO (cleanup, wasmCWriteGoto(writer, labelIndex))
         }
         writer->indent--;
 
-        MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "}\n"))
+        MUST_OR_GOTO (cleanup, wasmCWriteIndent(writer))
+        MUST_OR_GOTO (cleanup, wasmCWrite(writer, "}\n"))
     }
 
-    wasmBranchTableInstructionFree(instruction);
+    result = true;
 
-    return true;
+cleanup:
+    wasmBranchTableInstructionFree(instruction);
+    return result;
 }
 
 static
@@ -2580,6 +2583,22 @@ wasmCGetDebugLine(
     }
 
     return debugLine;
+}
+
+static
+WasmDebugLines
+wasmCDebugLinesAtAddress(
+    WasmDebugLines debugLines,
+    const size_t absoluteAddress
+) {
+    while (debugLines.length > 1
+           && absoluteAddress >= debugLines.debugLines[1].address) {
+
+        debugLines.length--;
+        debugLines.debugLines++;
+    }
+
+    return debugLines;
 }
 
 static
@@ -4398,6 +4417,7 @@ wasmCWriteFunctionBody(
     WasmOpcode opcode = wasmOpcodeUnreachable;
     WasmLabel label = wasmEmptyLabel;
     WasmValueType* resultType = NULL;
+    bool result = false;
 
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -4413,7 +4433,7 @@ wasmCWriteFunctionBody(
         resultType = NULL;
     }
 
-    MUST (stringBuilderInitialize(&stringBuilder))
+    MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
 
     {
         WasmCFunctionWriter writer;
@@ -4433,10 +4453,13 @@ wasmCWriteFunctionBody(
         writer.multipleModules = multipleModules;
         writer.debugLines = debugLines;
 
-        MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
-        MUST (wasmCWriteFunctionCode(&writer, &opcode))
-        MUST (wasmCWriteLabel(&writer, label.index))
-        MUST (wasmCWriteFunctionReturn(&writer, functionType))
+        MUST_OR_GOTO (
+            cleanup,
+            wasmLabelStackPush(writer.labelStack, 0, resultType, &label)
+        )
+        MUST_OR_GOTO (cleanup, wasmCWriteFunctionCode(&writer, &opcode))
+        MUST_OR_GOTO (cleanup, wasmCWriteLabel(&writer, label.index))
+        MUST_OR_GOTO (cleanup, wasmCWriteFunctionReturn(&writer, functionType))
     }
 
     fputs("{\n", file);
@@ -4445,9 +4468,11 @@ wasmCWriteFunctionBody(
     fputs(stringBuilder.string, file);
     fputs("}\n", file);
 
-    stringBuilderFree(&stringBuilder);
+    result = true;
 
-    return true;
+cleanup:
+    stringBuilderFree(&stringBuilder);
+    return result;
 }
 
 static
@@ -4586,6 +4611,7 @@ wasmCWriteFunctionImplementations(
     WasmTypeStack typeStack = wasmEmptyTypeStack;
     WasmTypeStack stackDeclarations = wasmEmptyTypeStack;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
+    bool result = false;
 
     U32 functionIDIndex = startIDIndex;
     for (; functionIDIndex < endIDIndex; functionIDIndex++) {
@@ -4615,7 +4641,7 @@ wasmCWriteFunctionImplementations(
             multipleModules
         );
         fputc(' ', file);
-        MUST (wasmCWriteFunctionBody(
+        MUST_OR_GOTO (cleanup, wasmCWriteFunctionBody(
             file,
             &typeStack,
             &stackDeclarations,
@@ -4631,11 +4657,13 @@ wasmCWriteFunctionImplementations(
         fputs("\n", file);
     }
 
+    result = true;
+
+cleanup:
     wasmTypeStackFree(&typeStack);
     wasmTypeStackFree(&stackDeclarations);
     wasmLabelsFree(&labelStack.labels);
-
-    return true;
+    return result;
 }
 
 static
@@ -4748,7 +4776,8 @@ wasmCWriteInitGlobals(
 
     if (globalCount > 0) {
         StringBuilder stringBuilder = emptyStringBuilder;
-        MUST (stringBuilderInitialize(&stringBuilder))
+        bool result = false;
+        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
 
         fprintf(file, "static void %sInitGlobals(%sInstance* i) {\n", moduleName, moduleName);
 
@@ -4768,9 +4797,11 @@ wasmCWriteInitGlobals(
                 }
                 {
                     const Buffer code = global.init;
-                    MUST (stringBuilderReset(&stringBuilder))
-
-                    MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                    MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
+                    MUST_OR_GOTO (
+                        cleanup,
+                        wasmCWriteConstantExpr(&stringBuilder, module, code)
+                    )
                     fputs(stringBuilder.string, file);
                 }
                 fputs(";\n", file);
@@ -4779,7 +4810,11 @@ wasmCWriteInitGlobals(
 
         fputs("}\n\n", file);
 
+        result = true;
+
+cleanup:
         stringBuilderFree(&stringBuilder);
+        return result;
     }
 
     return true;
@@ -5204,7 +5239,8 @@ wasmCWriteDataSegments(
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteDataSegmentsFromSection(
     FILE* file,
     const WasmModule* module,
@@ -5215,6 +5251,7 @@ wasmCWriteDataSegmentsFromSection(
 
     U32 dataSegmentIndex = 0;
     FILE* segmentsFile = NULL;
+    bool result = false;
 
     switch (mode) {
         case wasmDataSegmentModeGNULD: {
@@ -5252,7 +5289,7 @@ wasmCWriteDataSegmentsFromSection(
         }
         default: {
             fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
-            abort();
+            return false;
         }
     }
 
@@ -5264,7 +5301,7 @@ wasmCWriteDataSegmentsFromSection(
             filename,
             strerror(errno)
         );
-        abort();
+        return false;
     }
 
     for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
@@ -5274,23 +5311,30 @@ wasmCWriteDataSegmentsFromSection(
         if (written != length) {
             fprintf(
                 stderr,
-                "w2c2: failed to write data segment %u: %s",
+                "w2c2: failed to write data segment %u: %s\n",
                 dataSegmentIndex,
                 strerror(errno)
             );
-            abort();
+            goto cleanup;
         }
     }
 
+    result = true;
+
+cleanup:
     if (fclose(segmentsFile) != 0) {
-        fprintf(
-            stderr,
-            "w2c2: failed to close data segments file %s: %s",
-            filename,
-            strerror(errno)
-        );
-        abort();
+        if (result) {
+            fprintf(
+                stderr,
+                "w2c2: failed to close data segments file %s: %s\n",
+                filename,
+                strerror(errno)
+            );
+        }
+        result = false;
     }
+
+    return result;
 }
 
 static
@@ -5354,7 +5398,8 @@ wasmCWriteInitMemories(
     if (memoryCount > 0) {
 
         StringBuilder stringBuilder = emptyStringBuilder;
-        MUST (stringBuilderInitialize(&stringBuilder))
+        bool result = false;
+        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
 
         fprintf(
             file,
@@ -5455,8 +5500,11 @@ wasmCWriteInitMemories(
                             false
                         );
                         fputs(", ", file);
-                        MUST (stringBuilderReset(&stringBuilder))
-                        MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                        MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
+                        MUST_OR_GOTO (
+                            cleanup,
+                            wasmCWriteConstantExpr(&stringBuilder, module, code)
+                        )
                         fputs(stringBuilder.string, file);
                         /* TODO: add support for multiple modules */
                         switch (dataSegmentMode) {
@@ -5480,7 +5528,11 @@ wasmCWriteInitMemories(
 
         fputs("}\n\n", file);
 
+        result = true;
+
+cleanup:
         stringBuilderFree(&stringBuilder);
+        return result;
     }
     return true;
 }
@@ -5580,7 +5632,8 @@ wasmCWriteInitTables(
     const U32 tableCount = module->tables.count;
     if (tableCount > 0 || elementSegmentCount > 0) {
         StringBuilder stringBuilder = emptyStringBuilder;
-        MUST (stringBuilderInitialize(&stringBuilder))
+        bool result = false;
+        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
 
         fprintf(file, "static void %sInitTables(%sInstance* i) {\n", moduleName, moduleName);
 
@@ -5618,8 +5671,11 @@ wasmCWriteInitTables(
                 }
                 {
                     const Buffer code = elementSegment.offset;
-                    MUST (stringBuilderReset(&stringBuilder))
-                    MUST (wasmCWriteConstantExpr(&stringBuilder, module, code))
+                    MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
+                    MUST_OR_GOTO (
+                        cleanup,
+                        wasmCWriteConstantExpr(&stringBuilder, module, code)
+                    )
                     fputs(stringBuilder.string, file);
                 }
                 fputs(";\n", file);
@@ -5646,7 +5702,11 @@ wasmCWriteInitTables(
 
         fputs("}\n\n", file);
 
+        result = true;
+
+cleanup:
         stringBuilderFree(&stringBuilder);
+        return result;
     }
 
     return true;
@@ -6139,6 +6199,7 @@ wasmCWriteImplementationFile(
     FILE* file = NULL;
     char filename[W2C2_IMPL_FILENAME_LENGTH+1];
     const U32 functionCount = (U32)functionIDs.length;
+    bool result = false;
 
     U32 endFunctionIDIndex = startFunctionIDIndex + (U32)functionsPerFile;
     if (endFunctionIDIndex > functionCount) {
@@ -6164,7 +6225,7 @@ wasmCWriteImplementationFile(
 
     wasmCWriteIncludes(file, headerName);
 
-    MUST (wasmCWriteFunctionImplementations(
+    MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
         file,
         module,
         moduleName,
@@ -6177,17 +6238,21 @@ wasmCWriteImplementationFile(
         multipleModules
     ))
 
-    if (fclose(file) != 0) {
-        fprintf(
-            stderr,
-            "w2c2: failed to close implementation file: %s: %s\n",
-            filename,
-            strerror(errno)
-        );
-        return false;
-    }
+    result = true;
 
-    return true;
+cleanup:
+    if (fclose(file) != 0) {
+        if (result) {
+            fprintf(
+                stderr,
+                "w2c2: failed to close implementation file: %s: %s\n",
+                filename,
+                strerror(errno)
+            );
+        }
+        result = false;
+    }
+    return result;
 }
 
 #if HAS_PTHREAD
@@ -6204,8 +6269,7 @@ typedef struct WasmCImplementationWriterTask {
     bool pretty;
     bool debug;
     bool multipleModules;
-    bool result;
-    WasmDebugLines* debugLines;
+    WasmDebugLines debugLines;
 } WasmCImplementationWriterTask;
 
 typedef struct WasmCImplementationConcurrentWriter {
@@ -6214,20 +6278,40 @@ typedef struct WasmCImplementationConcurrentWriter {
     pthread_cond_t produce;
     WasmCImplementationWriterTask* task;
     bool done;
+    bool failed;
 } WasmCImplementationConcurrentWriter;
 
 static
-WasmCImplementationConcurrentWriter
-wasmCImplementationConcurrentWriterNew(
-    void
+bool
+WARN_UNUSED_RESULT
+wasmCImplementationConcurrentWriterInitialize(
+    WasmCImplementationConcurrentWriter* writer
 ) {
-    WasmCImplementationConcurrentWriter writer;
-    pthread_mutex_init(&writer.mutex, NULL);
-    pthread_cond_init(&writer.consume, NULL);
-    pthread_cond_init(&writer.produce, NULL);
-    writer.task = NULL;
-    writer.done = false;
-    return writer;
+    int err = pthread_mutex_init(&writer->mutex, NULL);
+    if (err != 0) {
+        fprintf(stderr, "w2c2: failed to initialize writer mutex: %s\n", strerror(err));
+        return false;
+    }
+
+    err = pthread_cond_init(&writer->consume, NULL);
+    if (err != 0) {
+        fprintf(stderr, "w2c2: failed to initialize writer condition: %s\n", strerror(err));
+        pthread_mutex_destroy(&writer->mutex);
+        return false;
+    }
+
+    err = pthread_cond_init(&writer->produce, NULL);
+    if (err != 0) {
+        fprintf(stderr, "w2c2: failed to initialize writer condition: %s\n", strerror(err));
+        pthread_cond_destroy(&writer->consume);
+        pthread_mutex_destroy(&writer->mutex);
+        return false;
+    }
+
+    writer->task = NULL;
+    writer->done = false;
+    writer->failed = false;
+    return true;
 }
 
 static
@@ -6277,7 +6361,7 @@ wasmCImplementationWriterThread(
             const bool pretty = task->pretty;
             const bool debug = task->debug;
             const bool multipleModules = task->multipleModules;
-            WasmDebugLines* debugLines = task->debugLines;
+            WasmDebugLines debugLines = task->debugLines;
 
             writer->task = NULL;
 
@@ -6288,7 +6372,7 @@ wasmCImplementationWriterThread(
                     module,
                     moduleName,
                     headerName,
-                    debugLines,
+                    &debugLines,
                     filePrefix,
                     fileIndex,
                     functionsPerFile,
@@ -6306,7 +6390,14 @@ wasmCImplementationWriterThread(
                         fileIndex,
                         startFunctionID.functionIndex
                     );
-                    exit(1);
+
+                    pthread_mutex_lock(&writer->mutex);
+                    writer->failed = true;
+                    writer->done = true;
+                    pthread_cond_broadcast(&writer->consume);
+                    pthread_cond_broadcast(&writer->produce);
+                    pthread_mutex_unlock(&writer->mutex);
+                    return NULL;
                 }
             }
         }
@@ -6342,18 +6433,30 @@ wasmCWriteModuleImplementationFiles(
     }
     fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
-    {
-
 #if HAS_PTHREAD
+    {
         U32 threadCount = options.threadCount;
-        pthread_t* threads = calloc(threadCount, sizeof(pthread_t));
+        pthread_t* threads = NULL;
+        U32 createdThreadCount = 0;
         U32 jobIndex = 0;
-
-        bool setDebugLines = options.debug && options.threadCount == 1;
-
-        WasmCImplementationConcurrentWriter writer = wasmCImplementationConcurrentWriterNew();
-
+        bool result = true;
+        WasmCImplementationConcurrentWriter writer;
         WasmCImplementationWriterTask task;
+
+        if (threadCount == 0) {
+            threadCount = 1;
+        }
+        if (!wasmCImplementationConcurrentWriterInitialize(&writer)) {
+            return false;
+        }
+
+        threads = calloc(threadCount, sizeof(pthread_t));
+        if (threads == NULL) {
+            fprintf(stderr, "w2c2: failed to allocate implementation threads\n");
+            wasmCImplementationConcurrentWriterDestroy(&writer);
+            return false;
+        }
+
         task.functionsPerFile = functionsPerFile;
         task.module = module;
         task.moduleName = moduleName;
@@ -6362,9 +6465,9 @@ wasmCWriteModuleImplementationFiles(
         task.debug = options.debug;
         task.multipleModules = options.multipleModules;
 
-        for (; jobIndex < threadCount; jobIndex++) {
+        for (; createdThreadCount < threadCount; createdThreadCount++) {
             int err = pthread_create(
-                &threads[jobIndex],
+                &threads[createdThreadCount],
                 NULL,
                 wasmCImplementationWriterThread,
                 &writer
@@ -6375,83 +6478,105 @@ wasmCWriteModuleImplementationFiles(
                     "w2c2: failed to create implementations thread: %s\n",
                     strerror(err)
                 );
-                return false;
+                result = false;
+                goto finish;
             }
         }
-#endif /* HAS_PTHREAD */
 
         for (; fileIndex < fileCount; fileIndex++) {
-            U32 startFunctionIDIndex = fileIndex * functionsPerFile;
-#if HAS_PTHREAD
+            const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
             pthread_mutex_lock(&writer.mutex);
 
-            while (writer.task != NULL) {
+            while (!writer.failed && writer.task != NULL) {
                 pthread_cond_wait(
                     &writer.produce,
                     &writer.mutex
                 );
             }
 
+            if (writer.failed) {
+                pthread_mutex_unlock(&writer.mutex);
+                result = false;
+                break;
+            }
+
             task.filePrefix = filePrefix;
             task.fileIndex = fileIndex;
             task.startFunctionIDIndex = startFunctionIDIndex;
             task.functionIDs = functionIDs;
-            if (setDebugLines) {
-                task.debugLines = &debugLines;
+            if (options.debug && debugLines.length > 0) {
+                const WasmFunctionID startFunctionID =
+                    functionIDs.functionIDs[startFunctionIDIndex];
+                const WasmFunction startFunction =
+                    module->functions.functions[startFunctionID.functionIndex];
+                task.debugLines = wasmCDebugLinesAtAddress(
+                    debugLines,
+                    startFunction.start
+                );
             } else {
-                task.debugLines = NULL;
+                task.debugLines = emptyWasmDebugLines;
             }
 
             writer.task = &task;
 
             pthread_cond_signal(&writer.consume);
             pthread_mutex_unlock(&writer.mutex);
-
-#else
-            MUST (wasmCWriteImplementationFile(
-                module,
-                moduleName,
-                headerName,
-                &debugLines,
-                filePrefix,
-                fileIndex,
-                functionsPerFile,
-                startFunctionIDIndex,
-                functionIDs,
-                options.pretty,
-                options.debug,
-                options.multipleModules
-            ))
-#endif /* HAS_PTHREAD */
         }
-#if HAS_PTHREAD
 
+finish:
         pthread_mutex_lock(&writer.mutex);
 
-        while (writer.task != NULL) {
+        while (!writer.failed && writer.task != NULL) {
             pthread_cond_wait(
                 &writer.produce,
                 &writer.mutex
             );
         }
 
+        if (writer.failed) {
+            result = false;
+        }
         writer.done = true;
         pthread_cond_broadcast(&writer.consume);
         pthread_mutex_unlock(&writer.mutex);
 
-        for (jobIndex = 0; jobIndex < threadCount; jobIndex++) {
+        for (jobIndex = 0; jobIndex < createdThreadCount; jobIndex++) {
             int err = pthread_join(threads[jobIndex], NULL);
-            if (err) {
+            if (err != 0) {
                 fprintf(stderr, "w2c2: failed to join writer thread: %s\n", strerror(err));
-                return false;
+                result = false;
             }
         }
 
-        free(threads);
+        if (writer.failed) {
+            result = false;
+        }
 
+        free(threads);
         wasmCImplementationConcurrentWriterDestroy(&writer);
-#endif /* HAS_PTHREAD */
+        return result;
     }
+#else
+    for (; fileIndex < fileCount; fileIndex++) {
+        const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
+        if (!wasmCWriteImplementationFile(
+            module,
+            moduleName,
+            headerName,
+            &debugLines,
+            filePrefix,
+            fileIndex,
+            functionsPerFile,
+            startFunctionIDIndex,
+            functionIDs,
+            options.pretty,
+            options.debug,
+            options.multipleModules
+        )) {
+            return false;
+        }
+    }
+#endif /* HAS_PTHREAD */
 
     return true;
 }
@@ -6470,6 +6595,7 @@ wasmCWriteModuleImplementation(
 ) {
     /* Create file */
     FILE* file = NULL;
+    bool result = false;
 
     file = fopen(filename, "w");
     if (file == NULL) {
@@ -6488,11 +6614,11 @@ wasmCWriteModuleImplementation(
         case wasmDataSegmentModeGNULD:
         case wasmDataSegmentModeSectcreate1:
         case wasmDataSegmentModeSectcreate2: {
-            wasmCWriteDataSegmentsFromSection(
+            MUST_OR_GOTO (cleanup, wasmCWriteDataSegmentsFromSection(
                 file,
                 module,
                 options.dataSegmentMode
-            );
+            ))
             break;
         }
         case wasmDataSegmentModeArrays: {
@@ -6501,7 +6627,7 @@ wasmCWriteModuleImplementation(
         }
         default: {
             fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
-            abort();
+            goto cleanup;
         }
     }
 
@@ -6518,7 +6644,7 @@ wasmCWriteModuleImplementation(
     {
         WasmDebugLines debugLines = module->debugLines;
 
-        MUST (wasmCWriteFunctionImplementations(
+        MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
             file,
             module,
             moduleName,
@@ -6532,7 +6658,7 @@ wasmCWriteModuleImplementation(
         ))
     } else {
 
-        MUST (wasmCWriteModuleImplementationFiles(
+        MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
             module,
             moduleName,
             headerName,
@@ -6541,7 +6667,7 @@ wasmCWriteModuleImplementation(
             options
         ))
 
-        MUST (wasmCWriteModuleImplementationFiles(
+        MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
             module,
             moduleName,
             headerName,
@@ -6553,7 +6679,7 @@ wasmCWriteModuleImplementation(
 
     /* Write initializations code */
 
-    MUST (wasmCWriteInits(
+    MUST_OR_GOTO (cleanup, wasmCWriteInits(
         module,
         moduleName,
         file,
@@ -6562,19 +6688,21 @@ wasmCWriteModuleImplementation(
         options.multipleModules
     ))
 
-    /* Close file */
+    result = true;
 
+cleanup:
     if (fclose(file) != 0) {
-        fprintf(
-            stderr,
-            "w2c2: failed to close output file: %s: %s\n",
-            filename,
-            strerror(errno)
-        );
-        return false;
+        if (result) {
+            fprintf(
+                stderr,
+                "w2c2: failed to close output file: %s: %s\n",
+                filename,
+                strerror(errno)
+            );
+        }
+        result = false;
     }
-
-    return true;
+    return result;
 }
 
 bool
@@ -6591,8 +6719,31 @@ wasmCWriteModule(
 
     const char* outputPath = options.outputPath;
 
+    if (module == NULL || moduleName == NULL || outputPath == NULL) {
+        fprintf(stderr, "w2c2: invalid module writer argument\n");
+        return false;
+    }
+
+    switch (options.dataSegmentMode) {
+        case wasmDataSegmentModeArrays:
+        case wasmDataSegmentModeGNULD:
+        case wasmDataSegmentModeSectcreate1:
+        case wasmDataSegmentModeSectcreate2:
+            break;
+        default:
+            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
+            return false;
+    }
+
     strcpy(outputName, outputPath);
-    strcpy(outputName, basename(outputName));
+    {
+        char* outputBaseName = basename(outputName);
+        memmove(
+            outputName,
+            outputBaseName,
+            strlen(outputBaseName) + 1
+        );
+    }
 
     strcpy(headerName, outputName);
 

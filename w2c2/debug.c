@@ -119,8 +119,10 @@ compareDebugLines(const void *a, const void *b) {
 static
 void
 appendSubprogramDebugLine(
+    Dwarf_Debug debug,
     Dwarf_Die die,
     char** files,
+    Dwarf_Signed fileCount,
     WasmDebugLines* debugLines
 ) {
     int res = DW_DLV_ERROR;
@@ -134,37 +136,45 @@ appendSubprogramDebugLine(
 
     res = dwarf_lowpc(die, &address, &error);
     if (res != DW_DLV_OK || address >= 0xffffffff) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_hasattr(die, DW_AT_decl_line, &hasDeclLine, &error);
     if (res != DW_DLV_OK || !hasDeclLine) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_hasattr(die, DW_AT_decl_file, &hasDeclFile, &error);
     if (res != DW_DLV_OK || !hasDeclFile) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_attr(die, DW_AT_decl_line, &attr, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_formudata(attr, &line, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
+    dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    attr = NULL;
 
     res = dwarf_attr(die, DW_AT_decl_file, &attr, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_formudata(attr, &fileIndex, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
+    }
+    dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    attr = NULL;
+
+    if (fileIndex == 0 || fileIndex > (Dwarf_Unsigned)fileCount) {
+        goto cleanup;
     }
 
     {
@@ -173,9 +183,20 @@ appendSubprogramDebugLine(
         debugLine.path = strdup(files[fileIndex - 1]);
         debugLine.number = line;
 
-        if (!wasmDebugLinesAppend(debugLines, debugLine)) {
+        if (debugLine.path == NULL
+            || !wasmDebugLinesAppend(debugLines, debugLine)) {
+
             /* TODO: bubble up error? */
+            free(debugLine.path);
         }
+    }
+
+cleanup:
+    if (attr != NULL) {
+        dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    }
+    if (error != NULL) {
+        dwarf_dealloc(debug, error, DW_DLA_ERROR);
     }
 }
 
@@ -185,6 +206,7 @@ appendSubprogramDebugLines(
     Dwarf_Debug debug,
     Dwarf_Die rootDie,
     char** files,
+    Dwarf_Signed fileCount,
     WasmDebugLines* debugLines
 ) {
     int res = DW_DLV_ERROR;
@@ -192,13 +214,14 @@ appendSubprogramDebugLines(
     Dwarf_Error error = NULL;
 
     res = dwarf_child(rootDie, &childDie, &error);
-    switch (res) {
-        case DW_DLV_ERROR: {
+    if (res != DW_DLV_OK) {
+        if (res == DW_DLV_ERROR) {
             fprintf(stderr, "w2c2: failed to get child DIE\n");
-            return;
         }
-        case DW_DLV_NO_ENTRY:
-            return;
+        if (error != NULL) {
+            dwarf_dealloc(debug, error, DW_DLA_ERROR);
+        }
+        return;
     }
 
     while (true) {
@@ -208,29 +231,46 @@ appendSubprogramDebugLines(
         res = dwarf_tag(childDie, &childDieTag, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get DIE tag\n");
+            if (error != NULL) {
+                dwarf_dealloc(debug, error, DW_DLA_ERROR);
+                error = NULL;
+            }
         }
 
         if (childDieTag == DW_TAG_subprogram) {
-            appendSubprogramDebugLine(childDie, files, debugLines);
+            appendSubprogramDebugLine(
+                debug,
+                childDie,
+                files,
+                fileCount,
+                debugLines
+            );
         }
 
         if (childDieTag != DW_TAG_base_type
             && childDieTag != DW_TAG_lexical_block) {
 
-            appendSubprogramDebugLines(debug, childDie, files, debugLines);
+            appendSubprogramDebugLines(
+                debug,
+                childDie,
+                files,
+                fileCount,
+                debugLines
+            );
         }
 
         res = dwarf_siblingof(debug, childDie, &nextChildDie, &error);
         dwarf_dealloc(debug, childDie, DW_DLA_DIE);
         childDie = nextChildDie;
 
-        switch (res) {
-            case DW_DLV_ERROR: {
+        if (res != DW_DLV_OK) {
+            if (res == DW_DLV_ERROR) {
                 fprintf(stderr, "w2c2: failed to get child sibling DIE\n");
-                return;
             }
-            case DW_DLV_NO_ENTRY:
-                return;
+            if (error != NULL) {
+                dwarf_dealloc(debug, error, DW_DLA_ERROR);
+            }
+            return;
         }
     }
 }
@@ -240,12 +280,27 @@ wasmParseDebugInfo(
     WasmDebugSections sections
 ) {
     WasmDebugLines debugLines = emptyWasmDebugLines;
+    const char* version = dwarf_package_version();
     int res = DW_DLV_ERROR;
     Dwarf_Obj_Access_Interface* interface = NULL;
-    Dwarf_Debug debug;
+    Dwarf_Debug debug = NULL;
     Dwarf_Error error = NULL;
 
-    interface = (Dwarf_Obj_Access_Interface *)calloc(1, sizeof(Dwarf_Obj_Access_Interface*));
+    if (version == NULL
+        || strlen(version) != 8
+        || strspn(version, "0123456789") != 8
+        || strcmp(version, "20201020") < 0) {
+
+        fprintf(
+            stderr,
+            "w2c2: libdwarf 20201020 or newer is required"
+            " for the old libdwarf API; found %s\n",
+            version == NULL ? "unknown" : version
+        );
+        goto end;
+    }
+
+    interface = (Dwarf_Obj_Access_Interface*)calloc(1, sizeof(*interface));
     if (!interface) {
         fprintf(stderr, "w2c2: failed to allocate DWARF interface\n");
         goto end;
@@ -271,37 +326,47 @@ wasmParseDebugInfo(
 
         res = dwarf_next_cu_header(debug, NULL, NULL, NULL, NULL, NULL, &error);
         if (res != DW_DLV_OK) {
+            if (error != NULL) {
+                dwarf_dealloc(debug, error, DW_DLA_ERROR);
+                error = NULL;
+            }
             break;
         }
 
         res = dwarf_siblingof(debug, NULL, &cuDie, &error);
         if (res != DW_DLV_OK) {
-            goto free_die;
+            goto cleanup_cu;
         }
 
         res = dwarf_tag(cuDie, &tag, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get DIE tag\n");
-            goto free_die;
+            goto cleanup_cu;
         }
 
         if (tag != DW_TAG_compile_unit) {
             fprintf(stderr, "w2c2: unexpected non-compile unit DIE tag: %d\n", tag);
-            goto free_die;
+            goto cleanup_cu;
         }
 
         res = dwarf_srcfiles(cuDie, &files, &fileCount, &error);
         if  (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get CU DIE files\n");
-            goto free_die;
+            goto cleanup_cu;
         }
 
-        appendSubprogramDebugLines(debug, cuDie, files, &debugLines);
+        appendSubprogramDebugLines(
+            debug,
+            cuDie,
+            files,
+            fileCount,
+            &debugLines
+        );
 
         res = dwarf_srclines(cuDie, &lines, &lineCount, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get lines\n");
-            goto free_files;
+            goto cleanup_cu;
         }
 
         for (; lineIndex < lineCount; lineIndex++) {
@@ -313,7 +378,7 @@ wasmParseDebugInfo(
             res = dwarf_lineaddr(line, &debugLine.address, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line address\n");
-                goto loop_end;
+                goto cleanup_cu;
             }
 
             /* TODO: why the big jump? */
@@ -325,55 +390,73 @@ wasmParseDebugInfo(
             res = dwarf_linesrc(line, &path, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line source\n");
-                goto loop_end;
+                goto cleanup_cu;
             }
             debugLine.path = strdup(path);
             dwarf_dealloc(debug, path, DW_DLA_STRING);
+            path = NULL;
+            if (debugLine.path == NULL) {
+                goto cleanup_cu;
+            }
 
             /* Line number */
             res = dwarf_lineno(line, &debugLine.number, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line number\n");
-                goto loop_end;
+                free(debugLine.path);
+                goto cleanup_cu;
             }
 
             if (!wasmDebugLinesAppend(&debugLines, debugLine)) {
-                goto loop_end;
+                free(debugLine.path);
+                goto cleanup_cu;
             }
         }
 
-free_die:
-        dwarf_dealloc(debug, cuDie, DW_DLA_DIE);
-
-free_files:
-        {
+cleanup_cu:
+        if (lines != NULL) {
+            dwarf_srclines_dealloc(debug, lines, lineCount);
+        }
+        if (files != NULL) {
             int fileIndex = 0;
             for (fileIndex = 0; fileIndex < fileCount; fileIndex++) {
                 dwarf_dealloc(debug, files[fileIndex], DW_DLA_STRING);
             }
+            dwarf_dealloc(debug, files, DW_DLA_LIST);
         }
-        dwarf_dealloc(debug, files, DW_DLA_LIST);
-
-loop_end:
-        dwarf_srclines_dealloc(debug, lines, lineCount);
+        if (cuDie != NULL) {
+            dwarf_dealloc(debug, cuDie, DW_DLA_DIE);
+        }
+        if (error != NULL) {
+            dwarf_dealloc(debug, error, DW_DLA_ERROR);
+            error = NULL;
+        }
     }
 
-    res = dwarf_object_finish(debug, &error);
-    if (res != DW_DLV_OK) {
-        fprintf(stderr, "w2c2: failed to finish DWARF reader\n");
+    if (debug != NULL) {
+        res = dwarf_object_finish(debug, &error);
+        debug = NULL;
+        if (res != DW_DLV_OK) {
+            fprintf(stderr, "w2c2: failed to finish DWARF reader\n");
+        }
     }
 
 end:
+    if (error != NULL) {
+        dwarf_dealloc_error(NULL, error);
+    }
     if (interface != NULL) {
         free(interface);
     }
 
-    qsort(
-        debugLines.debugLines,
-        debugLines.length,
-        sizeof(WasmDebugLine),
-        compareDebugLines
-    );
+    if (debugLines.length > 1) {
+        qsort(
+            debugLines.debugLines,
+            debugLines.length,
+            sizeof(WasmDebugLine),
+            compareDebugLines
+        );
+    }
 
     return debugLines;
 }
@@ -517,8 +600,10 @@ compareDebugLines(
 static
 void
 appendSubprogramDebugLine(
+    Dwarf_Debug debug,
     Dwarf_Die die,
     char** files,
+    Dwarf_Signed fileCount,
     WasmDebugLines* debugLines
 ) {
     int res = DW_DLV_ERROR;
@@ -532,37 +617,45 @@ appendSubprogramDebugLine(
 
     res = dwarf_lowpc(die, &address, &error);
     if (res != DW_DLV_OK || address >= 0xffffffff) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_hasattr(die, DW_AT_decl_line, &hasDeclLine, &error);
     if (res != DW_DLV_OK || !hasDeclLine) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_hasattr(die, DW_AT_decl_file, &hasDeclFile, &error);
     if (res != DW_DLV_OK || !hasDeclFile) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_attr(die, DW_AT_decl_line, &attr, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_formudata(attr, &line, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
+    dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    attr = NULL;
 
     res = dwarf_attr(die, DW_AT_decl_file, &attr, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
     }
 
     res = dwarf_formudata(attr, &fileIndex, &error);
     if (res != DW_DLV_OK) {
-        return;
+        goto cleanup;
+    }
+    dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    attr = NULL;
+
+    if (fileIndex == 0 || fileIndex > (Dwarf_Unsigned)fileCount) {
+        goto cleanup;
     }
 
     {
@@ -571,9 +664,20 @@ appendSubprogramDebugLine(
         debugLine.path = strdup(files[fileIndex - 1]);
         debugLine.number = line;
 
-        if (!wasmDebugLinesAppend(debugLines, debugLine)) {
+        if (debugLine.path == NULL
+            || !wasmDebugLinesAppend(debugLines, debugLine)) {
+
             /* TODO: bubble up error? */
+            free(debugLine.path);
         }
+    }
+
+cleanup:
+    if (attr != NULL) {
+        dwarf_dealloc(debug, attr, DW_DLA_ATTR);
+    }
+    if (error != NULL) {
+        dwarf_dealloc(debug, error, DW_DLA_ERROR);
     }
 }
 
@@ -583,6 +687,7 @@ appendSubprogramDebugLines(
     Dwarf_Debug debug,
     Dwarf_Die rootDie,
     char** files,
+    Dwarf_Signed fileCount,
     WasmDebugLines* debugLines
 ) {
     int res = DW_DLV_ERROR;
@@ -590,13 +695,14 @@ appendSubprogramDebugLines(
     Dwarf_Error error = NULL;
 
     res = dwarf_child(rootDie, &childDie, &error);
-    switch (res) {
-        case DW_DLV_ERROR: {
+    if (res != DW_DLV_OK) {
+        if (res == DW_DLV_ERROR) {
             fprintf(stderr, "w2c2: failed to get child DIE\n");
-            return;
         }
-        case DW_DLV_NO_ENTRY:
-            return;
+        if (error != NULL) {
+            dwarf_dealloc(debug, error, DW_DLA_ERROR);
+        }
+        return;
     }
 
     while (true) {
@@ -606,29 +712,46 @@ appendSubprogramDebugLines(
         res = dwarf_tag(childDie, &childDieTag, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get DIE tag\n");
+            if (error != NULL) {
+                dwarf_dealloc(debug, error, DW_DLA_ERROR);
+                error = NULL;
+            }
         }
 
         if (childDieTag == DW_TAG_subprogram) {
-            appendSubprogramDebugLine(childDie, files, debugLines);
+            appendSubprogramDebugLine(
+                debug,
+                childDie,
+                files,
+                fileCount,
+                debugLines
+            );
         }
 
         if (childDieTag != DW_TAG_base_type
             && childDieTag != DW_TAG_lexical_block) {
 
-            appendSubprogramDebugLines(debug, childDie, files, debugLines);
+            appendSubprogramDebugLines(
+                debug,
+                childDie,
+                files,
+                fileCount,
+                debugLines
+            );
         }
 
         res = dwarf_siblingof_b(debug, childDie, isInfo, &nextChildDie, &error);
         dwarf_dealloc(debug, childDie, DW_DLA_DIE);
         childDie = nextChildDie;
 
-        switch (res) {
-            case DW_DLV_ERROR: {
+        if (res != DW_DLV_OK) {
+            if (res == DW_DLV_ERROR) {
                 fprintf(stderr, "w2c2: failed to get child sibling DIE\n");
-                return;
             }
-            case DW_DLV_NO_ENTRY:
-                return;
+            if (error != NULL) {
+                dwarf_dealloc(debug, error, DW_DLA_ERROR);
+            }
+            return;
         }
     }
 }
@@ -640,7 +763,7 @@ wasmParseDebugInfo(
     WasmDebugLines debugLines = emptyWasmDebugLines;
     int res = DW_DLV_ERROR;
     Dwarf_Obj_Access_Interface_a* interface = NULL;
-    Dwarf_Debug debug;
+    Dwarf_Debug debug = NULL;
     Dwarf_Error error = NULL;
 
     interface = (Dwarf_Obj_Access_Interface_a*)calloc(1, sizeof(Dwarf_Obj_Access_Interface_a));
@@ -672,43 +795,53 @@ wasmParseDebugInfo(
 
         res = dwarf_next_cu_header_d(debug, isInfo, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error);
         if (res != DW_DLV_OK) {
+            if (error != NULL) {
+                dwarf_dealloc_error(debug, error);
+                error = NULL;
+            }
             break;
         }
 
         res = dwarf_siblingof_b(debug, NULL, isInfo, &cuDie, &error);
         if (res != DW_DLV_OK) {
-            goto free_die;
+            goto cleanup_cu;
         }
 
         res = dwarf_tag(cuDie, &tag, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get DIE tag\n");
-            goto free_die;
+            goto cleanup_cu;
         }
 
         if (tag != DW_TAG_compile_unit) {
             fprintf(stderr, "w2c2: unexpected non-compile unit DIE tag: %d\n", tag);
-            goto free_die;
+            goto cleanup_cu;
         }
 
         res = dwarf_srcfiles(cuDie, &files, &fileCount, &error);
         if  (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get CU DIE files\n");
-            goto free_die;
+            goto cleanup_cu;
         }
 
-        appendSubprogramDebugLines(debug, cuDie, files, &debugLines);
+        appendSubprogramDebugLines(
+            debug,
+            cuDie,
+            files,
+            fileCount,
+            &debugLines
+        );
 
         res = dwarf_srclines_b(cuDie, &version, &tableCount, &lineContext, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get line context\n");
-            goto free_files;
+            goto cleanup_cu;
         }
 
         res = dwarf_srclines_from_linecontext(lineContext, &lines, &lineCount, &error);
         if (res != DW_DLV_OK) {
             fprintf(stderr, "w2c2: failed to get lines from context\n");
-            goto free_files;
+            goto cleanup_cu;
         }
 
         for (; lineIndex < lineCount; lineIndex++) {
@@ -720,7 +853,7 @@ wasmParseDebugInfo(
             res = dwarf_lineaddr(line, &debugLine.address, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line address\n");
-                goto loop_end;
+                goto cleanup_cu;
             }
 
             /* TODO: why the big jump? */
@@ -732,55 +865,73 @@ wasmParseDebugInfo(
             res = dwarf_linesrc(line, &path, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line source\n");
-                goto loop_end;
+                goto cleanup_cu;
             }
             debugLine.path = strdup(path);
             dwarf_dealloc(debug, path, DW_DLA_STRING);
+            path = NULL;
+            if (debugLine.path == NULL) {
+                goto cleanup_cu;
+            }
 
             /* Line number */
             res = dwarf_lineno(line, &debugLine.number, &error);
             if (res != DW_DLV_OK) {
                 fprintf(stderr, "w2c2: failed to get line number\n");
-                goto loop_end;
+                free(debugLine.path);
+                goto cleanup_cu;
             }
 
             if (!wasmDebugLinesAppend(&debugLines, debugLine)) {
-                goto loop_end;
+                free(debugLine.path);
+                goto cleanup_cu;
             }
         }
 
-free_die:
-        dwarf_dealloc(debug, cuDie, DW_DLA_DIE);
-
-free_files:
-        {
+cleanup_cu:
+        if (lineContext != NULL) {
+            dwarf_srclines_dealloc_b(lineContext);
+        }
+        if (files != NULL) {
             int fileIndex = 0;
             for (fileIndex = 0; fileIndex < fileCount; fileIndex++) {
                 dwarf_dealloc(debug, files[fileIndex], DW_DLA_STRING);
             }
+            dwarf_dealloc(debug, files, DW_DLA_LIST);
         }
-        dwarf_dealloc(debug, files, DW_DLA_LIST);
-
-loop_end:
-        dwarf_srclines_dealloc_b(lineContext);
+        if (cuDie != NULL) {
+            dwarf_dealloc(debug, cuDie, DW_DLA_DIE);
+        }
+        if (error != NULL) {
+            dwarf_dealloc_error(debug, error);
+            error = NULL;
+        }
     }
 
-    res = dwarf_object_finish(debug);
-    if (res != DW_DLV_OK) {
-        fprintf(stderr, "w2c2: failed to finish DWARF reader\n");
+    if (debug != NULL) {
+        res = dwarf_object_finish(debug);
+        if (res != DW_DLV_OK) {
+            fprintf(stderr, "w2c2: failed to finish DWARF reader\n");
+        }
+        debug = NULL;
     }
 
 end:
+    if (error != NULL) {
+        dwarf_dealloc_error(debug, error);
+    }
     if (interface != NULL) {
         free(interface);
     }
 
-    qsort(
-        debugLines.debugLines,
-        debugLines.length,
-        sizeof(WasmDebugLine),
-        compareDebugLines
-    );
+    if (debugLines.length > 1) {
+        qsort(
+            debugLines.debugLines,
+            debugLines.length,
+            sizeof(WasmDebugLine),
+            compareDebugLines
+        );
+    }
 
     return debugLines;
 }

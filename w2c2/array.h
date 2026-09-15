@@ -65,6 +65,8 @@ static W2C2_INLINE void                                       \
 INSTANCE ## Free(NAME* INSTANCE) {                            \
     free(INSTANCE->ITEMS);                                    \
     INSTANCE->ITEMS = NULL;                                   \
+    INSTANCE->length = 0;                                     \
+    INSTANCE->capacity = 0;                                   \
 }
 
 

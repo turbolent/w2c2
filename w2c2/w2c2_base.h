@@ -87,6 +87,7 @@ typedef U32 WasmPtr;
 #endif
 
 #define MUST(_) { if (!(_)) { return false; }; }
+#define MUST_OR_GOTO(LABEL, _) { if (!(_)) { goto LABEL; }; }
 
 #define WASM_LITTLE_ENDIAN  0
 #define WASM_BIG_ENDIAN     1
@@ -706,7 +707,12 @@ wasmThreadCreate(
     startArg->startFuncArg = startFuncArg;
 
     *thread = CreateThread(NULL, 0, wasmWin32ThreadStart, startArg, 0, NULL);
-    return thread != NULL;
+    if (*thread == NULL) {
+        free(startArg);
+        return false;
+    }
+
+    return true;
 }
 
 #endif

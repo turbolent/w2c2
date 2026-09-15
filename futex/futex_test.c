@@ -114,6 +114,14 @@ testFutex(void) {
 #endif
     }
 
+    /*
+     * Change the waited-on values before notifying.
+     * A thread that has started but not begun waiting
+     * will then return "not-equal" instead of blocking forever.
+     */
+    i32_atomic_store(mem, waitAddress1, 1);
+    i32_atomic_store(mem, waitAddress2, 1);
+
     wasmMemoryAtomicNotify(mem, waitAddress1, 2);
     wasmMemoryAtomicNotify(mem, waitAddress2, 2);
     wasmMemoryAtomicNotify(mem, waitAddress1, 1);

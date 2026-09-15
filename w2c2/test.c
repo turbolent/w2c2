@@ -3,6 +3,7 @@
 #include "typestack_test.h"
 #include "opcode_test.h"
 #include "sha1_test.h"
+#include "module_test.h"
 
 int
 main(void) {
@@ -12,5 +13,6 @@ main(void) {
     testTypeStack();
     testOpcodes();
     testSHA1();
+    testModuleLifecycle();
     return 0;
 }

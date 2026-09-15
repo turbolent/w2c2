@@ -47,6 +47,7 @@ bool
 readWasmBinary(
     const char* path,
     WasmModuleReader* wasmModuleReaderResult,
+    Buffer* bufferResult,
     const bool debug
 ) {
     WasmModuleReaderError* error = NULL;
@@ -55,6 +56,7 @@ readWasmBinary(
         fprintf(stderr, "w2c2: failed to read file %s\n", path);
         return false;
     }
+    *bufferResult = buffer;
 
     wasmModuleReaderResult->buffer = buffer;
     wasmModuleReaderResult->debug = debug;
@@ -67,6 +69,8 @@ readWasmBinary(
             path,
             wasmModuleReaderErrorMessage(error)
         );
+        bufferFree(bufferResult);
+        wasmModuleReaderResult->buffer = emptyBuffer;
         return false;
     }
 
@@ -113,11 +117,14 @@ wasmFunctionIDsCompareHashes(
     return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
 }
 
-WasmFunctionIDs
+static
+bool
+WARN_UNUSED_RESULT
 wasmSortedFunctionIDs(
-    const WasmFunctions functions
+    const WasmFunctions functions,
+    WasmFunctionIDs* result
 ) {
-    WasmFunctionIDs result = emptyWasmFunctionIDs;
+    WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
 
     U32 functionIndex = 0;
     for (; functionIndex < functions.count; functionIndex++) {
@@ -125,71 +132,85 @@ wasmSortedFunctionIDs(
         WasmFunctionID functionID = emptyWasmFunctionID;
         memcpy(functionID.hash, function.hash, SHA1_DIGEST_LENGTH);
         functionID.functionIndex = functionIndex;
-        if (!wasmFunctionIDsAppend(&result, functionID)) {
-            exit(1);
+        if (!wasmFunctionIDsAppend(&functionIDs, functionID)) {
+            wasmFunctionIDsFree(&functionIDs);
+            return false;
         }
     }
 
-    if (result.length > 1) {
+    if (functionIDs.length > 1) {
         qsort(
-            result.functionIDs,
-            result.length,
+            functionIDs.functionIDs,
+            functionIDs.length,
             sizeof(WasmFunctionID),
             wasmFunctionIDsCompareHashes
         );
     }
 
-    return result;
+    *result = functionIDs;
+    return true;
 }
 
-void wasmSplitStaticAndDynamicFunctions(
+static
+bool
+WARN_UNUSED_RESULT
+wasmSplitStaticAndDynamicFunctions(
     const WasmFunctionIDs functionIDs,
     const WasmFunctionIDs referenceFunctionIDs,
     WasmFunctionIDs *staticFunctions,
     WasmFunctionIDs *dynamicFunctions
 ) {
-    const WasmFunctionID* functionID = functionIDs.functionIDs;
-    const WasmFunctionID* lastFunctionID = functionID + functionIDs.length;
-
-    const WasmFunctionID* referenceFunctionID = referenceFunctionIDs.functionIDs;
-    const WasmFunctionID* lastReferenceFunctionID = referenceFunctionID + referenceFunctionIDs.length;
+    size_t functionIndex = 0;
+    size_t referenceFunctionIndex = 0;
 
     while (
-        functionID != lastFunctionID
-        && referenceFunctionID != lastReferenceFunctionID
+        functionIndex < functionIDs.length
+        && referenceFunctionIndex < referenceFunctionIDs.length
     ) {
-        const int comparisonResult = wasmFunctionIDsCompareHashes(functionID, referenceFunctionID);
+        const WasmFunctionID functionID =
+            functionIDs.functionIDs[functionIndex];
+        const WasmFunctionID referenceFunctionID =
+            referenceFunctionIDs.functionIDs[referenceFunctionIndex];
+        const int comparisonResult = wasmFunctionIDsCompareHashes(
+            &functionID,
+            &referenceFunctionID
+        );
         if (comparisonResult < 0) {
             /* Function only exists in the module, and not in the reference module, so it's a dynamic function */
-            if (!wasmFunctionIDsAppend(dynamicFunctions, *functionID)) {
-                exit(1);
+            if (!wasmFunctionIDsAppend(dynamicFunctions, functionID)) {
+                return false;
             }
 
-            functionID++;
+            functionIndex++;
 
         } else if (comparisonResult > 0) {
             /* Function only exists in the reference module, and not in the module, so skip it */
-            referenceFunctionID++;
+            referenceFunctionIndex++;
 
         } else {
             /* comparisonResult == 0 */
             /* Function exists in both modules, so it's a static function */
-            if (!wasmFunctionIDsAppend(staticFunctions, *functionID)) {
-                exit(1);
+            if (!wasmFunctionIDsAppend(staticFunctions, functionID)) {
+                return false;
             }
 
-            functionID++;
-            referenceFunctionID++;
+            functionIndex++;
+            referenceFunctionIndex++;
         }
     }
 
-    while (functionID != lastFunctionID) {
+    while (functionIndex < functionIDs.length) {
         /* Identifier only exists in the module, and not in the reference module, so it's a dynamic function */
-        if (!wasmFunctionIDsAppend(dynamicFunctions, *functionID)) {
-            exit(1);
+        if (!wasmFunctionIDsAppend(
+            dynamicFunctions,
+            functionIDs.functionIDs[functionIndex]
+        )) {
+            return false;
         }
-        functionID++;
+        functionIndex++;
     }
+
+    return true;
 }
 
 static
@@ -201,12 +222,17 @@ cleanImplementationFiles(void) {
     size_t pathLength = 0;
 
 #if HAS_GLOB
-    glob_t globbuf;
+    glob_t globbuf = {0};
     size_t pathIndex = 0;
     const int globResult = glob("*.c", GLOB_NOSORT, NULL, &globbuf);
     if (globResult != 0) {
         if (globResult != GLOB_NOMATCH) {
             fprintf(stderr, "w2c2: failed to glob files to clean\n");
+        }
+        if (globResult == GLOB_NOSPACE
+            || globResult == GLOB_ABORTED) {
+
+            globfree(&globbuf);
         }
         return;
     }
@@ -460,38 +486,56 @@ main(
     getPathModuleName(moduleName, modulePath);
 
     {
+        int result = EXIT_FAILURE;
+        Buffer moduleBuffer = emptyBuffer;
+        Buffer referenceModuleBuffer = emptyBuffer;
         WasmModuleReader reader = emptyWasmModuleReader;
+        WasmModuleReader referenceReader = emptyWasmModuleReader;
         WasmCWriteModuleOptions writeOptions = emptyWasmCWriteModuleOptions;
 
         WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
-
+        WasmFunctionIDs referenceFunctionIDs = emptyWasmFunctionIDs;
         WasmFunctionIDs staticFunctionIDs = emptyWasmFunctionIDs;
         WasmFunctionIDs dynamicFunctionIDs = emptyWasmFunctionIDs;
 
-        if (!readWasmBinary(modulePath, &reader, debug)) {
-            return 1;
+        if (!readWasmBinary(modulePath, &reader, &moduleBuffer, debug)) {
+            goto cleanup;
         }
 
-        functionIDs = wasmSortedFunctionIDs(reader.module->functions);
+        if (!wasmSortedFunctionIDs(reader.module->functions, &functionIDs)) {
+            fprintf(stderr, "w2c2: failed to allocate function IDs\n");
+            goto cleanup;
+        }
 
         if (referenceModulePath != NULL) {
-            WasmModuleReader referenceReader = emptyWasmModuleReader;
-            WasmFunctionIDs referenceFunctionIDs = emptyWasmFunctionIDs;
-
             size_t total = 0;
 
-            if (!readWasmBinary(referenceModulePath, &referenceReader, false)) {
-                return 1;
+            if (!readWasmBinary(
+                referenceModulePath,
+                &referenceReader,
+                &referenceModuleBuffer,
+                false
+            )) {
+                goto cleanup;
             }
 
-            referenceFunctionIDs = wasmSortedFunctionIDs(referenceReader.module->functions);
+            if (!wasmSortedFunctionIDs(
+                referenceReader.module->functions,
+                &referenceFunctionIDs
+            )) {
+                fprintf(stderr, "w2c2: failed to allocate reference function IDs\n");
+                goto cleanup;
+            }
 
-            wasmSplitStaticAndDynamicFunctions(
+            if (!wasmSplitStaticAndDynamicFunctions(
                 functionIDs,
                 referenceFunctionIDs,
                 &staticFunctionIDs,
                 &dynamicFunctionIDs
-            );
+            )) {
+                fprintf(stderr, "w2c2: failed to split function IDs\n");
+                goto cleanup;
+            }
 
             total = dynamicFunctionIDs.length + staticFunctionIDs.length;
 
@@ -500,7 +544,11 @@ main(
                 "w2c2: %llu of %llu functions are dynamic (%.2f%%)\n",
                 (U64)dynamicFunctionIDs.length,
                 (U64)total,
-                (float)dynamicFunctionIDs.length / (float)total * 100.0
+                total == 0
+                    ? 0.0
+                    : (double)dynamicFunctionIDs.length
+                        / (double)total
+                        * 100.0
             );
         } else {
             staticFunctionIDs = functionIDs;
@@ -512,7 +560,7 @@ main(
         }
 
         if (!changeToOutputDirectory(outputPath)) {
-            return 1;
+            goto cleanup;
         }
 
         if (clean) {
@@ -535,9 +583,24 @@ main(
             dynamicFunctionIDs
         )) {
             fprintf(stderr, "w2c2: failed to compile\n");
-            return 1;
+            goto cleanup;
         }
-    }
 
-    return 0;
+        result = EXIT_SUCCESS;
+
+cleanup:
+        if (staticFunctionIDs.functionIDs != functionIDs.functionIDs) {
+            wasmFunctionIDsFree(&staticFunctionIDs);
+        }
+        wasmFunctionIDsFree(&dynamicFunctionIDs);
+        wasmFunctionIDsFree(&referenceFunctionIDs);
+        wasmFunctionIDsFree(&functionIDs);
+
+        wasmModuleFree(referenceReader.module);
+        bufferFree(&referenceModuleBuffer);
+        wasmModuleFree(reader.module);
+        bufferFree(&moduleBuffer);
+
+        return result;
+    }
 }

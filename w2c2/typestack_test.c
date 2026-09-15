@@ -81,5 +81,6 @@ testTypeStack(void) {
             }
         }
     }
+    wasmTypeStackFree(&typeStack);
     fprintf(stderr, "PASS testTypeStack\n");
 }

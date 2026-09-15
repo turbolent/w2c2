@@ -63,7 +63,8 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidStartSectionFunctionIndex,
     wasmModuleReaderInvalidNameSectionFunctionNameCount,
     wasmModuleReaderInvalidNameSectionFunctionIndex,
-    wasmModuleReaderInvalidNameSectionFunctionName
+    wasmModuleReaderInvalidNameSectionFunctionName,
+    wasmModuleReaderInvalidSectionOrder
 } WasmModuleReaderErrorCode;
 
 typedef struct WasmModuleReaderError {
@@ -75,6 +76,13 @@ wasmModuleReaderErrorMessage(
     const WasmModuleReaderError* error
 );
 
+/*
+ * The function does not modify reader->buffer.
+ * On success, it frees any prior reader->module.
+ * The caller owns the new module and releases it with wasmModuleFree.
+ * On failure, reader->module is unchanged.
+ * The input buffer remains caller-owned and must outlive the parsed module.
+ */
 void
 wasmModuleRead(
     WasmModuleReader* reader,
