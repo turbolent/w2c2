@@ -7,6 +7,8 @@
 #endif /* HAS_PTHREAD */
 #include <errno.h>
 #include <limits.h>
+
+#include "diagnostic_internal.h"
 #include "compat.h"
 #include "w2c2_base.h"
 
@@ -498,21 +500,27 @@ wasmCWriteStringLabelName(
 
 static
 W2C2_INLINE
-const char*
+bool
+WARN_UNUSED_RESULT
 wasmCGetReturnType(
-    const WasmFunctionType functionType
+    const WasmFunctionType functionType,
+    const U32 typeIndex,
+    const char** result,
+    WasmDiagnosticContext* diagnostics
 ) {
     switch (functionType.resultCount) {
         case 0:
-            return "void";
-        case 1: {
-            const WasmValueType resultType = functionType.resultTypes[0];
-            return valueTypeNames[resultType];
-        }
+            *result = "void";
+            return true;
+        case 1:
+            *result = valueTypeNames[functionType.resultTypes[0]];
+            return true;
         default:
             /* TODO: add support for multiple result values */
-            fprintf(stderr, "w2c2: unsupported function with multiple result values\n");
-            abort();
+            wasmDiagnosticReportUnsupportedFunctionResults(
+                diagnostics, typeIndex, functionType.resultCount
+            );
+            return false;
     }
 }
 
@@ -549,6 +557,7 @@ wasmCWriteFileLocalsDeclarations(
 
 typedef struct WasmCFunctionWriter {
     StringBuilder* builder;
+    WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
     WasmTypeStack* stackDeclarations;
     WasmLabelStack* labelStack;
@@ -664,7 +673,11 @@ wasmCWriteCallExpr(
 ) {
     WasmCallInstruction instruction;
     if (!wasmCallInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid call instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeCall
+        );
         return false;
     }
 
@@ -760,15 +773,22 @@ wasmCWriteCallIndirectExpr(
 ) {
     WasmCallIndirectInstruction instruction;
     if (!wasmCallIndirectInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid call_indirect instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeCallIndirect
+        );
         return false;
     }
 
     if (!writer->ignore) {
         const WasmFunctionType functionType = writer->module->functionTypes.functionTypes[instruction.functionTypeIndex];
+        const char* returnType = NULL;
 
         const U32 parameterCount = functionType.parameterCount;
         const U32 resultCount = functionType.resultCount;
+
+        MUST (wasmCGetReturnType(functionType, instruction.functionTypeIndex, &returnType, writer->diagnostics))
 
         MUST (wasmCWriteIndent(writer))
 
@@ -800,7 +820,7 @@ wasmCWriteCallIndirectExpr(
         }
 
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWrite(writer, wasmCGetReturnType(functionType)))
+        MUST (wasmCWrite(writer, returnType))
         MUST (wasmCWrite(writer, " (*)"))
 
         MUST (wasmCWriteParameters(writer, functionType))
@@ -842,7 +862,11 @@ wasmCWriteLocalGetExpr(
 ) {
     WasmLocalInstruction instruction;
     if (!wasmLocalInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid local.get instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeLocalGet
+        );
         return false;
     }
 
@@ -855,9 +879,10 @@ wasmCWriteLocalGetExpr(
             &localType
         );
         if (!gotType) {
-            fprintf(
-                stderr,
-                "w2c2: invalid local.get instruction: invalid local index: %u\n",
+            wasmDiagnosticReportInvalidLocalIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)wasmOpcodeLocalGet,
                 instruction.localIndex
             );
             return false;
@@ -887,10 +912,10 @@ wasmCWriteLocalAssignmentExpr(
 ) {
     WasmLocalInstruction instruction;
     if (!wasmLocalInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
@@ -904,10 +929,10 @@ wasmCWriteLocalAssignmentExpr(
             &localType
         );
         if (!gotType) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction: invalid local index: %u\n",
-                wasmOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidLocalIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)opcode,
                 instruction.localIndex
             );
             return false;
@@ -941,10 +966,10 @@ wasmCWriteGlobalGetExpr(
 
     WasmGlobalInstruction instruction;
     if (!wasmGlobalInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
@@ -957,10 +982,10 @@ wasmCWriteGlobalGetExpr(
             &globalType
         );
         if (!gotType) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction: invalid global index: %u\n",
-                wasmOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidGlobalIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)opcode,
                 instruction.globalIndex
             );
             return false;
@@ -991,10 +1016,10 @@ wasmCWriteGlobalSetExpr(
 
     WasmGlobalInstruction instruction;
     if (!wasmGlobalInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
@@ -1007,10 +1032,10 @@ wasmCWriteGlobalSetExpr(
             &globalType
         );
         if (!gotType) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction: invalid global index: %u\n",
-                wasmOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidGlobalIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)opcode,
                 instruction.globalIndex
             );
             return false;
@@ -1037,7 +1062,8 @@ WARN_UNUSED_RESULT
 wasmCWriteLiteral(
     StringBuilder* builder,
     const WasmValueType valueType,
-    const WasmValue value
+    const WasmValue value,
+    WasmDiagnosticContext* diagnostics
 ) {
     switch (valueType) {
         case wasmValueTypeI32: {
@@ -1096,7 +1122,7 @@ wasmCWriteLiteral(
             break;
         }
         default:
-            fprintf(stderr, "w2c2: unsupported const type %s\n", wasmValueTypeDescription(valueType));
+            wasmDiagnosticReportUnsupportedValueType(diagnostics, valueType);
             return false;
     }
 
@@ -1112,16 +1138,17 @@ wasmCWriteConstExpr(
 ) {
     WasmConstInstruction instruction;
     if (!wasmConstInstructionRead(writer->code, opcode, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
 
     if (!writer->ignore) {
         const WasmValueType resultType = wasmOpcodeResultType(opcode);
+
         MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
@@ -1129,7 +1156,7 @@ wasmCWriteConstExpr(
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteLiteral(writer->builder, resultType, instruction.value))
+            MUST (wasmCWriteLiteral(writer->builder, resultType, instruction.value, writer->diagnostics))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -1184,10 +1211,10 @@ wasmCWriteLoadExpr(
     WasmMemoryArgumentInstruction instruction;
 
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
@@ -1267,10 +1294,10 @@ wasmCWriteLoadExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported load instruction opcode: %s\n",
-                    wasmOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeUnprefixed,
+                    (U32)opcode
                 );
                 return false;
             }
@@ -1335,10 +1362,10 @@ wasmCWriteStoreExpr(
 ) {
     WasmMemoryArgumentInstruction instruction;
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)opcode
         );
         return false;
     }
@@ -1383,10 +1410,10 @@ wasmCWriteStoreExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported store instruction opcode: %s\n",
-                    wasmOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeUnprefixed,
+                    (U32)opcode
                 );
                 return false;
             }
@@ -1406,16 +1433,22 @@ wasmCWriteMemorySizeExpr(
 ) {
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory.size instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeMemorySize
+        );
         return false;
     }
 
     {
         static const U32 expectedMemoryIndex = 0;
         if (instruction.memoryIndex != expectedMemoryIndex) {
-            fprintf(
-                stderr,
-                "w2c2: invalid memory.size instruction: expected memory index %u, got %u\n",
+            wasmDiagnosticReportUnexpectedMemoryIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)wasmOpcodeMemorySize,
+                1,
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1459,16 +1492,22 @@ wasmCWriteMemoryGrowExpr(
 ) {
     WasmMemoryInstruction instruction;
     if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory.grow instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeMemoryGrow
+        );
         return false;
     }
 
     {
         static const U32 expectedMemoryIndex = 0;
         if (instruction.memoryIndex != expectedMemoryIndex) {
-            fprintf(
-                stderr,
-                "w2c2: invalid memory.grow instruction: expected memory index %u, got %u\n",
+            wasmDiagnosticReportUnexpectedMemoryIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeUnprefixed,
+                (U32)wasmOpcodeMemoryGrow,
+                1,
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -1514,7 +1553,11 @@ wasmCWriteMemoryInitExpr(
 ) {
     WasmMemoryInitInstruction instruction;
     if (!wasmMemoryInitInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory.init instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeMisc,
+            (U32)wasmMiscOpcodeMemoryInit
+        );
         return false;
     }
 
@@ -1568,7 +1611,11 @@ wasmCWriteMemoryCopyExpr(
 ) {
     WasmMemoryCopyInstruction instruction;
     if (!wasmMemoryCopyInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory.copy instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeMisc,
+            (U32)wasmMiscOpcodeMemoryCopy
+        );
         return false;
     }
 
@@ -1576,9 +1623,11 @@ wasmCWriteMemoryCopyExpr(
     {
         static const U32 expectedMemoryIndex = 0;
         if (instruction.memoryIndex1 != expectedMemoryIndex) {
-            fprintf(
-                stderr,
-                "w2c2: invalid memory.copy instruction: expected memory index 1 to be %u, got %u\n",
+            wasmDiagnosticReportUnexpectedMemoryIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeMisc,
+                (U32)wasmMiscOpcodeMemoryCopy,
+                1,
                 expectedMemoryIndex,
                 instruction.memoryIndex1
             );
@@ -1586,9 +1635,11 @@ wasmCWriteMemoryCopyExpr(
         }
 
         if (instruction.memoryIndex2 != expectedMemoryIndex) {
-            fprintf(
-                stderr,
-                "w2c2: invalid memory.copy instruction: expected memory index 2 to be %u, got %u\n",
+            wasmDiagnosticReportUnexpectedMemoryIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeMisc,
+                (U32)wasmMiscOpcodeMemoryCopy,
+                2,
                 expectedMemoryIndex,
                 instruction.memoryIndex2
             );
@@ -1653,16 +1704,22 @@ wasmCWriteMemoryFillExpr(
     UNUSED_PARAMETER(miscOpcode);
 
     if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid memory.fill instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeMisc,
+            (U32)wasmMiscOpcodeMemoryFill
+        );
         return false;
     }
 
     {
         static const U32 expectedMemoryIndex = 0;
         if (instruction.memoryIndex != expectedMemoryIndex) {
-            fprintf(
-                stderr,
-                "w2c2: invalid memory.fill instruction: expected memory index %u, got %u\n",
+            wasmDiagnosticReportUnexpectedMemoryIndex(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeMisc,
+                (U32)wasmMiscOpcodeMemoryFill,
+                1,
                 expectedMemoryIndex,
                 instruction.memoryIndex
             );
@@ -2068,11 +2125,7 @@ wasmCWriteIfExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction: expected block type\n",
-            wasmOpcodeDescription(*opcode)
-        );
+        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
         return false;
     }
 
@@ -2179,11 +2232,7 @@ wasmCWriteBlockExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction: expected block type\n",
-            wasmOpcodeDescription(*opcode)
-        );
+        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
         return false;
     }
 
@@ -2245,11 +2294,7 @@ wasmCWriteLoopExpr(
     WasmValueType blockValueType = 0;
     WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction: expected block type\n",
-            wasmOpcodeDescription(*opcode)
-       );
+        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
         return false;
     }
 
@@ -2401,7 +2446,11 @@ wasmCWriteBranchExpr(
 ) {
     WasmBranchInstruction instruction;
     if (!wasmBranchInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid br instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeBr
+        );
         return false;
     }
 
@@ -2421,7 +2470,11 @@ wasmCWriteBranchIfExpr(
 ) {
     WasmBranchInstruction instruction;
     if (!wasmBranchInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid br.if instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeBrIf
+        );
         return false;
     }
 
@@ -2471,7 +2524,11 @@ wasmCWriteBranchTableExpr(
     WasmBranchTableInstruction instruction;
     bool result = false;
     if (!wasmBranchTableInstructionRead(writer->code, &instruction)) {
-        fprintf(stderr, "w2c2: invalid br_table instruction encoding\n");
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeUnprefixed,
+            (U32)wasmOpcodeBrTable
+        );
         return false;
     }
 
@@ -2612,10 +2669,10 @@ wasmCWriteMemoryAtomicNotifyExpr(
     WasmMemoryArgumentInstruction instruction;
 
     if (!wasmMemoryArgument32InstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2727,10 +2784,10 @@ wasmCWriteMemoryAtomicWait32Expr(
     WasmMemoryArgumentInstruction instruction;
 
     if (!wasmMemoryArgument32InstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2751,10 +2808,10 @@ wasmCWriteMemoryAtomicWait64Expr(
     WasmMemoryArgumentInstruction instruction;
 
     if (!wasmMemoryArgument64InstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2775,10 +2832,10 @@ wasmCWriteAtomicFenceExpr(
     U8 immediate = 0;
     MUST (bufferReadByte(writer->code, &immediate) > 0)
     if (immediate != 0x0) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2800,10 +2857,10 @@ wasmCWriteAtomicLoadExpr(
     WasmMemoryArgumentInstruction instruction;
 
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2856,20 +2913,20 @@ wasmCWriteAtomicLoadExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported atomic load instruction opcode: %s\n",
-                    wasmThreadsOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeThreads,
+                    (U32)opcode
                 );
                 return false;
             }
         }
 
         if (instruction.align != expectedAlign) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
-                wasmThreadsOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidAlignment(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeThreads,
+                (U32)opcode,
                 expectedAlign,
                 instruction.align
             );
@@ -2896,10 +2953,10 @@ wasmCWriteAtomicStoreExpr(
 ) {
     WasmMemoryArgumentInstruction instruction;
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -2944,20 +3001,20 @@ wasmCWriteAtomicStoreExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported atomic store instruction opcode: %s\n",
-                    wasmThreadsOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeThreads,
+                    (U32)opcode
                 );
                 return false;
             }
         }
 
         if (instruction.align != expectedAlign) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
-                wasmThreadsOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidAlignment(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeThreads,
+                (U32)opcode,
                 expectedAlign,
                 instruction.align
             );
@@ -2979,10 +3036,10 @@ wasmCWriteAtomicRMWExpr(
 ) {
     WasmMemoryArgumentInstruction instruction;
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -3251,20 +3308,20 @@ wasmCWriteAtomicRMWExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported atomic RMW instruction opcode: %s\n",
-                    wasmThreadsOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeThreads,
+                    (U32)opcode
                 );
                 return false;
             }
         }
 
         if (instruction.align != expectedAlign) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
-                wasmThreadsOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidAlignment(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeThreads,
+                (U32)opcode,
                 expectedAlign,
                 instruction.align
             );
@@ -3319,10 +3376,10 @@ wasmCWriteAtomicRMWCmpxchgExpr(
 ) {
     WasmMemoryArgumentInstruction instruction;
     if (!wasmMemoryArgumentInstructionRead(writer->code, &instruction)) {
-        fprintf(
-            stderr,
-            "w2c2: invalid %s instruction encoding\n",
-            wasmThreadsOpcodeDescription(opcode)
+        wasmDiagnosticReportInvalidInstruction(
+            writer->diagnostics,
+            wasmDiagnosticOpcodeThreads,
+            (U32)opcode
         );
         return false;
     }
@@ -3375,20 +3432,20 @@ wasmCWriteAtomicRMWCmpxchgExpr(
                 break;
             }
             default: {
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported atomic RMW compare-exchange instruction opcode: %s\n",
-                    wasmThreadsOpcodeDescription(opcode)
+                wasmDiagnosticReportUnsupportedOpcode(
+                    writer->diagnostics,
+                    wasmDiagnosticOpcodeThreads,
+                    (U32)opcode
                 );
                 return false;
             }
         }
 
         if (instruction.align != expectedAlign) {
-            fprintf(
-                stderr,
-                "w2c2: invalid %s instruction encoding: expected align %d, got %d\n",
-                wasmThreadsOpcodeDescription(opcode),
+            wasmDiagnosticReportInvalidAlignment(
+                writer->diagnostics,
+                wasmDiagnosticOpcodeThreads,
+                (U32)opcode,
                 expectedAlign,
                 instruction.align
             );
@@ -3671,6 +3728,13 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteAtomicRMWCmpxchgExpr(writer, threadsOpcode))
                         break;
                     }
+                    default:
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeThreads,
+                            (U32)threadsOpcode
+                        );
+                        return false;
                 }
 
                 break;
@@ -3689,13 +3753,7 @@ wasmCWriteFunctionCode(
                         U32 dataIndex = 0;
                         MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
 
-                        /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
-                        );
-
+                        /* TODO: implement data.drop semantics. */
                         break;
                     }
                     case wasmMiscOpcodeMemoryCopy: {
@@ -3714,13 +3772,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     case wasmMiscOpcodeElemDrop: {
                         /* TODO: refactor into instruction read function */
@@ -3728,13 +3786,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &elemIndex) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     case wasmMiscOpcodeTableCopy: {
                         /* TODO: refactor into instruction read function */
@@ -3744,13 +3802,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex2) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     case wasmMiscOpcodeTableGrow: {
                         /* TODO: refactor into instruction read function */
@@ -3758,13 +3816,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     case wasmMiscOpcodeTableSize: {
                         /* TODO: refactor into instruction read function */
@@ -3772,13 +3830,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     case wasmMiscOpcodeTableFill: {
                         /* TODO: refactor into instruction read function */
@@ -3786,13 +3844,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex) > 0)
 
                         /* TODO */
-                        fprintf(
-                            stderr,
-                            "w2c2: unimplemented opcode: %s\n",
-                            wasmMiscOpcodeDescription(miscOpcode)
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeMisc,
+                            (U32)miscOpcode
                         );
 
-                        break;
+                        return false;
                     }
                     default:
                         if (writer->ignore) {
@@ -3833,10 +3891,10 @@ wasmCWriteFunctionCode(
                                 break;
                             }
                             default: {
-                                fprintf(
-                                    stderr,
-                                    "w2c2: unsupported misc opcode: %s\n",
-                                    wasmMiscOpcodeDescription(miscOpcode)
+                                wasmDiagnosticReportUnsupportedOpcode(
+                                    writer->diagnostics,
+                                    wasmDiagnosticOpcodeMisc,
+                                    (U32)miscOpcode
                                 );
                                 return false;
                             }
@@ -4303,11 +4361,10 @@ wasmCWriteFunctionCode(
                         break;
                     }
                     default: {
-                        fprintf(
-                            stderr,
-                            "w2c2: unsupported opcode %s (0x%X)\n",
-                            wasmOpcodeDescription(*opcode),
-                            *opcode
+                        wasmDiagnosticReportUnsupportedOpcode(
+                            writer->diagnostics,
+                            wasmDiagnosticOpcodeUnprefixed,
+                            (U32)*opcode
                         );
                         return false;
                     }
@@ -4410,7 +4467,8 @@ wasmCWriteFunctionBody(
     WasmDebugLines* debugLines,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     Buffer code = function.code;
     StringBuilder stringBuilder = emptyStringBuilder;
@@ -4426,17 +4484,25 @@ wasmCWriteFunctionBody(
         resultType = &functionType.resultTypes[0];
         /* TODO: add support for multiple result values */
         if (functionType.resultCount > 1) {
-            fprintf(stderr, "w2c2: function with multiple return values\n");
+            wasmDiagnosticReportUnsupportedFunctionResults(
+                diagnostics,
+                function.functionTypeIndex,
+                functionType.resultCount
+            );
             return false;
         }
     } else {
         resultType = NULL;
     }
 
-    MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
+    if (!stringBuilderInitialize(&stringBuilder)) {
+        wasmDiagnosticReportAllocationFailed(diagnostics);
+        goto cleanup;
+    }
 
     {
         WasmCFunctionWriter writer;
+        writer.diagnostics = diagnostics;
         writer.builder = &stringBuilder;
         writer.typeStack = typeStack;
         writer.stackDeclarations = stackDeclarations;
@@ -4522,7 +4588,8 @@ wasmCWriteFileParameters(
 
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFileFunctionSignature(
     FILE* file,
     const WasmModule* module,
@@ -4531,12 +4598,15 @@ wasmCWriteFileFunctionSignature(
     const U32 functionIndex,
     const bool writeParameterNames,
     const bool pretty,
-    const bool prefix
+    const bool prefix,
+    WasmDiagnosticContext* diagnostics
 ) {
+    const char* returnType = NULL;
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
-    fputs(wasmCGetReturnType(functionType), file);
+    MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
+    fputs(returnType, file);
     fputc(' ', file);
     if (prefix) {
         fputs(moduleName, file);
@@ -4551,17 +4621,20 @@ wasmCWriteFileFunctionSignature(
         false,
         pretty
     );
+    return true;
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
@@ -4570,7 +4643,7 @@ wasmCWriteFunctionDeclarations(
     for (; declaredFunctionIndex < functionCount; declaredFunctionIndex++) {
         const WasmFunction function = module->functions.functions[declaredFunctionIndex];
         const U32 moduleFunctionIndex = assertSizeU32(functionImportCount) + declaredFunctionIndex;
-        wasmCWriteFileFunctionSignature(
+        MUST (wasmCWriteFileFunctionSignature(
             file,
             module,
             moduleName,
@@ -4578,8 +4651,9 @@ wasmCWriteFunctionDeclarations(
             moduleFunctionIndex,
             false,
             pretty,
-            multipleModules
-        );
+            multipleModules,
+            diagnostics
+        ))
 
         if (debug && function.exportName == NULL && moduleFunctionIndex < module->functionNames.length) {
             char* functionName = module->functionNames.names[moduleFunctionIndex];
@@ -4589,6 +4663,7 @@ wasmCWriteFunctionDeclarations(
         }
         fputs(";\n\n", file);
     }
+    return true;
 }
 
 static
@@ -4604,7 +4679,8 @@ wasmCWriteFunctionImplementations(
     const WasmFunctionIDs functionIDs,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t functionImportCount = module->functionImports.length;
 
@@ -4619,6 +4695,8 @@ wasmCWriteFunctionImplementations(
         const U32 functionIndex = functionID.functionIndex;
         const WasmFunction function = module->functions.functions[functionIndex];
 
+        diagnostics->location.hasFunctionIndex = true;
+        diagnostics->location.functionIndex = assertSizeU32(functionImportCount) + functionIndex;
         wasmTypeStackClear(&typeStack);
         wasmTypeStackClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
@@ -4630,7 +4708,7 @@ wasmCWriteFunctionImplementations(
             }
         }
 
-        wasmCWriteFileFunctionSignature(
+        MUST_OR_GOTO (cleanup, wasmCWriteFileFunctionSignature(
             file,
             module,
             moduleName,
@@ -4638,8 +4716,9 @@ wasmCWriteFunctionImplementations(
             assertSizeU32(functionImportCount) + functionIndex,
             true,
             pretty,
-            multipleModules
-        );
+            multipleModules,
+            diagnostics
+        ))
         fputc(' ', file);
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionBody(
             file,
@@ -4652,14 +4731,22 @@ wasmCWriteFunctionImplementations(
             debugLines,
             pretty,
             debug,
-            multipleModules
+            multipleModules,
+            diagnostics
         ))
         fputs("\n", file);
+        if (ferror(file)) {
+            wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputWriteFailed, diagnostics->location.outputName, 0);
+            goto cleanup;
+        }
     }
 
     result = true;
 
 cleanup:
+    if (!result && !diagnostics->hasError) {
+        wasmDiagnosticReportTranslationFailed(diagnostics);
+    }
     wasmTypeStackFree(&typeStack);
     wasmTypeStackFree(&stackDeclarations);
     wasmLabelsFree(&labelStack.labels);
@@ -4729,7 +4816,8 @@ WARN_UNUSED_RESULT
 wasmCWriteConstantExpr(
     StringBuilder* builder,
     const WasmModule* module,
-    Buffer code
+    Buffer code,
+    WasmDiagnosticContext* diagnostics
 ) {
     WasmOpcode opcode;
     MUST (wasmOpcodeRead(&code, &opcode))
@@ -4741,10 +4829,14 @@ wasmCWriteConstantExpr(
             const WasmValueType resultType = wasmOpcodeResultType(opcode);
             WasmConstInstruction instruction;
             if (!wasmConstInstructionRead(&code, opcode, &instruction)) {
-                fprintf(stderr, "w2c2: invalid const instruction encoding\n");
+                wasmDiagnosticReportInvalidInstruction(
+                    diagnostics,
+                    wasmDiagnosticOpcodeUnprefixed,
+                    (U32)opcode
+                );
                 return false;
             }
-            MUST (wasmCWriteLiteral(builder, resultType, instruction.value))
+            MUST (wasmCWriteLiteral(builder, resultType, instruction.value, diagnostics))
             break;
         }
         case wasmOpcodeGlobalGet: {
@@ -4754,7 +4846,7 @@ wasmCWriteConstantExpr(
             break;
         }
         default: {
-            fprintf(stderr, "w2c2: invalid init expression instruction %s\n", wasmOpcodeDescription(opcode));
+            wasmDiagnosticReportUnsupportedOpcode(diagnostics, wasmDiagnosticOpcodeUnprefixed, (U32)opcode);
             return false;
         }
     }
@@ -4769,7 +4861,8 @@ wasmCWriteInitGlobals(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
-    const bool pretty
+    const bool pretty,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t globalImportCount = module->globalImports.length;
     const U32 globalCount = module->globals.count;
@@ -4777,7 +4870,10 @@ wasmCWriteInitGlobals(
     if (globalCount > 0) {
         StringBuilder stringBuilder = emptyStringBuilder;
         bool result = false;
-        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
+        if (!stringBuilderInitialize(&stringBuilder)) {
+            wasmDiagnosticReportAllocationFailed(diagnostics);
+            goto cleanup;
+        }
 
         fprintf(file, "static void %sInitGlobals(%sInstance* i) {\n", moduleName, moduleName);
 
@@ -4800,7 +4896,7 @@ wasmCWriteInitGlobals(
                     MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
                     MUST_OR_GOTO (
                         cleanup,
-                        wasmCWriteConstantExpr(&stringBuilder, module, code)
+                        wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                     )
                     fputs(stringBuilder.string, file);
                 }
@@ -4858,7 +4954,8 @@ wasmCWriteInitImportValue(
 
 static
 W2C2_INLINE
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionImport(
     FILE* file,
     const WasmModule* module,
@@ -4866,10 +4963,13 @@ wasmCWriteFunctionImport(
     const WasmFunctionImport import,
     const bool declaration,
     const bool pretty,
-    const bool prefix
+    const bool prefix,
+    WasmDiagnosticContext* diagnostics
 ) {
+    const char* returnType = NULL;
     const WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
-    fputs(wasmCGetReturnType(functionType), file);
+    MUST (wasmCGetReturnType(functionType, import.functionTypeIndex, &returnType, diagnostics))
+    fputs(returnType, file);
     fputc(' ', file);
     if (declaration) {
         if (prefix) {
@@ -4886,6 +4986,7 @@ wasmCWriteFunctionImport(
         declaration,
         pretty
     );
+    return true;
 }
 
 static
@@ -5007,20 +5108,25 @@ wasmCWriteExportName(
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionExport(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmExport export,
     const WasmFunctionType functionType,
+    const U32 functionTypeIndex,
     const bool writeBody,
     const bool pretty,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
+    const char* returnType = NULL;
     const U32 parameterCount = functionType.parameterCount;
 
-    fputs(wasmCGetReturnType(functionType), file);
+    MUST (wasmCGetReturnType(functionType, functionTypeIndex, &returnType, diagnostics))
+    fputs(returnType, file);
     fputc(' ', file);
     wasmCWriteExportName(file, moduleName, export.name);
     wasmCWriteFileParameters(
@@ -5059,6 +5165,7 @@ wasmCWriteFunctionExport(
     } else {
         fputs(";\n\n", file);
     }
+    return true;
 }
 
 static
@@ -5094,14 +5201,16 @@ wasmCWriteMemoryExport(
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteExports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
     const bool writeBody,
     const bool pretty,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 exportCount = module->exports.count;
@@ -5121,7 +5230,7 @@ wasmCWriteExports(
                     functionTypeIndex = function.functionTypeIndex;
                 }
                 functionType = module->functionTypes.functionTypes[functionTypeIndex];
-                wasmCWriteFunctionExport(file, module, moduleName, export, functionType, writeBody, pretty, multipleModules);
+                MUST (wasmCWriteFunctionExport(file, module, moduleName, export, functionType, functionTypeIndex, writeBody, pretty, multipleModules, diagnostics))
                 break;
             }
             case wasmExportKindMemory: {
@@ -5130,27 +5239,25 @@ wasmCWriteExports(
             }
             default: {
                 /* TODO: other export kinds */
-                fprintf(
-                    stderr,
-                    "w2c2: unsupported export: %s (%s)\n",
-                    export.name,
-                    wasmExportKindDescription(export.kind)
-                );
+                wasmDiagnosticReportUnsupportedExport(diagnostics, export.name, export.kind);
             }
         }
     }
+    return true;
 }
 
 #define DATA_SEGMENT_CHUNK_LENGTH 18
 
 /* TODO: add support for multiple modules */
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteDataSegments(
     FILE* file,
     const WasmModule* module,
     const WasmDataSegmentMode mode,
-    const bool pretty
+    const bool pretty,
+    WasmDiagnosticContext* diagnostics
 ) {
     const U32 dataSegmentCount = module->dataSegments.count;
 
@@ -5232,10 +5339,11 @@ wasmCWriteDataSegments(
             break;
         }
         default: {
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
-            abort();
+            wasmDiagnosticReportInvalidDataSegmentMode(diagnostics, mode);
+            return false;
         }
     }
+    return true;
 }
 
 static
@@ -5244,7 +5352,8 @@ WARN_UNUSED_RESULT
 wasmCWriteDataSegmentsFromSection(
     FILE* file,
     const WasmModule* module,
-    const WasmDataSegmentMode mode
+    const WasmDataSegmentMode mode,
+    WasmDiagnosticContext* diagnostics
 ) {
     static const char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
@@ -5288,19 +5397,16 @@ wasmCWriteDataSegmentsFromSection(
             break;
         }
         default: {
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", mode);
+            wasmDiagnosticReportInvalidDataSegmentMode(diagnostics, mode);
             return false;
         }
     }
 
+    diagnostics->location.outputName = filename;
+    diagnostics->location.hasFunctionIndex = false;
     segmentsFile = fopen(filename, "wb");
     if (segmentsFile == NULL) {
-        fprintf(
-            stderr,
-            "w2c2: failed to create data segments file %s: %s\n",
-            filename,
-            strerror(errno)
-        );
+        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
         return false;
     }
 
@@ -5309,12 +5415,7 @@ wasmCWriteDataSegmentsFromSection(
         const size_t length = dataSegment.bytes.length;
         const size_t written = fwrite(dataSegment.bytes.data, 1, length, segmentsFile);
         if (written != length) {
-            fprintf(
-                stderr,
-                "w2c2: failed to write data segment %u: %s\n",
-                dataSegmentIndex,
-                strerror(errno)
-            );
+            wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputWriteFailed, filename, errno);
             goto cleanup;
         }
     }
@@ -5322,19 +5423,13 @@ wasmCWriteDataSegmentsFromSection(
     result = true;
 
 cleanup:
-    if (fclose(segmentsFile) != 0) {
-        if (result) {
-            fprintf(
-                stderr,
-                "w2c2: failed to close data segments file %s: %s\n",
-                filename,
-                strerror(errno)
-            );
-        }
+    diagnostics->location.hasFunctionIndex = false;
+    diagnostics->location.outputName = filename;
+    if (!wasmDiagnosticCloseOutput(diagnostics, segmentsFile)) {
         result = false;
     }
-
     return result;
+
 }
 
 static
@@ -5391,7 +5486,8 @@ wasmCWriteInitMemories(
     const WasmModule* module,
     const char* moduleName,
     const WasmDataSegmentMode dataSegmentMode,
-    const bool pretty
+    const bool pretty,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
@@ -5399,7 +5495,10 @@ wasmCWriteInitMemories(
 
         StringBuilder stringBuilder = emptyStringBuilder;
         bool result = false;
-        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
+        if (!stringBuilderInitialize(&stringBuilder)) {
+            wasmDiagnosticReportAllocationFailed(diagnostics);
+            goto cleanup;
+        }
 
         fprintf(
             file,
@@ -5426,7 +5525,12 @@ wasmCWriteInitMemories(
                             fputs(indentation, file);
                         }
                         wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-                        fprintf(file, "= WASM_MEMORY_ALLOCATE_SHARED(%u, %u);\n", memory.min, memory.max);
+                        fprintf(
+                            file,
+                            "= WASM_MEMORY_ALLOCATE_SHARED(%u, %u);\n",
+                            memory.min,
+                            memory.max
+                        );
                     }
                     if (pretty) {
                         fputs(indentation, file);
@@ -5503,7 +5607,7 @@ wasmCWriteInitMemories(
                         MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
                         MUST_OR_GOTO (
                             cleanup,
-                            wasmCWriteConstantExpr(&stringBuilder, module, code)
+                            wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                         )
                         fputs(stringBuilder.string, file);
                         /* TODO: add support for multiple modules */
@@ -5625,7 +5729,8 @@ wasmCWriteInitTables(
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t tableImportCount = module->tableImports.length;
     const U32 elementSegmentCount = module->elementSegments.count;
@@ -5633,7 +5738,10 @@ wasmCWriteInitTables(
     if (tableCount > 0 || elementSegmentCount > 0) {
         StringBuilder stringBuilder = emptyStringBuilder;
         bool result = false;
-        MUST_OR_GOTO (cleanup, stringBuilderInitialize(&stringBuilder))
+        if (!stringBuilderInitialize(&stringBuilder)) {
+            wasmDiagnosticReportAllocationFailed(diagnostics);
+            goto cleanup;
+        }
 
         fprintf(file, "static void %sInitTables(%sInstance* i) {\n", moduleName, moduleName);
 
@@ -5674,7 +5782,7 @@ wasmCWriteInitTables(
                     MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
                     MUST_OR_GOTO (
                         cleanup,
-                        wasmCWriteConstantExpr(&stringBuilder, module, code)
+                        wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                     )
                     fputs(stringBuilder.string, file);
                 }
@@ -5733,13 +5841,15 @@ wasmCWriteFreeTables(
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteFunctionImports(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
@@ -5748,9 +5858,10 @@ wasmCWriteFunctionImports(
         if (pretty) {
             fputs(indentation, file);
         }
-        wasmCWriteFunctionImport(file, module, moduleName, import, true, pretty, multipleModules);
+        MUST (wasmCWriteFunctionImport(file, module, moduleName, import, true, pretty, multipleModules, diagnostics))
         fputs(";\n\n", file);
     }
+    return true;
 }
 
 static
@@ -5800,19 +5911,22 @@ wasmCWriteModuleInstanceDeclaration(
 }
 
 static
-void
+bool
+WARN_UNUSED_RESULT
 wasmCWriteModuleDeclarations(
     FILE* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty);
-    wasmCWriteFunctionImports(file, module, moduleName, pretty, multipleModules);
-    wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug, multipleModules);
-    wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules);
+    MUST (wasmCWriteFunctionImports(file, module, moduleName, pretty, multipleModules, diagnostics))
+    MUST (wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
+    MUST (wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules, diagnostics))
+    return true;
 }
 
 static
@@ -6042,19 +6156,18 @@ wasmCWriteModuleHeader(
     const char* filename,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     /* Create file */
     FILE* file = NULL;
+    bool result = false;
 
+    diagnostics->location.outputName = filename;
+    diagnostics->location.hasFunctionIndex = false;
     file = fopen(filename, "w");
     if (file == NULL) {
-        fprintf(
-            stderr,
-            "w2c2: failed to create header file %s: %s\n",
-            filename,
-            strerror(errno)
-        );
+        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
         return false;
     }
 
@@ -6064,7 +6177,7 @@ wasmCWriteModuleHeader(
     fputs("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n", file);
 
     wasmCWriteBaseInclude(file);
-    wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules);
+    MUST_OR_GOTO (cleanup, wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
     fprintf(
         file,
         "void %sInstantiate(%sInstance* instance, void* resolve(const char* module, const char* name));\n\n",
@@ -6082,17 +6195,15 @@ wasmCWriteModuleHeader(
 
     fprintf(file, "#endif /* %s_H */\n\n", moduleName);
 
-    if (fclose(file) != 0) {
-        fprintf(
-            stderr,
-            "w2c2: failed to close header file: %s: %s\n",
-            filename,
-            strerror(errno)
-        );
-        return false;
-    }
+    result = true;
 
-    return true;
+cleanup:
+    diagnostics->location.hasFunctionIndex = false;
+    diagnostics->location.outputName = filename;
+    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
+        result = false;
+    }
+    return result;
 }
 
 static
@@ -6160,16 +6271,17 @@ wasmCWriteInits(
     FILE* file,
     const WasmDataSegmentMode dataSegmentMode,
     const bool pretty,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
-    MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty))
-    MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules))
-    MUST (wasmCWriteInitGlobals(file, module, moduleName, pretty))
+    MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty, diagnostics))
+    MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules, diagnostics))
+    MUST (wasmCWriteInitGlobals(file, module, moduleName, pretty, diagnostics))
     MUST (wasmCWriteInitImports(file, module, moduleName, pretty))
 
-    wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules);
+    MUST (wasmCWriteExports(file, module, moduleName, true, pretty, multipleModules, diagnostics))
 
     wasmCWriteFreeChildFunction(file, module, moduleName, pretty);
     wasmCWriteNewChildFunction(file, module, moduleName, pretty, multipleModules);
@@ -6194,7 +6306,8 @@ wasmCWriteImplementationFile(
     const WasmFunctionIDs functionIDs,
     const bool pretty,
     const bool debug,
-    const bool multipleModules
+    const bool multipleModules,
+    WasmDiagnosticContext* diagnostics
 ) {
     FILE* file = NULL;
     char filename[W2C2_IMPL_FILENAME_LENGTH+1];
@@ -6212,14 +6325,11 @@ wasmCWriteImplementationFile(
     }
 
     sprintf(filename, "%c%010u.c", filePrefix, fileIndex);
+    diagnostics->location.outputName = filename;
+    diagnostics->location.hasFunctionIndex = false;
     file = fopen(filename, "w");
     if (file == NULL) {
-        fprintf(
-            stderr,
-            "w2c2: failed to create implementation file %s: %s\n",
-            filename,
-            strerror(errno)
-        );
+        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
         return false;
     }
 
@@ -6235,21 +6345,16 @@ wasmCWriteImplementationFile(
         functionIDs,
         pretty,
         debug,
-        multipleModules
+        multipleModules,
+        diagnostics
     ))
 
     result = true;
 
 cleanup:
-    if (fclose(file) != 0) {
-        if (result) {
-            fprintf(
-                stderr,
-                "w2c2: failed to close implementation file: %s: %s\n",
-                filename,
-                strerror(errno)
-            );
-        }
+    diagnostics->location.hasFunctionIndex = false;
+    diagnostics->location.outputName = filename;
+    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
         result = false;
     }
     return result;
@@ -6273,6 +6378,7 @@ typedef struct WasmCImplementationWriterTask {
 } WasmCImplementationWriterTask;
 
 typedef struct WasmCImplementationConcurrentWriter {
+    WasmDiagnostics diagnostics;
     pthread_mutex_t mutex;
     pthread_cond_t consume;
     pthread_cond_t produce;
@@ -6285,24 +6391,26 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCImplementationConcurrentWriterInitialize(
-    WasmCImplementationConcurrentWriter* writer
+    WasmCImplementationConcurrentWriter* writer,
+    WasmDiagnosticContext* diagnostics
 ) {
     int err = pthread_mutex_init(&writer->mutex, NULL);
+    writer->diagnostics = diagnostics->diagnostics;
     if (err != 0) {
-        fprintf(stderr, "w2c2: failed to initialize writer mutex: %s\n", strerror(err));
+        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadMutexInitialize, err);
         return false;
     }
 
     err = pthread_cond_init(&writer->consume, NULL);
     if (err != 0) {
-        fprintf(stderr, "w2c2: failed to initialize writer condition: %s\n", strerror(err));
+        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadConditionInitialize, err);
         pthread_mutex_destroy(&writer->mutex);
         return false;
     }
 
     err = pthread_cond_init(&writer->produce, NULL);
     if (err != 0) {
-        fprintf(stderr, "w2c2: failed to initialize writer condition: %s\n", strerror(err));
+        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadConditionInitialize, err);
         pthread_cond_destroy(&writer->consume);
         pthread_mutex_destroy(&writer->mutex);
         return false;
@@ -6330,6 +6438,9 @@ wasmCImplementationWriterThread(
     void* arg
 ) {
     WasmCImplementationConcurrentWriter* writer = (WasmCImplementationConcurrentWriter*)arg;
+    WasmDiagnosticContext threadDiagnostics = emptyWasmDiagnosticContext;
+    WasmDiagnosticContext* diagnostics = &threadDiagnostics;
+    diagnostics->diagnostics = writer->diagnostics;
 
     while (true) {
         pthread_mutex_lock(&writer->mutex);
@@ -6380,16 +6491,13 @@ wasmCImplementationWriterThread(
                     functionIDs,
                     pretty,
                     debug,
-                    multipleModules
+                    multipleModules,
+                    diagnostics
                 );
                 if (!result) {
-                    const WasmFunctionID startFunctionID = functionIDs.functionIDs[startFunctionIDIndex];
-                    fprintf(
-                        stderr,
-                        "w2c2: failed to write implementation file %d. start function index: %d\n",
-                        fileIndex,
-                        startFunctionID.functionIndex
-                    );
+                    if (!diagnostics->hasError) {
+                        wasmDiagnosticReportTranslationFailed(diagnostics);
+                    }
 
                     pthread_mutex_lock(&writer->mutex);
                     writer->failed = true;
@@ -6417,7 +6525,8 @@ wasmCWriteModuleImplementationFiles(
     const char* headerName,
     WasmFunctionIDs functionIDs,
     char filePrefix,
-    WasmCWriteModuleOptions options
+    WasmCWriteModuleOptions options,
+    WasmDiagnosticContext* diagnostics
 ) {
     WasmDebugLines debugLines = module->debugLines;
 
@@ -6446,13 +6555,13 @@ wasmCWriteModuleImplementationFiles(
         if (threadCount == 0) {
             threadCount = 1;
         }
-        if (!wasmCImplementationConcurrentWriterInitialize(&writer)) {
+        if (!wasmCImplementationConcurrentWriterInitialize(&writer, diagnostics)) {
             return false;
         }
 
         threads = calloc(threadCount, sizeof(pthread_t));
         if (threads == NULL) {
-            fprintf(stderr, "w2c2: failed to allocate implementation threads\n");
+            wasmDiagnosticReportAllocationFailed(diagnostics);
             wasmCImplementationConcurrentWriterDestroy(&writer);
             return false;
         }
@@ -6473,11 +6582,7 @@ wasmCWriteModuleImplementationFiles(
                 &writer
             );
             if (err) {
-                fprintf(
-                    stderr,
-                    "w2c2: failed to create implementations thread: %s\n",
-                    strerror(err)
-                );
+                wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadCreate, err);
                 result = false;
                 goto finish;
             }
@@ -6543,12 +6648,13 @@ finish:
         for (jobIndex = 0; jobIndex < createdThreadCount; jobIndex++) {
             int err = pthread_join(threads[jobIndex], NULL);
             if (err != 0) {
-                fprintf(stderr, "w2c2: failed to join writer thread: %s\n", strerror(err));
+                wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadJoin, err);
                 result = false;
             }
         }
 
         if (writer.failed) {
+            diagnostics->hasError = true;
             result = false;
         }
 
@@ -6571,7 +6677,8 @@ finish:
             functionIDs,
             options.pretty,
             options.debug,
-            options.multipleModules
+            options.multipleModules,
+            diagnostics
         )) {
             return false;
         }
@@ -6591,20 +6698,18 @@ wasmCWriteModuleImplementation(
     const char* headerName,
     const WasmFunctionIDs staticFunctionIDs,
     const WasmFunctionIDs dynamicFunctionIDs,
-    const WasmCWriteModuleOptions options
+    const WasmCWriteModuleOptions options,
+    WasmDiagnosticContext* diagnostics
 ) {
     /* Create file */
     FILE* file = NULL;
     bool result = false;
 
+    diagnostics->location.outputName = filename;
+    diagnostics->location.hasFunctionIndex = false;
     file = fopen(filename, "w");
     if (file == NULL) {
-        fprintf(
-            stderr,
-            "w2c2: failed to open output file %s: %s\n",
-            filename,
-            strerror(errno)
-        );
+        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
         return false;
     }
 
@@ -6617,7 +6722,8 @@ wasmCWriteModuleImplementation(
             MUST_OR_GOTO (cleanup, wasmCWriteDataSegmentsFromSection(
                 file,
                 module,
-                options.dataSegmentMode
+                options.dataSegmentMode,
+                diagnostics
             ))
             break;
         }
@@ -6626,16 +6732,19 @@ wasmCWriteModuleImplementation(
             break;
         }
         default: {
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
+            wasmDiagnosticReportInvalidDataSegmentMode(diagnostics, options.dataSegmentMode);
             goto cleanup;
         }
     }
 
-    wasmCWriteDataSegments(
+    diagnostics->location.outputName = filename;
+
+    MUST_OR_GOTO (cleanup, wasmCWriteDataSegments(
         file, module,
         options.dataSegmentMode,
-        options.pretty
-    );
+        options.pretty,
+        diagnostics
+    ))
 
     /* Write implementations */
 
@@ -6654,7 +6763,8 @@ wasmCWriteModuleImplementation(
             staticFunctionIDs,
             options.pretty,
             options.debug,
-            options.multipleModules
+            options.multipleModules,
+            diagnostics
         ))
     } else {
 
@@ -6664,7 +6774,8 @@ wasmCWriteModuleImplementation(
             headerName,
             staticFunctionIDs,
             's',
-            options
+            options,
+            diagnostics
         ))
 
         MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
@@ -6673,9 +6784,13 @@ wasmCWriteModuleImplementation(
             headerName,
             dynamicFunctionIDs,
             'd',
-            options
+            options,
+            diagnostics
         ))
     }
+
+    diagnostics->location.outputName = filename;
+    diagnostics->location.hasFunctionIndex = false;
 
     /* Write initializations code */
 
@@ -6685,34 +6800,31 @@ wasmCWriteModuleImplementation(
         file,
         options.dataSegmentMode,
         options.pretty,
-        options.multipleModules
+        options.multipleModules,
+        diagnostics
     ))
 
     result = true;
 
 cleanup:
-    if (fclose(file) != 0) {
-        if (result) {
-            fprintf(
-                stderr,
-                "w2c2: failed to close output file: %s: %s\n",
-                filename,
-                strerror(errno)
-            );
-        }
+    diagnostics->location.hasFunctionIndex = false;
+    diagnostics->location.outputName = filename;
+    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
         result = false;
     }
     return result;
 }
 
+static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteModule(
+wasmCWriteModuleInternal(
     const WasmModule* module,
     const char* moduleName,
     const WasmCWriteModuleOptions options,
     const WasmFunctionIDs staticFunctionIDs,
-    const WasmFunctionIDs dynamicFunctionIDs
+    const WasmFunctionIDs dynamicFunctionIDs,
+    WasmDiagnosticContext* diagnostics
 ) {
     char outputName[PATH_MAX];
     char headerName[PATH_MAX];
@@ -6720,7 +6832,7 @@ wasmCWriteModule(
     const char* outputPath = options.outputPath;
 
     if (module == NULL || moduleName == NULL || outputPath == NULL) {
-        fprintf(stderr, "w2c2: invalid module writer argument\n");
+        wasmDiagnosticReportInvalidWriterArgument(diagnostics);
         return false;
     }
 
@@ -6731,8 +6843,13 @@ wasmCWriteModule(
         case wasmDataSegmentModeSectcreate2:
             break;
         default:
-            fprintf(stderr, "w2c2: unsupported data segment mode: %d\n", options.dataSegmentMode);
+            wasmDiagnosticReportInvalidDataSegmentMode(diagnostics, options.dataSegmentMode);
             return false;
+    }
+
+    if (strlen(outputPath) >= sizeof(outputName) - 2) {
+        wasmDiagnosticReportInvalidWriterArgument(diagnostics);
+        return false;
     }
 
     strcpy(outputName, outputPath);
@@ -6761,7 +6878,8 @@ wasmCWriteModule(
         headerName,
         options.pretty,
         options.debug,
-        options.multipleModules
+        options.multipleModules,
+        diagnostics
     ))
 
     MUST (wasmCWriteModuleImplementation(
@@ -6771,8 +6889,32 @@ wasmCWriteModule(
         headerName,
         staticFunctionIDs,
         dynamicFunctionIDs,
-        options
+        options,
+        diagnostics
     ))
 
     return true;
+}
+
+bool
+WARN_UNUSED_RESULT
+wasmCWriteModule(
+    const WasmModule* module,
+    const char* moduleName,
+    const WasmCWriteModuleOptions options,
+    const WasmFunctionIDs staticFunctionIDs,
+    const WasmFunctionIDs dynamicFunctionIDs
+) {
+    WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+    bool result;
+    diagnostics.diagnostics = options.diagnostics;
+    result = wasmCWriteModuleInternal(
+        module, moduleName, options,
+        staticFunctionIDs, dynamicFunctionIDs, &diagnostics
+    );
+    if (!result && !diagnostics.hasError) {
+        memset(&diagnostics.location, 0, sizeof(diagnostics.location));
+        wasmDiagnosticReportTranslationFailed(&diagnostics);
+    }
+    return result;
 }

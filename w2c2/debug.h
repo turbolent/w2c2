@@ -4,6 +4,7 @@
 #include "w2c2_base.h"
 #include "buffer.h"
 #include "array.h"
+#include "diagnostic.h"
 
 typedef struct WasmDebugSection {
     char* name;
@@ -36,7 +37,8 @@ static const WasmDebugLines emptyWasmDebugLines = {0, 0, NULL};
 
 WasmDebugLines
 wasmParseDebugInfo(
-    WasmDebugSections sections
+    WasmDebugSections sections,
+    WasmDiagnostics diagnostics
 );
 
 #endif /* W2C2_DEBUG_H */

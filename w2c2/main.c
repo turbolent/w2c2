@@ -1,25 +1,34 @@
-#include "path.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
 #if HAS_UNISTD
 #include <unistd.h>
-#endif
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
+#endif /* HAS_UNISTD */
 #if HAS_GETOPT
   #include <getopt.h>
-#else
-  #include "getopt_impl.h"
 #endif /* HAS_GETOPT */
+#if HAS_GLOB
+#include <glob.h>
+#endif /* HAS_GLOB */
+#if _WIN32
+#include <direct.h>
+#include <windows.h>
+#endif
 
+#include "path.h"
 #include "buffer.h"
 #include "file.h"
 #include "reader.h"
 #include "c.h"
 #include "compat.h"
+#include "diagnostic_print.h"
+#if !HAS_GETOPT
+  #include "getopt_impl.h"
+#endif /* !HAS_GETOPT */
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 #if HAS_PTHREAD
 static char* const optString = "t:f:d:r:pgmch";
@@ -27,20 +36,14 @@ static char* const optString = "t:f:d:r:pgmch";
 static char* const optString = "f:d:r:pgmch";
 #endif /* HAS_PTHREAD */
 
-#if HAS_GLOB
-#include <glob.h>
-#endif /* HAS_GLOB */
-
-#if HAS_UNISTD
-#include <unistd.h>
-#endif /* HAS_UNISTD */
-#if _WIN32
-#include <direct.h>
-#endif
-
-#if _WIN32
-#include <windows.h>
-#endif
+static
+void
+reportDiagnostic(
+    void* context,
+    const WasmDiagnostic* diagnostic
+) {
+    wasmDiagnosticPrint(stderr, diagnostic, (const char*)context);
+}
 
 static
 bool
@@ -60,15 +63,11 @@ readWasmBinary(
 
     wasmModuleReaderResult->buffer = buffer;
     wasmModuleReaderResult->debug = debug;
+    wasmModuleReaderResult->diagnostics.report = reportDiagnostic;
+    wasmModuleReaderResult->diagnostics.context = (void*)path;
 
     wasmModuleRead(wasmModuleReaderResult, &error);
     if (error != NULL) {
-        fprintf(
-            stderr,
-            "w2c2: failed to read module %s: %s\n",
-            path,
-            wasmModuleReaderErrorMessage(error)
-        );
         bufferFree(bufferResult);
         wasmModuleReaderResult->buffer = emptyBuffer;
         return false;
@@ -567,6 +566,7 @@ main(
             cleanImplementationFiles();
         }
 
+        writeOptions.diagnostics.report = reportDiagnostic;
         writeOptions.outputPath = outputPath;
         writeOptions.threadCount = threadCount;
         writeOptions.functionsPerFile = functionsPerFile;
@@ -582,7 +582,6 @@ main(
             staticFunctionIDs,
             dynamicFunctionIDs
         )) {
-            fprintf(stderr, "w2c2: failed to compile\n");
             goto cleanup;
         }
 

@@ -4,6 +4,7 @@
 #include "opcode_test.h"
 #include "sha1_test.h"
 #include "module_test.h"
+#include "diagnostic_test.h"
 
 int
 main(void) {
@@ -14,5 +15,6 @@ main(void) {
     testOpcodes();
     testSHA1();
     testModuleLifecycle();
+    testDiagnostics();
     return 0;
 }

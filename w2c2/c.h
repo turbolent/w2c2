@@ -3,6 +3,7 @@
 
 #include "w2c2_base.h"
 #include "module.h"
+#include "diagnostic.h"
 
 #define W2C2_IMPL_FILENAME_LENGTH 13
 
@@ -15,10 +16,11 @@ typedef struct WasmCWriteModuleOptions {
     bool debug;
     bool multipleModules;
     WasmDataSegmentMode dataSegmentMode;
+    WasmDiagnostics diagnostics;
 } WasmCWriteModuleOptions;
 
 static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
-    NULL, 0, 0, false, false, false, wasmDataSegmentModeArrays
+    NULL, 0, 0, false, false, false, wasmDataSegmentModeArrays, {NULL, NULL}
 };
 
 bool
