@@ -5,17 +5,10 @@
 #if HAS_PTHREAD
   #include <pthread.h>
 #endif /* HAS_PTHREAD */
-#include <errno.h>
 #include <limits.h>
 
-#include "diagnostic_internal.h"
-#include "compat.h"
+#include "output_internal.h"
 #include "w2c2_base.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
-
 #include "c.h"
 #include "stringbuilder.h"
 #include "instruction.h"
@@ -50,19 +43,21 @@ static const char* const indentation = "  ";
 
 static
 W2C2_INLINE
-void
-wasmCWriteFileLocalName(
-    FILE* file,
+bool
+wasmCWriteLocalName(
+    WasmOutput* file,
     const U32 localIndex
 ) {
-    fprintf(file, "%c%u", localNamePrefix, localIndex);
+    wasmOutputChar(file, localNamePrefix);
+    wasmOutputU32(file, localIndex);
+    return !file->failed;
 }
 
 static
 W2C2_INLINE
 void
-wasmCWriteFileEscaped(
-    FILE* file,
+wasmCWriteEscaped(
+    WasmOutput* file,
     const char* name
 ) {
     static const char escapeChar = 'X';
@@ -76,14 +71,15 @@ wasmCWriteFileEscaped(
              */
             const bool wasUnderscore = p != name && *(p-1) == '_';
             if (wasUnderscore) {
-                fputs("__", file);
+                wasmOutputString(file, "__");
             } else {
-                fputc(c, file);
+                wasmOutputChar(file, c);
             }
         } else if (c != escapeChar && isalnum(c)) {
-            fputc(c, file);
+            wasmOutputChar(file, c);
         } else {
-            fprintf(file, "%c%02X", escapeChar, c);
+            wasmOutputChar(file, escapeChar);
+            wasmOutputHex(file, (unsigned int)c, wasmOutputHexUpperPadded);
         }
     }
 }
@@ -92,95 +88,34 @@ static const char* wasmImportNameSeparator = "__";
 
 static
 W2C2_INLINE
-bool
-WARN_UNUSED_RESULT
-wasmCWriteStringEscaped(
-    StringBuilder* builder,
-    const char* name
-) {
-    static const char escapeChar = 'X';
-    const char* p = name;
-    for (; *p != '\0'; p++) {
-        const char c = *p;
-        if (c == '_') {
-            /*
-             * Double underscore is reserved for concatenating module name and import name,
-             * so produce triple underscore instead.
-             */
-            const bool wasUnderscore = p != name && *(p-1) == '_';
-            if (wasUnderscore) {
-                MUST (stringBuilderAppend(builder, "__"))
-            } else {
-                MUST (stringBuilderAppendChar(builder, c))
-            }
-        } else if (c != escapeChar && isalnum(c)) {
-            MUST (stringBuilderAppendChar(builder, c))
-        } else {
-            MUST (stringBuilderAppendChar(builder, escapeChar))
-            MUST (stringBuilderAppendCharHex(builder, c))
-        }
-    }
-    return true;
-}
-
-static
-W2C2_INLINE
 void
-wasmCWriteFileGlobalNonImportName(
-    FILE* file,
+wasmCWriteGlobalNonImportName(
+    WasmOutput* file,
     const U32 globalIndex
 ) {
-    fputc(globalNamePrefix, file);
-    fprintf(file, "%u", globalIndex);
+    wasmOutputChar(file, globalNamePrefix);
+    wasmOutputU32(file, globalIndex);
 }
 
 static
 W2C2_INLINE
 void
-wasmCWriteFileImportName(
-    FILE* file,
+wasmCWriteImportName(
+    WasmOutput* file,
     const char* module,
     const char* name
 ) {
-    wasmCWriteFileEscaped(file, module);
-    fputs(wasmImportNameSeparator, file);
-    wasmCWriteFileEscaped(file, name);
+    wasmCWriteEscaped(file, module);
+    wasmOutputString(file, wasmImportNameSeparator);
+    wasmCWriteEscaped(file, name);
 }
 
 
 static
 W2C2_INLINE
-void
-wasmCWriteFileGlobalUse(
-    FILE* file,
-    const WasmModule* module,
-    const U32 globalIndex,
-    const bool reference
-) {
-    if (globalIndex < module->globalImports.length) {
-        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
-        if (!reference) {
-            fputs("(*", file);
-        }
-        fputs("i->", file);
-        wasmCWriteFileImportName(file, import.module, import.name);
-        if (!reference) {
-            fputc(')', file);
-        }
-    } else {
-        if (reference) {
-            fputc('&', file);
-        }
-        fputs("i->", file);
-        wasmCWriteFileGlobalNonImportName(file, globalIndex);
-    }
-}
-
-static
 bool
-WARN_UNUSED_RESULT
-wasmCWriteStringGlobalUse(
-    StringBuilder* builder,
+wasmCWriteGlobalUse(
+    WasmOutput* file,
     const WasmModule* module,
     const U32 globalIndex,
     const bool reference
@@ -188,42 +123,39 @@ wasmCWriteStringGlobalUse(
     if (globalIndex < module->globalImports.length) {
         const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (!reference) {
-            MUST (stringBuilderAppend(builder, "(*"))
+            wasmOutputString(file, "(*");
         }
-        MUST (stringBuilderAppend(builder, "i->"))
-        MUST (wasmCWriteStringEscaped(builder, import.module))
-        MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
-        MUST (wasmCWriteStringEscaped(builder, import.name))
+        wasmOutputString(file, "i->");
+        wasmCWriteImportName(file, import.module, import.name);
         if (!reference) {
-            MUST (stringBuilderAppendChar(builder, ')'))
+            wasmOutputChar(file, ')');
         }
     } else {
         if (reference) {
-            MUST (stringBuilderAppendChar(builder, '&'))
+            wasmOutputChar(file, '&');
         }
-        MUST (stringBuilderAppend(builder, "i->"))
-        MUST (stringBuilderAppendChar(builder, globalNamePrefix))
-        MUST (stringBuilderAppendU32(builder, globalIndex))
+        wasmOutputString(file, "i->");
+        wasmCWriteGlobalNonImportName(file, globalIndex);
     }
-    return true;
+    return !file->failed;
 }
 
 static
 W2C2_INLINE
 void
-wasmCWriteFileMemoryNonImportName(
-    FILE* file,
+wasmCWriteMemoryNonImportName(
+    WasmOutput* file,
     const U32 memoryIndex
 ) {
-    fputc(memoryNamePrefix, file);
-    fprintf(file, "%u", memoryIndex);
+    wasmOutputChar(file, memoryNamePrefix);
+    wasmOutputU32(file, memoryIndex);
 }
 
 static
 W2C2_INLINE
-void
-wasmCWriteFileMemoryUse(
-    FILE* file,
+bool
+wasmCWriteMemoryUse(
+    WasmOutput* file,
     const WasmModule* module,
     const U32 memoryIndex,
     const char *variableName,
@@ -234,64 +166,37 @@ wasmCWriteFileMemoryUse(
     }
 
     if (!reference) {
-        fputs("(*", file);
+        wasmOutputString(file, "(*");
     }
-    fprintf(file, "%s->", variableName);
+    wasmOutputString(file, variableName);
+    wasmOutputString(file, "->");
     if (memoryIndex < module->memoryImports.length) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        wasmCWriteFileImportName(file, import.module, import.name);
+        wasmCWriteImportName(file, import.module, import.name);
     } else {
-        wasmCWriteFileMemoryNonImportName(file, memoryIndex);
+        wasmCWriteMemoryNonImportName(file, memoryIndex);
     }
     if (!reference) {
-        fputc(')', file);
+        wasmOutputChar(file, ')');
     }
-}
-
-static
-W2C2_INLINE
-bool
-WARN_UNUSED_RESULT
-wasmCWriteStringMemoryUse(
-    StringBuilder* builder,
-    const WasmModule* module,
-    const U32 memoryIndex,
-    const bool reference
-) {
-    if (!reference) {
-        MUST (stringBuilderAppend(builder, "(*"))
-    }
-    MUST (stringBuilderAppend(builder, "i->"))
-    if (memoryIndex < module->memoryImports.length) {
-        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        MUST (wasmCWriteStringEscaped(builder, import.module))
-        MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
-        MUST (wasmCWriteStringEscaped(builder, import.name))
-    } else {
-        MUST (stringBuilderAppendChar(builder, memoryNamePrefix))
-        MUST (stringBuilderAppendU32(builder, memoryIndex))
-    }
-    if (!reference) {
-        MUST (stringBuilderAppendChar(builder, ')'))
-    }
-    return true;
+    return !file->failed;
 }
 
 static
 void
-wasmCWriteFileTableNonImportName(
-    FILE* file,
+wasmCWriteTableNonImportName(
+    WasmOutput* file,
     const U32 tableIndex
 ) {
-    fputc(tableNamePrefix, file);
-    fprintf(file, "%u", tableIndex);
+    wasmOutputChar(file, tableNamePrefix);
+    wasmOutputU32(file, tableIndex);
 }
 
 static
 W2C2_INLINE
-void
-wasmCWriteFileTableUse(
-    FILE* file,
+bool
+wasmCWriteTableUse(
+    WasmOutput* file,
     const WasmModule* module,
     const U32 tableIndex,
     const bool reference
@@ -299,122 +204,52 @@ wasmCWriteFileTableUse(
     if (tableIndex < module->tableImports.length) {
         const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (!reference) {
-            fputs("(*", file);
+            wasmOutputString(file, "(*");
         }
-        fputs("i->", file);
-        wasmCWriteFileImportName(file, import.module, import.name);
+        wasmOutputString(file, "i->");
+        wasmCWriteImportName(file, import.module, import.name);
         if (!reference) {
-            fputc(')', file);
+            wasmOutputChar(file, ')');
         }
     } else {
         if (reference) {
-            fputc('&', file);
+            wasmOutputChar(file, '&');
         }
-        fputs("i->", file);
-        wasmCWriteFileTableNonImportName(file, tableIndex);
+        wasmOutputString(file, "i->");
+        wasmCWriteTableNonImportName(file, tableIndex);
     }
-}
-
-static
-W2C2_INLINE
-bool
-WARN_UNUSED_RESULT
-wasmCWriteStringTableUse(
-    StringBuilder* builder,
-    const WasmModule* module,
-    const U32 tableIndex,
-    const bool reference
-) {
-    if (tableIndex < module->tableImports.length) {
-        const WasmTableImport import = module->tableImports.imports[tableIndex];
-        if (!reference) {
-            MUST (stringBuilderAppend(builder, "(*"))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
-        MUST (wasmCWriteStringEscaped(builder, import.module))
-        MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
-        MUST (wasmCWriteStringEscaped(builder, import.name))
-        if (!reference) {
-            MUST (stringBuilderAppendChar(builder, ')'))
-        }
-    } else {
-        if (reference) {
-            MUST (stringBuilderAppendChar(builder, '&'))
-        }
-        MUST (stringBuilderAppend(builder, "i->"))
-        MUST (stringBuilderAppendChar(builder, tableNamePrefix))
-        MUST (stringBuilderAppendU32(builder, tableIndex))
-    }
-    return true;
-}
-
-/* TODO: add support for multiple modules */
-static
-W2C2_INLINE
-void
-wasmCWriteFileDataSegmentName(
-    FILE* file,
-    const U32 dataSegmentIndex
-) {
-    fputc(dataSegmentNamePrefix, file);
-    fprintf(file, "%u", dataSegmentIndex);
+    return !file->failed;
 }
 
 /* TODO: add support for multiple modules */
 static
 W2C2_INLINE
 bool
-wasmCWriteStringDataSegmentName(
-    StringBuilder* builder,
+wasmCWriteDataSegmentName(
+    WasmOutput* file,
     const U32 dataSegmentIndex
 ) {
-    MUST (stringBuilderAppendChar(builder, dataSegmentNamePrefix))
-    MUST (stringBuilderAppendU32(builder, dataSegmentIndex))
-    return true;
+    wasmOutputChar(file, dataSegmentNamePrefix);
+    wasmOutputU32(file, dataSegmentIndex);
+    return !file->failed;
 }
 
 static
 W2C2_INLINE
 void
-wasmCWriteFileFunctionNonImportName(
-    FILE* file,
+wasmCWriteFunctionNonImportName(
+    WasmOutput* file,
     const U32 functionIndex
 ) {
-    fprintf(file, "f%u", functionIndex);
-}
-
-static
-W2C2_INLINE
-void
-wasmCWriteFileFunctionUse(
-    FILE* file,
-    const WasmModule* module,
-    const char* moduleName,
-    const U32 functionIndex,
-    const bool reference,
-    const bool prefix
-) {
-    if (reference) {
-        fputc('&', file);
-    }
-    if (prefix) {
-        fputs(moduleName, file);
-        fputc('_', file);
-    }
-    if (functionIndex < module->functionImports.length) {
-        const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        wasmCWriteFileImportName(file, import.module, import.name);
-    } else {
-        wasmCWriteFileFunctionNonImportName(file, functionIndex);
-    }
+    wasmOutputString(file, "f");
+    wasmOutputU32(file, functionIndex);
 }
 
 static
 W2C2_INLINE
 bool
-WARN_UNUSED_RESULT
-wasmCWriteStringFunctionUse(
-    StringBuilder* builder,
+wasmCWriteFunctionUse(
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const U32 functionIndex,
@@ -422,80 +257,46 @@ wasmCWriteStringFunctionUse(
     const bool prefix
 ) {
     if (reference) {
-        MUST (stringBuilderAppendChar(builder, '&'))
+        wasmOutputChar(file, '&');
     }
     if (prefix) {
-        MUST (stringBuilderAppend(builder, moduleName))
-        MUST (stringBuilderAppendChar(builder, '_'))
+        wasmOutputString(file, moduleName);
+        wasmOutputChar(file, '_');
     }
     if (functionIndex < module->functionImports.length) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        MUST (wasmCWriteStringEscaped(builder, import.module))
-        MUST (stringBuilderAppend(builder, wasmImportNameSeparator))
-        MUST (wasmCWriteStringEscaped(builder, import.name))
+        wasmCWriteImportName(file, import.module, import.name);
     } else {
-        MUST (stringBuilderAppendChar(builder, 'f'))
-        MUST (stringBuilderAppendU32(builder, functionIndex))
+        wasmCWriteFunctionNonImportName(file, functionIndex);
     }
-    return true;
+    return !file->failed;
 }
 
 static
 W2C2_INLINE
-void
-wasmCWriteFileStackName(
-    FILE* file,
+bool
+wasmCWriteStackName(
+    WasmOutput* file,
     const U32 stackIndex,
     const WasmValueType valueType
 ) {
-    fprintf(
-        file,
-        "%c%c%u",
-        stackNamePrefix,
-        valueTypeStackNames[valueType],
-        stackIndex
-    );
+    wasmOutputChar(file, stackNamePrefix);
+    wasmOutputChar(file, valueTypeStackNames[valueType]);
+    wasmOutputU32(file, stackIndex);
+    return !file->failed;
 }
 
 static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
-wasmCWriteStringStackName(
-    StringBuilder* builder,
-    const U32 stackIndex,
-    const WasmValueType localType
-) {
-    MUST (stringBuilderAppendChar(builder, stackNamePrefix))
-    MUST (stringBuilderAppendChar(builder, valueTypeStackNames[localType]))
-    MUST (stringBuilderAppendU32(builder, stackIndex))
-    return true;
-}
-
-static
-W2C2_INLINE
-bool
-WARN_UNUSED_RESULT
-wasmCWriteStringLocalName(
-    StringBuilder* builder,
-    const U32 localIndex
-) {
-    MUST (stringBuilderAppendChar(builder, localNamePrefix))
-    MUST (stringBuilderAppendU32(builder, localIndex))
-    return true;
-}
-
-static
-W2C2_INLINE
-bool
-WARN_UNUSED_RESULT
-wasmCWriteStringLabelName(
-    StringBuilder* builder,
+wasmCWriteLabelName(
+    WasmOutput* output,
     const U32 labelIndex
 ) {
-    MUST (stringBuilderAppendChar(builder, labelNamePrefix))
-    MUST (stringBuilderAppendU32(builder, labelIndex))
-    return true;
+    wasmOutputChar(output, labelNamePrefix);
+    wasmOutputU32(output, labelIndex);
+    return !output->failed;
 }
 
 static
@@ -526,8 +327,8 @@ wasmCGetReturnType(
 
 static
 void
-wasmCWriteFileLocalsDeclarations(
-    FILE* file,
+wasmCWriteLocalsDeclarations(
+    WasmOutput* file,
     const WasmModule* module,
     const WasmFunction function,
     const bool pretty
@@ -545,18 +346,19 @@ wasmCWriteFileLocalsDeclarations(
         const U32 endIndex = localIndex + localsDeclaration.count;
         for (; localIndex < endIndex; localIndex++) {
             if (pretty) {
-                fputs(indentation, file);
+                wasmOutputString(file, indentation);
             }
-            fputs(valueTypeNames[localsDeclaration.type], file);
-            fputc(' ', file);
-            wasmCWriteFileLocalName(file, parameterCount + localIndex);
-            fputs(pretty ? " = 0;\n" : "=0;\n", file);
+            wasmOutputString(file, valueTypeNames[localsDeclaration.type]);
+            wasmOutputChar(file, ' ');
+            wasmCWriteLocalName(file, parameterCount + localIndex);
+            wasmOutputString(file, pretty ? " = 0;\n" : "=0;\n");
         }
     }
 }
 
 typedef struct WasmCFunctionWriter {
     StringBuilder* builder;
+    WasmOutput* output;
     WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
     WasmTypeStack* stackDeclarations;
@@ -700,12 +502,12 @@ wasmCWriteCallExpr(
                 }
 
                 MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
-                MUST (wasmCWriteStringStackName(writer->builder, resultStackIndex, resultType))
+                MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
                 MUST (wasmCWriteAssign(writer))
             }
 
-            MUST (wasmCWriteStringFunctionUse(
-                writer->builder,
+            MUST (wasmCWriteFunctionUse(
+                writer->output,
                 writer->module,
                 writer->moduleName,
                 instruction.funcIndex,
@@ -723,7 +525,7 @@ wasmCWriteCallExpr(
                         parameterCount - parameterIndex - 1
                     );
                     MUST (wasmCWriteComma(writer))
-                    MUST (wasmCWriteStringStackName(writer->builder, paramStackIndex, parameterType))
+                    MUST (wasmCWriteStackName(writer->output, paramStackIndex, parameterType))
                 }
             }
             MUST (wasmCWrite(writer, ");\n"))
@@ -744,25 +546,48 @@ wasmCWriteCallExpr(
 
 static
 bool
-WARN_UNUSED_RESULT
 wasmCWriteParameters(
-    const WasmCFunctionWriter* writer,
-    const WasmFunctionType functionType
+    WasmOutput* file,
+    const char* moduleName,
+    const WasmFunctionType functionType,
+    const bool writeParameterNames,
+    const bool voidPointerInstanceType,
+    const bool pretty
 ) {
-    MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWrite(writer, writer->moduleName))
-    MUST (wasmCWrite(writer, "Instance*"))
+    wasmOutputChar(file, '(');
+    if (voidPointerInstanceType) {
+        wasmOutputString(file, "void*");
+    } else {
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance*");
+    }
+
+    if (writeParameterNames) {
+        if (pretty) {
+            wasmOutputString(file, " i");
+        } else {
+            wasmOutputChar(file, 'i');
+        }
+    }
     {
         U32 parameterIndex = 0;
         for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
             const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
-            MUST (wasmCWriteComma(writer))
-            MUST (wasmCWrite(writer, valueTypeNames[parameterType]))
+            const char* parameterTypeName = valueTypeNames[parameterType];
+            if (pretty) {
+                wasmOutputString(file, ", ");
+            } else {
+                wasmOutputChar(file, ',');
+            }
+            wasmOutputString(file, parameterTypeName);
+            if (writeParameterNames) {
+                wasmOutputChar(file, ' ');
+                wasmCWriteLocalName(file, parameterIndex);
+            }
         }
     }
-    MUST (wasmCWriteChar(writer, ')'))
-
-    return true;
+    wasmOutputChar(file, ')');
+    return !file->failed;
 }
 
 static
@@ -802,18 +627,18 @@ wasmCWriteCallIndirectExpr(
             }
 
             MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
-            MUST (wasmCWriteStringStackName(writer->builder, resultStackIndex, resultType))
+            MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
             MUST (wasmCWriteAssign(writer))
         }
 
         MUST (wasmCWrite(writer, "TF("))
-        MUST (wasmCWriteStringTableUse(writer->builder, writer->module, instruction.tableIndex, false))
+        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, false))
         MUST (wasmCWriteComma(writer))
 
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -823,7 +648,9 @@ wasmCWriteCallIndirectExpr(
         MUST (wasmCWrite(writer, returnType))
         MUST (wasmCWrite(writer, " (*)"))
 
-        MUST (wasmCWriteParameters(writer, functionType))
+        MUST (wasmCWriteParameters(
+            writer->output, writer->moduleName, functionType, false, false, writer->pretty
+        ))
 
         MUST (wasmCWrite(writer, ")(i"))
 
@@ -836,7 +663,7 @@ wasmCWriteCallIndirectExpr(
                     parameterCount - parameterIndex
                 );
                 MUST (wasmCWriteComma(writer))
-                MUST (wasmCWriteStringStackName(writer->builder, paramStackIndex, parameterType))
+                MUST (wasmCWriteStackName(writer->output, paramStackIndex, parameterType))
             }
         }
         MUST (wasmCWrite(writer, ");\n"))
@@ -893,9 +720,9 @@ wasmCWriteLocalGetExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, localType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, localType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringLocalName(writer->builder, instruction.localIndex))
+            MUST (wasmCWriteLocalName(writer->output, instruction.localIndex))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -942,9 +769,9 @@ wasmCWriteLocalAssignmentExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringLocalName(writer->builder, instruction.localIndex))
+            MUST (wasmCWriteLocalName(writer->output, instruction.localIndex))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, localType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, localType))
             MUST (wasmCWrite(writer, ";\n"))
         }
         if (opcode == wasmOpcodeLocalSet) {
@@ -996,9 +823,9 @@ wasmCWriteGlobalGetExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, globalType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, globalType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringGlobalUse(writer->builder, writer->module, instruction.globalIndex, false))
+            MUST (wasmCWriteGlobalUse(writer->output, writer->module, instruction.globalIndex, false))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -1045,9 +872,9 @@ wasmCWriteGlobalSetExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringGlobalUse(writer->builder, writer->module, instruction.globalIndex, false))
+            MUST (wasmCWriteGlobalUse(writer->output, writer->module, instruction.globalIndex, false))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, globalType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, globalType))
             MUST (wasmCWrite(writer, ";\n"))
         }
         wasmTypeStackDrop(writer->typeStack, 1);
@@ -1154,7 +981,7 @@ wasmCWriteConstExpr(
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteLiteral(writer->builder, resultType, instruction.value, writer->diagnostics))
             MUST (wasmCWrite(writer, ";\n"))
@@ -1176,14 +1003,14 @@ wasmCWriteLoad(
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+    MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+    MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1328,10 +1155,10 @@ wasmCWriteStore(
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+    MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -1341,8 +1168,8 @@ wasmCWriteStore(
         MUST (wasmCWriteChar(writer, 'U'))
     }
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1465,16 +1292,17 @@ wasmCWriteMemorySizeExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 resultType
             ))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringMemoryUse(
-                writer->builder,
+            MUST (wasmCWriteMemoryUse(
+                writer->output,
                 writer->module,
                 instruction.memoryIndex,
+                NULL,
                 false
             ))
             MUST (wasmCWrite(writer, ".pages;\n"))
@@ -1523,18 +1351,19 @@ wasmCWriteMemoryGrowExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, "wasmMemoryGrow("))
-            MUST (wasmCWriteStringMemoryUse(
-                writer->builder,
+            MUST (wasmCWriteMemoryUse(
+                writer->output,
                 writer->module,
                 instruction.memoryIndex,
+                NULL,
                 true
             ))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -1568,30 +1397,31 @@ wasmCWriteMemoryInitExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "LOAD_DATA("))
-        MUST (wasmCWriteStringMemoryUse(
-            writer->builder,
+        MUST (wasmCWriteMemoryUse(
+            writer->output,
             writer->module,
             instruction.memoryIndex,
+            NULL,
             false
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex2,
             writer->typeStack->valueTypes[stackIndex2]
         ))
         MUST (wasmCWriteComma(writer))
         /* TODO: add support for multiple modules */
-        MUST (wasmCWriteStringDataSegmentName(writer->builder, instruction.dataSegmentIndex))
+        MUST (wasmCWriteDataSegmentName(writer->output, instruction.dataSegmentIndex))
         MUST (wasmCWriteChar(writer, '+'))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex1,
             writer->typeStack->valueTypes[stackIndex1]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -1654,34 +1484,36 @@ wasmCWriteMemoryCopyExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmMemoryCopy("))
-        MUST (wasmCWriteStringMemoryUse(
-            writer->builder,
+        MUST (wasmCWriteMemoryUse(
+            writer->output,
             writer->module,
             instruction.memoryIndex1,
+            NULL,
             true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringMemoryUse(
-            writer->builder,
+        MUST (wasmCWriteMemoryUse(
+            writer->output,
             writer->module,
             instruction.memoryIndex2,
+            NULL,
             true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex2,
             writer->typeStack->valueTypes[stackIndex2]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex1,
             writer->typeStack->valueTypes[stackIndex1]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -1734,27 +1566,28 @@ wasmCWriteMemoryFillExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmMemoryFill("))
-        MUST (wasmCWriteStringMemoryUse(
-            writer->builder,
+        MUST (wasmCWriteMemoryUse(
+            writer->output,
             writer->module,
             instruction.memoryIndex,
+            NULL,
             true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex2,
             writer->typeStack->valueTypes[stackIndex2]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex1,
             writer->typeStack->valueTypes[stackIndex1]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -1780,12 +1613,12 @@ wasmCWriteUnaryExpr(
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, resultType))
+    MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1812,7 +1645,7 @@ wasmCWriteInfixBinaryExpr(
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+    MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
 
     if (assignmentAllowed) {
         if (writer->pretty) {
@@ -1825,8 +1658,8 @@ wasmCWriteInfixBinaryExpr(
         }
     } else {
         MUST (wasmCWriteAssign(writer))
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex1,
             writer->typeStack->valueTypes[stackIndex1]
         ))
@@ -1834,8 +1667,8 @@ wasmCWriteInfixBinaryExpr(
         MUST (wasmCWrite(writer, operator))
         MUST (wasmCWriteChar(writer, ' '))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1865,7 +1698,7 @@ wasmCWriteSignedInfixBinaryExpr(
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+    MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
     if (writer->pretty) {
         MUST (wasmCWrite(writer, " = ("))
     } else {
@@ -1875,8 +1708,8 @@ wasmCWriteSignedInfixBinaryExpr(
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
     MUST (wasmCWriteChar(writer, ')'))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -1891,8 +1724,8 @@ wasmCWriteSignedInfixBinaryExpr(
     }
     MUST (wasmCWrite(writer, signedTypeNames[parameter1Type]))
     MUST (wasmCWriteChar(writer, ')'))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1918,18 +1751,18 @@ wasmCWritePrefixBinaryExpr(
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+    MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, operator))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -1960,8 +1793,8 @@ wasmCWriteSignedShiftRightExpr(
     ))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -1974,8 +1807,8 @@ wasmCWriteSignedShiftRightExpr(
     MUST (wasmCWrite(writer, ")(("))
     MUST (wasmCWrite(writer, signedTypeNames[resultType]))
     MUST (wasmCWriteChar(writer, ')'))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -1984,8 +1817,8 @@ wasmCWriteSignedShiftRightExpr(
     } else {
         MUST (wasmCWrite(writer, ">>("))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -2021,8 +1854,8 @@ wasmCWriteUnsignedShiftRightExpr(
     ))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -2031,8 +1864,8 @@ wasmCWriteUnsignedShiftRightExpr(
     } else {
         MUST (wasmCWrite(writer, ">>=("))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -2068,8 +1901,8 @@ wasmCWriteShiftLeftExpr(
     ))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -2078,8 +1911,8 @@ wasmCWriteShiftLeftExpr(
     } else {
         MUST (wasmCWrite(writer, "<<=("))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -2104,7 +1937,7 @@ wasmCWriteLabel(
     const U32 labelIndex
 ) {
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringLabelName(writer->builder, labelIndex))
+    MUST (wasmCWriteLabelName(writer->output, labelIndex))
     MUST (wasmCWrite(writer, ":;\n"))
 
     return true;
@@ -2138,8 +1971,8 @@ wasmCWriteIfExpr(
         }
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -2361,10 +2194,10 @@ wasmCWriteGoto(
 
             MUST (wasmTypeStackSet(writer->stackDeclarations, destinationStackIndex, resultType))
 
-            MUST (wasmCWriteStringStackName(writer->builder, destinationStackIndex, resultType))
+            MUST (wasmCWriteStackName(writer->output, destinationStackIndex, resultType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -2377,7 +2210,7 @@ wasmCWriteGoto(
     }
 
     MUST (wasmCWrite(writer, "goto "))
-    MUST (wasmCWriteStringLabelName(writer->builder, label.index))
+    MUST (wasmCWriteLabelName(writer->output, label.index))
     MUST (wasmCWrite(writer, ";\n"))
     return true;
 }
@@ -2398,14 +2231,14 @@ wasmCWriteSelectExpr(
     MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
 
     MUST (wasmCWriteIndent(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex2,
         resultType
     ))
     MUST (wasmCWriteAssign(writer))
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex0,
         writer->typeStack->valueTypes[stackIndex0]
     ))
@@ -2414,8 +2247,8 @@ wasmCWriteSelectExpr(
     } else {
         MUST (wasmCWriteChar(writer, '?'))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex2,
         writer->typeStack->valueTypes[stackIndex2]
     ))
@@ -2424,8 +2257,8 @@ wasmCWriteSelectExpr(
     } else {
         MUST (wasmCWriteChar(writer, ':'))
     }
-    MUST (wasmCWriteStringStackName(
-        writer->builder,
+    MUST (wasmCWriteStackName(
+        writer->output,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
     ))
@@ -2487,8 +2320,8 @@ wasmCWriteBranchIfExpr(
         } else {
             MUST (wasmCWrite(writer, "if("))
         }
-        MUST (wasmCWriteStringStackName(
-            writer->builder,
+        MUST (wasmCWriteStackName(
+            writer->output,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -2541,8 +2374,8 @@ wasmCWriteBranchTableExpr(
         } else {
             MUST_OR_GOTO (cleanup, wasmCWrite(writer, "switch("))
         }
-        MUST_OR_GOTO (cleanup, wasmCWriteStringStackName(
-            writer->builder,
+        MUST_OR_GOTO (cleanup, wasmCWriteStackName(
+            writer->output,
             stackIndex0,
             writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -2686,24 +2519,25 @@ wasmCWriteMemoryAtomicNotifyExpr(
         MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+        MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
-        MUST (wasmCWriteStringMemoryUse(
-                writer->builder,
+        MUST (wasmCWriteMemoryUse(
+                writer->output,
                 writer->module,
                 0,
+                NULL,
                 true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-                writer->builder,
+        MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex1,
                 writer->typeStack->valueTypes[stackIndex1]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-                writer->builder,
+        MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -2734,30 +2568,31 @@ wasmCWriteMemoryAtomicWaitExpr(
         MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWriteStringStackName(writer->builder, stackIndex2, resultType))
+        MUST (wasmCWriteStackName(writer->output, stackIndex2, resultType))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
-        MUST (wasmCWriteStringMemoryUse(
-                writer->builder,
+        MUST (wasmCWriteMemoryUse(
+                writer->output,
                 writer->module,
                 0,
+                NULL,
                 true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-                writer->builder,
+        MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex2,
                 writer->typeStack->valueTypes[stackIndex2]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-                writer->builder,
+        MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex1,
                 writer->typeStack->valueTypes[stackIndex1]
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStringStackName(
-                writer->builder,
+        MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
         ))
@@ -3335,14 +3170,14 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex1, resultType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+            MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                    writer->builder,
+            MUST (wasmCWriteStackName(
+                    writer->output,
                 stackIndex1,
                 writer->typeStack->valueTypes[stackIndex1]
             ))
@@ -3352,8 +3187,8 @@ wasmCWriteAtomicRMWExpr(
                 MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                writer->builder,
+            MUST (wasmCWriteStackName(
+                writer->output,
                 stackIndex0,
                 writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -3460,14 +3295,14 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex2, resultType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex2, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteStringMemoryUse(writer->builder, writer->module, 0, true))
+            MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                    writer->builder,
+            MUST (wasmCWriteStackName(
+                    writer->output,
                     stackIndex2,
                     writer->typeStack->valueTypes[stackIndex2]
             ))
@@ -3477,14 +3312,14 @@ wasmCWriteAtomicRMWCmpxchgExpr(
                 MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                    writer->builder,
+            MUST (wasmCWriteStackName(
+                    writer->output,
                     stackIndex1,
                     writer->typeStack->valueTypes[stackIndex1]
             ))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStringStackName(
-                    writer->builder,
+            MUST (wasmCWriteStackName(
+                    writer->output,
                     stackIndex0,
                     writer->typeStack->valueTypes[stackIndex0]
             ))
@@ -4379,7 +4214,7 @@ wasmCWriteFunctionCode(
 static
 void
 wasmCWriteStackDeclarations(
-    FILE* file,
+    WasmOutput* file,
     const WasmTypeStack* stackDeclarations,
     const bool pretty
 ) {
@@ -4398,25 +4233,25 @@ wasmCWriteStackDeclarations(
             }
             if (written == 0) {
                 if (pretty) {
-                    fputs(indentation, file);
+                    wasmOutputString(file, indentation);
                 }
-                fputs(valueTypeNames[testType], file);
-                fputc(' ', file);
+                wasmOutputString(file, valueTypeNames[testType]);
+                wasmOutputChar(file, ' ');
             } else {
                 if (pretty) {
-                    fputs(", ", file);
+                    wasmOutputString(file, ", ");
                 } else {
-                    fputc(',', file);
+                    wasmOutputChar(file, ',');
                 }
             }
 
-            wasmCWriteFileStackName(file, stackDeclarationIndex, testType);
+            wasmCWriteStackName(file, stackDeclarationIndex, testType);
 
             written++;
         }
 
         if (written > 0) {
-            fputs(";\n", file);
+            wasmOutputString(file, ";\n");
         }
     }
 }
@@ -4445,7 +4280,7 @@ wasmCWriteFunctionReturn(
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWrite(writer, "return "))
-            MUST (wasmCWriteStringStackName(writer->builder, stackIndex0, returnType))
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, returnType))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -4457,7 +4292,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionBody(
-    FILE* file,
+    WasmOutput* file,
     WasmTypeStack* typeStack,
     WasmTypeStack* stackDeclarations,
     WasmLabelStack* labelStack,
@@ -4501,7 +4336,9 @@ wasmCWriteFunctionBody(
     }
 
     {
+        WasmOutput output = wasmOutputForStringBuilder(&stringBuilder, diagnostics);
         WasmCFunctionWriter writer;
+        writer.output = &output;
         writer.diagnostics = diagnostics;
         writer.builder = &stringBuilder;
         writer.typeStack = typeStack;
@@ -4528,11 +4365,11 @@ wasmCWriteFunctionBody(
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionReturn(&writer, functionType))
     }
 
-    fputs("{\n", file);
-    wasmCWriteFileLocalsDeclarations(file, module, function, pretty);
+    wasmOutputString(file, "{\n");
+    wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
-    fputs(stringBuilder.string, file);
-    fputs("}\n", file);
+    wasmOutputString(file, stringBuilder.string);
+    wasmOutputString(file, "}\n");
 
     result = true;
 
@@ -4541,57 +4378,13 @@ cleanup:
     return result;
 }
 
-static
-void
-wasmCWriteFileParameters(
-    FILE* file,
-    const char* moduleName,
-    const WasmFunctionType functionType,
-    const bool writeParameterNames,
-    const bool voidPointerInstanceType,
-    const bool pretty
-) {
-    fputc('(', file);
-    if (voidPointerInstanceType) {
-        fputs("void*", file);
-    } else {
-        fputs(moduleName, file);
-        fputs("Instance*", file);
-    }
-
-    if (writeParameterNames) {
-        if (pretty) {
-            fputs(" i", file);
-        } else {
-            fputc('i', file);
-        }
-    }
-    {
-        U32 parameterIndex = 0;
-        for (; parameterIndex < functionType.parameterCount; parameterIndex++) {
-            const WasmValueType parameterType = functionType.parameterTypes[parameterIndex];
-            const char* parameterTypeName = valueTypeNames[parameterType];
-            if (pretty) {
-                fputs(", ", file);
-            } else {
-                fputc(',', file);
-            }
-            fputs(parameterTypeName, file);
-            if (writeParameterNames) {
-                fputc(' ', file);
-                wasmCWriteFileLocalName(file, parameterIndex);
-            }
-        }
-    }
-    fputc(')', file);
-}
 
 
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteFileFunctionSignature(
-    FILE* file,
+wasmCWriteFunctionSignature(
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmFunction function,
@@ -4606,14 +4399,14 @@ wasmCWriteFileFunctionSignature(
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
     MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
-    fputs(returnType, file);
-    fputc(' ', file);
+    wasmOutputString(file, returnType);
+    wasmOutputChar(file, ' ');
     if (prefix) {
-        fputs(moduleName, file);
-        fputc('_', file);
+        wasmOutputString(file, moduleName);
+        wasmOutputChar(file, '_');
     }
-    wasmCWriteFileFunctionNonImportName(file, functionIndex);
-    wasmCWriteFileParameters(
+    wasmCWriteFunctionNonImportName(file, functionIndex);
+    wasmCWriteParameters(
         file,
         moduleName,
         functionType,
@@ -4628,7 +4421,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionDeclarations(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -4643,7 +4436,7 @@ wasmCWriteFunctionDeclarations(
     for (; declaredFunctionIndex < functionCount; declaredFunctionIndex++) {
         const WasmFunction function = module->functions.functions[declaredFunctionIndex];
         const U32 moduleFunctionIndex = assertSizeU32(functionImportCount) + declaredFunctionIndex;
-        MUST (wasmCWriteFileFunctionSignature(
+        MUST (wasmCWriteFunctionSignature(
             file,
             module,
             moduleName,
@@ -4658,10 +4451,14 @@ wasmCWriteFunctionDeclarations(
         if (debug && function.exportName == NULL && moduleFunctionIndex < module->functionNames.length) {
             char* functionName = module->functionNames.names[moduleFunctionIndex];
             if (functionName != NULL) {
-                fprintf(file, " __asm__(\"%s_%s\")", moduleName, functionName);
+                wasmOutputString(file, " __asm__(\"");
+                wasmOutputString(file, moduleName);
+                wasmOutputString(file, "_");
+                wasmOutputString(file, functionName);
+                wasmOutputString(file, "\")");
             }
         }
-        fputs(";\n\n", file);
+        wasmOutputString(file, ";\n\n");
     }
     return true;
 }
@@ -4670,7 +4467,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionImplementations(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     WasmDebugLines* debugLines,
@@ -4704,11 +4501,15 @@ wasmCWriteFunctionImplementations(
         if (debug) {
             const WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
             if (debugLine != NULL) {
-                fprintf(file, "#line %u \"%s\"\n", (U32)debugLine->number, debugLine->path);
+                wasmOutputString(file, "#line ");
+                wasmOutputU32(file, (U32)debugLine->number);
+                wasmOutputString(file, " \"");
+                wasmOutputString(file, debugLine->path);
+                wasmOutputString(file, "\"\n");
             }
         }
 
-        MUST_OR_GOTO (cleanup, wasmCWriteFileFunctionSignature(
+        MUST_OR_GOTO (cleanup, wasmCWriteFunctionSignature(
             file,
             module,
             moduleName,
@@ -4719,7 +4520,7 @@ wasmCWriteFunctionImplementations(
             multipleModules,
             diagnostics
         ))
-        fputc(' ', file);
+        wasmOutputChar(file, ' ');
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionBody(
             file,
             &typeStack,
@@ -4734,9 +4535,8 @@ wasmCWriteFunctionImplementations(
             multipleModules,
             diagnostics
         ))
-        fputs("\n", file);
-        if (ferror(file)) {
-            wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputWriteFailed, diagnostics->location.outputName, 0);
+        wasmOutputString(file, "\n");
+        if (file->failed) {
             goto cleanup;
         }
     }
@@ -4757,17 +4557,17 @@ static
 W2C2_INLINE
 void
 wasmCWriteGlobalImportType(
-    FILE* file,
+    WasmOutput* file,
     const WasmGlobalImport import
 ) {
-    fputs(valueTypeNames[import.globalType.valueType], file);
-    fputc('*', file);
+    wasmOutputString(file, valueTypeNames[import.globalType.valueType]);
+    wasmOutputChar(file, '*');
 }
 
 static
 void
 wasmCWriteGlobalImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -4776,21 +4576,21 @@ wasmCWriteGlobalImports(
     for (; globalIndex < globalImportCount; globalIndex++) {
         const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
         wasmCWriteGlobalImportType(file, import);
         if (pretty) {
-            fputc(' ', file);
+            wasmOutputChar(file, ' ');
         }
-        wasmCWriteFileImportName(file, import.module, import.name);
-        fputs(";\n", file);
+        wasmCWriteImportName(file, import.module, import.name);
+        wasmOutputString(file, ";\n");
     }
 }
 
 static
 void
 wasmCWriteGlobals(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -4801,12 +4601,12 @@ wasmCWriteGlobals(
     for (; globalIndex < globalCount; globalIndex++) {
         const WasmGlobal global = module->globals.globals[globalIndex];
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs(valueTypeNames[global.type.valueType], file);
-        fputc(' ', file);
-        wasmCWriteFileGlobalNonImportName(file, assertSizeU32(globalImportCount) + globalIndex);
-        fputs(";\n", file);
+        wasmOutputString(file, valueTypeNames[global.type.valueType]);
+        wasmOutputChar(file, ' ');
+        wasmCWriteGlobalNonImportName(file, assertSizeU32(globalImportCount) + globalIndex);
+        wasmOutputString(file, ";\n");
     }
 }
 
@@ -4819,6 +4619,7 @@ wasmCWriteConstantExpr(
     Buffer code,
     WasmDiagnosticContext* diagnostics
 ) {
+    WasmOutput output = wasmOutputForStringBuilder(builder, diagnostics);
     WasmOpcode opcode;
     MUST (wasmOpcodeRead(&code, &opcode))
     switch (opcode) {
@@ -4842,7 +4643,7 @@ wasmCWriteConstantExpr(
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
             MUST (wasmGlobalInstructionRead(&code, &instruction))
-            MUST (wasmCWriteStringGlobalUse(builder, module, instruction.globalIndex, false))
+            MUST (wasmCWriteGlobalUse(&output, module, instruction.globalIndex, false))
             break;
         }
         default: {
@@ -4858,7 +4659,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteInitGlobals(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -4875,7 +4676,11 @@ wasmCWriteInitGlobals(
             goto cleanup;
         }
 
-        fprintf(file, "static void %sInitGlobals(%sInstance* i) {\n", moduleName, moduleName);
+        wasmOutputString(file, "static void ");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitGlobals(");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance* i) {\n");
 
         {
             U32 globalIndex = 0;
@@ -4883,13 +4688,13 @@ wasmCWriteInitGlobals(
                 const WasmGlobal global = module->globals.globals[globalIndex];
 
                 if (pretty) {
-                    fputs(indentation, file);
+                    wasmOutputString(file, indentation);
                 }
-                wasmCWriteFileGlobalUse(file, module, assertSizeU32(globalImportCount) + globalIndex, false);
+                wasmCWriteGlobalUse(file, module, assertSizeU32(globalImportCount) + globalIndex, false);
                 if (pretty) {
-                    fputs(" = ", file);
+                    wasmOutputString(file, " = ");
                 } else {
-                    fputc('=', file);
+                    wasmOutputChar(file, '=');
                 }
                 {
                     const Buffer code = global.init;
@@ -4898,13 +4703,13 @@ wasmCWriteInitGlobals(
                         cleanup,
                         wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                     )
-                    fputs(stringBuilder.string, file);
+                    wasmOutputString(file, stringBuilder.string);
                 }
-                fputs(";\n", file);
+                wasmOutputString(file, ";\n");
             }
         }
 
-        fputs("}\n\n", file);
+        wasmOutputString(file, "}\n\n");
 
         result = true;
 
@@ -4920,24 +4725,24 @@ static
 W2C2_INLINE
 void
 wasmCWriteInitImportAssignment(
-    FILE* file,
+    WasmOutput* file,
     const char* module,
     const char* name,
     const bool pretty
 ) {
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("i->", file);
-    wasmCWriteFileImportName(file, module, name);
+    wasmOutputString(file, "i->");
+    wasmCWriteImportName(file, module, name);
     if (pretty) {
-        fputs(" =\n", file);
+        wasmOutputString(file, " =\n");
         if (pretty) {
-            fputs(indentation, file);
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
+            wasmOutputString(file, indentation);
         }
     } else {
-        fputc('=', file);
+        wasmOutputChar(file, '=');
     }
 }
 
@@ -4945,11 +4750,15 @@ static
 W2C2_INLINE
 void
 wasmCWriteInitImportValue(
-    FILE* file,
+    WasmOutput* file,
     const char* module,
     const char* name
 ) {
-    fprintf(file, "resolve(\"%s\", \"%s\");\n", module, name);
+    wasmOutputString(file, "resolve(\"");
+    wasmOutputString(file, module);
+    wasmOutputString(file, "\", \"");
+    wasmOutputString(file, name);
+    wasmOutputString(file, "\");\n");
 }
 
 static
@@ -4957,7 +4766,7 @@ W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionImport(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmFunctionImport import,
@@ -4969,16 +4778,16 @@ wasmCWriteFunctionImport(
     const char* returnType = NULL;
     const WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
     MUST (wasmCGetReturnType(functionType, import.functionTypeIndex, &returnType, diagnostics))
-    fputs(returnType, file);
-    fputc(' ', file);
+    wasmOutputString(file, returnType);
+    wasmOutputChar(file, ' ');
     if (declaration) {
         if (prefix) {
-            fputs(moduleName, file);
-            fputc('_', file);
+            wasmOutputString(file, moduleName);
+            wasmOutputChar(file, '_');
         }
-        wasmCWriteFileImportName(file, import.module, import.name);
+        wasmCWriteImportName(file, import.module, import.name);
     }
-    wasmCWriteFileParameters(
+    wasmCWriteParameters(
         file,
         moduleName,
         functionType,
@@ -4992,7 +4801,7 @@ wasmCWriteFunctionImport(
 static
 void
 wasmCWriteInitGlobalImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5001,9 +4810,9 @@ wasmCWriteInitGlobalImports(
     for (; globalIndex < globalImportCount; globalIndex++) {
         const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
-        fputc('(', file);
+        wasmOutputChar(file, '(');
         wasmCWriteGlobalImportType(file, import);
-        fputc(')', file);
+        wasmOutputChar(file, ')');
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -5012,15 +4821,15 @@ static
 W2C2_INLINE
 void
 wasmCWriteMemoryType(
-    FILE* file
+    WasmOutput* file
 ) {
-    fputs("wasmMemory*", file);
+    wasmOutputString(file, "wasmMemory*");
 }
 
 static
 void
 wasmCWriteInitMemoryImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5030,9 +4839,9 @@ wasmCWriteInitMemoryImports(
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
-        fputc('(', file);
+        wasmOutputChar(file, '(');
         wasmCWriteMemoryType(file);
-        fputc(')', file);
+        wasmOutputChar(file, ')');
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -5041,15 +4850,15 @@ static
 W2C2_INLINE
 void
 wasmCWriteTableType(
-    FILE* file
+    WasmOutput* file
 ) {
-    fputs("wasmTable*", file);
+    wasmOutputString(file, "wasmTable*");
 }
 
 static
 void
 wasmCWriteInitTableImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5059,9 +4868,9 @@ wasmCWriteInitTableImports(
     for (; tableIndex < tableImportCount; tableIndex++) {
         const WasmTableImport import = module->tableImports.imports[tableIndex];
         wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
-        fputc('(', file);
+        wasmOutputChar(file, '(');
         wasmCWriteTableType(file);
-        fputc(')', file);
+        wasmOutputChar(file, ')');
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
 }
@@ -5070,27 +4879,26 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteInitImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty
 ) {
-    fprintf(
-        file,
-        "static void %sInitImports(%sInstance* i, void* resolve(const char* module, const char* name)) {\n",
-        moduleName,
-        moduleName
-    );
+    wasmOutputString(file, "static void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "InitImports(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* i, void* resolve(const char* module, const char* name)) {\n");
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("if (resolve == NULL) { return; }\n", file);
+    wasmOutputString(file, "if (resolve == NULL) { return; }\n");
 
     wasmCWriteInitMemoryImports(file, module, pretty);
     wasmCWriteInitTableImports(file, module, pretty);
     wasmCWriteInitGlobalImports(file, module, pretty);
 
-    fputs("}\n\n", file);
+    wasmOutputString(file, "}\n\n");
 
     return true;
 }
@@ -5099,19 +4907,20 @@ static
 W2C2_INLINE
 void
 wasmCWriteExportName(
-    FILE* file,
+    WasmOutput* file,
     const char* moduleName,
     const char* name
 ) {
-    fprintf(file, "%s_", moduleName);
-    wasmCWriteFileEscaped(file, name);
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "_");
+    wasmCWriteEscaped(file, name);
 }
 
 static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionExport(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmExport export,
@@ -5126,10 +4935,10 @@ wasmCWriteFunctionExport(
     const U32 parameterCount = functionType.parameterCount;
 
     MUST (wasmCGetReturnType(functionType, functionTypeIndex, &returnType, diagnostics))
-    fputs(returnType, file);
-    fputc(' ', file);
+    wasmOutputString(file, returnType);
+    wasmOutputChar(file, ' ');
     wasmCWriteExportName(file, moduleName, export.name);
-    wasmCWriteFileParameters(
+    wasmCWriteParameters(
         file,
         moduleName,
         functionType,
@@ -5139,31 +4948,31 @@ wasmCWriteFunctionExport(
     );
     if (writeBody) {
         if (pretty) {
-            fputc(' ', file);
+            wasmOutputChar(file, ' ');
         }
-        fputs("{\n", file);
+        wasmOutputString(file, "{\n");
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
         if (functionType.resultCount > 0) {
-            fputs("return ", file);
+            wasmOutputString(file, "return ");
         }
-        wasmCWriteFileFunctionUse(file, module, moduleName, export.index, false, multipleModules);
-        fputs("(i", file);
+        wasmCWriteFunctionUse(file, module, moduleName, export.index, false, multipleModules);
+        wasmOutputString(file, "(i");
         {
             U32 parameterIndex = 0;
             for (; parameterIndex < parameterCount; parameterIndex++) {
                 if (pretty) {
-                    fputs(", ", file);
+                    wasmOutputString(file, ", ");
                 } else {
-                    fputc(',', file);
+                    wasmOutputChar(file, ',');
                 }
-                wasmCWriteFileLocalName(file, parameterIndex);
+                wasmCWriteLocalName(file, parameterIndex);
             }
         }
-        fputs(");\n}\n\n", file);
+        wasmOutputString(file, ");\n}\n\n");
     } else {
-        fputs(";\n\n", file);
+        wasmOutputString(file, ";\n\n");
     }
     return true;
 }
@@ -5171,7 +4980,7 @@ wasmCWriteFunctionExport(
 static
 void
 wasmCWriteMemoryExport(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmExport export,
@@ -5180,23 +4989,25 @@ wasmCWriteMemoryExport(
 ) {
     wasmCWriteMemoryType(file);
     if (pretty) {
-        fputc(' ', file);
+        wasmOutputChar(file, ' ');
     }
     wasmCWriteExportName(file, moduleName, export.name);
-    fprintf(file, "(%sInstance* i)", moduleName);
+    wasmOutputString(file, "(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* i)");
     if (writeBody) {
         if (pretty) {
-            fputc(' ', file);
+            wasmOutputChar(file, ' ');
         }
-        fputs("{\n", file);
+        wasmOutputString(file, "{\n");
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs("return ", file);
-        wasmCWriteFileMemoryUse(file, module, export.index, NULL, true);
-        fputs(";\n}\n\n", file);
+        wasmOutputString(file, "return ");
+        wasmCWriteMemoryUse(file, module, export.index, NULL, true);
+        wasmOutputString(file, ";\n}\n\n");
     } else {
-        fputs(";\n\n", file);
+        wasmOutputString(file, ";\n\n");
     }
 }
 
@@ -5204,7 +5015,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteExports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool writeBody,
@@ -5253,7 +5064,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteDataSegments(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const WasmDataSegmentMode mode,
     const bool pretty,
@@ -5268,18 +5079,18 @@ wasmCWriteDataSegments(
                 const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
                 const size_t byteCount = dataSegment.bytes.length;
 
-                fputs("const U8 ", file);
+                wasmOutputString(file, "const U8 ");
                 /* TODO: add support for multiple modules */
-                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                wasmCWriteDataSegmentName(file, dataSegmentIndex);
                 if (pretty) {
-                    fputs("[] = {", file);
+                    wasmOutputString(file, "[] = {");
                 } else {
-                    fputs("[]={", file);
+                    wasmOutputString(file, "[]={");
                 }
                 if (byteCount > DATA_SEGMENT_CHUNK_LENGTH) {
-                    fputc('\n', file);
+                    wasmOutputChar(file, '\n');
                     if (pretty) {
-                        fputs(indentation, file);
+                        wasmOutputString(file, indentation);
                     }
                 }
                 {
@@ -5288,28 +5099,29 @@ wasmCWriteDataSegments(
                         U8 value = dataSegment.bytes.data[byteIndex];
                         if (byteIndex > 0) {
                             if (pretty) {
-                                fputs(", ", file);
+                                wasmOutputString(file, ", ");
                             } else {
-                                fputc(',', file);
+                                wasmOutputChar(file, ',');
                             }
                             if (byteIndex % DATA_SEGMENT_CHUNK_LENGTH == 0) {
-                                fputs("\n", file);
+                                wasmOutputString(file, "\n");
                                 if (pretty) {
-                                    fputs(indentation, file);
+                                    wasmOutputString(file, indentation);
                                 }
                             }
                         }
                         if (value < 10) {
-                            fprintf(file, "%u", value);
+                            wasmOutputU32(file, value);
                         } else {
-                            fprintf(file, "0x%x", value);
+                            wasmOutputString(file, "0x");
+                            wasmOutputHex(file, (unsigned int)value, wasmOutputHexLower);
                         }
                     }
                 }
                 if (byteCount > DATA_SEGMENT_CHUNK_LENGTH) {
-                    fputc('\n', file);
+                    wasmOutputChar(file, '\n');
                 }
-                fputs("};\n\n", file);
+                wasmOutputString(file, "};\n\n");
             }
             break;
         }
@@ -5324,17 +5136,17 @@ wasmCWriteDataSegments(
                     continue;
                 }
                 if (writtenCount == 0) {
-                    fputs("U8 ", file);
+                    wasmOutputString(file, "U8 ");
                 } else {
-                    fputc(',', file);
+                    wasmOutputChar(file, ',');
                 }
-                fputc('*', file);
+                wasmOutputChar(file, '*');
                 /* TODO: add support for multiple modules */
-                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                wasmCWriteDataSegmentName(file, dataSegmentIndex);
                 writtenCount += 1;
             }
             if (writtenCount > 0) {
-                fputs(";\n", file);
+                wasmOutputString(file, ";\n");
             }
             break;
         }
@@ -5350,7 +5162,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteDataSegmentsFromSection(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const WasmDataSegmentMode mode,
     WasmDiagnosticContext* diagnostics
@@ -5359,18 +5171,19 @@ wasmCWriteDataSegmentsFromSection(
     const U32 dataSegmentCount = module->dataSegments.count;
 
     U32 dataSegmentIndex = 0;
-    FILE* segmentsFile = NULL;
+    WasmOutput segmentsOutput;
+    WasmOutput* segmentsFile = &segmentsOutput;
     bool result = false;
 
     switch (mode) {
         case wasmDataSegmentModeGNULD: {
-            fputs("extern U8 _binary_datasegments_start[];\n\n", file);
-            fputs("static U8* ds = _binary_datasegments_start;\n", file);
+            wasmOutputString(file, "extern U8 _binary_datasegments_start[];\n\n");
+            wasmOutputString(file, "static U8* ds = _binary_datasegments_start;\n");
             break;
         }
         case wasmDataSegmentModeSectcreate1: {
-            fputs("extern U8 data_segments_data __asm(\"section$start$__DATA$__datasegments\");\n\n", file);
-            fputs("static U8* ds = &data_segments_data;\n", file);
+            wasmOutputString(file, "extern U8 data_segments_data __asm(\"section$start$__DATA$__datasegments\");\n\n");
+            wasmOutputString(file, "static U8* ds = &data_segments_data;\n");
             break;
         }
         case wasmDataSegmentModeSectcreate2: {
@@ -5378,22 +5191,16 @@ wasmCWriteDataSegmentsFromSection(
              * On Rhapsody, mach-o/getsect.h was added.
              * On OPENSTEP, libc.h is needed.
              */
-            fputs(
-                "#include <mach/mach.h>\n"
+            wasmOutputString(file, "#include <mach/mach.h>\n"
                 "#ifdef __MACH30__\n"
                 "#include <mach-o/getsect.h>\n"
                 "#define SECT_DATA_SIZE_TYPE unsigned long\n"
                 "#else\n"
                 "#include <libc.h>\n"
                 "#define SECT_DATA_SIZE_TYPE int\n"
-                "#endif\n",
-                file
-            );
-            fputs(
-                "SECT_DATA_SIZE_TYPE len = 0;\n"
-                "static char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n",
-                file
-            );
+                "#endif\n");
+            wasmOutputString(file, "SECT_DATA_SIZE_TYPE len = 0;\n"
+                "static char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n");
             break;
         }
         default: {
@@ -5402,20 +5209,21 @@ wasmCWriteDataSegmentsFromSection(
         }
     }
 
+    if (file->failed) {
+        return false;
+    }
+
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
-    segmentsFile = fopen(filename, "wb");
-    if (segmentsFile == NULL) {
-        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
+    if (!wasmOutputOpen(segmentsFile, file->provider, filename, wasmOutputData, diagnostics)) {
         return false;
     }
 
     for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
         const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
         const size_t length = dataSegment.bytes.length;
-        const size_t written = fwrite(dataSegment.bytes.data, 1, length, segmentsFile);
-        if (written != length) {
-            wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputWriteFailed, filename, errno);
+        wasmOutputWrite(segmentsFile, dataSegment.bytes.data, length);
+        if (segmentsFile->failed) {
             goto cleanup;
         }
     }
@@ -5425,17 +5233,18 @@ wasmCWriteDataSegmentsFromSection(
 cleanup:
     diagnostics->location.hasFunctionIndex = false;
     diagnostics->location.outputName = filename;
-    if (!wasmDiagnosticCloseOutput(diagnostics, segmentsFile)) {
-        result = false;
+    if (!result) {
+        wasmOutputAbort(segmentsFile);
+        return false;
     }
-    return result;
+    return wasmOutputClose(segmentsFile);
 
 }
 
 static
 void
 wasmCWriteMemoryImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5445,21 +5254,21 @@ wasmCWriteMemoryImports(
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
         wasmCWriteMemoryType(file);
         if (pretty) {
-            fputc(' ', file);
+            wasmOutputChar(file, ' ');
         }
-        wasmCWriteFileImportName(file, import.module, import.name);
-        fputs(";\n", file);
+        wasmCWriteImportName(file, import.module, import.name);
+        wasmOutputString(file, ";\n");
     }
 }
 
 static
 void
 wasmCWriteMemories(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5470,11 +5279,11 @@ wasmCWriteMemories(
     for (; memoryIndex < memoryCount; memoryIndex++) {
         U32 moduleMemoryIndex = assertSizeU32(memoryImportCount) + memoryIndex;
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs("wasmMemory* ", file);
-        wasmCWriteFileMemoryNonImportName(file, moduleMemoryIndex);
-        fputs(";\n", file);
+        wasmOutputString(file, "wasmMemory* ");
+        wasmCWriteMemoryNonImportName(file, moduleMemoryIndex);
+        wasmOutputString(file, ";\n");
     }
 }
 
@@ -5482,7 +5291,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteInitMemories(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const WasmDataSegmentMode dataSegmentMode,
@@ -5500,13 +5309,13 @@ wasmCWriteInitMemories(
             goto cleanup;
         }
 
-        fprintf(
-            file,
-            "static void %sInitMemories(%sInstance* i, %sInstance* parent) {\n",
-            moduleName,
-            moduleName,
-            moduleName
-        );
+        wasmOutputString(file, "static void ");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitMemories(");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance* i, ");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance* parent) {\n");
 
         {
             U32 memoryIndex = 0;
@@ -5516,46 +5325,49 @@ wasmCWriteInitMemories(
 
                 if (memory.shared) {
                     if (pretty) {
-                        fputs(indentation, file);
+                        wasmOutputString(file, indentation);
                     }
-                    fputs("if (parent == NULL) {\n", file);
+                    wasmOutputString(file, "if (parent == NULL) {\n");
                     {
                         if (pretty) {
-                            fputs(indentation, file);
-                            fputs(indentation, file);
+                            wasmOutputString(file, indentation);
+                            wasmOutputString(file, indentation);
                         }
-                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-                        fprintf(
-                            file,
-                            "= WASM_MEMORY_ALLOCATE_SHARED(%u, %u);\n",
-                            memory.min,
-                            memory.max
-                        );
+                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        wasmOutputString(file, "= WASM_MEMORY_ALLOCATE_SHARED(");
+                        wasmOutputU32(file, memory.min);
+                        wasmOutputString(file, ", ");
+                        wasmOutputU32(file, memory.max);
+                        wasmOutputString(file, ");\n");
                     }
                     if (pretty) {
-                        fputs(indentation, file);
+                        wasmOutputString(file, indentation);
                     }
-                    fputs("} else {\n", file);
+                    wasmOutputString(file, "} else {\n");
                     {
                         if (pretty) {
-                            fputs(indentation, file);
-                            fputs(indentation, file);
+                            wasmOutputString(file, indentation);
+                            wasmOutputString(file, indentation);
                         }
-                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-                        fputs(" = ", file);
-                        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, "parent", true);
-                        fputs(";\n", file);
+                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        wasmOutputString(file, " = ");
+                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, "parent", true);
+                        wasmOutputString(file, ";\n");
                     }
                     if (pretty) {
-                        fputs(indentation, file);
+                        wasmOutputString(file, indentation);
                     }
-                    fputs("}\n", file);
+                    wasmOutputString(file, "}\n");
                 } else {
                     if (pretty) {
-                        fputs(indentation, file);
+                        wasmOutputString(file, indentation);
                     }
-                    wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-                    fprintf(file, " = wasmMemoryAllocate(%u, %u, false);\n", memory.min, memory.max);
+                    wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                    wasmOutputString(file, " = wasmMemoryAllocate(");
+                    wasmOutputU32(file, memory.min);
+                    wasmOutputString(file, ", ");
+                    wasmOutputU32(file, memory.max);
+                    wasmOutputString(file, ", false);\n");
                 }
             }
         }
@@ -5576,13 +5388,15 @@ wasmCWriteInitMemories(
                         case wasmDataSegmentModeSectcreate2: {
                             /* Initialize the data segment variable */
                             /* TODO: add support for multiple modules */
-                            wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                            wasmCWriteDataSegmentName(file, dataSegmentIndex);
                             if (pretty) {
-                                fprintf(file, " = ds + %llu", byteOffset);
+                                wasmOutputString(file, " = ds + ");
+                                wasmOutputU64(file, byteOffset);
                             } else {
-                                fprintf(file, "=ds+%llu", byteOffset);
+                                wasmOutputString(file, "=ds+");
+                                wasmOutputU64(file, byteOffset);
                             }
-                            fputs(";\n", file);
+                            wasmOutputString(file, ";\n");
                             break;
                         }
                         case wasmDataSegmentModeArrays:
@@ -5593,36 +5407,39 @@ wasmCWriteInitMemories(
                     /* Load active segments */
                     if (code.data != NULL) {
                         if (pretty) {
-                            fputs(indentation, file);
+                            wasmOutputString(file, indentation);
                         }
-                        fputs("LOAD_DATA(", file);
-                        wasmCWriteFileMemoryUse(
+                        wasmOutputString(file, "LOAD_DATA(");
+                        wasmCWriteMemoryUse(
                             file,
                             module,
                             dataSegment.memoryIndex,
                             NULL,
                             false
                         );
-                        fputs(", ", file);
+                        wasmOutputString(file, ", ");
                         MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
                         MUST_OR_GOTO (
                             cleanup,
                             wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                         )
-                        fputs(stringBuilder.string, file);
+                        wasmOutputString(file, stringBuilder.string);
                         /* TODO: add support for multiple modules */
                         switch (dataSegmentMode) {
                             case wasmDataSegmentModeGNULD:
                             case wasmDataSegmentModeSectcreate1:
                             case wasmDataSegmentModeSectcreate2:
-                                fprintf(file, ", ds+%llu", byteOffset);
+                                wasmOutputString(file, ", ds+");
+                                wasmOutputU64(file, byteOffset);
                                 break;
                             case wasmDataSegmentModeArrays:
-                                fputs(", ", file);
-                                wasmCWriteFileDataSegmentName(file, dataSegmentIndex);
+                                wasmOutputString(file, ", ");
+                                wasmCWriteDataSegmentName(file, dataSegmentIndex);
                                 break;
                         }
-                        fprintf(file, ", %lu);\n", (unsigned long) dataSegmentLength);
+                        wasmOutputString(file, ", ");
+                        wasmOutputU64(file, (unsigned long) dataSegmentLength);
+                        wasmOutputString(file, ");\n");
                     }
                 }
 
@@ -5630,7 +5447,7 @@ wasmCWriteInitMemories(
             }
         }
 
-        fputs("}\n\n", file);
+        wasmOutputString(file, "}\n\n");
 
         result = true;
 
@@ -5644,7 +5461,7 @@ cleanup:
 static
 void
 wasmCWriteFreeMemories(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty,
     const bool freeShared
@@ -5659,19 +5476,19 @@ wasmCWriteFreeMemories(
             continue;
         }
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs("wasmMemoryFree(", file);
-        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
-        fputs(");\n", file);
+        wasmOutputString(file, "wasmMemoryFree(");
+        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+        wasmOutputString(file, ");\n");
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        wasmCWriteFileMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
         if (pretty) {
-            fputs(" = NULL;\n", file);
+            wasmOutputString(file, " = NULL;\n");
         } else {
-            fputs("=NULL;\n", file);
+            wasmOutputString(file, "=NULL;\n");
         }
     }
 }
@@ -5679,7 +5496,7 @@ wasmCWriteFreeMemories(
 static
 void
 wasmCWriteTableImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5689,21 +5506,21 @@ wasmCWriteTableImports(
     for (; tableIndex < tableImportCount; tableIndex++) {
         const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
         wasmCWriteTableType(file);
         if (pretty) {
-            fputc(' ', file);
+            wasmOutputChar(file, ' ');
         }
-        wasmCWriteFileImportName(file, import.module, import.name);
-        fputs(";\n", file);
+        wasmCWriteImportName(file, import.module, import.name);
+        wasmOutputString(file, ";\n");
     }
 }
 
 static
 void
 wasmCWriteTables(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5713,11 +5530,11 @@ wasmCWriteTables(
     U32 tableIndex = 0;
     for (; tableIndex < tableCount; tableIndex++) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs("wasmTable ", file);
-        wasmCWriteFileTableNonImportName(file, assertSizeU32(tableImportCount) + tableIndex);
-        fputs(";\n", file);
+        wasmOutputString(file, "wasmTable ");
+        wasmCWriteTableNonImportName(file, assertSizeU32(tableImportCount) + tableIndex);
+        wasmOutputString(file, ";\n");
     }
 }
 
@@ -5725,7 +5542,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteInitTables(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -5743,13 +5560,17 @@ wasmCWriteInitTables(
             goto cleanup;
         }
 
-        fprintf(file, "static void %sInitTables(%sInstance* i) {\n", moduleName, moduleName);
+        wasmOutputString(file, "static void ");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitTables(");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance* i) {\n");
 
         if (elementSegmentCount > 0) {
             if (pretty) {
-                fputs(indentation, file);
+                wasmOutputString(file, indentation);
             }
-            fputs("U32 offset;\n", file);
+            wasmOutputString(file, "U32 offset;\n");
         }
 
         {
@@ -5758,11 +5579,15 @@ wasmCWriteInitTables(
                 const WasmTable table = module->tables.tables[tableIndex];
 
                 if (pretty) {
-                    fputs(indentation, file);
+                    wasmOutputString(file, indentation);
                 }
-                fputs("wasmTableAllocate(", file);
-                wasmCWriteFileTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
-                fprintf(file, ", %u, %u);\n", table.min, table.max);
+                wasmOutputString(file, "wasmTableAllocate(");
+                wasmCWriteTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
+                wasmOutputString(file, ", ");
+                wasmOutputU32(file, table.min);
+                wasmOutputString(file, ", ");
+                wasmOutputU32(file, table.max);
+                wasmOutputString(file, ");\n");
             }
         }
 
@@ -5772,10 +5597,10 @@ wasmCWriteInitTables(
                 const WasmElementSegment elementSegment = module->elementSegments.elementSegments[elementSegmentIndex];
 
                 if (pretty) {
-                    fputs(indentation, file);
-                    fputs("offset = ", file);
+                    wasmOutputString(file, indentation);
+                    wasmOutputString(file, "offset = ");
                 } else {
-                    fputs("offset=", file);
+                    wasmOutputString(file, "offset=");
                 }
                 {
                     const Buffer code = elementSegment.offset;
@@ -5784,31 +5609,35 @@ wasmCWriteInitTables(
                         cleanup,
                         wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
                     )
-                    fputs(stringBuilder.string, file);
+                    wasmOutputString(file, stringBuilder.string);
                 }
-                fputs(";\n", file);
+                wasmOutputString(file, ";\n");
 
                 {
                     U32 functionIndexIndex = 0;
                     for (; functionIndexIndex < elementSegment.functionIndexCount; functionIndexIndex++) {
                         const U32 functionIndex = elementSegment.functionIndices[functionIndexIndex];
                         if (pretty) {
-                            fputs(indentation, file);
+                            wasmOutputString(file, indentation);
                         }
-                        wasmCWriteFileTableUse(file, module, elementSegment.tableIndex, false);
+                        wasmCWriteTableUse(file, module, elementSegment.tableIndex, false);
                         if (pretty) {
-                            fprintf(file, ".data[offset + %u] = (wasmFunc)", functionIndexIndex);
+                            wasmOutputString(file, ".data[offset + ");
+                            wasmOutputU32(file, functionIndexIndex);
+                            wasmOutputString(file, "] = (wasmFunc)");
                         } else {
-                            fprintf(file, ".data[offset+%u]=(wasmFunc)", functionIndexIndex);
+                            wasmOutputString(file, ".data[offset+");
+                            wasmOutputU32(file, functionIndexIndex);
+                            wasmOutputString(file, "]=(wasmFunc)");
                         }
-                        wasmCWriteFileFunctionUse(file, module, moduleName, functionIndex, true, multipleModules);
-                        fputs(";\n", file);
+                        wasmCWriteFunctionUse(file, module, moduleName, functionIndex, true, multipleModules);
+                        wasmOutputString(file, ";\n");
                     }
                 }
             }
         }
 
-        fputs("}\n\n", file);
+        wasmOutputString(file, "}\n\n");
 
         result = true;
 
@@ -5823,7 +5652,7 @@ cleanup:
 static
 void
 wasmCWriteFreeTables(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const bool pretty
 ) {
@@ -5832,11 +5661,11 @@ wasmCWriteFreeTables(
     U32 tableIndex = 0;
     for (; tableIndex < tableCount; tableIndex++) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fputs("wasmTableFree(", file);
-        wasmCWriteFileTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
-        fputs(");\n", file);
+        wasmOutputString(file, "wasmTableFree(");
+        wasmCWriteTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
+        wasmOutputString(file, ");\n");
     }
 }
 
@@ -5844,7 +5673,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionImports(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -5856,10 +5685,10 @@ wasmCWriteFunctionImports(
     for (; functionIndex < functionImportCount; functionIndex++) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
         MUST (wasmCWriteFunctionImport(file, module, moduleName, import, true, pretty, multipleModules, diagnostics))
-        fputs(";\n\n", file);
+        wasmOutputString(file, ";\n\n");
     }
     return true;
 }
@@ -5868,36 +5697,40 @@ static
 W2C2_INLINE
 void
 wasmCWriteBaseInclude(
-    FILE* file
+    WasmOutput* file
 ) {
-    fputs("#include \"w2c2_base.h\"\n\n", file);
+    wasmOutputString(file, "#include \"w2c2_base.h\"\n\n");
 }
 
 static
 W2C2_INLINE
 void
 wasmCWriteIncludes(
-    FILE* file,
+    WasmOutput* file,
     const char* headerName
 ) {
     wasmCWriteBaseInclude(file);
-    fprintf(file, "#include \"%s\"\n\n", headerName);
+    wasmOutputString(file, "#include \"");
+    wasmOutputString(file, headerName);
+    wasmOutputString(file, "\"\n\n");
 }
 
 static
 void
 wasmCWriteModuleInstanceDeclaration(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty
 ) {
-    fprintf(file, "typedef struct %sInstance {\n", moduleName);
+    wasmOutputString(file, "typedef struct ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance {\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("wasmModuleInstance common;\n", file);
+    wasmOutputString(file, "wasmModuleInstance common;\n");
 
     wasmCWriteMemoryImports(file, module, pretty);
     wasmCWriteTableImports(file, module, pretty);
@@ -5907,14 +5740,16 @@ wasmCWriteModuleInstanceDeclaration(
     wasmCWriteTables(file, module, pretty);
     wasmCWriteGlobals(file, module, pretty);
 
-    fprintf(file, "} %sInstance;\n\n", moduleName);
+    wasmOutputString(file, "} ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance;\n\n");
 }
 
 static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModuleDeclarations(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -5932,219 +5767,237 @@ wasmCWriteModuleDeclarations(
 static
 void
 wasmCWriteFreeChildFunction(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty
 ) {
-    fprintf(
-        file,
-        "static void %sFreeChild(wasmModuleInstance* child) {\n",
-        moduleName
-    );
+    wasmOutputString(file, "static void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FreeChild(wasmModuleInstance* child) {\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "%sInstance* i = (%sInstance*)child;\n", moduleName, moduleName);
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* i = (");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance*)child;\n");
 
     wasmCWriteFreeMemories(file, module, pretty, false);
     wasmCWriteFreeTables(file, module, pretty);
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("free(i);\n", file);
-    fputs("}\n\n", file);
+    wasmOutputString(file, "free(i);\n");
+    wasmOutputString(file, "}\n\n");
 }
 
 /* TODO: verify */
 static
 void
 wasmCWriteNewChildFunction(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
     const bool multipleModules
 ) {
-    fprintf(
-        file,
-        "static wasmModuleInstance* %sNewChild(wasmModuleInstance* instance) {\n",
-        moduleName
-    );
+    wasmOutputString(file, "static wasmModuleInstance* ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "NewChild(wasmModuleInstance* instance) {\n");
 
     /* TODO: clean up */
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "%sInstance* self = (%sInstance*)instance;\n", moduleName, moduleName);
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* self = (");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance*)instance;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(
-        file,
-        "%sInstance* child = (%sInstance*)calloc(1, sizeof(%sInstance));\n",
-        moduleName,
-        moduleName,
-        moduleName
-    );
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* child = (");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance*)calloc(1, sizeof(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance));\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("child->common.funcExports = self->common.funcExports;\n", file);
+    wasmOutputString(file, "child->common.funcExports = self->common.funcExports;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("child->common.resolveImports = self->common.resolveImports;\n", file);
+    wasmOutputString(file, "child->common.resolveImports = self->common.resolveImports;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("child->common.newChild = self->common.newChild;\n", file);
+    wasmOutputString(file, "child->common.newChild = self->common.newChild;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("child->common.freeChild = self->common.freeChild;\n", file);
+    wasmOutputString(file, "child->common.freeChild = self->common.freeChild;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "%sInitImports(child, self->common.resolveImports);\n", moduleName);
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "InitImports(child, self->common.resolveImports);\n");
 
     if (module->memories.count > 0) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitMemories(child, self);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitMemories(child, self);\n");
     }
 
     if (module->tables.count > 0
         || module->elementSegments.count > 0
             ) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitTables(child);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitTables(child);\n");
     }
 
     if (module->globals.count > 0) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitGlobals(child);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitGlobals(child);\n");
     }
 
     if (module->hasStartFunction) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        wasmCWriteFileFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
-        fputs("(child);\n", file);
+        wasmCWriteFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
+        wasmOutputString(file, "(child);\n");
     }
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("return &child->common;\n", file);
+    wasmOutputString(file, "return &child->common;\n");
 
-    fputs("}\n\n", file);
+    wasmOutputString(file, "}\n\n");
 }
 
 
 static
 void
 wasmCWriteInstantiateFunction(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
     const bool multipleModules
 ) {
-    fprintf(
-        file,
-        "void %sInstantiate(%sInstance* i, void* resolveImports(const char* module, const char* name)) {\n",
-        moduleName,
-        moduleName
-    );
+    wasmOutputString(file, "void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instantiate(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* i, void* resolveImports(const char* module, const char* name)) {\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "i->common.funcExports = %sFuncExports;\n", moduleName);
+    wasmOutputString(file, "i->common.funcExports = ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FuncExports;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fputs("i->common.resolveImports = resolveImports;\n", file);
+    wasmOutputString(file, "i->common.resolveImports = resolveImports;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "i->common.newChild = %sNewChild;\n", moduleName);
+    wasmOutputString(file, "i->common.newChild = ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "NewChild;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "i->common.freeChild = %sFreeChild;\n", moduleName);
+    wasmOutputString(file, "i->common.freeChild = ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FreeChild;\n");
 
     if (pretty) {
-        fputs(indentation, file);
+        wasmOutputString(file, indentation);
     }
-    fprintf(file, "%sInitImports(i, resolveImports);\n", moduleName);
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "InitImports(i, resolveImports);\n");
 
     if (module->memories.count > 0) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitMemories(i, NULL);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitMemories(i, NULL);\n");
     }
 
     if (module->tables.count > 0
         || module->elementSegments.count > 0
     ) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitTables(i);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitTables(i);\n");
     }
 
     if (module->globals.count > 0) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        fprintf(file, "%sInitGlobals(i);\n", moduleName);
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitGlobals(i);\n");
     }
 
     if (module->hasStartFunction) {
         if (pretty) {
-            fputs(indentation, file);
+            wasmOutputString(file, indentation);
         }
-        wasmCWriteFileFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
-        fputs("(i);\n", file);
+        wasmCWriteFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
+        wasmOutputString(file, "(i);\n");
     }
 
-    fputs("}\n\n", file);
+    wasmOutputString(file, "}\n\n");
 }
 
 static
 void
 wasmCWriteFreeFunction(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty
 ) {
-    fprintf(file, "void %sFreeInstance(%sInstance* i) {\n", moduleName, moduleName);
+    wasmOutputString(file, "void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FreeInstance(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* i) {\n");
 
     wasmCWriteFreeMemories(file, module, pretty, true);
     wasmCWriteFreeTables(file, module, pretty);
 
-    fputs("}\n\n", file);
+    wasmOutputString(file, "}\n\n");
 }
 
 static
@@ -6157,60 +6010,65 @@ wasmCWriteModuleHeader(
     const bool pretty,
     const bool debug,
     const bool multipleModules,
+    WasmOutputProvider provider,
     WasmDiagnosticContext* diagnostics
 ) {
     /* Create file */
-    FILE* file = NULL;
+    WasmOutput output;
+    WasmOutput* file = &output;
     bool result = false;
 
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
-    file = fopen(filename, "w");
-    if (file == NULL) {
-        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
+    if (!wasmOutputOpen(file, provider, filename, wasmOutputHeader, diagnostics)) {
         return false;
     }
 
-    fprintf(file, "#ifndef %s_H\n", moduleName);
-    fprintf(file, "#define %s_H\n\n", moduleName);
+    wasmOutputString(file, "#ifndef ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "_H\n");
+    wasmOutputString(file, "#define ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "_H\n\n");
 
-    fputs("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n", file);
+    wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);
     MUST_OR_GOTO (cleanup, wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
-    fprintf(
-        file,
-        "void %sInstantiate(%sInstance* instance, void* resolve(const char* module, const char* name));\n\n",
-        moduleName,
-        moduleName
-    );
-    fprintf(
-        file,
-        "void %sFreeInstance(%sInstance* instance);\n\n",
-        moduleName,
-        moduleName
-    );
+    wasmOutputString(file, "void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instantiate(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* instance, void* resolve(const char* module, const char* name));\n\n");
+    wasmOutputString(file, "void ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FreeInstance(");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "Instance* instance);\n\n");
 
-    fputs("#ifdef __cplusplus\n}\n#endif\n\n", file);
+    wasmOutputString(file, "#ifdef __cplusplus\n}\n#endif\n\n");
 
-    fprintf(file, "#endif /* %s_H */\n\n", moduleName);
+    wasmOutputString(file, "#endif /* ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "_H */\n\n");
 
     result = true;
 
 cleanup:
     diagnostics->location.hasFunctionIndex = false;
     diagnostics->location.outputName = filename;
-    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
-        result = false;
+    if (!result) {
+        wasmOutputAbort(file);
+        return false;
     }
-    return result;
+    return wasmOutputClose(file);
 }
 
 static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModuleFunctionExportsArray(
-    FILE* file,
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
@@ -6229,12 +6087,11 @@ wasmCWriteModuleFunctionExportsArray(
         }
     }
 
-    fprintf(
-        file,
-        "wasmFuncExport %sFuncExports[%u] = {\n",
-        moduleName,
-        functionExportCount + 1
-    );
+    wasmOutputString(file, "wasmFuncExport ");
+    wasmOutputString(file, moduleName);
+    wasmOutputString(file, "FuncExports[");
+    wasmOutputU32(file, functionExportCount + 1);
+    wasmOutputString(file, "] = {\n");
 
     {
         U32 exportIndex = 0;
@@ -6244,8 +6101,8 @@ wasmCWriteModuleFunctionExportsArray(
                 continue;
             }
 
-            fputs("{(wasmFunc)", file);
-            wasmCWriteFileFunctionUse(
+            wasmOutputString(file, "{(wasmFunc)");
+            wasmCWriteFunctionUse(
                 file,
                 module,
                 moduleName,
@@ -6253,11 +6110,13 @@ wasmCWriteModuleFunctionExportsArray(
                 false,
                 multipleModules
             );
-            fprintf(file, ",\"%s\"},\n", export.name);
+            wasmOutputString(file, ",\"");
+            wasmOutputString(file, export.name);
+            wasmOutputString(file, "\"},\n");
         }
     }
 
-    fputs("{NULL,NULL}\n};\n\n", file);
+    wasmOutputString(file, "{NULL,NULL}\n};\n\n");
 
     return true;
 }
@@ -6268,7 +6127,7 @@ WARN_UNUSED_RESULT
 wasmCWriteInits(
     const WasmModule* module,
     const char* moduleName,
-    FILE* file,
+    WasmOutput* file,
     const WasmDataSegmentMode dataSegmentMode,
     const bool pretty,
     const bool multipleModules,
@@ -6307,9 +6166,11 @@ wasmCWriteImplementationFile(
     const bool pretty,
     const bool debug,
     const bool multipleModules,
+    WasmOutputProvider provider,
     WasmDiagnosticContext* diagnostics
 ) {
-    FILE* file = NULL;
+    WasmOutput output;
+    WasmOutput* file = &output;
     char filename[W2C2_IMPL_FILENAME_LENGTH+1];
     const U32 functionCount = (U32)functionIDs.length;
     bool result = false;
@@ -6327,9 +6188,7 @@ wasmCWriteImplementationFile(
     sprintf(filename, "%c%010u.c", filePrefix, fileIndex);
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
-    file = fopen(filename, "w");
-    if (file == NULL) {
-        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
+    if (!wasmOutputOpen(file, provider, filename, wasmOutputC, diagnostics)) {
         return false;
     }
 
@@ -6354,10 +6213,11 @@ wasmCWriteImplementationFile(
 cleanup:
     diagnostics->location.hasFunctionIndex = false;
     diagnostics->location.outputName = filename;
-    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
-        result = false;
+    if (!result) {
+        wasmOutputAbort(file);
+        return false;
     }
-    return result;
+    return wasmOutputClose(file);
 }
 
 #if HAS_PTHREAD
@@ -6379,6 +6239,7 @@ typedef struct WasmCImplementationWriterTask {
 
 typedef struct WasmCImplementationConcurrentWriter {
     WasmDiagnostics diagnostics;
+    WasmOutputProvider output;
     pthread_mutex_t mutex;
     pthread_cond_t consume;
     pthread_cond_t produce;
@@ -6492,6 +6353,7 @@ wasmCImplementationWriterThread(
                     pretty,
                     debug,
                     multipleModules,
+                    writer->output,
                     diagnostics
                 );
                 if (!result) {
@@ -6558,6 +6420,8 @@ wasmCWriteModuleImplementationFiles(
         if (!wasmCImplementationConcurrentWriterInitialize(&writer, diagnostics)) {
             return false;
         }
+
+        writer.output = options.output;
 
         threads = calloc(threadCount, sizeof(pthread_t));
         if (threads == NULL) {
@@ -6678,6 +6542,7 @@ finish:
             options.pretty,
             options.debug,
             options.multipleModules,
+            options.output,
             diagnostics
         )) {
             return false;
@@ -6702,14 +6567,13 @@ wasmCWriteModuleImplementation(
     WasmDiagnosticContext* diagnostics
 ) {
     /* Create file */
-    FILE* file = NULL;
+    WasmOutput output;
+    WasmOutput* file = &output;
     bool result = false;
 
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
-    file = fopen(filename, "w");
-    if (file == NULL) {
-        wasmDiagnosticReportOutputFailed(diagnostics, wasmDiagnosticOutputOpenFailed, filename, errno);
+    if (!wasmOutputOpen(file, options.output, filename, wasmOutputC, diagnostics)) {
         return false;
     }
 
@@ -6747,6 +6611,10 @@ wasmCWriteModuleImplementation(
     ))
 
     /* Write implementations */
+
+    if (file->failed) {
+        goto cleanup;
+    }
 
     if (options.functionsPerFile >= module->functions.count
         && dynamicFunctionIDs.length == 0)
@@ -6792,6 +6660,10 @@ wasmCWriteModuleImplementation(
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
 
+    if (file->failed) {
+        goto cleanup;
+    }
+
     /* Write initializations code */
 
     MUST_OR_GOTO (cleanup, wasmCWriteInits(
@@ -6809,10 +6681,11 @@ wasmCWriteModuleImplementation(
 cleanup:
     diagnostics->location.hasFunctionIndex = false;
     diagnostics->location.outputName = filename;
-    if (!wasmDiagnosticCloseOutput(diagnostics, file)) {
-        result = false;
+    if (!result) {
+        wasmOutputAbort(file);
+        return false;
     }
-    return result;
+    return wasmOutputClose(file);
 }
 
 static
@@ -6826,12 +6699,14 @@ wasmCWriteModuleInternal(
     const WasmFunctionIDs dynamicFunctionIDs,
     WasmDiagnosticContext* diagnostics
 ) {
-    char outputName[PATH_MAX];
-    char headerName[PATH_MAX];
+    const char* outputName = options.outputName;
+    char* headerName;
+    size_t nameLength;
+    bool result = false;
 
-    const char* outputPath = options.outputPath;
-
-    if (module == NULL || moduleName == NULL || outputPath == NULL) {
+    if (module == NULL || moduleName == NULL || outputName == NULL
+        || outputName[0] == '\0' || options.output.open == NULL
+        || strchr(outputName, '/') != NULL || strchr(outputName, '\\') != NULL) {
         wasmDiagnosticReportInvalidWriterArgument(diagnostics);
         return false;
     }
@@ -6847,21 +6722,16 @@ wasmCWriteModuleInternal(
             return false;
     }
 
-    if (strlen(outputPath) >= sizeof(outputName) - 2) {
+    nameLength = strlen(outputName);
+    if (nameLength > (size_t)-1 - 3) {
         wasmDiagnosticReportInvalidWriterArgument(diagnostics);
         return false;
     }
-
-    strcpy(outputName, outputPath);
-    {
-        char* outputBaseName = wasmBasename(outputName);
-        memmove(
-            outputName,
-            outputBaseName,
-            strlen(outputBaseName) + 1
-        );
+    headerName = (char*)malloc(nameLength + 3);
+    if (headerName == NULL) {
+        wasmDiagnosticReportAllocationFailed(diagnostics);
+        return false;
     }
-
     strcpy(headerName, outputName);
 
     {
@@ -6872,17 +6742,18 @@ wasmCWriteModuleInternal(
         strcpy(headerExt, ".h");
     }
 
-    MUST (wasmCWriteModuleHeader(
+    MUST_OR_GOTO (cleanup, wasmCWriteModuleHeader(
         module,
         moduleName,
         headerName,
         options.pretty,
         options.debug,
         options.multipleModules,
+        options.output,
         diagnostics
     ))
 
-    MUST (wasmCWriteModuleImplementation(
+    MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementation(
         module,
         moduleName,
         outputName,
@@ -6893,7 +6764,12 @@ wasmCWriteModuleInternal(
         diagnostics
     ))
 
-    return true;
+    result = true;
+
+cleanup:
+    free(headerName);
+    diagnostics->location.outputName = NULL;
+    return result;
 }
 
 bool

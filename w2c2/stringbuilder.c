@@ -10,9 +10,13 @@ stringBuilderEnsureCapacity(
     StringBuilder* stringBuilder,
     const size_t length
 ) {
-    const size_t lengthWithNull = length + 1;
+    size_t lengthWithNull;
+    MUST (length < (size_t)-1)
+    lengthWithNull = length + 1;
     if (lengthWithNull > stringBuilder->capacity) {
-        const size_t newCapacity = lengthWithNull + (stringBuilder->capacity >> 1U);
+        const size_t extra = stringBuilder->capacity >> 1U;
+        const size_t newCapacity = extra <= (size_t)-1 - lengthWithNull
+            ? lengthWithNull + extra : lengthWithNull;
         void* newString = realloc(stringBuilder->string, newCapacity);
         MUST (newString != NULL)
         stringBuilder->string = (char*) newString;
@@ -76,7 +80,9 @@ stringBuilderAppendChar(
     StringBuilder* stringBuilder,
     const char c
 ) {
-    const size_t newLength = stringBuilder->length + 1;
+    size_t newLength;
+    MUST (stringBuilder->length < (size_t)-1)
+    newLength = stringBuilder->length + 1;
     MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
 
     stringBuilder->string[stringBuilder->length++] = c;
@@ -93,7 +99,9 @@ stringBuilderAppendSized(
     const char* string,
     const size_t length
 ) {
-    const size_t newLength = stringBuilder->length + length;
+    size_t newLength;
+    MUST (length <= (size_t)-1 - stringBuilder->length)
+    newLength = stringBuilder->length + length;
     MUST (stringBuilderEnsureCapacity(stringBuilder, newLength))
 
     memcpy(
@@ -167,16 +175,6 @@ stringBuilderAppendF64(
     char buffer[32];
     /* DBL_DECIMAL_DIG */
     const int length = sprintf(buffer, "%.17g", value);
-    return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
-}
-
-bool
-stringBuilderAppendCharHex(
-    StringBuilder* stringBuilder,
-    const char value
-) {
-    char buffer[3];
-    const int length = sprintf(buffer, "%02X", value);
     return stringBuilderAppendSized(stringBuilder, buffer, (size_t) length);
 }
 

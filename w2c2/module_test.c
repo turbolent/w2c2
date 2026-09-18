@@ -480,7 +480,8 @@ testModuleWriteCleanup(void) {
         }
     }
 
-    options.outputPath = outputPath;
+    options.outputName = outputPath;
+    options.output = wasmFileOutputProvider(".");
     options.functionsPerFile = 0;
     options.threadCount = 0;
     if (!wasmCWriteModule(
@@ -521,7 +522,7 @@ testModuleWriteCleanup(void) {
         testStringDuplicate("module-2.c");
     reader.module->debugLines.debugLines[2].number = 30;
 
-    options.outputPath = debugOutputPath;
+    options.outputName = debugOutputPath;
     options.functionsPerFile = 1;
     options.threadCount = 2;
     options.debug = true;

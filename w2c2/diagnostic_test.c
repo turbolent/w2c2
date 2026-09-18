@@ -146,7 +146,8 @@ static
 WasmCWriteModuleOptions
 diagnosticOptions(DiagnosticCapture* capture) {
     WasmCWriteModuleOptions options = emptyWasmCWriteModuleOptions;
-    options.outputPath = "diagnostic-test.c";
+    options.outputName = "diagnostic-test.c";
+    options.output = wasmFileOutputProvider(".");
     options.functionsPerFile = 1;
     options.threadCount = 2;
     options.diagnostics = captureReporting(capture);
@@ -237,54 +238,6 @@ testOutputFailures(void) {
     wasmModuleFree(module);
     captureDestroy(&capture);
 #endif
-}
-
-static
-void
-testCloseOutput(void) {
-    const char* name = "diagnostic-test-readonly";
-    DiagnosticCapture capture;
-    WasmDiagnosticContext context = emptyWasmDiagnosticContext;
-    FILE* file = fopen(name, "w");
-    CHECK(file != NULL);
-    CHECK(fclose(file) == 0);
-    captureInitialize(&capture);
-    context.diagnostics = captureReporting(&capture);
-    context.location.outputName = name;
-
-    file = fopen(name, "r");
-    CHECK(file != NULL);
-    CHECK(fputs("x", file) == EOF);
-    CHECK(ferror(file) != 0);
-    CHECK(!wasmDiagnosticCloseOutput(&context, file));
-    CHECK(capture.count == 1);
-    CHECK(capture.last.code == wasmDiagnosticOutputWriteFailed);
-    CHECK(capture.last.info.outputFailed.systemError == 0);
-    CHECK(strcmp(capture.name, name) == 0);
-    CHECK(remove(name) == 0);
-
-    file = tmpfile();
-    CHECK(file != NULL);
-    CHECK(wasmDiagnosticCloseOutput(&context, file));
-    CHECK(capture.count == 1);
-#if HAS_UNISTD
-    context.hasError = false;
-    file = tmpfile();
-    CHECK(file != NULL);
-    CHECK(close(fileno(file)) == 0);
-    CHECK(!wasmDiagnosticCloseOutput(&context, file));
-    CHECK(capture.count == 2);
-    CHECK(capture.last.code == wasmDiagnosticOutputCloseFailed);
-    CHECK(capture.last.info.outputFailed.systemError == EBADF);
-
-    /* A prior diagnostic suppresses secondary output errors. */
-    file = tmpfile();
-    CHECK(file != NULL);
-    CHECK(close(fileno(file)) == 0);
-    CHECK(!wasmDiagnosticCloseOutput(&context, file));
-    CHECK(capture.count == 2);
-#endif
-    captureDestroy(&capture);
 }
 
 static
@@ -446,7 +399,7 @@ void*
 translateConcurrently(void* context) {
     ConcurrentTranslation* translation = (ConcurrentTranslation*)context;
     WasmCWriteModuleOptions options = diagnosticOptions(&translation->capture);
-    options.outputPath = translation->dynamic ? "diagnostic-dynamic.c" : "diagnostic-static.c";
+    options.outputName = translation->dynamic ? "diagnostic-dynamic.c" : "diagnostic-static.c";
     CHECK(!wasmCWriteModule(translation->module, "diagnostic", options,
         translation->dynamic ? emptyWasmFunctionIDs : translation->ids,
         translation->dynamic ? translation->ids : emptyWasmFunctionIDs));
@@ -526,7 +479,6 @@ void
 testDiagnostics(void) {
     testReaderDiagnostics();
     testOutputFailures();
-    testCloseOutput();
     testUnsupportedInstructions();
     testUnsupportedSignatures();
     testDataDropNoOp();
