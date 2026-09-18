@@ -6,7 +6,7 @@
 static
 bool
 wasmOutputAppend(void* context, const U8* bytes, size_t length, int* systemError) {
-    if (!stringBuilderAppendSized((StringBuilder*)context, (const char*)bytes, length)) {
+    if (!outputBufferAppend((OutputBuffer*)context, bytes, length)) {
         *systemError = ENOMEM;
         return false;
     }
@@ -28,12 +28,12 @@ wasmOutputBufferAbort(void* context) {
 }
 
 WasmOutput
-wasmOutputForStringBuilder(StringBuilder* builder, WasmDiagnosticContext* diagnostics) {
+wasmOutputForBuffer(OutputBuffer* buffer, WasmDiagnosticContext* diagnostics) {
     WasmOutput output;
     memset(&output, 0, sizeof(output));
     output.diagnostics = diagnostics;
     output.name = diagnostics->location.outputName;
-    output.sink.context = builder;
+    output.sink.context = buffer;
     output.sink.write = wasmOutputAppend;
     output.sink.close = wasmOutputBufferClose;
     output.sink.abort = wasmOutputBufferAbort;
@@ -142,5 +142,49 @@ void
 wasmOutputHex(WasmOutput* output, unsigned int value, WasmOutputHexFormat format) {
     char buffer[sizeof(value) * 2 + 1];
     const int length = sprintf(buffer, format == wasmOutputHexUpperPadded ? "%02X" : "%x", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputI32(WasmOutput* output, I32 value) {
+    char buffer[12];
+    const int length = sprintf(buffer, "%i", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputI64(WasmOutput* output, I64 value) {
+    char buffer[22];
+    const int length = sprintf(buffer, "%lli", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputF32(WasmOutput* output, F32 value) {
+    char buffer[32];
+    /* FLT_DECIMAL_DIG */
+    const int length = sprintf(buffer, "%.9g", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputF64(WasmOutput* output, F64 value) {
+    char buffer[32];
+    /* DBL_DECIMAL_DIG */
+    const int length = sprintf(buffer, "%.17g", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputU32Hex(WasmOutput* output, U32 value) {
+    char buffer[9];
+    const int length = sprintf(buffer, "%08X", value);
+    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+}
+
+void
+wasmOutputU64Hex(WasmOutput* output, U64 value) {
+    char buffer[17];
+    const int length = sprintf(buffer, "%016llX", value);
     wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
 }

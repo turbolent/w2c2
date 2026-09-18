@@ -10,7 +10,6 @@
 #include "output_internal.h"
 #include "w2c2_base.h"
 #include "c.h"
-#include "stringbuilder.h"
 #include "instruction.h"
 #include "typestack.h"
 #include "labelstack.h"
@@ -357,7 +356,6 @@ wasmCWriteLocalsDeclarations(
 }
 
 typedef struct WasmCFunctionWriter {
-    StringBuilder* builder;
     WasmOutput* output;
     WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
@@ -384,14 +382,14 @@ wasmCWriteIndent(
     const WasmCFunctionWriter* writer
 ) {
     if (writer->pretty) {
-        StringBuilder* builder = writer->builder;
         const U32 indent = writer->indent;
         U32 index = 0;
         for (; index <= indent; index++) {
-            MUST (stringBuilderAppend(builder, indentation))
+            wasmOutputString(writer->output, indentation);
+            MUST (!writer->output->failed)
         }
     }
-    return true;
+    return !writer->output->failed;
 }
 
 static
@@ -402,7 +400,8 @@ wasmCWrite(
     const WasmCFunctionWriter* writer,
     const char* string
 ) {
-    return stringBuilderAppend(writer->builder, string);
+    wasmOutputString(writer->output, string);
+    return !writer->output->failed;
 }
 
 
@@ -414,7 +413,8 @@ wasmCWriteChar(
     const WasmCFunctionWriter* writer,
     const char c
 ) {
-    return stringBuilderAppendChar(writer->builder, c);
+    wasmOutputChar(writer->output, c);
+    return !writer->output->failed;
 }
 
 static
@@ -887,21 +887,21 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteLiteral(
-    StringBuilder* builder,
+    WasmOutput* output,
     const WasmValueType valueType,
     const WasmValue value,
     WasmDiagnosticContext* diagnostics
 ) {
     switch (valueType) {
         case wasmValueTypeI32: {
-            MUST (stringBuilderAppendI32(builder, value.i32))
-            MUST (stringBuilderAppendChar(builder, 'U'))
+            wasmOutputI32(output, value.i32);
+            wasmOutputChar(output, 'U');
             break;
         }
         case wasmValueTypeI64: {
-            MUST (stringBuilderAppend(builder, "W2C2_LL("))
-            MUST (stringBuilderAppendI64(builder, value.i64))
-            MUST (stringBuilderAppend(builder, "U)"))
+            wasmOutputString(output, "W2C2_LL(");
+            wasmOutputI64(output, value.i64);
+            wasmOutputString(output, "U)");
             break;
         }
         case wasmValueTypeF32: {
@@ -911,18 +911,18 @@ wasmCWriteLiteral(
                 const U32 significand = bits & 0x7fffffU;
                 if (significand == 0) {
                     if (isNegative) {
-                        MUST (stringBuilderAppendChar(builder, '-'))
+                        wasmOutputChar(output, '-');
                     }
-                    MUST (stringBuilderAppend(builder, "INFINITY"))
+                    wasmOutputString(output, "INFINITY");
                 } else {
-                    MUST (stringBuilderAppend(builder, "f32_reinterpret_i32(0x"))
-                    MUST (stringBuilderAppendU32Hex(builder, bits))
-                    MUST (stringBuilderAppendChar(builder, ')'))
+                    wasmOutputString(output, "f32_reinterpret_i32(0x");
+                    wasmOutputU32Hex(output, bits);
+                    wasmOutputChar(output, ')');
                 }
             } else if (bits == 0x80000000U) {
-                MUST (stringBuilderAppend(builder, "-0.f"))
+                wasmOutputString(output, "-0.f");
             } else {
-                MUST (stringBuilderAppendF32(builder, value.f32))
+                wasmOutputF32(output, value.f32);
             }
             break;
         }
@@ -933,18 +933,18 @@ wasmCWriteLiteral(
                 const U64 significand = bits & W2C2_LL(0x7fffffU);
                 if (significand == 0) {
                     if (isNegative) {
-                        MUST (stringBuilderAppendChar(builder, '-'))
+                        wasmOutputChar(output, '-');
                     }
-                    MUST (stringBuilderAppend(builder, "INFINITY"))
+                    wasmOutputString(output, "INFINITY");
                 } else {
-                    MUST (stringBuilderAppend(builder, "f64_reinterpret_i64(0x"))
-                    MUST (stringBuilderAppendU64Hex(builder, bits))
-                    MUST (stringBuilderAppendChar(builder, ')'))
+                    wasmOutputString(output, "f64_reinterpret_i64(0x");
+                    wasmOutputU64Hex(output, bits);
+                    wasmOutputChar(output, ')');
                 }
             } else if (bits == W2C2_LL(0x8000000000000000U)) {
-                MUST (stringBuilderAppend(builder, "-0.f"))
+                wasmOutputString(output, "-0.f");
             } else {
-                MUST (stringBuilderAppendF64(builder, value.f64))
+                wasmOutputF64(output, value.f64);
             }
             break;
         }
@@ -953,7 +953,7 @@ wasmCWriteLiteral(
             return false;
     }
 
-    return true;
+    return !output->failed;
 }
 
 static
@@ -983,7 +983,7 @@ wasmCWriteConstExpr(
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteLiteral(writer->builder, resultType, instruction.value, writer->diagnostics))
+            MUST (wasmCWriteLiteral(writer->output, resultType, instruction.value, writer->diagnostics))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -1016,7 +1016,7 @@ wasmCWriteLoad(
     ))
     if (instruction.offset != 0) {
         MUST (wasmCWritePlus(writer))
-        MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+        wasmOutputU32(writer->output, instruction.offset);
         MUST (wasmCWriteChar(writer, 'U'))
     }
     MUST (wasmCWrite(writer, ");\n"))
@@ -1164,7 +1164,7 @@ wasmCWriteStore(
     ))
     if (instruction.offset != 0) {
         MUST (wasmCWritePlus(writer))
-        MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+        wasmOutputU32(writer->output, instruction.offset);
         MUST (wasmCWriteChar(writer, 'U'))
     }
     MUST (wasmCWriteComma(writer))
@@ -2392,7 +2392,7 @@ wasmCWriteBranchTableExpr(
             for (; index < instruction.labelIndexCount; index++) {
                 MUST_OR_GOTO (cleanup, wasmCWriteIndent(writer))
                 MUST_OR_GOTO (cleanup, wasmCWrite(writer, "case "))
-                MUST_OR_GOTO (cleanup, stringBuilderAppendU32(writer->builder, index))
+                wasmOutputU32(writer->output, index);
                 MUST_OR_GOTO (cleanup, wasmCWrite(writer, ":\n"))
                 writer->indent++;
                 {
@@ -2433,16 +2433,16 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteDebugLine(
-    StringBuilder* builder,
+    WasmOutput* output,
     const WasmDebugLine* debugLine
 
 ) {
-    MUST (stringBuilderAppend(builder, "#line "))
-    MUST (stringBuilderAppendU64(builder, debugLine->number))
-    MUST (stringBuilderAppend(builder, " \""))
-    MUST (stringBuilderAppend(builder, debugLine->path))
-    MUST (stringBuilderAppend(builder, "\"\n"))
-    return true;
+    wasmOutputString(output, "#line ");
+    wasmOutputU64(output, debugLine->number);
+    wasmOutputString(output, " \"");
+    wasmOutputString(output, debugLine->path);
+    wasmOutputString(output, "\"\n");
+    return !output->failed;
 }
 
 
@@ -3183,7 +3183,7 @@ wasmCWriteAtomicRMWExpr(
             ))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                wasmOutputU32(writer->output, instruction.offset);
                 MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWriteComma(writer))
@@ -3308,7 +3308,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             ))
             if (instruction.offset != 0) {
                 MUST (wasmCWritePlus(writer))
-                MUST (stringBuilderAppendU32(writer->builder, instruction.offset))
+                wasmOutputU32(writer->output, instruction.offset);
                 MUST (wasmCWriteChar(writer, 'U'))
             }
             MUST (wasmCWriteComma(writer))
@@ -3349,7 +3349,7 @@ wasmCWriteFunctionCode(
                 absoluteAddress
             );
             if (debugLine != NULL) {
-                MUST (wasmCWriteDebugLine(writer->builder, debugLine))
+                MUST (wasmCWriteDebugLine(writer->output, debugLine))
             }
         }
 
@@ -4306,7 +4306,7 @@ wasmCWriteFunctionBody(
     WasmDiagnosticContext* diagnostics
 ) {
     Buffer code = function.code;
-    StringBuilder stringBuilder = emptyStringBuilder;
+    OutputBuffer buffer = emptyOutputBuffer;
     WasmOpcode opcode = wasmOpcodeUnreachable;
     WasmLabel label = wasmEmptyLabel;
     WasmValueType* resultType = NULL;
@@ -4330,17 +4330,16 @@ wasmCWriteFunctionBody(
         resultType = NULL;
     }
 
-    if (!stringBuilderInitialize(&stringBuilder)) {
+    if (!outputBufferInitialize(&buffer)) {
         wasmDiagnosticReportAllocationFailed(diagnostics);
         goto cleanup;
     }
 
     {
-        WasmOutput output = wasmOutputForStringBuilder(&stringBuilder, diagnostics);
+        WasmOutput output = wasmOutputForBuffer(&buffer, diagnostics);
         WasmCFunctionWriter writer;
         writer.output = &output;
         writer.diagnostics = diagnostics;
-        writer.builder = &stringBuilder;
         writer.typeStack = typeStack;
         writer.stackDeclarations = stackDeclarations;
         writer.labelStack = labelStack;
@@ -4368,13 +4367,13 @@ wasmCWriteFunctionBody(
     wasmOutputString(file, "{\n");
     wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
-    wasmOutputString(file, stringBuilder.string);
+    wasmOutputWrite(file, buffer.data, buffer.length);
     wasmOutputString(file, "}\n");
 
-    result = true;
+    result = !file->failed;
 
 cleanup:
-    stringBuilderFree(&stringBuilder);
+    outputBufferFree(&buffer);
     return result;
 }
 
@@ -4614,13 +4613,13 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteConstantExpr(
-    StringBuilder* builder,
+    WasmOutput* output,
     const WasmModule* module,
     Buffer code,
     WasmDiagnosticContext* diagnostics
 ) {
-    WasmOutput output = wasmOutputForStringBuilder(builder, diagnostics);
     WasmOpcode opcode;
+    MUST (!output->failed)
     MUST (wasmOpcodeRead(&code, &opcode))
     switch (opcode) {
         case wasmOpcodeI32Const:
@@ -4637,13 +4636,13 @@ wasmCWriteConstantExpr(
                 );
                 return false;
             }
-            MUST (wasmCWriteLiteral(builder, resultType, instruction.value, diagnostics))
+            MUST (wasmCWriteLiteral(output, resultType, instruction.value, diagnostics))
             break;
         }
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
             MUST (wasmGlobalInstructionRead(&code, &instruction))
-            MUST (wasmCWriteGlobalUse(&output, module, instruction.globalIndex, false))
+            MUST (wasmCWriteGlobalUse(output, module, instruction.globalIndex, false))
             break;
         }
         default: {
@@ -4652,7 +4651,7 @@ wasmCWriteConstantExpr(
         }
     }
 
-    return true;
+    return !output->failed;
 }
 
 static
@@ -4669,13 +4668,6 @@ wasmCWriteInitGlobals(
     const U32 globalCount = module->globals.count;
 
     if (globalCount > 0) {
-        StringBuilder stringBuilder = emptyStringBuilder;
-        bool result = false;
-        if (!stringBuilderInitialize(&stringBuilder)) {
-            wasmDiagnosticReportAllocationFailed(diagnostics);
-            goto cleanup;
-        }
-
         wasmOutputString(file, "static void ");
         wasmOutputString(file, moduleName);
         wasmOutputString(file, "InitGlobals(");
@@ -4698,27 +4690,16 @@ wasmCWriteInitGlobals(
                 }
                 {
                     const Buffer code = global.init;
-                    MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
-                    MUST_OR_GOTO (
-                        cleanup,
-                        wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
-                    )
-                    wasmOutputString(file, stringBuilder.string);
+                    MUST (wasmCWriteConstantExpr(file, module, code, diagnostics))
                 }
                 wasmOutputString(file, ";\n");
             }
         }
 
         wasmOutputString(file, "}\n\n");
-
-        result = true;
-
-cleanup:
-        stringBuilderFree(&stringBuilder);
-        return result;
     }
 
-    return true;
+    return !file->failed;
 }
 
 static
@@ -5301,14 +5282,6 @@ wasmCWriteInitMemories(
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
     if (memoryCount > 0) {
-
-        StringBuilder stringBuilder = emptyStringBuilder;
-        bool result = false;
-        if (!stringBuilderInitialize(&stringBuilder)) {
-            wasmDiagnosticReportAllocationFailed(diagnostics);
-            goto cleanup;
-        }
-
         wasmOutputString(file, "static void ");
         wasmOutputString(file, moduleName);
         wasmOutputString(file, "InitMemories(");
@@ -5418,12 +5391,7 @@ wasmCWriteInitMemories(
                             false
                         );
                         wasmOutputString(file, ", ");
-                        MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
-                        MUST_OR_GOTO (
-                            cleanup,
-                            wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
-                        )
-                        wasmOutputString(file, stringBuilder.string);
+                        MUST (wasmCWriteConstantExpr(file, module, code, diagnostics))
                         /* TODO: add support for multiple modules */
                         switch (dataSegmentMode) {
                             case wasmDataSegmentModeGNULD:
@@ -5448,14 +5416,8 @@ wasmCWriteInitMemories(
         }
 
         wasmOutputString(file, "}\n\n");
-
-        result = true;
-
-cleanup:
-        stringBuilderFree(&stringBuilder);
-        return result;
     }
-    return true;
+    return !file->failed;
 }
 
 static
@@ -5553,13 +5515,6 @@ wasmCWriteInitTables(
     const U32 elementSegmentCount = module->elementSegments.count;
     const U32 tableCount = module->tables.count;
     if (tableCount > 0 || elementSegmentCount > 0) {
-        StringBuilder stringBuilder = emptyStringBuilder;
-        bool result = false;
-        if (!stringBuilderInitialize(&stringBuilder)) {
-            wasmDiagnosticReportAllocationFailed(diagnostics);
-            goto cleanup;
-        }
-
         wasmOutputString(file, "static void ");
         wasmOutputString(file, moduleName);
         wasmOutputString(file, "InitTables(");
@@ -5604,12 +5559,7 @@ wasmCWriteInitTables(
                 }
                 {
                     const Buffer code = elementSegment.offset;
-                    MUST_OR_GOTO (cleanup, stringBuilderReset(&stringBuilder))
-                    MUST_OR_GOTO (
-                        cleanup,
-                        wasmCWriteConstantExpr(&stringBuilder, module, code, diagnostics)
-                    )
-                    wasmOutputString(file, stringBuilder.string);
+                    MUST (wasmCWriteConstantExpr(file, module, code, diagnostics))
                 }
                 wasmOutputString(file, ";\n");
 
@@ -5638,15 +5588,9 @@ wasmCWriteInitTables(
         }
 
         wasmOutputString(file, "}\n\n");
-
-        result = true;
-
-cleanup:
-        stringBuilderFree(&stringBuilder);
-        return result;
     }
 
-    return true;
+    return !file->failed;
 }
 
 static

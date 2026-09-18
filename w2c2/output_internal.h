@@ -3,7 +3,7 @@
 
 #include "output.h"
 #include "diagnostic_internal.h"
-#include "stringbuilder.h"
+#include "output_buffer.h"
 
 typedef enum WasmOutputHexFormat {
     wasmOutputHexLower,
@@ -19,11 +19,11 @@ typedef struct WasmOutput {
 } WasmOutput;
 
 /*
- * Borrows the builder;
+ * Borrows the buffer;
  * close and abort leave it intact.
  */
 WasmOutput
-wasmOutputForStringBuilder(StringBuilder* builder, WasmDiagnosticContext* diagnostics);
+wasmOutputForBuffer(OutputBuffer* buffer, WasmDiagnosticContext* diagnostics);
 
 bool
 WARN_UNUSED_RESULT
@@ -59,5 +59,23 @@ wasmOutputU64(WasmOutput* output, U64 value);
 
 void
 wasmOutputHex(WasmOutput* output, unsigned int value, WasmOutputHexFormat format);
+
+void
+wasmOutputI32(WasmOutput* output, I32 value);
+
+void
+wasmOutputI64(WasmOutput* output, I64 value);
+
+void
+wasmOutputF32(WasmOutput* output, F32 value);
+
+void
+wasmOutputF64(WasmOutput* output, F64 value);
+
+void
+wasmOutputU32Hex(WasmOutput* output, U32 value);
+
+void
+wasmOutputU64Hex(WasmOutput* output, U64 value);
 
 #endif /* W2C2_OUTPUT_INTERNAL_H */

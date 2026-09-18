@@ -33,6 +33,7 @@ typedef struct CapturedOutput {
 
 typedef struct OutputTrace {
     size_t writes;
+    bool writeFailed;
     bool closed;
     bool aborted;
 } OutputTrace;
@@ -58,6 +59,7 @@ typedef struct OutputCapture {
     int systemError;
     OutputFailure failure;
     const char* failureName;
+    const char* failureBytes;
     WasmMemoryOutput memory;
 } OutputCapture;
 
@@ -162,10 +164,16 @@ bool
 tracedWrite(void* context, const U8* bytes, size_t length, int* systemError) {
     TracedSink* sink = (TracedSink*)context;
     OutputTrace* trace = &sink->capture->traces[sink->index];
-    CHECK(!trace->closed && !trace->aborted);
+    CHECK(!trace->closed && !trace->aborted && !trace->writeFailed);
     trace->writes++;
-    if (sink->selected && sink->capture->failure == outputWriteFailure) {
-        CHECK(trace->writes == 1);
+    if (sink->selected && sink->capture->failure == outputWriteFailure
+        && (sink->capture->failureBytes == NULL
+            || (length == strlen(sink->capture->failureBytes)
+                && memcmp(bytes, sink->capture->failureBytes, length) == 0))) {
+        if (sink->capture->failureBytes == NULL) {
+            CHECK(trace->writes == 1);
+        }
+        trace->writeFailed = true;
         *systemError = EIO;
         return false;
     }
@@ -275,10 +283,14 @@ readOutputModule(void) {
     static U8 bytes[] = {
         0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
         0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
+        0x02, 0x0D, 0x01, 0x03, 'e', 'n', 'v', 0x04, 'b', 'a', 's', 'e', 0x03, 0x7F, 0x00,
         0x03, 0x03, 0x02, 0x00, 0x00,
+        0x04, 0x04, 0x01, 0x70, 0x00, 0x40,
         0x05, 0x03, 0x01, 0x00, 0x01,
+        0x06, 0x0B, 0x02, 0x7F, 0x00, 0x41, 0x11, 0x0B, 0x7F, 0x00, 0x23, 0x00, 0x0B,
+        0x09, 0x07, 0x01, 0x00, 0x41, 0x1F, 0x0B, 0x01, 0x00,
         0x0A, 0x07, 0x02, 0x02, 0x00, 0x0B, 0x02, 0x00, 0x0B,
-        0x0B, 0x0A, 0x01, 0x00, 0x41, 0x00, 0x0B, 0x04, 0x00, 0xFF, 0x0A, 0x00
+        0x0B, 0x0A, 0x01, 0x00, 0x41, 0x17, 0x0B, 0x04, 0x00, 0xFF, 0x0A, 0x00
     };
     WasmModuleReader reader = emptyWasmModuleReader;
     WasmModuleReaderError* error = NULL;
@@ -419,6 +431,63 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
+testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
+    static const char* values[] = {"17", "23", "31"};
+    static U8 invalidConstant[] = {0x41};
+    Buffer* expressions[3];
+    size_t index;
+    OutputCapture capture;
+    WasmCWriteModuleOptions options;
+    const CapturedOutput* generated;
+    captureInitialize(&capture);
+    options = captureOptions(&capture);
+    CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+    generated = findOutput(&capture, "output-test.c");
+    CHECK(generated != NULL);
+    CHECK(strstr((const char*)generated->bytes, "i->g1=17U;") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "i->g2=(*i->env__base);") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "23U") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "offset=31U;") != NULL);
+    CHECK(capture.diagnosticCount == 0);
+    checkClosed(&capture);
+    captureFree(&capture);
+
+    expressions[0] = &module->globals.globals[0].init;
+    expressions[1] = &module->dataSegments.dataSegments[0].offset;
+    expressions[2] = &module->elementSegments.elementSegments[0].offset;
+    for (index = 0; index < 3; index++) {
+        const Buffer previous = *expressions[index];
+        captureInitialize(&capture);
+        capture.failure = outputWriteFailure;
+        capture.failureName = "output-test.c";
+        capture.failureBytes = values[index];
+        options = captureOptions(&capture);
+        CHECK(!wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+        CHECK(capture.diagnosticCount == 1);
+        CHECK(capture.diagnosticCode == wasmDiagnosticOutputWriteFailed);
+        CHECK(capture.systemError == EIO);
+        CHECK(findOutput(&capture, "output-test.c") == NULL);
+        checkClosed(&capture);
+        captureFree(&capture);
+
+        captureInitialize(&capture);
+        capture.failure = outputCloseFailure;
+        capture.failureName = "output-test.c";
+        options = captureOptions(&capture);
+        expressions[index]->data = invalidConstant;
+        expressions[index]->length = sizeof(invalidConstant);
+        CHECK(!wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+        CHECK(capture.diagnosticCount == 1);
+        CHECK(capture.diagnosticCode == wasmDiagnosticInvalidInstruction);
+        CHECK(findOutput(&capture, "output-test.c") == NULL);
+        checkClosed(&capture);
+        captureFree(&capture);
+        *expressions[index] = previous;
+    }
+}
+
+static
+void
 testMemoryEdges(void) {
     OutputCapture capture;
     WasmOutputProvider provider;
@@ -440,8 +509,84 @@ testMemoryEdges(void) {
 
 static
 void
+testOutputBuffer(void) {
+    static const U8 bytes[] = {0, 1, 0xFF, 0};
+    OutputBuffer buffer = emptyOutputBuffer;
+    size_t index;
+    CHECK(outputBufferInitialize(&buffer));
+    CHECK(buffer.length == 0 && buffer.data[0] == 0);
+    CHECK(outputBufferAppend(&buffer, NULL, 0));
+    for (index = 0; index < 128; index++) {
+        CHECK(outputBufferAppend(&buffer, bytes, sizeof(bytes)));
+        CHECK(buffer.length == (index + 1) * sizeof(bytes));
+        CHECK(buffer.data[buffer.length] == 0);
+    }
+    {
+        U8* data = buffer.data;
+        const size_t capacity = buffer.capacity;
+        CHECK(!outputBufferAppend(&buffer, bytes, (size_t)-1));
+        CHECK(!outputBufferAppend(&buffer, bytes, (size_t)-1 - buffer.length));
+        CHECK(buffer.data == data && buffer.capacity == capacity);
+        CHECK(buffer.length == 128 * sizeof(bytes));
+        CHECK(buffer.data[buffer.length] == 0);
+    }
+    for (index = 0; index < 128; index++) {
+        CHECK(memcmp(buffer.data + index * sizeof(bytes), bytes, sizeof(bytes)) == 0);
+    }
+    outputBufferFree(&buffer);
+    CHECK(buffer.data == NULL && buffer.length == 0 && buffer.capacity == 0);
+}
+
+static
+void
+testOutputFormatting(void) {
+    static const char* expected =
+        "4294967295 2147483647 -2147483647 -2147483648\n"
+        "18446744073709551615 9223372036854775807 -9223372036854775807 -9223372036854775808\n"
+        "FFFFFFFF 00000001 FFFFFFFFFFFFFFFF 0000000000000001\n"
+        "0.100000001 0.10000000000000001";
+    OutputBuffer buffer = emptyOutputBuffer;
+    WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+    WasmOutput output;
+    CHECK(outputBufferInitialize(&buffer));
+    output = wasmOutputForBuffer(&buffer, &diagnostics);
+    wasmOutputU32(&output, UINT32_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI32(&output, INT32_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI32(&output, INT32_MIN + 1);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI32(&output, INT32_MIN);
+    wasmOutputChar(&output, '\n');
+    wasmOutputU64(&output, UINT64_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI64(&output, INT64_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI64(&output, INT64_MIN + 1);
+    wasmOutputChar(&output, ' ');
+    wasmOutputI64(&output, INT64_MIN);
+    wasmOutputChar(&output, '\n');
+    wasmOutputU32Hex(&output, UINT32_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputU32Hex(&output, 1);
+    wasmOutputChar(&output, ' ');
+    wasmOutputU64Hex(&output, UINT64_MAX);
+    wasmOutputChar(&output, ' ');
+    wasmOutputU64Hex(&output, 1);
+    wasmOutputChar(&output, '\n');
+    wasmOutputF32(&output, 0.1F);
+    wasmOutputChar(&output, ' ');
+    wasmOutputF64(&output, 0.1);
+    CHECK(wasmOutputClose(&output));
+    CHECK(buffer.length == strlen(expected));
+    CHECK(strcmp((const char*)buffer.data, expected) == 0);
+    outputBufferFree(&buffer);
+}
+
+static
+void
 testBorrowedBuffer(void) {
-    StringBuilder builder = emptyStringBuilder;
+    OutputBuffer builder = emptyOutputBuffer;
     WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
     WasmOutput output;
     OutputCapture capture;
@@ -451,15 +596,15 @@ testBorrowedBuffer(void) {
     diagnostics.location.outputName = capture.failureName;
     diagnostics.diagnostics.context = &capture;
     diagnostics.diagnostics.report = captureDiagnostic;
-    CHECK(stringBuilderInitialize(&builder));
-    output = wasmOutputForStringBuilder(&builder, &diagnostics);
+    CHECK(outputBufferInitialize(&builder));
+    output = wasmOutputForBuffer(&builder, &diagnostics);
     wasmOutputHex(&output, 10, wasmOutputHexUpperPadded);
     wasmOutputChar(&output, '/');
     wasmOutputHex(&output, 10, wasmOutputHexLower);
     CHECK(wasmOutputClose(&output));
-    CHECK(strcmp(builder.string, "0A/a") == 0);
+    CHECK(strcmp((const char*)builder.data, "0A/a") == 0);
 
-    output = wasmOutputForStringBuilder(&builder, &diagnostics);
+    output = wasmOutputForBuffer(&builder, &diagnostics);
     wasmOutputWrite(&output, &byte, (size_t)-1);
     CHECK(output.failed);
     CHECK(capture.diagnosticCount == 1);
@@ -468,8 +613,8 @@ testBorrowedBuffer(void) {
     wasmOutputString(&output, "ignored");
     CHECK(!wasmOutputClose(&output));
     CHECK(capture.diagnosticCount == 1);
-    CHECK(builder.length == 4 && strcmp(builder.string, "0A/a") == 0);
-    stringBuilderFree(&builder);
+    CHECK(builder.length == 4 && strcmp((const char*)builder.data, "0A/a") == 0);
+    outputBufferFree(&builder);
     captureFree(&capture);
 }
 
@@ -569,7 +714,10 @@ testOutputs(void) {
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
     testProviderFailures(module, ids);
+    testConstantExpressions(module, ids);
     testMemoryEdges();
+    testOutputBuffer();
+    testOutputFormatting();
     testBorrowedBuffer();
     testAbortedTranslation(module, ids);
 #if HAS_PTHREAD

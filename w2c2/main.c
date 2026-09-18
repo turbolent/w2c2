@@ -22,7 +22,7 @@
 #include "c.h"
 #include "compat.h"
 #include "diagnostic_print.h"
-#include "stringbuilder.h"
+#include "output_buffer.h"
 #if !HAS_GETOPT
   #include "getopt_impl.h"
 #endif /* !HAS_GETOPT */
@@ -226,25 +226,25 @@ cleanImplementationFiles(const char* directory) {
     glob_t globbuf = {0};
     size_t pathIndex = 0;
     int globResult;
-    StringBuilder escapedDirectory = emptyStringBuilder;
-    if (!stringBuilderInitialize(&escapedDirectory)) {
+    OutputBuffer escapedDirectory = emptyOutputBuffer;
+    if (!outputBufferInitialize(&escapedDirectory)) {
         return;
     }
     for (index = 0; directory[index] != '\0'; index++) {
         const char c = directory[index];
         if (strchr("\\*?[]", c) != NULL) {
-            if (!stringBuilderAppendChar(&escapedDirectory, '\\')) {
-                stringBuilderFree(&escapedDirectory);
+            if (!outputBufferAppend(&escapedDirectory, (const U8*)"\\", 1)) {
+                outputBufferFree(&escapedDirectory);
                 return;
             }
         }
-        if (!stringBuilderAppendChar(&escapedDirectory, c)) {
-            stringBuilderFree(&escapedDirectory);
+        if (!outputBufferAppend(&escapedDirectory, (const U8*)&c, 1)) {
+            outputBufferFree(&escapedDirectory);
             return;
         }
     }
-    pattern = wasmPathJoin(escapedDirectory.string, "*.c");
-    stringBuilderFree(&escapedDirectory);
+    pattern = wasmPathJoin((const char*)escapedDirectory.data, "*.c");
+    outputBufferFree(&escapedDirectory);
     if (pattern == NULL) {
         return;
     }
