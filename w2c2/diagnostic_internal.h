@@ -1,8 +1,6 @@
 #ifndef W2C2_DIAGNOSTIC_INTERNAL_H
 #define W2C2_DIAGNOSTIC_INTERNAL_H
 
-#include <stdio.h>
-
 #include "diagnostic.h"
 
 /* Each reader, writer, or worker owns its error-reporting state. */
@@ -177,13 +175,6 @@ wasmDiagnosticReportDwarfUnexpectedTag(
 void
 wasmDiagnosticReportTranslationFailed(
     WasmDiagnosticContext* context
-);
-
-bool
-WARN_UNUSED_RESULT
-wasmDiagnosticCloseOutput(
-    WasmDiagnosticContext* context,
-    FILE* file
 );
 
 #endif /* W2C2_DIAGNOSTIC_INTERNAL_H */

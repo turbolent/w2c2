@@ -1,8 +1,9 @@
 #ifndef W2C2_STRINGBUILDER_H
 #define W2C2_STRINGBUILDER_H
 
-#include "w2c2_base.h"
 #include <stdarg.h>
+
+#include "w2c2_base.h"
 
 typedef struct StringBuilder {
     char* string;
@@ -60,12 +61,6 @@ stringBuilderAppendChar(
     char c
 );
 
-bool
-WARN_UNUSED_RESULT
-stringBuilderAppendCharHex(
-    StringBuilder* stringBuilder,
-    char value
-);
 
 bool
 WARN_UNUSED_RESULT

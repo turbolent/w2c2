@@ -5,6 +5,7 @@
 #include "sha1_test.h"
 #include "module_test.h"
 #include "diagnostic_test.h"
+#include "output_test.h"
 
 int
 main(void) {
@@ -16,5 +17,6 @@ main(void) {
     testSHA1();
     testModuleLifecycle();
     testDiagnostics();
+    testOutputs();
     return 0;
 }

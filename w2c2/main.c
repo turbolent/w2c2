@@ -22,6 +22,7 @@
 #include "c.h"
 #include "compat.h"
 #include "diagnostic_print.h"
+#include "stringbuilder.h"
 #if !HAS_GETOPT
   #include "getopt_impl.h"
 #endif /* !HAS_GETOPT */
@@ -214,33 +215,61 @@ wasmSplitStaticAndDynamicFunctions(
 
 static
 void
-cleanImplementationFiles(void) {
-    char* path = NULL;
-    size_t pathCharIndex = 0;
-    bool allDigits = true;
-    size_t pathLength = 0;
-
+cleanImplementationFiles(const char* directory) {
+    const char* name;
+    char* path;
+    char* pattern;
+    size_t index;
+    size_t nameLength;
+    bool allDigits;
 #if HAS_GLOB
     glob_t globbuf = {0};
     size_t pathIndex = 0;
-    const int globResult = glob("*.c", GLOB_NOSORT, NULL, &globbuf);
+    int globResult;
+    StringBuilder escapedDirectory = emptyStringBuilder;
+    if (!stringBuilderInitialize(&escapedDirectory)) {
+        return;
+    }
+    for (index = 0; directory[index] != '\0'; index++) {
+        const char c = directory[index];
+        if (strchr("\\*?[]", c) != NULL) {
+            if (!stringBuilderAppendChar(&escapedDirectory, '\\')) {
+                stringBuilderFree(&escapedDirectory);
+                return;
+            }
+        }
+        if (!stringBuilderAppendChar(&escapedDirectory, c)) {
+            stringBuilderFree(&escapedDirectory);
+            return;
+        }
+    }
+    pattern = wasmPathJoin(escapedDirectory.string, "*.c");
+    stringBuilderFree(&escapedDirectory);
+    if (pattern == NULL) {
+        return;
+    }
+    globResult = glob(pattern, GLOB_NOSORT, NULL, &globbuf);
+    free(pattern);
     if (globResult != 0) {
         if (globResult != GLOB_NOMATCH) {
             fprintf(stderr, "w2c2: failed to glob files to clean\n");
         }
-        if (globResult == GLOB_NOSPACE
-            || globResult == GLOB_ABORTED) {
-
+        if (globResult == GLOB_NOSPACE || globResult == GLOB_ABORTED) {
             globfree(&globbuf);
         }
         return;
     }
-
     for (; pathIndex < globbuf.gl_pathc; pathIndex++) {
-        path = globbuf.gl_pathv[pathIndex];
+        name = wasmBasename(globbuf.gl_pathv[pathIndex]);
 #elif _WIN32
     WIN32_FIND_DATA findFileData;
-    const HANDLE hFind = FindFirstFile("*.c", &findFileData);
+    HANDLE hFind;
+    pattern = wasmPathJoin(directory, "*.c");
+    if (pattern == NULL) {
+        return;
+    }
+    hFind = FindFirstFile(pattern, &findFileData);
+    free(pattern);
     if (hFind == INVALID_HANDLE_VALUE) {
         if (GetLastError() != ERROR_FILE_NOT_FOUND) {
             fprintf(stderr, "w2c2: failed to find files to clean\n");
@@ -248,25 +277,19 @@ cleanImplementationFiles(void) {
         return;
     }
     do {
-        path = findFileData.cFileName;
+        name = findFileData.cFileName;
 #else
 #error "Unable to find files"
 #endif
-        pathCharIndex = 0;
         allDigits = true;
-
-        pathLength = strlen(path);
-        if (pathLength != W2C2_IMPL_FILENAME_LENGTH) {
+        nameLength = strlen(name);
+        if (nameLength != W2C2_IMPL_FILENAME_LENGTH
+            || (name[0] != 'd' && name[0] != 's')
+            || strcmp(name + nameLength - 2, ".c") != 0) {
             continue;
         }
-
-        if (path[pathCharIndex] != 'd' && path[pathCharIndex] != 's') {
-            continue;
-        }
-
-        for (pathCharIndex = 1; pathCharIndex < pathLength - 2; pathCharIndex++) {
-            const char c = path[pathCharIndex];
-            if (c < '0' || c > '9') {
+        for (index = 1; index < nameLength - 2; index++) {
+            if (name[index] < '0' || name[index] > '9') {
                 allDigits = false;
                 break;
             }
@@ -274,14 +297,17 @@ cleanImplementationFiles(void) {
         if (!allDigits) {
             continue;
         }
-
+        path = wasmPathJoin(directory, name);
+        if (path == NULL) {
+            continue;
+        }
         fprintf(stderr, "w2c2: cleaning file: %s\n", path);
-
         if (remove(path) != 0) {
             fprintf(stderr, "w2c2: failed to remove file %s\n", path);
         }
+        free(path);
     }
-#if _WIN32
+#if !HAS_GLOB && _WIN32
     while (FindNextFile(hFind, &findFileData) != 0);
 #endif
 
@@ -290,28 +316,6 @@ cleanImplementationFiles(void) {
 #elif _WIN32
     FindClose(hFind);
 #endif
-}
-
-static
-bool
-WARN_UNUSED_RESULT
-changeToOutputDirectory(
-    const char* outputPath
-) {
-    char outputDir[PATH_MAX];
-    strcpy(outputDir, outputPath);
-    strcpy(outputDir, dirname(outputDir));
-
-#if _WIN32
-    if (_chdir(outputDir) < 0) {
-#else
-    if (chdir(outputDir) < 0) {
-#endif
-        fprintf(stderr, "w2c2: failed to change to output directory %s\n", outputDir);
-        return false;
-    }
-
-    return true;
 }
 
 int
@@ -486,6 +490,11 @@ main(
 
     {
         int result = EXIT_FAILURE;
+        char* outputNameStorage = NULL;
+        char* outputDirectoryStorage = NULL;
+        const char* outputDirectory;
+        const char* outputName;
+        const size_t outputPathLength = strlen(outputPath);
         Buffer moduleBuffer = emptyBuffer;
         Buffer referenceModuleBuffer = emptyBuffer;
         WasmModuleReader reader = emptyWasmModuleReader;
@@ -558,16 +567,24 @@ main(
             functionsPerFile = reader.module->functions.count;
         }
 
-        if (!changeToOutputDirectory(outputPath)) {
+        outputNameStorage = (char*)malloc(outputPathLength + 1);
+        outputDirectoryStorage = (char*)malloc(outputPathLength + 1);
+        if (outputNameStorage == NULL || outputDirectoryStorage == NULL) {
+            fprintf(stderr, "w2c2: failed to allocate output path\n");
             goto cleanup;
         }
+        memcpy(outputNameStorage, outputPath, outputPathLength + 1);
+        memcpy(outputDirectoryStorage, outputPath, outputPathLength + 1);
+        outputName = wasmBasename(outputNameStorage);
+        outputDirectory = dirname(outputDirectoryStorage);
 
         if (clean) {
-            cleanImplementationFiles();
+            cleanImplementationFiles(outputDirectory);
         }
 
         writeOptions.diagnostics.report = reportDiagnostic;
-        writeOptions.outputPath = outputPath;
+        writeOptions.outputName = outputName;
+        writeOptions.output = wasmFileOutputProvider(outputDirectory);
         writeOptions.threadCount = threadCount;
         writeOptions.functionsPerFile = functionsPerFile;
         writeOptions.pretty = pretty;
@@ -588,6 +605,8 @@ main(
         result = EXIT_SUCCESS;
 
 cleanup:
+        free(outputNameStorage);
+        free(outputDirectoryStorage);
         if (staticFunctionIDs.functionIDs != functionIDs.functionIDs) {
             wasmFunctionIDsFree(&staticFunctionIDs);
         }

@@ -4,11 +4,14 @@
 #include "w2c2_base.h"
 #include "module.h"
 #include "diagnostic.h"
+#include "output.h"
 
 #define W2C2_IMPL_FILENAME_LENGTH 13
 
 typedef struct WasmCWriteModuleOptions {
-    const char* outputPath;
+    /* Logical C filename; the provider chooses its destination. */
+    const char* outputName;
+    WasmOutputProvider output;
     /* A zero thread count selects one worker. */
     U32 threadCount;
     U32 functionsPerFile;
@@ -20,7 +23,7 @@ typedef struct WasmCWriteModuleOptions {
 } WasmCWriteModuleOptions;
 
 static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
-    NULL, 0, 0, false, false, false, wasmDataSegmentModeArrays, {NULL, NULL}
+    NULL, {NULL, NULL}, 0, 0, false, false, false, wasmDataSegmentModeArrays, {NULL, NULL}
 };
 
 bool
