@@ -6,3 +6,8 @@ compile_flags.txt
 cmake-build-debug
 build
 w2c2/w2c2
+w2c2/libw2c2.so
+w2c2/libw2c2.dylib
+w2c2/w2c2_test
+w2c2/w2c2_embed
+w2c2/w2c2_embedding_test

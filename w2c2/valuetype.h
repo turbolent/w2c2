@@ -5,6 +5,10 @@
 #include "leb128.h"
 #include "w2c2_base.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum WasmValueType {
     wasmValueTypeI32,
     wasmValueTypeI64,
@@ -81,5 +85,9 @@ wasmReadBlockType(
     return wasmDecodeValueType(encodedValueType, *result);
 }
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_VALUETYPE_H */

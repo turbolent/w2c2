@@ -2,6 +2,7 @@
 #define W2C2_MODULE_H
 
 #include "w2c2_base.h"
+#include "api.h"
 #include "functiontype.h"
 #include "function.h"
 #include "export.h"
@@ -13,6 +14,10 @@
 #include "elementsegment.h"
 #include "debug.h"
 #include "name.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct WasmFunctionTypes {
     WasmFunctionType* functionTypes;
@@ -69,11 +74,22 @@ typedef struct WasmModule {
     WasmTables tables;
     WasmElementSegments elementSegments;
     U32 startFunctionIndex;
-    bool hasStartFunction;
+    WasmBool hasStartFunction;
     WasmDebugSections debugSections;
     WasmDebugLines debugLines;
     WasmNames functionNames;
 } WasmModule;
+
+/*
+ * On success, result owns a new array released with wasmFunctionIDsFree.
+ * On failure, result is unchanged.
+ */
+WasmBool
+WARN_UNUSED_RESULT
+wasmSortedFunctionIDs(
+    WasmFunctions functions,
+    WasmFunctionIDs* result
+);
 
 /*
  * Frees translator-owned module storage.
@@ -156,5 +172,9 @@ wasmModuleGetFunctionType(
     }
     return true;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_MODULE_H */

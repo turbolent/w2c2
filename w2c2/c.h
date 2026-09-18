@@ -3,30 +3,15 @@
 
 #include "w2c2_base.h"
 #include "module.h"
-#include "diagnostic.h"
-#include "output.h"
+#include "w2c2.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define W2C2_IMPL_FILENAME_LENGTH 13
 
-typedef struct WasmCWriteModuleOptions {
-    /* Logical C filename; the provider chooses its destination. */
-    const char* outputName;
-    WasmOutputProvider output;
-    /* A zero thread count selects one worker. */
-    U32 threadCount;
-    U32 functionsPerFile;
-    bool pretty;
-    bool debug;
-    bool multipleModules;
-    WasmDataSegmentMode dataSegmentMode;
-    WasmDiagnostics diagnostics;
-} WasmCWriteModuleOptions;
-
-static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions ={
-    NULL, {NULL, NULL}, 0, 0, false, false, false, wasmDataSegmentModeArrays, {NULL, NULL}
-};
-
-bool
+WasmBool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
     const WasmModule *module,
@@ -35,5 +20,9 @@ wasmCWriteModule(
     WasmFunctionIDs staticFunctionIDs,
     WasmFunctionIDs dynamicFunctionIDs
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_C_H */

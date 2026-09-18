@@ -2,12 +2,13 @@
 #define W2C2_GLOBAL_H
 
 #include "w2c2_base.h"
+#include "api.h"
 #include "buffer.h"
 #include "valuetype.h"
 
 typedef struct WasmGlobalType {
     WasmValueType valueType;
-    bool mutable;
+    WasmBool mutable;
 } WasmGlobalType;
 
 typedef struct WasmGlobal {

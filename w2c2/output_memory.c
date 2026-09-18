@@ -11,7 +11,7 @@ typedef struct MemoryOutputSink {
 } MemoryOutputSink;
 
 static
-bool
+WasmBool
 memoryOutputWrite(void* context, const U8* bytes, size_t length, int* systemError) {
     MemoryOutputSink* sink = (MemoryOutputSink*)context;
     if (!outputBufferAppend(&sink->buffer, bytes, length)) {
@@ -30,11 +30,11 @@ memoryOutputAbort(void* context) {
 }
 
 static
-bool
+WasmBool
 memoryOutputClose(void* context, int* systemError) {
     MemoryOutputSink* sink = (MemoryOutputSink*)context;
     const WasmMemoryOutput* output = sink->output;
-    const bool result = output->complete(
+    const WasmBool result = output->complete(
         output->context, sink->name, sink->kind,
         sink->buffer.data, sink->buffer.length, systemError
     );
@@ -43,7 +43,7 @@ memoryOutputClose(void* context, int* systemError) {
 }
 
 static
-bool
+WasmBool
 memoryOutputOpen(
     void* context,
     const char* name,

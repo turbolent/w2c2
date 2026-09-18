@@ -6,6 +6,10 @@
 #include "array.h"
 #include "diagnostic.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct WasmDebugSection {
     char* name;
     Buffer buffer;
@@ -40,5 +44,9 @@ wasmParseDebugInfo(
     WasmDebugSections sections,
     WasmDiagnostics diagnostics
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_DEBUG_H */

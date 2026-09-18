@@ -102,6 +102,46 @@ For example, to compile using 2 threads:
 ./w2c2 -t 2 module.wasm module.c
 ```
 
+## Embedding
+
+w2c2 builds a static translator library by default.
+Use `-DSHARED_LIB=ON` with CMake,
+or `SHARED_LIB=1` with Make,
+for a shared library on POSIX systems.
+Windows supports static libraries only.
+
+```sh
+cmake -S w2c2 -B build -DCMAKE_INSTALL_PREFIX=/your/prefix
+cmake --build build
+ctest --test-dir build --output-on-failure
+cmake --install build
+```
+
+CMake installs the library, public headers, CLI, and a relocatable package.
+Consumers can use:
+
+```cmake
+find_package(w2c2 CONFIG REQUIRED)
+target_link_libraries(my_translator PRIVATE w2c2::w2c2_lib)
+```
+
+Pass `-DCMAKE_PREFIX_PATH=/your/prefix` when configuring the consumer.
+The package supplies the library's thread and libdwarf dependencies when enabled.
+
+With Make:
+
+```sh
+make -C w2c2
+make -C w2c2 test
+make -C w2c2 install PREFIX=/your/prefix
+cc -I/your/prefix/include/w2c2 examples/embed/main.c /your/prefix/lib/libw2c2.a -lm -pthread -o embed
+```
+
+Make installation supports `DESTDIR` for staging.
+Add `-ldwarf` when the library was built with libdwarf support.
+The CMake package is installed by CMake only.
+Run `make clean` before changing build features or switching library types.
+
 ## Examples
 
 Coremark:

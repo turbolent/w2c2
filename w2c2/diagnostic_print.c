@@ -282,6 +282,10 @@ wasmDiagnosticPrint(
             fprintf(file, "w2c2: unexpected non-compile unit DIE tag: %u\n", info.tag);
             break;
         }
+        case wasmDiagnosticInvalidTranslationArgument: {
+            fprintf(file, "w2c2: invalid translation argument\n");
+            break;
+        }
         case wasmDiagnosticTranslationFailed: {
             fprintf(file, "w2c2: translation failed\n");
             break;

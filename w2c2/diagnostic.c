@@ -353,3 +353,13 @@ wasmDiagnosticReportTranslationFailed(
     );
     wasmDiagnosticReport(context, &diagnostic);
 }
+
+void
+wasmDiagnosticReportInvalidTranslationArgument(
+    WasmDiagnosticContext* context
+) {
+    WasmDiagnostic diagnostic = wasmDiagnosticInitialize(
+        wasmDiagnosticInvalidTranslationArgument, wasmDiagnosticError
+    );
+    wasmDiagnosticReport(context, &diagnostic);
+}

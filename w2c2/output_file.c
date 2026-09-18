@@ -5,7 +5,7 @@
 #include "path.h"
 
 static
-bool
+WasmBool
 fileOutputWrite(void* context, const U8* bytes, size_t length, int* systemError) {
     if (fwrite(bytes, 1, length, (FILE*)context) != length) {
         *systemError = errno;
@@ -15,7 +15,7 @@ fileOutputWrite(void* context, const U8* bytes, size_t length, int* systemError)
 }
 
 static
-bool
+WasmBool
 fileOutputClose(void* context, int* systemError) {
     if (fclose((FILE*)context) != 0) {
         *systemError = errno;
@@ -31,7 +31,7 @@ fileOutputAbort(void* context) {
 }
 
 static
-bool
+WasmBool
 fileOutputOpen(
     void* context,
     const char* name,

@@ -2,6 +2,11 @@
 #define W2C2_OUTPUT_H
 
 #include "w2c2_base.h"
+#include "api.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum WasmOutputKind {
     wasmOutputC,
@@ -19,8 +24,8 @@ typedef enum WasmOutputKind {
  */
 typedef struct WasmOutputSink {
     void* context;
-    bool (*write)(void* context, const U8* bytes, size_t length, int* systemError);
-    bool (*close)(void* context, int* systemError);
+    WasmBool (*write)(void* context, const U8* bytes, size_t length, int* systemError);
+    WasmBool (*close)(void* context, int* systemError);
     void (*abort)(void* context);
 } WasmOutputSink;
 
@@ -34,7 +39,7 @@ typedef struct WasmOutputSink {
  */
 typedef struct WasmOutputProvider {
     void* context;
-    bool (*open)(
+    WasmBool (*open)(
         void* context,
         const char* name,
         WasmOutputKind kind,
@@ -56,7 +61,7 @@ wasmFileOutputProvider(const char* directory);
  */
 typedef struct WasmMemoryOutput {
     void* context;
-    bool (*complete)(
+    WasmBool (*complete)(
         void* context,
         const char* name,
         WasmOutputKind kind,
@@ -69,5 +74,9 @@ typedef struct WasmMemoryOutput {
 /* The configuration is borrowed until translation returns. */
 WasmOutputProvider
 wasmMemoryOutputProvider(const WasmMemoryOutput* output);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_OUTPUT_H */

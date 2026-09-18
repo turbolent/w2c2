@@ -6716,7 +6716,7 @@ cleanup:
     return result;
 }
 
-bool
+WasmBool
 WARN_UNUSED_RESULT
 wasmCWriteModule(
     const WasmModule* module,
@@ -6736,5 +6736,5 @@ wasmCWriteModule(
         memset(&diagnostics.location, 0, sizeof(diagnostics.location));
         wasmDiagnosticReportTranslationFailed(&diagnostics);
     }
-    return result;
+    return result != false;
 }

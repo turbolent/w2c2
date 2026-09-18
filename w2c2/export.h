@@ -3,6 +3,10 @@
 
 #include "w2c2_base.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum WasmExportKind {
     wasmExportKindFunction,
     wasmExportKindTable,
@@ -22,6 +26,10 @@ typedef struct WasmExport {
     U32 index;
 } WasmExport;
 
-static const WasmExport wasmEmptyExport = {NULL, 0, 0};
+static const WasmExport wasmEmptyExport = {NULL, wasmExportKindFunction, 0};
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_EXPORT_H */

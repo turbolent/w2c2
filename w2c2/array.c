@@ -1,7 +1,7 @@
 #include <assert.h>
 #include "array.h"
 
-bool
+WasmBool
 arrayEnsureCapacitySlowPath(
     void** items,
     const size_t length,

@@ -4,7 +4,7 @@
 #include "output_internal.h"
 
 static
-bool
+WasmBool
 wasmOutputAppend(void* context, const U8* bytes, size_t length, int* systemError) {
     if (!outputBufferAppend((OutputBuffer*)context, bytes, length)) {
         *systemError = ENOMEM;
@@ -14,7 +14,7 @@ wasmOutputAppend(void* context, const U8* bytes, size_t length, int* systemError
 }
 
 static
-bool
+WasmBool
 wasmOutputBufferClose(void* context, int* systemError) {
     (void)context;
     (void)systemError;

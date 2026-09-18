@@ -87,7 +87,7 @@ static void captureUnlock(OutputCapture* capture) {
 }
 
 static
-bool
+WasmBool
 captureComplete(
     void* context, const char* name, WasmOutputKind kind,
     const U8* bytes, size_t length, int* systemError
@@ -160,7 +160,7 @@ captureDiagnostic(void* context, const WasmDiagnostic* diagnostic) {
 }
 
 static
-bool
+WasmBool
 tracedWrite(void* context, const U8* bytes, size_t length, int* systemError) {
     TracedSink* sink = (TracedSink*)context;
     OutputTrace* trace = &sink->capture->traces[sink->index];
@@ -181,11 +181,11 @@ tracedWrite(void* context, const U8* bytes, size_t length, int* systemError) {
 }
 
 static
-bool
+WasmBool
 tracedClose(void* context, int* systemError) {
     TracedSink* sink = (TracedSink*)context;
     OutputTrace* trace = &sink->capture->traces[sink->index];
-    bool result;
+    WasmBool result;
     CHECK(!trace->closed && !trace->aborted);
     trace->closed = true;
     if (sink->selected && sink->capture->failure == outputCloseFailure) {
@@ -211,7 +211,7 @@ tracedAbort(void* context) {
 }
 
 static
-bool
+WasmBool
 tracedOpen(
     void* context, const char* name, WasmOutputKind kind,
     WasmOutputSink* output, int* systemError
