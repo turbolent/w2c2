@@ -4,14 +4,16 @@
 #include "w2c2_base.h"
 #include "buffer.h"
 #include "module.h"
+#include "diagnostic.h"
 
 typedef struct WasmModuleReader {
     Buffer buffer;
     WasmModule* module;
     bool debug;
+    WasmDiagnostics diagnostics;
 } WasmModuleReader;
 
-static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL, false};
+static const WasmModuleReader emptyWasmModuleReader = {{NULL, 0}, NULL, false, {NULL, NULL}};
 
 typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidMagic,

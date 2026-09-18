@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "diagnostic_internal.h"
 #include "reader.h"
 #include "section.h"
 #include "opcode.h"
@@ -360,7 +361,8 @@ static
 void
 wasmFunctionNamesRemoveDuplicates(
     WasmNames* functionNames,
-    WasmModuleReaderError** error
+    WasmModuleReaderError** error,
+    WasmDiagnosticContext* diagnostics
 ) {
     const size_t functionNameCount = functionNames->length;
     size_t functionNameIndex = 0;
@@ -420,9 +422,8 @@ wasmFunctionNamesRemoveDuplicates(
             for (; duplicateIndex < duplicateEnd; duplicateIndex++) {
                 const WasmFunctionNameEntry previous = entries[duplicateIndex - 1];
                 const WasmFunctionNameEntry current = entries[duplicateIndex];
-                fprintf(
-                    stderr,
-                    "w2c2: ignoring duplicate function name %s used by functions %u and %u\n",
+                wasmDiagnosticReportDuplicateFunctionName(
+                    diagnostics,
                     previous.name,
                     previous.functionIndex,
                     current.functionIndex
@@ -452,7 +453,8 @@ void
 wasmReadNameSection(
     WasmModuleReader* reader,
     const U32 sectionSize,
-    WasmModuleReaderError** error
+    WasmModuleReaderError** error,
+    WasmDiagnosticContext* diagnostics
 ) {
     const U8* end = reader->buffer.data + sectionSize;
 
@@ -577,15 +579,14 @@ wasmReadNameSection(
                 }
 
                 /* Remove duplicates */
-                wasmFunctionNamesRemoveDuplicates(&reader->module->functionNames, error);
+                wasmFunctionNamesRemoveDuplicates(&reader->module->functionNames, error, diagnostics);
                 if (*error != NULL) {
                     return;
                 }
             } else {
-                fprintf(
-                    stderr,
-                    "w2c2: skipping unsupported %s (size %d)\n",
-                    wasmNameSubsectionIDDescription(subsectionID),
+                wasmDiagnosticReportSkippedNameSubsection(
+                    diagnostics,
+                    (U32)subsectionID,
                     subsectionSize
                 );
                 bufferSkipUnchecked(&reader->buffer, subsectionSize);
@@ -612,9 +613,12 @@ wasmReadCustomSection(
     U32 sectionSize,
     WasmModuleReaderError** error
 ) {
+    WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
     char* name = NULL;
     const U8* start = reader->buffer.data;
     const U8* end = NULL;
+
+    diagnostics.diagnostics = reader->diagnostics;
 
     /* Read name */
     if (!wasmReadName(&reader->buffer, &name)) {
@@ -646,13 +650,13 @@ wasmReadCustomSection(
         bufferSkip(&reader->buffer, sectionSize);
 
     } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
-        wasmReadNameSection(reader, sectionSize, error);
+        wasmReadNameSection(reader, sectionSize, error, &diagnostics);
         if (*error != NULL) {
             goto fail;
         }
         free(name);
     } else {
-        fprintf(stderr, "w2c2: skipping custom section '%s' (size %u)\n", name, sectionSize);
+        wasmDiagnosticReportSkippedCustomSection(&diagnostics, name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
         free(name);
     }
@@ -2147,7 +2151,8 @@ void
 wasmModuleReadSection(
     WasmModuleReader* reader,
     U8* lastSectionOrder,
-    WasmModuleReaderError** error
+    WasmModuleReaderError** error,
+    WasmDiagnosticContext* diagnostics
 ) {
     U8 rawSectionID = 0;
     WasmSectionID sectionID = 0;
@@ -2229,22 +2234,19 @@ wasmModuleReadSection(
         }
     }
 
-    fprintf(
-        stderr,
-        "w2c2: skipping unsupported %s (%d)\n",
-        wasmSectionIDDescription(sectionID),
-        sectionID
-    );
+    wasmDiagnosticReportSkippedSection(diagnostics, (U32)sectionID);
 
     bufferSkipUnchecked(&reader->buffer, sectionSize);
 
     *error = NULL;
 }
 
+static
 void
-wasmModuleRead(
+wasmModuleReadInternal(
     WasmModuleReader* reader,
-    WasmModuleReaderError** error
+    WasmModuleReaderError** error,
+    WasmDiagnosticContext* diagnostics
 ) {
     WasmModuleReader moduleReader = *reader;
     WasmModule* module = NULL;
@@ -2274,7 +2276,7 @@ wasmModuleRead(
             break;
         }
 
-        wasmModuleReadSection(&moduleReader, &lastSectionOrder, error);
+        wasmModuleReadSection(&moduleReader, &lastSectionOrder, error, diagnostics);
         if (*error != NULL) {
             goto fail;
         }
@@ -2283,7 +2285,7 @@ wasmModuleRead(
     }
 
     if (moduleReader.debug && module->debugSections.length > 0) {
-        module->debugLines = wasmParseDebugInfo(module->debugSections);
+        module->debugLines = wasmParseDebugInfo(module->debugSections, diagnostics->diagnostics);
     } else {
         module->debugLines = emptyWasmDebugLines;
     }
@@ -2295,4 +2297,17 @@ wasmModuleRead(
 
 fail:
     wasmModuleFree(module);
+}
+
+void
+wasmModuleRead(
+    WasmModuleReader* reader,
+    WasmModuleReaderError** error
+) {
+    WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+    diagnostics.diagnostics = reader->diagnostics;
+    wasmModuleReadInternal(reader, error, &diagnostics);
+    if (*error != NULL) {
+        wasmDiagnosticReportReaderFailed(&diagnostics, *error);
+    }
 }

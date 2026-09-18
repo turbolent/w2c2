@@ -2,14 +2,12 @@
 #include "compat.h"
 #include "path.h"
 
-#if !HAS_LIBGEN
-
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
  */
 
 char*
-basename(
+wasmBasename(
     char* s
 ) {
     size_t i;
@@ -23,6 +21,8 @@ basename(
     for (; i && s[i - 1] != PATH_SEPARATOR; i--) { }
     return s+i;
 }
+
+#if !HAS_LIBGEN
 
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
