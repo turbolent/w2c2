@@ -1,23 +1,20 @@
 #include <errno.h>
 
 #include "output.h"
-#include "stringbuilder.h"
+#include "output_buffer.h"
 
 typedef struct MemoryOutputSink {
     const WasmMemoryOutput* output;
     const char* name;
     WasmOutputKind kind;
-    StringBuilder buffer;
+    OutputBuffer buffer;
 } MemoryOutputSink;
 
 static
 bool
 memoryOutputWrite(void* context, const U8* bytes, size_t length, int* systemError) {
     MemoryOutputSink* sink = (MemoryOutputSink*)context;
-    if (length == 0) {
-        return true;
-    }
-    if (!stringBuilderAppendSized(&sink->buffer, (const char*)bytes, length)) {
+    if (!outputBufferAppend(&sink->buffer, bytes, length)) {
         *systemError = ENOMEM;
         return false;
     }
@@ -28,7 +25,7 @@ static
 void
 memoryOutputAbort(void* context) {
     MemoryOutputSink* sink = (MemoryOutputSink*)context;
-    stringBuilderFree(&sink->buffer);
+    outputBufferFree(&sink->buffer);
     free(sink);
 }
 
@@ -39,7 +36,7 @@ memoryOutputClose(void* context, int* systemError) {
     const WasmMemoryOutput* output = sink->output;
     const bool result = output->complete(
         output->context, sink->name, sink->kind,
-        (const U8*)sink->buffer.string, sink->buffer.length, systemError
+        sink->buffer.data, sink->buffer.length, systemError
     );
     memoryOutputAbort(context);
     return result;
@@ -68,8 +65,8 @@ memoryOutputOpen(
     sink->output = output;
     sink->name = name;
     sink->kind = kind;
-    sink->buffer = emptyStringBuilder;
-    if (!stringBuilderInitialize(&sink->buffer)) {
+    sink->buffer = emptyOutputBuffer;
+    if (!outputBufferInitialize(&sink->buffer)) {
         free(sink);
         *systemError = ENOMEM;
         return false;
