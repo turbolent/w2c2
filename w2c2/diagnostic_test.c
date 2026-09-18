@@ -545,7 +545,8 @@ testDiagnostics(void) {
     CHECK(remove("diagnostic-dynamic.c") == 0);
     CHECK(remove("diagnostic-dynamic.h") == 0);
     CHECK(remove("d0000000000.c") == 0);
-    CHECK(remove("d0000000001.c") == 0);
+    /* The first worker failure may stop translation before the second file is created. */
+    CHECK(remove("d0000000001.c") == 0 || errno == ENOENT);
 #endif
     fprintf(stderr, "PASS testDiagnostics\n");
 }
