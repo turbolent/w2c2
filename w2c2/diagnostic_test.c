@@ -323,7 +323,7 @@ testUnsupportedInstructions(void) {
             CHECK(capture.last.code == wasmDiagnosticUnsupportedOpcode);
             CHECK(capture.last.info.unsupportedOpcode.family
                 == (index == 0 ? wasmDiagnosticOpcodeMisc : wasmDiagnosticOpcodeThreads));
-            CHECK(capture.last.info.unsupportedOpcode.opcode == (index == 0 ? 0x0E : 0x7F));
+            CHECK(capture.last.info.unsupportedOpcode.opcode == (index == 0 ? 0x0EU : 0x7FU));
         } else if (index == 2) {
             CHECK(capture.last.code == wasmDiagnosticUnsupportedFunctionResults);
             CHECK(capture.last.info.unsupportedFunctionResults.typeIndex == 1);
