@@ -1,6 +1,7 @@
 #ifndef W2C2_DIAGNOSTIC_H
 #define W2C2_DIAGNOSTIC_H
 
+#include "api.h"
 #include "opcode.h"
 #include "export.h"
 #include "datasegment.h"
@@ -69,7 +70,8 @@ typedef enum WasmDiagnosticCode {
     wasmDiagnosticDwarfFailure,
     wasmDiagnosticDwarfVersionUnsupported,
     wasmDiagnosticDwarfUnexpectedTag,
-    wasmDiagnosticTranslationFailed
+    wasmDiagnosticTranslationFailed,
+    wasmDiagnosticInvalidTranslationArgument
 } WasmDiagnosticCode;
 
 typedef struct WasmDiagnosticReaderFailedInfo {
@@ -179,7 +181,7 @@ typedef struct WasmDiagnosticDwarfUnexpectedTagInfo {
 
 typedef struct WasmDiagnosticLocation {
     const char* outputName;
-    bool hasFunctionIndex;
+    WasmBool hasFunctionIndex;
     U32 functionIndex;
 } WasmDiagnosticLocation;
 

@@ -2,13 +2,14 @@
 #define W2C2_DATASEGMENT_H
 
 #include "w2c2_base.h"
+#include "api.h"
 #include "buffer.h"
 
 typedef struct WasmDataSegment {
     U32 memoryIndex;
     Buffer offset;
     Buffer bytes;
-    bool passive;
+    WasmBool passive;
 } WasmDataSegment;
 
 static const WasmDataSegment wasmEmptyDataSegment = {0, {0, false}, {0, false}, false};

@@ -836,7 +836,7 @@ wasmReadLimits(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
-    bool *shared,
+    WasmBool *shared,
     WasmModuleReaderError** error
 ) {
     U8 kindIndicator = 0;
@@ -907,7 +907,7 @@ wasmReadMemoryType(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
-    bool* shared,
+    WasmBool* shared,
     WasmModuleReaderError** error
 ) {
     wasmReadLimits(reader, min, max, shared, error);
@@ -954,7 +954,7 @@ wasmReadTableType(
     WasmModuleReader* reader,
     U32* min,
     U32* max,
-    bool* shared,
+    WasmBool* shared,
     WasmModuleReaderError** error
 ) {
     U8 tableType = 0;
@@ -1785,7 +1785,7 @@ wasmReadDataSegment(
     result->memoryIndex = memoryIndex;
     result->offset = offset;
     result->bytes = bytes;
-    result->passive = passive;
+    result->passive = passive != false;
 }
 
 static

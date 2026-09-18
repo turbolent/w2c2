@@ -3,6 +3,49 @@
 #include "module.h"
 
 static
+int
+wasmFunctionIDsCompareHashes(
+    const void* a,
+    const void* b
+) {
+    const WasmFunctionID* functionIDA = a;
+    const WasmFunctionID* functionIDB = b;
+    return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
+}
+
+WasmBool
+WARN_UNUSED_RESULT
+wasmSortedFunctionIDs(
+    const WasmFunctions functions,
+    WasmFunctionIDs* result
+) {
+    WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
+
+    U32 functionIndex = 0;
+    if (!wasmFunctionIDsEnsureCapacity(&functionIDs, functions.count)) {
+        return false;
+    }
+    functionIDs.length = functions.count;
+    for (; functionIndex < functions.count; functionIndex++) {
+        WasmFunctionID* functionID = &functionIDs.functionIDs[functionIndex];
+        memcpy(functionID->hash, functions.functions[functionIndex].hash, SHA1_DIGEST_LENGTH);
+        functionID->functionIndex = functionIndex;
+    }
+
+    if (functionIDs.length > 1) {
+        qsort(
+            functionIDs.functionIDs,
+            functionIDs.length,
+            sizeof(WasmFunctionID),
+            wasmFunctionIDsCompareHashes
+        );
+    }
+
+    *result = functionIDs;
+    return true;
+}
+
+static
 void
 wasmModuleFunctionTypesFree(
     WasmFunctionTypes* functionTypes

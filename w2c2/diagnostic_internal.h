@@ -177,4 +177,9 @@ wasmDiagnosticReportTranslationFailed(
     WasmDiagnosticContext* context
 );
 
+void
+wasmDiagnosticReportInvalidTranslationArgument(
+    WasmDiagnosticContext* context
+);
+
 #endif /* W2C2_DIAGNOSTIC_INTERNAL_H */

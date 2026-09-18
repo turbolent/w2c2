@@ -2,8 +2,13 @@
 #define W2C2_ARRAY_H
 
 #include "w2c2_base.h"
+#include "api.h"
 
-bool
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+WasmBool
 arrayEnsureCapacitySlowPath(
     void** items,
     size_t length,
@@ -69,5 +74,9 @@ INSTANCE ## Free(NAME* INSTANCE) {                            \
     INSTANCE->capacity = 0;                                   \
 }
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_ARRAY_H */

@@ -75,6 +75,7 @@ jobs:
             w2c2:
               - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
@@ -184,6 +185,7 @@ jobs:
             w2c2:
               - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
@@ -227,6 +229,38 @@ jobs:
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
 
+  library:
+    runs-on: ${{ matrix.os }}
+    name: "Library (${{ matrix.os }}, shared=${{ matrix.shared }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        shared: ["OFF", "ON"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and test library
+        run: |
+          cmake -S w2c2 -B build -DSHARED_LIB=${{ matrix.shared }}
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
+      - name: Test relocated installation
+        run: |
+          cmake --install build --prefix "$PWD/install"
+          mv install relocated
+          cmake -S tests/embedding -B consumer -DCMAKE_PREFIX_PATH="$PWD/relocated"
+          cmake --build consumer --parallel 4
+          ctest --test-dir consumer --output-on-failure
+          printf '\000asm\001\000\000\000' > empty.wasm
+          relocated/bin/w2c2 empty.wasm empty.c
+      - name: Test Make library and installation
+        run: |
+          shared=0
+          if [ "${{ matrix.shared }}" = "ON" ]; then shared=1; fi
+          make -C w2c2 test SHARED_LIB=$shared
+          make -C w2c2 install SHARED_LIB=$shared PREFIX=/w2c2 DESTDIR="$PWD/stage"
+          stage/w2c2/bin/w2c2 empty.wasm make.c
+
   windows-msvc:
     runs-on: windows-latest
     name: "Windows (MSVC)"
@@ -240,6 +274,8 @@ jobs:
             w2c2:
               - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
+              - 'tests/embedding/**'
             wasi:
               - '.github/workflows/tests.yml'
               - 'wasi/**'
@@ -251,6 +287,20 @@ jobs:
         run: |
           cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
+          ctest --test-dir build -C Debug --output-on-failure
+          cmake --install build --config Debug --prefix "$PWD/install"
+          Move-Item install relocated
+          cmake -S ../tests/embedding -B consumer -DCMAKE_PREFIX_PATH="$PWD/relocated"
+          cmake --build consumer
+          ctest --test-dir consumer -C Debug --output-on-failure
+
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Reject Windows shared library configuration
+        working-directory: ./w2c2
+        run: |
+          cmake -B shared-build -DSHARED_LIB=ON
+          if ($LASTEXITCODE -eq 0) { throw "Windows shared libraries must be rejected" }
+          exit 0
 
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi

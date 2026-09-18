@@ -2,6 +2,7 @@
 #define W2C2_IMPORT_H
 
 #include "w2c2_base.h"
+#include "api.h"
 #include "global.h"
 #include "array.h"
 
@@ -56,7 +57,7 @@ typedef struct WasmMemoryImport {
     char* name;
     U32 min;
     U32 max;
-    bool shared;
+    WasmBool shared;
 } WasmMemoryImport;
 
 static const WasmMemoryImport wasmEmptyMemoryImport = {NULL, NULL, 0, 0, false};
@@ -76,7 +77,7 @@ typedef struct WasmTableImport {
     char* name;
     U32 min;
     U32 max;
-    bool shared;
+    WasmBool shared;
 } WasmTableImport;
 
 static const WasmTableImport wasmEmptyTableImport = {NULL, NULL, 0, 0, false};

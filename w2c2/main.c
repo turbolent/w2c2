@@ -63,7 +63,7 @@ readWasmBinary(
     *bufferResult = buffer;
 
     wasmModuleReaderResult->buffer = buffer;
-    wasmModuleReaderResult->debug = debug;
+    wasmModuleReaderResult->debug = debug != false;
     wasmModuleReaderResult->diagnostics.report = reportDiagnostic;
     wasmModuleReaderResult->diagnostics.context = (void*)path;
 
@@ -107,51 +107,6 @@ getPathModuleName(
 }
 
 static
-int
-wasmFunctionIDsCompareHashes(
-    const void* a,
-    const void* b
-) {
-    const WasmFunctionID* functionIDA = a;
-    const WasmFunctionID* functionIDB = b;
-    return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
-}
-
-static
-bool
-WARN_UNUSED_RESULT
-wasmSortedFunctionIDs(
-    const WasmFunctions functions,
-    WasmFunctionIDs* result
-) {
-    WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
-
-    U32 functionIndex = 0;
-    for (; functionIndex < functions.count; functionIndex++) {
-        const WasmFunction function = functions.functions[functionIndex];
-        WasmFunctionID functionID = emptyWasmFunctionID;
-        memcpy(functionID.hash, function.hash, SHA1_DIGEST_LENGTH);
-        functionID.functionIndex = functionIndex;
-        if (!wasmFunctionIDsAppend(&functionIDs, functionID)) {
-            wasmFunctionIDsFree(&functionIDs);
-            return false;
-        }
-    }
-
-    if (functionIDs.length > 1) {
-        qsort(
-            functionIDs.functionIDs,
-            functionIDs.length,
-            sizeof(WasmFunctionID),
-            wasmFunctionIDsCompareHashes
-        );
-    }
-
-    *result = functionIDs;
-    return true;
-}
-
-static
 bool
 WARN_UNUSED_RESULT
 wasmSplitStaticAndDynamicFunctions(
@@ -171,9 +126,10 @@ wasmSplitStaticAndDynamicFunctions(
             functionIDs.functionIDs[functionIndex];
         const WasmFunctionID referenceFunctionID =
             referenceFunctionIDs.functionIDs[referenceFunctionIndex];
-        const int comparisonResult = wasmFunctionIDsCompareHashes(
-            &functionID,
-            &referenceFunctionID
+        const int comparisonResult = memcmp(
+            functionID.hash,
+            referenceFunctionID.hash,
+            SHA1_DIGEST_LENGTH
         );
         if (comparisonResult < 0) {
             /* Function only exists in the module, and not in the reference module, so it's a dynamic function */
@@ -587,9 +543,9 @@ main(
         writeOptions.output = wasmFileOutputProvider(outputDirectory);
         writeOptions.threadCount = threadCount;
         writeOptions.functionsPerFile = functionsPerFile;
-        writeOptions.pretty = pretty;
-        writeOptions.debug = debug;
-        writeOptions.multipleModules = multipleModules;
+        writeOptions.pretty = pretty != false;
+        writeOptions.debug = debug != false;
+        writeOptions.multipleModules = multipleModules != false;
         writeOptions.dataSegmentMode = dataSegmentMode;
 
         if (!wasmCWriteModule(
