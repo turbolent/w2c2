@@ -6854,7 +6854,7 @@ wasmCWriteModuleInternal(
 
     strcpy(outputName, outputPath);
     {
-        char* outputBaseName = basename(outputName);
+        char* outputBaseName = wasmBasename(outputName);
         memmove(
             outputName,
             outputBaseName,
