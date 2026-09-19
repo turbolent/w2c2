@@ -6298,7 +6298,6 @@ wasmCImplementationWriterThread(
 
     while (true) {
         pthread_mutex_lock(&writer->mutex);
-        pthread_cond_signal(&writer->produce);
 
         while (!writer->done && writer->task == NULL) {
             pthread_cond_wait(
@@ -6329,6 +6328,7 @@ wasmCImplementationWriterThread(
             WasmDebugLines debugLines = task->debugLines;
 
             writer->task = NULL;
+            pthread_cond_signal(&writer->produce);
 
             pthread_mutex_unlock(&writer->mutex);
 

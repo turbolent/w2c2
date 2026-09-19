@@ -1,9 +1,14 @@
+#if HAS_PTHREAD && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200112L
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #if HAS_PTHREAD
 #include <pthread.h>
+#include <time.h>
 #endif
 #if HAS_UNISTD
 #include <unistd.h>
@@ -643,6 +648,96 @@ testAbortedTranslation(WasmModule* module, WasmFunctionIDs ids) {
 }
 
 #if HAS_PTHREAD
+typedef struct HandoffOutput {
+    OutputCapture capture;
+    pthread_cond_t ready;
+    size_t started;
+    bool stalled;
+} HandoffOutput;
+
+static
+WasmBool
+handoffOpen(
+    void* context, const char* name, WasmOutputKind kind,
+    WasmOutputSink* output, int* systemError
+) {
+    HandoffOutput* handoff = (HandoffOutput*)context;
+    if (kind == wasmOutputC && (name[0] == 's' || name[0] == 'd')) {
+        struct timespec deadline;
+        deadline.tv_sec = time(NULL) + 10;
+        deadline.tv_nsec = 0;
+
+        captureLock(&handoff->capture);
+        handoff->started++;
+        CHECK(pthread_cond_broadcast(&handoff->ready) == 0);
+        /*
+         * No job may finish before all four workers have started.
+         * The deadline only prevents a lost notification from hanging the test.
+         */
+        while (handoff->started < 4 && !handoff->stalled) {
+            const int result = pthread_cond_timedwait(
+                &handoff->ready, &handoff->capture.mutex, &deadline
+            );
+            CHECK(result == 0 || result == ETIMEDOUT);
+            if (result == ETIMEDOUT && handoff->started < 4) {
+                handoff->stalled = true;
+                CHECK(pthread_cond_broadcast(&handoff->ready) == 0);
+            }
+        }
+        captureUnlock(&handoff->capture);
+    }
+    return tracedOpen(&handoff->capture, name, kind, output, systemError);
+}
+
+static
+void
+testWorkerHandoff(void) {
+    static U8 bytes[] = {
+        0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
+        0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
+        0x03, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00,
+        0x0A, 0x0D, 0x04,
+        0x02, 0x00, 0x0B, 0x02, 0x00, 0x0B,
+        0x02, 0x00, 0x0B, 0x02, 0x00, 0x0B
+    };
+    WasmModuleReader reader = emptyWasmModuleReader;
+    WasmModuleReaderError* error = NULL;
+    WasmFunctionIDs ids;
+    unsigned int dynamic;
+    reader.buffer.data = bytes;
+    reader.buffer.length = sizeof(bytes);
+    wasmModuleRead(&reader, &error);
+    CHECK(error == NULL);
+    ids = outputFunctionIDs(reader.module);
+
+    for (dynamic = 0; dynamic < 2; dynamic++) {
+        HandoffOutput handoff;
+        WasmCWriteModuleOptions options;
+        captureInitialize(&handoff.capture);
+        CHECK(pthread_cond_init(&handoff.ready, NULL) == 0);
+        handoff.started = 0;
+        handoff.stalled = false;
+        options = captureOptions(&handoff.capture);
+        options.threadCount = 4;
+        options.output.context = &handoff;
+        options.output.open = handoffOpen;
+        CHECK(wasmCWriteModule(
+            reader.module, "outputTest", options,
+            dynamic ? emptyWasmFunctionIDs : ids,
+            dynamic ? ids : emptyWasmFunctionIDs
+        ));
+        CHECK(!handoff.stalled);
+        CHECK(handoff.started == 4);
+        CHECK(handoff.capture.count == 6);
+        CHECK(handoff.capture.diagnosticCount == 0);
+        checkClosed(&handoff.capture);
+        CHECK(pthread_cond_destroy(&handoff.ready) == 0);
+        captureFree(&handoff.capture);
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(reader.module);
+}
+
 typedef struct OutputTranslation {
     WasmModule* module;
     WasmFunctionIDs ids;
@@ -721,6 +816,7 @@ testOutputs(void) {
     testBorrowedBuffer();
     testAbortedTranslation(module, ids);
 #if HAS_PTHREAD
+    testWorkerHandoff();
     testIndependentTranslations(module, ids);
 #endif
     wasmFunctionIDsFree(&ids);
