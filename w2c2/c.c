@@ -2447,32 +2447,26 @@ wasmCWriteDebugLine(
 
 
 static
-WasmDebugLine*
+const WasmDebugLine*
 wasmCGetDebugLine(
     WasmDebugLines* debugLines,
     const size_t absoluteAddress
 ) {
-    WasmDebugLine* debugLine = NULL;
     if (debugLines->length == 0) {
         return NULL;
     }
 
-    debugLine = debugLines->debugLines;
-
-    if (debugLines->length > 1) {
-        const WasmDebugLine* nextDebugLine = debugLine + 1;
-        if (absoluteAddress >= nextDebugLine->address) {
-            debugLines->length--;
-            debugLines->debugLines++;
-            debugLine = debugLines->debugLines;
-        }
+    while (debugLines->length > 1
+           && debugLines->debugLines[1].address <= absoluteAddress) {
+        debugLines->length--;
+        debugLines->debugLines++;
     }
 
-    if (absoluteAddress < debugLine->address) {
-       return NULL;
+    if (absoluteAddress < debugLines->debugLines[0].address) {
+        return NULL;
     }
 
-    return debugLine;
+    return debugLines->debugLines;
 }
 
 static
@@ -2481,11 +2475,25 @@ wasmCDebugLinesAtAddress(
     WasmDebugLines debugLines,
     const size_t absoluteAddress
 ) {
-    while (debugLines.length > 1
-           && absoluteAddress >= debugLines.debugLines[1].address) {
+    size_t low = 0;
+    size_t high = debugLines.length;
+    while (low < high) {
+        const size_t middle = low + (high - low) / 2;
+        if (debugLines.debugLines[middle].address <= absoluteAddress) {
+            low = middle + 1;
+        } else {
+            high = middle;
+        }
+    }
 
-        debugLines.length--;
-        debugLines.debugLines++;
+    /*
+     * Keep the last applicable row,
+     * or the first row if the address precedes the table.
+     */
+    if (low > 0) {
+        low--;
+        debugLines.debugLines += low;
+        debugLines.length -= low;
     }
 
     return debugLines;
@@ -4480,7 +4488,6 @@ wasmCWriteFunctionImplementations(
     WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
-    WasmDebugLines* debugLines,
     const U32 startIDIndex,
     const U32 endIDIndex,
     const WasmFunctionIDs functionIDs,
@@ -4501,6 +4508,9 @@ wasmCWriteFunctionImplementations(
         const WasmFunctionID functionID = functionIDs.functionIDs[functionIDIndex];
         const U32 functionIndex = functionID.functionIndex;
         const WasmFunction function = module->functions.functions[functionIndex];
+        WasmDebugLines debugLines = debug
+            ? wasmCDebugLinesAtAddress(module->debugLines, function.start)
+            : emptyWasmDebugLines;
 
         diagnostics->location.hasFunctionIndex = true;
         diagnostics->location.functionIndex = assertSizeU32(functionImportCount) + functionIndex;
@@ -4509,7 +4519,7 @@ wasmCWriteFunctionImplementations(
         wasmLabelStackClear(&labelStack);
 
         if (debug) {
-            const WasmDebugLine* debugLine = wasmCGetDebugLine(debugLines, function.start);
+            const WasmDebugLine* debugLine = wasmCGetDebugLine(&debugLines, function.start);
             if (debugLine != NULL) {
                 wasmOutputString(file, "#line ");
                 wasmOutputU32(file, (U32)debugLine->number);
@@ -4539,7 +4549,7 @@ wasmCWriteFunctionImplementations(
             module,
             moduleName,
             function,
-            debugLines,
+            &debugLines,
             pretty,
             debug,
             multipleModules,
@@ -6150,7 +6160,6 @@ wasmCWriteImplementationFile(
     const WasmModule* module,
     const char* moduleName,
     const char* headerName,
-    WasmDebugLines* debugLines,
     const char filePrefix,
     const U32 fileIndex,
     const U32 functionsPerFile,
@@ -6191,7 +6200,6 @@ wasmCWriteImplementationFile(
         file,
         module,
         moduleName,
-        debugLines,
         startFunctionIDIndex,
         endFunctionIDIndex,
         functionIDs,
@@ -6227,7 +6235,6 @@ typedef struct WasmCImplementationWriterTask {
     bool pretty;
     bool debug;
     bool multipleModules;
-    WasmDebugLines debugLines;
 } WasmCImplementationWriterTask;
 
 typedef struct WasmCImplementationConcurrentWriter {
@@ -6325,7 +6332,6 @@ wasmCImplementationWriterThread(
             const bool pretty = task->pretty;
             const bool debug = task->debug;
             const bool multipleModules = task->multipleModules;
-            WasmDebugLines debugLines = task->debugLines;
 
             writer->task = NULL;
             pthread_cond_signal(&writer->produce);
@@ -6337,7 +6343,6 @@ wasmCImplementationWriterThread(
                     module,
                     moduleName,
                     headerName,
-                    &debugLines,
                     filePrefix,
                     fileIndex,
                     functionsPerFile,
@@ -6383,8 +6388,6 @@ wasmCWriteModuleImplementationFiles(
     WasmCWriteModuleOptions options,
     WasmDiagnosticContext* diagnostics
 ) {
-    WasmDebugLines debugLines = module->debugLines;
-
     U32 fileIndex = 0;
     const size_t functionCount = functionIDs.length;
     U32 functionsPerFile = options.functionsPerFile;
@@ -6466,18 +6469,6 @@ wasmCWriteModuleImplementationFiles(
             task.fileIndex = fileIndex;
             task.startFunctionIDIndex = startFunctionIDIndex;
             task.functionIDs = functionIDs;
-            if (options.debug && debugLines.length > 0) {
-                const WasmFunctionID startFunctionID =
-                    functionIDs.functionIDs[startFunctionIDIndex];
-                const WasmFunction startFunction =
-                    module->functions.functions[startFunctionID.functionIndex];
-                task.debugLines = wasmCDebugLinesAtAddress(
-                    debugLines,
-                    startFunction.start
-                );
-            } else {
-                task.debugLines = emptyWasmDebugLines;
-            }
 
             writer.task = &task;
 
@@ -6523,22 +6514,10 @@ finish:
 
     for (; fileIndex < fileCount; fileIndex++) {
         const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
-        WasmDebugLines fileDebugLines = emptyWasmDebugLines;
-        if (options.debug && debugLines.length > 0) {
-            const WasmFunctionID startFunctionID =
-                functionIDs.functionIDs[startFunctionIDIndex];
-            const WasmFunction startFunction =
-                module->functions.functions[startFunctionID.functionIndex];
-            fileDebugLines = wasmCDebugLinesAtAddress(
-                debugLines,
-                startFunction.start
-            );
-        }
         if (!wasmCWriteImplementationFile(
             module,
             moduleName,
             headerName,
-            &fileDebugLines,
             filePrefix,
             fileIndex,
             functionsPerFile,
@@ -6623,13 +6602,10 @@ wasmCWriteModuleImplementation(
     if (options.functionsPerFile >= module->functions.count
         && dynamicFunctionIDs.length == 0)
     {
-        WasmDebugLines debugLines = module->debugLines;
-
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
             file,
             module,
             moduleName,
-            &debugLines,
             0,
             (U32)staticFunctionIDs.length,
             staticFunctionIDs,
