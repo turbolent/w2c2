@@ -6398,7 +6398,7 @@ wasmCWriteModuleImplementationFiles(
     fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
 #if HAS_PTHREAD
-    {
+    if (options.threadCount > 1 && fileCount > 1) {
         U32 threadCount = options.threadCount;
         pthread_t* threads = NULL;
         U32 createdThreadCount = 0;
@@ -6407,9 +6407,6 @@ wasmCWriteModuleImplementationFiles(
         WasmCImplementationConcurrentWriter writer;
         WasmCImplementationWriterTask task;
 
-        if (threadCount == 0) {
-            threadCount = 1;
-        }
         if (threadCount > fileCount) {
             threadCount = (U32)fileCount;
         }
@@ -6522,14 +6519,26 @@ finish:
         wasmCImplementationConcurrentWriterDestroy(&writer);
         return result;
     }
-#else
+#endif /* HAS_PTHREAD */
+
     for (; fileIndex < fileCount; fileIndex++) {
         const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
+        WasmDebugLines fileDebugLines = emptyWasmDebugLines;
+        if (options.debug && debugLines.length > 0) {
+            const WasmFunctionID startFunctionID =
+                functionIDs.functionIDs[startFunctionIDIndex];
+            const WasmFunction startFunction =
+                module->functions.functions[startFunctionID.functionIndex];
+            fileDebugLines = wasmCDebugLinesAtAddress(
+                debugLines,
+                startFunction.start
+            );
+        }
         if (!wasmCWriteImplementationFile(
             module,
             moduleName,
             headerName,
-            &debugLines,
+            &fileDebugLines,
             filePrefix,
             fileIndex,
             functionsPerFile,
@@ -6544,7 +6553,6 @@ finish:
             return false;
         }
     }
-#endif /* HAS_PTHREAD */
 
     return true;
 }
