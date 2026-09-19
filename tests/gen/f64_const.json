@@ -1,0 +1,17 @@
+{"source_filename": "f64_const.wast",
+ "commands": [
+  {"type": "module", "line": 3, "filename": "f64_const.0.wasm"},
+  {"type": "assert_return", "line": 40, "action": {"type": "invoke", "field": "nan", "args": []}, "expected": [{"type": "i64", "value": "9221120237041090560"}]},
+  {"type": "assert_return", "line": 41, "action": {"type": "invoke", "field": "negative_nan", "args": []}, "expected": [{"type": "i64", "value": "18444492273895866368"}]},
+  {"type": "assert_return", "line": 42, "action": {"type": "invoke", "field": "high_payload", "args": []}, "expected": [{"type": "i64", "value": "9221120239188574208"}]},
+  {"type": "assert_return", "line": 43, "action": {"type": "invoke", "field": "negative_high_payload", "args": []}, "expected": [{"type": "i64", "value": "18444492276043350016"}]},
+  {"type": "assert_return", "line": 44, "action": {"type": "invoke", "field": "bit23_payload", "args": []}, "expected": [{"type": "i64", "value": "9218868437235793920"}]},
+  {"type": "assert_return", "line": 45, "action": {"type": "invoke", "field": "negative_bit23_payload", "args": []}, "expected": [{"type": "i64", "value": "18442240474090569728"}]},
+  {"type": "assert_return", "line": 46, "action": {"type": "invoke", "field": "low_payload", "args": []}, "expected": [{"type": "i64", "value": "9218868437227405313"}]},
+  {"type": "assert_return", "line": 47, "action": {"type": "invoke", "field": "negative_low_payload", "args": []}, "expected": [{"type": "i64", "value": "18442240474082181121"}]},
+  {"type": "assert_return", "line": 48, "action": {"type": "invoke", "field": "inf", "args": []}, "expected": [{"type": "i64", "value": "9218868437227405312"}]},
+  {"type": "assert_return", "line": 49, "action": {"type": "invoke", "field": "negative_inf", "args": []}, "expected": [{"type": "i64", "value": "18442240474082181120"}]},
+  {"type": "assert_return", "line": 50, "action": {"type": "invoke", "field": "global_nan", "args": []}, "expected": [{"type": "i64", "value": "9221120237041090560"}]},
+  {"type": "assert_return", "line": 51, "action": {"type": "invoke", "field": "global_negative_nan", "args": []}, "expected": [{"type": "i64", "value": "18444492273895866368"}]},
+  {"type": "assert_return", "line": 52, "action": {"type": "invoke", "field": "global_inf", "args": []}, "expected": [{"type": "i64", "value": "9218868437227405312"}]},
+  {"type": "assert_return", "line": 53, "action": {"type": "invoke", "field": "global_negative_inf", "args": []}, "expected": [{"type": "i64", "value": "18442240474082181120"}]}]}

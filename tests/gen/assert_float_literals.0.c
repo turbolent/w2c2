@@ -204,6 +204,31 @@ void test() {
         "f32_dec.min_int64()"
     );
     assertEqualU64(
+        floatliterals0_f64X2Enan(&instance),
+        9221120237041090560ull,
+        "f64.nan()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Epositive_nan(&instance),
+        9221120237041090560ull,
+        "f64.positive_nan()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Enegative_nan(&instance),
+        18444492273895866368ull,
+        "f64.negative_nan()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Eplain_nan(&instance),
+        9221120237041090560ull,
+        "f64.plain_nan()"
+    );
+    assertEqualU64(
+        floatliterals0_f64X2Einformally_known_as_plain_snan(&instance),
+        9219994337134247936ull,
+        "f64.informally_known_as_plain_snan()"
+    );
+    assertEqualU64(
         floatliterals0_f64X2Eall_ones_nan(&instance),
         18446744073709551615ull,
         "f64.all_ones_nan()"
