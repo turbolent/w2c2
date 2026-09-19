@@ -2535,6 +2535,11 @@ wasmCWriteMemoryAtomicNotifyExpr(
                 stackIndex1,
                 writer->typeStack->valueTypes[stackIndex1]
         ))
+        if (instruction.offset != 0) {
+            MUST (wasmCWritePlus(writer))
+            wasmOutputU32(writer->output, instruction.offset);
+            MUST (wasmCWriteChar(writer, 'U'))
+        }
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -2556,6 +2561,7 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryAtomicWaitExpr(
     const WasmCFunctionWriter* writer,
+    const WasmMemoryArgumentInstruction instruction,
     const bool isWait64
 ) {
     if (!writer->ignore) {
@@ -2584,6 +2590,11 @@ wasmCWriteMemoryAtomicWaitExpr(
                 stackIndex2,
                 writer->typeStack->valueTypes[stackIndex2]
         ))
+        if (instruction.offset != 0) {
+            MUST (wasmCWritePlus(writer))
+            wasmOutputU32(writer->output, instruction.offset);
+            MUST (wasmCWriteChar(writer, 'U'))
+        }
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -2627,7 +2638,7 @@ wasmCWriteMemoryAtomicWait32Expr(
         return false;
     }
 
-    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, false))
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, instruction, false))
 
     return true;
 }
@@ -2651,7 +2662,7 @@ wasmCWriteMemoryAtomicWait64Expr(
         return false;
     }
 
-    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, true))
+    MUST (wasmCWriteMemoryAtomicWaitExpr(writer, instruction, true))
 
     return true;
 }
