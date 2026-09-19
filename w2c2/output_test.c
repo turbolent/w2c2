@@ -54,6 +54,8 @@ typedef enum OutputFailure {
 typedef struct OutputCapture {
 #if HAS_PTHREAD
     pthread_mutex_t mutex;
+    pthread_t caller;
+    bool requireCaller;
 #endif
     CapturedOutput files[8];
     size_t count;
@@ -77,6 +79,9 @@ typedef struct TracedSink {
 
 static void captureLock(OutputCapture* capture) {
 #if HAS_PTHREAD
+    if (capture->requireCaller) {
+        CHECK(pthread_equal(pthread_self(), capture->caller));
+    }
     CHECK(pthread_mutex_lock(&capture->mutex) == 0);
 #else
     UNUSED_PARAMETER(capture);
@@ -125,6 +130,7 @@ captureInitialize(OutputCapture* capture) {
     memset(capture, 0, sizeof(*capture));
 #if HAS_PTHREAD
     CHECK(pthread_mutex_init(&capture->mutex, NULL) == 0);
+    capture->caller = pthread_self();
 #endif
     capture->memory.context = capture;
     capture->memory.complete = captureComplete;
@@ -397,23 +403,31 @@ testOutputEquivalence(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
-testWorkerCounts(WasmModule* module, WasmFunctionIDs ids) {
+testWorkerCounts(WasmModule* module, WasmFunctionIDs ids, WasmBool pretty) {
     static const struct {
         size_t staticCount;
         size_t dynamicCount;
         U32 functionsPerFile;
+        bool singleJobPerGroup;
     } cases[] = {
-        {0, 0, 1},
-        {2, 0, 1},
-        {0, 2, 1},
-        {1, 1, 1},
-        {0, 2, 2},
-        {0, 2, 0}
+        {0, 0, 1, true},
+        {2, 0, 1, false},
+        {0, 2, 1, false},
+        {1, 1, 1, true},
+        {0, 2, 2, true},
+        {0, 2, 0, true}
     };
     static const U32 threadCounts[] = {0, 2, UINT32_MAX};
     WasmModule emptyModule;
+    WasmFunctionID reversedIDs[2];
     size_t variant;
     memset(&emptyModule, 0, sizeof(emptyModule));
+    if (pretty) {
+        CHECK(ids.length == 2);
+        reversedIDs[0] = ids.functionIDs[1];
+        reversedIDs[1] = ids.functionIDs[0];
+        ids.functionIDs = reversedIDs;
+    }
 
     for (variant = 0; variant < sizeof(cases) / sizeof(cases[0]); variant++) {
         const WasmModule* input = cases[variant].staticCount + cases[variant].dynamicCount == 0
@@ -429,9 +443,15 @@ testWorkerCounts(WasmModule* module, WasmFunctionIDs ids) {
         dynamicIDs.length = cases[variant].dynamicCount;
 
         captureInitialize(&expected);
+#if HAS_PTHREAD
+        expected.requireCaller = true;
+#endif
         options = captureOptions(&expected);
         options.functionsPerFile = cases[variant].functionsPerFile;
         options.threadCount = 1;
+        options.pretty = pretty;
+        options.debug = pretty;
+        options.multipleModules = pretty;
         CHECK(wasmCWriteModule(input, "outputTest", options, staticIDs, dynamicIDs));
         CHECK(expected.diagnosticCount == 0);
         checkClosed(&expected);
@@ -440,9 +460,15 @@ testWorkerCounts(WasmModule* module, WasmFunctionIDs ids) {
             OutputCapture actual;
             size_t fileIndex;
             captureInitialize(&actual);
+#if HAS_PTHREAD
+            actual.requireCaller = threadCounts[index] == 0 || cases[variant].singleJobPerGroup;
+#endif
             options = captureOptions(&actual);
             options.functionsPerFile = cases[variant].functionsPerFile;
             options.threadCount = threadCounts[index];
+            options.pretty = pretty;
+            options.debug = pretty;
+            options.multipleModules = pretty;
             CHECK(wasmCWriteModule(input, "outputTest", options, staticIDs, dynamicIDs));
             CHECK(actual.diagnosticCount == 0);
             CHECK(actual.count == expected.count);
@@ -463,9 +489,9 @@ testWorkerCounts(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
-testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
+testProviderFailures(WasmModule* module, WasmFunctionIDs ids, U32 threadCount) {
     static const char* names[] = {
-        "output-test.h", "output-test.c", "s0000000000.c", "datasegments"
+        "output-test.h", "output-test.c", "s0000000000.c", "datasegments", "s0000000001.c"
     };
     size_t index;
     OutputFailure failure;
@@ -474,10 +500,13 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
             OutputCapture capture;
             WasmCWriteModuleOptions options;
             captureInitialize(&capture);
+#if HAS_PTHREAD
+            capture.requireCaller = threadCount <= 1;
+#endif
             capture.failure = failure;
             capture.failureName = names[index];
             options = captureOptions(&capture);
-            options.threadCount = UINT32_MAX;
+            options.threadCount = threadCount;
             options.dataSegmentMode = wasmDataSegmentModeGNULD;
             CHECK(!wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
             CHECK(capture.diagnosticCount == 1);
@@ -486,6 +515,10 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
                 ? wasmDiagnosticOutputOpenFailed : failure == outputWriteFailure
                 ? wasmDiagnosticOutputWriteFailed : wasmDiagnosticOutputCloseFailed));
             CHECK(findOutput(&capture, names[index]) == NULL);
+            if (strcmp(names[index], "s0000000001.c") == 0) {
+                CHECK(findOutput(&capture, "s0000000000.c") != NULL);
+                CHECK(findOutput(&capture, "output-test.c") == NULL);
+            }
             if (index == 1 && failure <= outputWriteFailure) {
                 CHECK(capture.opened == (failure == outputOpenFailure ? 1U : 2U));
             }
@@ -493,6 +526,7 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
             captureFree(&capture);
             captureInitialize(&capture);
             options = captureOptions(&capture);
+            options.threadCount = threadCount;
             CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
             CHECK(capture.diagnosticCount == 0);
             checkClosed(&capture);
@@ -692,13 +726,17 @@ testBorrowedBuffer(void) {
 
 static
 void
-testAbortedTranslation(WasmModule* module, WasmFunctionIDs ids) {
+testAbortedTranslation(WasmModule* module, WasmFunctionIDs ids, U32 threadCount) {
     static U8 invalidCall[] = {0x10};
     const Buffer previous = module->functions.functions[0].code;
     OutputCapture capture;
     WasmCWriteModuleOptions options;
     captureInitialize(&capture);
+#if HAS_PTHREAD
+    capture.requireCaller = threadCount <= 1;
+#endif
     options = captureOptions(&capture);
+    options.threadCount = threadCount;
     module->functions.functions[0].code.data = invalidCall;
     module->functions.functions[0].code.length = sizeof(invalidCall);
     /* A prior diagnostic suppresses secondary output errors. */
@@ -875,14 +913,17 @@ testOutputs(void) {
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
-    testWorkerCounts(module, ids);
-    testProviderFailures(module, ids);
+    testWorkerCounts(module, ids, false);
+    testWorkerCounts(module, ids, true);
+    testProviderFailures(module, ids, 1);
+    testProviderFailures(module, ids, UINT32_MAX);
     testConstantExpressions(module, ids);
     testMemoryEdges();
     testOutputBuffer();
     testOutputFormatting();
     testBorrowedBuffer();
-    testAbortedTranslation(module, ids);
+    testAbortedTranslation(module, ids, 1);
+    testAbortedTranslation(module, ids, 2);
 #if HAS_PTHREAD
     testWorkerHandoff();
     testIndependentTranslations(module, ids);

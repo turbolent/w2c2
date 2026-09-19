@@ -15,6 +15,7 @@ typedef struct WasmCWriteModuleOptions {
     /*
      * A zero thread count selects one worker.
      * At most one worker is created per implementation file.
+     * Work runs on the calling thread when one worker suffices.
      */
     U32 threadCount;
     U32 functionsPerFile;
