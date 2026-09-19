@@ -43,7 +43,7 @@ endif
 
 .SILENT:
 
-.PHONY: run-tests runtime-lifecycle-test atomic-offsets-test gen gen-atomic-offsets clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: run-tests runtime-lifecycle-test atomic-offsets-test c-strings-test gen gen-atomic-offsets gen-c-strings clean clean-wasm-json clean-assertions clean-compiled
 
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
@@ -74,7 +74,16 @@ test_atomic_offsets$(EXE): atomic_offsets_test.c test_atomic_offsets.c
 test_atomic_offsets.c: gen/atomic_offsets.wasm
 	$(W2C2) $< $@
 
-run-tests: atomic-offsets-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+c-strings-test: run-test-c_strings
+
+test_c_strings$(EXE): CFLAGS += -std=c89
+test_c_strings$(EXE): c_strings_test.c test_c_strings.c
+	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_c_strings.c: gen/c_strings.wasm
+	$(W2C2) -g $< $@
+
+run-tests: atomic-offsets-test c-strings-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -95,11 +104,14 @@ test_%.c: gen/%.wasm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-gen: gen-atomic-offsets
+gen: gen-atomic-offsets gen-c-strings
 	$(PYTHON3) gen.py
 
 gen-atomic-offsets:
 	wat2wasm --enable-threads atomic_offsets.wat -o gen/atomic_offsets.wasm
+
+gen-c-strings:
+	wat2wasm --debug-names c_strings.wat -o gen/c_strings.wasm
 
 gen-%:
 	$(PYTHON3) gen.py $*
@@ -107,5 +119,6 @@ gen-%:
 clean:
 	-rm -f main.o test_*.o test_*.h
 	-rm -f test_atomic_offsets$(EXE) test_atomic_offsets.c
+	-rm -f test_c_strings$(EXE) test_c_strings.c
 	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
