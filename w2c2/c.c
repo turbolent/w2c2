@@ -930,7 +930,7 @@ wasmCWriteLiteral(
             const U64 bits = (U64) value.i64;
             if ((bits & W2C2_LL(0x7ff0000000000000U)) == W2C2_LL(0x7ff0000000000000U)) {
                 const bool isNegative = (bits & W2C2_LL(0x8000000000000000U)) != 0;
-                const U64 significand = bits & W2C2_LL(0x7fffffU);
+                const U64 significand = bits & W2C2_LL(0xfffffffffffffU);
                 if (significand == 0) {
                     if (isNegative) {
                         wasmOutputChar(output, '-');
