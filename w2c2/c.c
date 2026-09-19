@@ -6410,6 +6410,9 @@ wasmCWriteModuleImplementationFiles(
         if (threadCount == 0) {
             threadCount = 1;
         }
+        if (threadCount > fileCount) {
+            threadCount = (U32)fileCount;
+        }
         if (!wasmCImplementationConcurrentWriterInitialize(&writer, diagnostics)) {
             return false;
         }
