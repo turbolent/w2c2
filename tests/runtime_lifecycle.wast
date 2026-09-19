@@ -10,4 +10,5 @@
 (module
   (import "spectest" "shared_memory" (memory 1 2 shared))
   (import "spectest" "table" (table 10 20 funcref))
+  (data (i32.const 12) "data")
 )

@@ -5286,9 +5286,7 @@ wasmCWriteInitMemories(
     WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
-    const WasmDataSegmentMode dataSegmentMode,
-    const bool pretty,
-    WasmDiagnosticContext* diagnostics
+    const bool pretty
 ) {
     const size_t memoryImportCount = module->memoryImports.length;
     const U32 memoryCount = module->memories.count;
@@ -5356,8 +5354,31 @@ wasmCWriteInitMemories(
             }
         }
 
+        wasmOutputString(file, "}\n\n");
+    }
+    return !file->failed;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteInitDataSegments(
+    WasmOutput* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const WasmDataSegmentMode dataSegmentMode,
+    const bool pretty,
+    WasmDiagnosticContext* diagnostics
+) {
+    const U32 dataSegmentCount = module->dataSegments.count;
+    if (dataSegmentCount > 0) {
+        wasmOutputString(file, "static void ");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitDataSegments(");
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "Instance* i) {\n");
+
         {
-            const U32 dataSegmentCount = module->dataSegments.count;
             U32 dataSegmentIndex = 0;
             U64 byteOffset = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
@@ -5816,6 +5837,14 @@ wasmCWriteNewChildFunction(
         wasmOutputString(file, "InitMemories(child, self);\n");
     }
 
+    if (module->dataSegments.count > 0) {
+        if (pretty) {
+            wasmOutputString(file, indentation);
+        }
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitDataSegments(child);\n");
+    }
+
     if (module->tables.count > 0
         || module->elementSegments.count > 0
             ) {
@@ -5904,6 +5933,14 @@ wasmCWriteInstantiateFunction(
         }
         wasmOutputString(file, moduleName);
         wasmOutputString(file, "InitMemories(i, NULL);\n");
+    }
+
+    if (module->dataSegments.count > 0) {
+        if (pretty) {
+            wasmOutputString(file, indentation);
+        }
+        wasmOutputString(file, moduleName);
+        wasmOutputString(file, "InitDataSegments(i);\n");
     }
 
     if (module->tables.count > 0
@@ -6090,7 +6127,8 @@ wasmCWriteInits(
 ) {
     MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
-    MUST (wasmCWriteInitMemories(file, module, moduleName, dataSegmentMode, pretty, diagnostics))
+    MUST (wasmCWriteInitMemories(file, module, moduleName, pretty))
+    MUST (wasmCWriteInitDataSegments(file, module, moduleName, dataSegmentMode, pretty, diagnostics))
     MUST (wasmCWriteInitTables(file, module, moduleName, pretty, multipleModules, diagnostics))
     MUST (wasmCWriteInitGlobals(file, module, moduleName, pretty, diagnostics))
     MUST (wasmCWriteInitImports(file, module, moduleName, pretty))
