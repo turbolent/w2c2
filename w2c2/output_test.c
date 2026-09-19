@@ -397,6 +397,72 @@ testOutputEquivalence(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
+testWorkerCounts(WasmModule* module, WasmFunctionIDs ids) {
+    static const struct {
+        size_t staticCount;
+        size_t dynamicCount;
+        U32 functionsPerFile;
+    } cases[] = {
+        {0, 0, 1},
+        {2, 0, 1},
+        {0, 2, 1},
+        {1, 1, 1},
+        {0, 2, 2},
+        {0, 2, 0}
+    };
+    static const U32 threadCounts[] = {0, 2, UINT32_MAX};
+    WasmModule emptyModule;
+    size_t variant;
+    memset(&emptyModule, 0, sizeof(emptyModule));
+
+    for (variant = 0; variant < sizeof(cases) / sizeof(cases[0]); variant++) {
+        const WasmModule* input = cases[variant].staticCount + cases[variant].dynamicCount == 0
+            ? &emptyModule : module;
+        WasmFunctionIDs staticIDs = ids;
+        WasmFunctionIDs dynamicIDs = ids;
+        WasmCWriteModuleOptions options;
+        OutputCapture expected;
+        size_t index;
+
+        staticIDs.length = cases[variant].staticCount;
+        dynamicIDs.functionIDs += staticIDs.length;
+        dynamicIDs.length = cases[variant].dynamicCount;
+
+        captureInitialize(&expected);
+        options = captureOptions(&expected);
+        options.functionsPerFile = cases[variant].functionsPerFile;
+        options.threadCount = 1;
+        CHECK(wasmCWriteModule(input, "outputTest", options, staticIDs, dynamicIDs));
+        CHECK(expected.diagnosticCount == 0);
+        checkClosed(&expected);
+
+        for (index = 0; index < sizeof(threadCounts) / sizeof(threadCounts[0]); index++) {
+            OutputCapture actual;
+            size_t fileIndex;
+            captureInitialize(&actual);
+            options = captureOptions(&actual);
+            options.functionsPerFile = cases[variant].functionsPerFile;
+            options.threadCount = threadCounts[index];
+            CHECK(wasmCWriteModule(input, "outputTest", options, staticIDs, dynamicIDs));
+            CHECK(actual.diagnosticCount == 0);
+            CHECK(actual.count == expected.count);
+            for (fileIndex = 0; fileIndex < expected.count; fileIndex++) {
+                const CapturedOutput* reference = &expected.files[fileIndex];
+                const CapturedOutput* output = findOutput(&actual, reference->name);
+                CHECK(output != NULL);
+                CHECK(output->kind == reference->kind);
+                CHECK(output->length == reference->length);
+                CHECK(memcmp(output->bytes, reference->bytes, output->length) == 0);
+            }
+            checkClosed(&actual);
+            captureFree(&actual);
+        }
+        captureFree(&expected);
+    }
+}
+
+static
+void
 testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
     static const char* names[] = {
         "output-test.h", "output-test.c", "s0000000000.c", "datasegments"
@@ -411,6 +477,7 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids) {
             capture.failure = failure;
             capture.failureName = names[index];
             options = captureOptions(&capture);
+            options.threadCount = UINT32_MAX;
             options.dataSegmentMode = wasmDataSegmentModeGNULD;
             CHECK(!wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
             CHECK(capture.diagnosticCount == 1);
@@ -808,6 +875,7 @@ testOutputs(void) {
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
+    testWorkerCounts(module, ids);
     testProviderFailures(module, ids);
     testConstantExpressions(module, ids);
     testMemoryEdges();

@@ -12,7 +12,10 @@ typedef struct WasmCWriteModuleOptions {
      */
     const char* outputName;
     WasmOutputProvider output;
-    /* A zero thread count selects one worker. */
+    /*
+     * A zero thread count selects one worker.
+     * At most one worker is created per implementation file.
+     */
     U32 threadCount;
     U32 functionsPerFile;
     WasmBool pretty;
