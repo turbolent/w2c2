@@ -32,7 +32,7 @@ resolveTestImports(
     }
 
     if (strcmp(name, "memory") == 0) {
-        return (void*)&spectest_memory;
+        return (void*)spectest_memory;
     }
 
     if (strcmp(name, "global_i32") == 0) {
@@ -44,7 +44,7 @@ resolveTestImports(
     }
 
     if (strcmp(name, "shared_memory") == 0) {
-        return (void*)&spectest_shared_memory;
+        return (void*)spectest_shared_memory;
     }
 
     fprintf(stderr, "FAIL: import of unknown spectest item: %s\n", name);

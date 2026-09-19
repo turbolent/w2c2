@@ -126,16 +126,30 @@ testImportedResourceLifecycle(void) {
     wasmTable table;
 
     importedMemory = wasmMemoryAllocate(1, 2, true);
+    memset(importedMemory->data, 0xA5, 32);
     wasmTableAllocate(&table, 10, 20);
     importedTable = &table;
 
     runtimelifecycle2Instantiate(&root, resolveRuntimeImports);
+    expect(
+        memcmp(importedMemory->data + 12, "data", 4) == 0,
+        "active segment did not initialize imported memory"
+    );
+    expect(
+        importedMemory->data[11] == 0xA5 && importedMemory->data[16] == 0xA5,
+        "active segment changed surrounding imported memory"
+    );
+    importedMemory->data[12] = 0;
     child = (runtimelifecycle2Instance*)root.common.newChild(
         (wasmModuleInstance*)&root
     );
     expect(
         child->spectest__shared_memory == importedMemory,
         "child did not borrow imported memory"
+    );
+    expect(
+        memcmp(importedMemory->data + 12, "data", 4) == 0,
+        "child did not initialize its active segment"
     );
     expect(
         child->spectest__table == importedTable,
