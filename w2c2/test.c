@@ -3,6 +3,7 @@
 #include "opcode_test.h"
 #include "sha1_test.h"
 #include "module_test.h"
+#include "reader_test.h"
 #include "diagnostic_test.h"
 #include "output_test.h"
 
@@ -14,6 +15,7 @@ main(void) {
     testOpcodes();
     testSHA1();
     testModuleLifecycle();
+    testReadLimits();
     testDiagnostics();
     testOutputs();
     return 0;

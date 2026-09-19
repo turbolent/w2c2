@@ -834,6 +834,7 @@ static
 void
 wasmReadLimits(
     WasmModuleReader* reader,
+    U32 defaultMax,
     U32* min,
     U32* max,
     WasmBool *shared,
@@ -861,7 +862,7 @@ wasmReadLimits(
 
     switch (kindIndicator) {
         case 0x0: {
-            *max = 0;
+            *max = defaultMax;
             *shared = false;
             break;
         }
@@ -898,6 +899,14 @@ wasmReadLimits(
         }
     }
 
+    if (kindIndicator != 0 && *min > *max) {
+        static WasmModuleReaderError wasmModuleReaderError = {
+            wasmModuleReaderInvalidLimitMaximum
+        };
+        *error = &wasmModuleReaderError;
+        return;
+    }
+
     *error = NULL;
 }
 
@@ -910,13 +919,7 @@ wasmReadMemoryType(
     WasmBool* shared,
     WasmModuleReaderError** error
 ) {
-    wasmReadLimits(reader, min, max, shared, error);
-    if (*error != NULL) {
-        return;
-    }
-    if (*max == 0) {
-        *max = UINT32_MAX / WASM_PAGE_SIZE;
-    }
+    wasmReadLimits(reader, UINT32_MAX / WASM_PAGE_SIZE, min, max, shared, error);
 }
 
 static
@@ -971,15 +974,7 @@ wasmReadTableType(
         return;
     }
 
-    wasmReadLimits(reader, min, max, shared, error);
-    if (*error != NULL) {
-        return;
-    }
-    if (*max == 0) {
-        *max = UINT32_MAX;
-    }
-
-    *error = NULL;
+    wasmReadLimits(reader, UINT32_MAX, min, max, shared, error);
 }
 
 static
