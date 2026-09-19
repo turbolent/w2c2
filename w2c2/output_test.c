@@ -403,6 +403,167 @@ testOutputEquivalence(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
+appendOutputDebugLine(WasmModule* module, U64 address, U64 number) {
+    WasmDebugLine line;
+    line.address = address;
+    line.number = number;
+    line.path = (char*)malloc(sizeof("debug-input.c"));
+    CHECK(line.path != NULL);
+    strcpy(line.path, "debug-input.c");
+    CHECK(wasmDebugLinesAppend(&module->debugLines, line));
+}
+
+static
+void
+checkOutputDebugLines(const CapturedOutput* output, const U32* expected, size_t count) {
+    const char* cursor;
+    size_t index;
+    CHECK(output != NULL);
+    cursor = (const char*)output->bytes;
+    for (index = 0; index < count; index++) {
+        unsigned long number = 0;
+        char path[64];
+        cursor = strstr(cursor, "#line ");
+        CHECK(cursor != NULL);
+        CHECK(sscanf(cursor, "#line %lu \"%63[^\"]\"", &number, path) == 2);
+        if (number != expected[index]) {
+            fprintf(stderr, "FAIL testDebugLineLookup: %s directive %lu: %lu != %lu\n",
+                output->name, (unsigned long)index, number, (unsigned long)expected[index]);
+            exit(1);
+        }
+        CHECK(strcmp(path, "debug-input.c") == 0);
+        cursor = strchr(cursor, '\n');
+        CHECK(cursor != NULL);
+        cursor++;
+    }
+    CHECK(strstr(cursor, "#line ") == NULL);
+}
+
+static
+void
+testDebugLineLookup(void) {
+    /*
+     * Each function contains i32.const 2147483647,
+     * drop,
+     * and end.
+     * The five-byte immediate skips several debug-row addresses.
+     */
+    static U8 bytes[] = {
+        0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
+        0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
+        0x03, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00,
+        0x0A, 0x29, 0x04,
+        0x09, 0x00, 0x41, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x1A, 0x0B,
+        0x09, 0x00, 0x41, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x1A, 0x0B,
+        0x09, 0x00, 0x41, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x1A, 0x0B,
+        0x09, 0x00, 0x41, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x1A, 0x0B
+    };
+    static const U32 offsets[] = {0, 1, 1, 3, 4, 5, 6};
+    static const U32 fileSizes[] = {4, 2, 1, 0};
+    static const char* fileNames[] = {
+        "s0000000000.c", "s0000000001.c", "s0000000002.c", "s0000000003.c"
+    };
+    /*
+     * Expected directives at the function signature,
+     * i32.const,
+     * drop,
+     * and end.
+     */
+    static const U32 expectedLines[3][4][4] = {
+        {{11, 11, 15, 15}, {111, 111, 115, 115},
+         {209, 209, 215, 215}, {311, 311, 315, 315}},
+        {{0}, {500, 500}, {500, 500, 500, 500}, {500, 500, 500, 500}},
+        {{0}, {0}, {0}, {0}}
+    };
+    static const size_t expectedCounts[3][4] = {
+        {4, 4, 4, 4}, {0, 2, 4, 4}, {0, 0, 0, 0}
+    };
+    size_t scenario;
+
+    for (scenario = 0; scenario < 3; scenario++) {
+        WasmModuleReader reader = emptyWasmModuleReader;
+        WasmModuleReaderError* error = NULL;
+        WasmFunctionIDs ids;
+        WasmDebugLines originalLines;
+        size_t index;
+        size_t layout;
+        reader.buffer.data = bytes;
+        reader.buffer.length = sizeof(bytes);
+        wasmModuleRead(&reader, &error);
+        CHECK(error == NULL);
+        ids = outputFunctionIDs(reader.module);
+        for (index = 0; index < 2; index++) {
+            const WasmFunctionID saved = ids.functionIDs[index];
+            ids.functionIDs[index] = ids.functionIDs[3 - index];
+            ids.functionIDs[3 - index] = saved;
+        }
+
+        if (scenario == 0) {
+            for (index = 0; index < 4; index++) {
+                size_t row;
+                const size_t start = reader.module->functions.functions[index].start;
+                for (row = 0; row < sizeof(offsets) / sizeof(offsets[0]); row++) {
+                    /* Function 2 starts between debug rows. */
+                    if (index == 2 && offsets[row] == 1) {
+                        continue;
+                    }
+                    appendOutputDebugLine(reader.module, start - 1 + offsets[row], 100 * index + 9 + row);
+                }
+            }
+        } else if (scenario == 1) {
+            /*
+             * The first function precedes the table.
+             * Later instructions and functions extend beyond its last row.
+             */
+            appendOutputDebugLine(reader.module, reader.module->functions.functions[1].start + 2, 500);
+        }
+        originalLines = reader.module->debugLines;
+
+        for (layout = 0; layout < sizeof(fileSizes) / sizeof(fileSizes[0]); layout++) {
+            const U32 functionsPerOutput = fileSizes[layout] == 0 ? 4 : fileSizes[layout];
+            unsigned int mode;
+            for (mode = 0; mode < 4; mode++) {
+                OutputCapture capture;
+                WasmCWriteModuleOptions options;
+                size_t fileIndex;
+                captureInitialize(&capture);
+                options = captureOptions(&capture);
+                options.functionsPerFile = fileSizes[layout];
+                options.threadCount = 1 + mode % 2;
+                options.pretty = mode >= 2;
+                options.debug = true;
+                CHECK(wasmCWriteModule(reader.module, "outputTest", options, ids, emptyWasmFunctionIDs));
+                CHECK(capture.diagnosticCount == 0);
+
+                for (fileIndex = 0; fileIndex < 4 / functionsPerOutput; fileIndex++) {
+                    const char* name = fileSizes[layout] == 4 ? "output-test.c" : fileNames[fileIndex];
+                    U32 expected[16];
+                    size_t count = 0;
+                    U32 functionOffset;
+                    for (functionOffset = 0; functionOffset < functionsPerOutput; functionOffset++) {
+                        const U32 functionIndex = ids.functionIDs[
+                            fileIndex * functionsPerOutput + functionOffset
+                        ].functionIndex;
+                        size_t line;
+                        for (line = 0; line < expectedCounts[scenario][functionIndex]; line++) {
+                            expected[count++] = expectedLines[scenario][functionIndex][line];
+                        }
+                    }
+                    checkOutputDebugLines(findOutput(&capture, name), expected, count);
+                }
+                CHECK(reader.module->debugLines.debugLines == originalLines.debugLines);
+                CHECK(reader.module->debugLines.length == originalLines.length);
+                checkClosed(&capture);
+                captureFree(&capture);
+            }
+        }
+        wasmFunctionIDsFree(&ids);
+        wasmModuleFree(reader.module);
+    }
+}
+
+static
+void
 testWorkerCounts(WasmModule* module, WasmFunctionIDs ids, WasmBool pretty) {
     static const struct {
         size_t staticCount;
@@ -913,6 +1074,7 @@ testOutputs(void) {
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
+    testDebugLineLookup();
     testWorkerCounts(module, ids, false);
     testWorkerCounts(module, ids, true);
     testProviderFailures(module, ids, 1);
