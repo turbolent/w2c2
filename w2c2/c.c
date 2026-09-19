@@ -41,6 +41,39 @@ static const char valueTypeStackNames[wasmValueType_count] = {
 static const char* const indentation = "  ";
 
 static
+void
+wasmCWriteStringContents(
+    WasmOutput* file,
+    const char* string
+) {
+    const U8* cursor = (const U8*)string;
+    const U8* start = cursor;
+    for (; *cursor != 0; cursor++) {
+        const U8 c = *cursor;
+        if (c == '"' || c == '\\' || c == '?' || c < 0x20 || c >= 0x7F) {
+            U8 escape[4];
+            size_t length;
+            wasmOutputWrite(file, start, (size_t)(cursor - start));
+            escape[0] = '\\';
+            if (c == '"' || c == '\\' || c == '?') {
+                /* Escape question marks to prevent C89 trigraph conversion. */
+                escape[1] = c;
+                length = 2;
+            } else {
+                /* Three octal digits keep following digits out of the escape. */
+                escape[1] = (U8)('0' + (c >> 6));
+                escape[2] = (U8)('0' + ((c >> 3) & 7));
+                escape[3] = (U8)('0' + (c & 7));
+                length = 4;
+            }
+            wasmOutputWrite(file, escape, length);
+            start = cursor + 1;
+        }
+    }
+    wasmOutputWrite(file, start, (size_t)(cursor - start));
+}
+
+static
 W2C2_INLINE
 bool
 wasmCWriteLocalName(
@@ -2440,7 +2473,7 @@ wasmCWriteDebugLine(
     wasmOutputString(output, "#line ");
     wasmOutputU64(output, debugLine->number);
     wasmOutputString(output, " \"");
-    wasmOutputString(output, debugLine->path);
+    wasmCWriteStringContents(output, debugLine->path);
     wasmOutputString(output, "\"\n");
     return !output->failed;
 }
@@ -4470,9 +4503,9 @@ wasmCWriteFunctionDeclarations(
             char* functionName = module->functionNames.names[moduleFunctionIndex];
             if (functionName != NULL) {
                 wasmOutputString(file, " __asm__(\"");
-                wasmOutputString(file, moduleName);
+                wasmCWriteStringContents(file, moduleName);
                 wasmOutputString(file, "_");
-                wasmOutputString(file, functionName);
+                wasmCWriteStringContents(file, functionName);
                 wasmOutputString(file, "\")");
             }
         }
@@ -4524,7 +4557,7 @@ wasmCWriteFunctionImplementations(
                 wasmOutputString(file, "#line ");
                 wasmOutputU32(file, (U32)debugLine->number);
                 wasmOutputString(file, " \"");
-                wasmOutputString(file, debugLine->path);
+                wasmCWriteStringContents(file, debugLine->path);
                 wasmOutputString(file, "\"\n");
             }
         }
@@ -4757,9 +4790,9 @@ wasmCWriteInitImportValue(
     const char* name
 ) {
     wasmOutputString(file, "resolve(\"");
-    wasmOutputString(file, module);
+    wasmCWriteStringContents(file, module);
     wasmOutputString(file, "\", \"");
-    wasmOutputString(file, name);
+    wasmCWriteStringContents(file, name);
     wasmOutputString(file, "\");\n");
 }
 
@@ -6113,7 +6146,7 @@ wasmCWriteModuleFunctionExportsArray(
                 multipleModules
             );
             wasmOutputString(file, ",\"");
-            wasmOutputString(file, export.name);
+            wasmCWriteStringContents(file, export.name);
             wasmOutputString(file, "\"},\n");
         }
     }
