@@ -16,13 +16,15 @@ static void* memoryTestCalloc(size_t count, size_t size);
 static void* memoryTestRealloc(void* pointer, size_t size);
 static void* memoryTestMemset(void* pointer, int value, size_t size);
 static void memoryTestAbort(void);
+static void memoryTestLock(int* mutex);
+static void memoryTestUnlock(int* mutex);
 
 /* These tests exercise serial shared-memory behavior on hosts without threads. */
 #define WASM_MUTEX_TYPE int
 #define WASM_MUTEX_INIT(mutex) (*(mutex) = 0, true)
-#define WASM_MUTEX_FREE(mutex) ((void)(mutex))
-#define WASM_MUTEX_LOCK(mutex) ((void)(mutex))
-#define WASM_MUTEX_UNLOCK(mutex) ((void)(mutex))
+#define WASM_MUTEX_FREE(mutex) CHECK(*(mutex) == 0)
+#define WASM_MUTEX_LOCK(mutex) memoryTestLock(mutex)
+#define WASM_MUTEX_UNLOCK(mutex) memoryTestUnlock(mutex)
 
 /* Keep allocation fault injection local to this copy of the runtime helpers. */
 #define calloc memoryTestCalloc
@@ -45,6 +47,25 @@ static unsigned int allocationCalls;
 static unsigned int failAllocation;
 static size_t allocationBytes;
 static size_t zeroedBytes;
+static wasmMemory* growBeforeLock;
+static unsigned int lockCalls;
+
+static void memoryTestLock(int* mutex) {
+    CHECK(*mutex == 0);
+    if (growBeforeLock != NULL) {
+        /* Simulate another grower finishing before this call acquires the lock. */
+        growBeforeLock->pages++;
+        growBeforeLock->size += WASM_PAGE_SIZE;
+        growBeforeLock = NULL;
+    }
+    *mutex = 1;
+    lockCalls++;
+}
+
+static void memoryTestUnlock(int* mutex) {
+    CHECK(*mutex == 1);
+    *mutex = 0;
+}
 
 static bool memoryTestAllocate(size_t size) {
     allocationCalls++;
@@ -99,6 +120,7 @@ static void checkAllocationFailure(U32 pages, U32 maximum, bool shared, unsigned
 static void testMemoryAllocation(void) {
     wasmMemory* memory = wasmMemoryAllocate(0, 0, false);
     CHECK(memory->data == NULL && memory->size == 0 && memory->pages == 0);
+    CHECK(wasmMemorySize(memory) == 0);
     CHECK(wasmMemoryGrow(memory, 0) == 0);
     CHECK(wasmMemoryGrow(memory, 1) == UINT32_MAX);
     wasmMemoryFree(memory);
@@ -153,6 +175,7 @@ static void testMemoryGrowth(void) {
 
     CHECK(wasmMemoryGrow(memory, 1) == 1);
     CHECK(memory->size == 2 * WASM_PAGE_SIZE && memory->pages == 2);
+    CHECK(wasmMemorySize(memory) == 2);
     CHECK(memory->data[0] == 42 && memory->data[WASM_PAGE_SIZE - 1] == 99);
     for (index = WASM_PAGE_SIZE; index < 2 * WASM_PAGE_SIZE; index++) {
         CHECK(memory->data[index] == 0);
@@ -210,10 +233,44 @@ static void testMemorySizeBoundary(void) {
     failAllocation = 0;
 }
 
+static void testMemorySynchronization(void) {
+    static const struct {
+        U32 delta;
+        U32 result;
+    } cases[] = {
+        {0, 2},
+        {1, 2},
+        {2, UINT32_MAX},
+        {UINT32_MAX, UINT32_MAX}
+    };
+    size_t index;
+    for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+        wasmMemory* memory = wasmMemoryAllocate(1, 3, true);
+        U32 expectedPages = cases[index].result == UINT32_MAX ? 2 : 2 + cases[index].delta;
+        growBeforeLock = memory;
+        lockCalls = 0;
+        CHECK(wasmMemoryGrow(memory, cases[index].delta) == cases[index].result);
+        CHECK(growBeforeLock == NULL && lockCalls == 1 && memory->mutex == 0);
+        CHECK(memory->pages == expectedPages && memory->size == (U64)expectedPages * WASM_PAGE_SIZE);
+        CHECK(wasmMemorySize(memory) == expectedPages);
+        CHECK(lockCalls == 2 && memory->mutex == 0);
+        wasmMemoryFree(memory);
+    }
+    {
+        wasmMemory* memory = wasmMemoryAllocate(1, 3, true);
+        growBeforeLock = memory;
+        lockCalls = 0;
+        CHECK(wasmMemorySize(memory) == 2);
+        CHECK(growBeforeLock == NULL && lockCalls == 1 && memory->mutex == 0);
+        wasmMemoryFree(memory);
+    }
+}
+
 void testRuntimeMemory(void) {
     CHECK(sizeof(WasmPtr) == 4);
     testMemoryAllocation();
     testMemoryGrowth();
     testMemorySizeBoundary();
+    testMemorySynchronization();
     fprintf(stderr, "PASS testRuntimeMemory\n");
 }

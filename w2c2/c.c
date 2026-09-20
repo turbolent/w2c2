@@ -1223,13 +1223,14 @@ wasmCWriteMemorySizeExpr(
                 resultType
             ))
             MUST (wasmCWriteAssign(writer))
+            MUST (wasmCWrite(writer, "wasmMemorySize("))
             MUST (wasmCWriteMemoryUse(
                 writer->output,
                 instruction.memoryIndex,
                 NULL,
-                false
+                true
             ))
-            MUST (wasmCWrite(writer, ".pages;\n"))
+            MUST (wasmCWrite(writer, ");\n"))
         }
     }
 

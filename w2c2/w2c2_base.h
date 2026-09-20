@@ -719,6 +719,8 @@ wasmThreadCreate(
 
 typedef struct wasmMemory {
     U8* data;
+    /* Shared size fields require the mutex;
+     * wasmMemorySize returns pages. */
     U64 size;
     U32 pages;
     U32 maxPages;
@@ -814,35 +816,60 @@ wasmMemoryFree(
 static
 W2C2_INLINE
 U32
+wasmMemorySize(
+    wasmMemory* memory
+) {
+    U32 pages;
+#ifdef WASM_MUTEX_TYPE
+    if (memory->shared) {
+        WASM_MUTEX_LOCK(&memory->mutex);
+    }
+#endif
+    pages = memory->pages;
+#ifdef WASM_MUTEX_TYPE
+    if (memory->shared) {
+        WASM_MUTEX_UNLOCK(&memory->mutex);
+    }
+#endif
+    return pages;
+}
+
+static
+W2C2_INLINE
+U32
 wasmMemoryGrow(
     wasmMemory* memory,
     const U32 delta
 ) {
-    const U32 oldPages = memory->pages;
-    const U64 newPages = (U64)oldPages + delta;
-    const U64 newSize = newPages * WASM_PAGE_SIZE;
+    U32 result;
+    U64 newPages;
+    U64 newSize;
+
+#ifdef WASM_MUTEX_TYPE
+    if (memory->shared) {
+        WASM_MUTEX_LOCK(&memory->mutex);
+    }
+#endif
+
+    result = memory->pages;
 
     if (delta == 0) {
-        return oldPages;
+        goto done;
     }
 
+    newPages = (U64)result + delta;
+    newSize = newPages * WASM_PAGE_SIZE;
     if (newPages > memory->maxPages || newSize > (size_t)-1) {
-        return (U32) -1;
-    }
-
-    if (memory->shared) {
-#ifdef WASM_MUTEX_TYPE
-        WASM_MUTEX_LOCK(&memory->mutex);
-#else
-        abort();
-#endif
+        result = (U32)-1;
+        goto done;
     }
 
     if (!memory->shared) {
-        const size_t oldSize = (size_t)((U64)oldPages * WASM_PAGE_SIZE);
+        const size_t oldSize = (size_t)((U64)result * WASM_PAGE_SIZE);
         U8* newData = (U8*)realloc(memory->data, (size_t)newSize);
         if (newData == NULL) {
-            return (U32) -1;
+            result = (U32)-1;
+            goto done;
         }
 
         memset(newData + oldSize, 0, (size_t)newSize - oldSize);
@@ -852,15 +879,14 @@ wasmMemoryGrow(
     memory->pages = (U32)newPages;
     memory->size = newSize;
 
-    if (memory->shared) {
+done:
 #ifdef WASM_MUTEX_TYPE
+    if (memory->shared) {
         WASM_MUTEX_UNLOCK(&memory->mutex);
-#else
-        abort();
-#endif
     }
+#endif
 
-    return oldPages;
+    return result;
 }
 
 static

@@ -4101,7 +4101,7 @@ wasiMemoryRangeIsValid(
 
     return memory != NULL
            && length <= UINT32_MAX
-           && end <= memory->size;
+           && end <= (U64)wasmMemorySize(memory) * WASM_PAGE_SIZE;
 }
 
 static

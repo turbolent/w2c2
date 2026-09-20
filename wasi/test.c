@@ -16,7 +16,7 @@ i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
     U32 eventCountPointer
 );
 
-#define TEST_MEMORY_SIZE 4096
+#define TEST_MEMORY_SIZE WASM_PAGE_SIZE
 #define TEST_SUBSCRIPTION_SIZE 48
 #define TEST_EVENT_SIZE 32
 #define TEST_IN_POINTER 0
@@ -726,6 +726,8 @@ main(int argc, char* argv[]) {
     memset(&testMemory, 0, sizeof(testMemory));
     testMemory.data = testMemoryData;
     testMemory.size = TEST_MEMORY_SIZE;
+    testMemory.pages = TEST_MEMORY_SIZE / WASM_PAGE_SIZE;
+    testMemory.maxPages = testMemory.pages;
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
