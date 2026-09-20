@@ -862,47 +862,15 @@ wasmCWriteLiteral(
             break;
         }
         case wasmValueTypeF32: {
-            const U32 bits = (U32) value.i32;
-            if ((bits & 0x7f800000U) == 0x7f800000U) {
-                const bool isNegative = (bits & 0x80000000U) != 0;
-                const U32 significand = bits & 0x7fffffU;
-                if (significand == 0) {
-                    if (isNegative) {
-                        wasmOutputChar(output, '-');
-                    }
-                    wasmOutputString(output, "INFINITY");
-                } else {
-                    wasmOutputString(output, "f32_reinterpret_i32(0x");
-                    wasmOutputU32Hex(output, bits);
-                    wasmOutputChar(output, ')');
-                }
-            } else if (bits == 0x80000000U) {
-                wasmOutputString(output, "-0.f");
-            } else {
-                wasmOutputF32(output, value.f32);
-            }
+            wasmOutputString(output, "f32_reinterpret_i32(0x");
+            wasmOutputU32Hex(output, (U32)value.i32);
+            wasmOutputString(output, "U)");
             break;
         }
         case wasmValueTypeF64: {
-            const U64 bits = (U64) value.i64;
-            if ((bits & W2C2_LL(0x7ff0000000000000U)) == W2C2_LL(0x7ff0000000000000U)) {
-                const bool isNegative = (bits & W2C2_LL(0x8000000000000000U)) != 0;
-                const U64 significand = bits & W2C2_LL(0xfffffffffffffU);
-                if (significand == 0) {
-                    if (isNegative) {
-                        wasmOutputChar(output, '-');
-                    }
-                    wasmOutputString(output, "INFINITY");
-                } else {
-                    wasmOutputString(output, "f64_reinterpret_i64(0x");
-                    wasmOutputU64Hex(output, bits);
-                    wasmOutputChar(output, ')');
-                }
-            } else if (bits == W2C2_LL(0x8000000000000000U)) {
-                wasmOutputString(output, "-0.f");
-            } else {
-                wasmOutputF64(output, value.f64);
-            }
+            wasmOutputString(output, "f64_reinterpret_i64(W2C2_LL(0x");
+            wasmOutputU64Hex(output, (U64)value.i64);
+            wasmOutputString(output, "U))");
             break;
         }
         default:

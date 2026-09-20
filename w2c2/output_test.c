@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <locale.h>
 #if HAS_PTHREAD
 #include <pthread.h>
 #include <time.h>
@@ -1003,6 +1004,135 @@ testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
+testFloatConstants(void) {
+    static const struct {
+        U32 f32;
+        U64 f64;
+    } cases[] = {
+        {0x00000000U, W2C2_LL(0x0000000000000000U)},
+        {0x3F800000U, W2C2_LL(0x3FF0000000000000U)},
+        {0x3FC00000U, W2C2_LL(0x3FF8000000000000U)},
+        {0x3DCCCCCDU, W2C2_LL(0x3FB999999999999AU)},
+        {0x00000001U, W2C2_LL(0x0000000000000001U)},
+        {0x007FFFFFU, W2C2_LL(0x000FFFFFFFFFFFFFU)},
+        {0x00800000U, W2C2_LL(0x0010000000000000U)},
+        {0x7F7FFFFFU, W2C2_LL(0x7FEFFFFFFFFFFFFFU)},
+        {0x7F800000U, W2C2_LL(0x7FF0000000000000U)},
+        {0x7FC00000U, W2C2_LL(0x7FF8000000000000U)},
+        {0x7F800001U, W2C2_LL(0x7FF0000000000001U)},
+        {0x7FA00000U, W2C2_LL(0x7FF0000000800000U)},
+        {0x7FC00001U, W2C2_LL(0x7FF8000000000001U)},
+        {0x7FFFFFFFU, W2C2_LL(0x7FFFFFFFFFFFFFFFU)}
+    };
+    WasmModule* module = readOutputModule();
+    WasmFunctionIDs ids = outputFunctionIDs(module);
+    size_t index;
+    unsigned int variant;
+    module->globals.globals[0].type.valueType = wasmValueTypeF32;
+    module->globals.globals[1].type.valueType = wasmValueTypeF64;
+    for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+        for (variant = 0; variant < 8; variant++) {
+            const U32 bits32 = cases[index].f32 | (variant % 2 ? 0x80000000U : 0);
+            const U64 bits64 = cases[index].f64 | (variant % 2 ? W2C2_LL(0x8000000000000000U) : 0);
+            U8 code32[] = {0x43, 0, 0, 0, 0, 0x1A, 0x0B};
+            U8 code64[] = {0x44, 0, 0, 0, 0, 0, 0, 0, 0, 0x1A, 0x0B};
+            U8 init32[6];
+            U8 init64[10];
+            char expected[2][64];
+            size_t byte;
+            size_t type;
+            OutputCapture capture;
+            WasmCWriteModuleOptions options;
+            for (byte = 0; byte < 4; byte++) {
+                code32[byte + 1] = (U8)(bits32 >> (byte * 8));
+            }
+            for (byte = 0; byte < 8; byte++) {
+                code64[byte + 1] = (U8)(bits64 >> (byte * 8));
+            }
+            memcpy(init32, code32, sizeof(init32));
+            memcpy(init64, code64, sizeof(init64));
+            init32[sizeof(init32) - 1] = 0x0B;
+            init64[sizeof(init64) - 1] = 0x0B;
+            module->globals.globals[0].init.data = init32;
+            module->globals.globals[0].init.length = sizeof(init32);
+            module->globals.globals[1].init.data = init64;
+            module->globals.globals[1].init.length = sizeof(init64);
+            module->functions.functions[0].code.data = code32;
+            module->functions.functions[0].code.length = sizeof(code32);
+            module->functions.functions[1].code.data = code64;
+            module->functions.functions[1].code.length = sizeof(code64);
+            sprintf(expected[0], "f32_reinterpret_i32(0x%08XU)", bits32);
+            sprintf(expected[1], "f64_reinterpret_i64(W2C2_LL(0x%016llXU))", bits64);
+            captureInitialize(&capture);
+            options = captureOptions(&capture);
+            options.functionsPerFile = variant % 4 < 2 ? 2 : 1;
+            options.pretty = variant >= 4;
+            CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+            CHECK(capture.diagnosticCount == 0);
+            for (type = 0; type < 2; type++) {
+                size_t fileIndex;
+                size_t count = 0;
+                for (fileIndex = 0; fileIndex < capture.count; fileIndex++) {
+                    const char* cursor = (const char*)capture.files[fileIndex].bytes;
+                    while ((cursor = strstr(cursor, expected[type])) != NULL) {
+                        count++;
+                        cursor += strlen(expected[type]);
+                    }
+                }
+                /* Each constant occurs in a function and a global initializer. */
+                CHECK(count == 2);
+            }
+            checkClosed(&capture);
+            captureFree(&capture);
+        }
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(module);
+}
+
+static
+void
+testFloatConstantLocales(void) {
+    static const char* locales[] = {
+        "C", "de_DE.UTF-8", "fr_FR.UTF-8", "de_DE", "fr_FR",
+        "German_Germany.1252", "French_France.1252"
+    };
+    const char* current = setlocale(LC_NUMERIC, NULL);
+    char* previous = (char*)malloc(strlen(current) + 1);
+    bool testedComma = false;
+    size_t index;
+    CHECK(previous != NULL);
+    strcpy(previous, current);
+    for (index = 0; index < sizeof(locales) / sizeof(locales[0]); index++) {
+        char* selected;
+        current = setlocale(LC_NUMERIC, locales[index]);
+        if (current == NULL) {
+            CHECK(index != 0);
+            continue;
+        }
+        if (index != 0 && strcmp(localeconv()->decimal_point, ",") != 0) {
+            continue;
+        }
+        selected = (char*)malloc(strlen(current) + 1);
+        CHECK(selected != NULL);
+        strcpy(selected, current);
+        testFloatConstants();
+        CHECK(strcmp(setlocale(LC_NUMERIC, NULL), selected) == 0);
+        free(selected);
+        if (index != 0) {
+            testedComma = true;
+            break;
+        }
+    }
+    CHECK(setlocale(LC_NUMERIC, previous) != NULL);
+    free(previous);
+    if (!testedComma) {
+        fprintf(stderr, "SKIP testFloatConstantLocales: no comma-decimal locale installed\n");
+    }
+}
+
+static
+void
 testMemoryEdges(void) {
     OutputCapture capture;
     WasmOutputProvider provider;
@@ -1436,6 +1566,7 @@ testOutputs(void) {
     testProviderFailures(module, ids, 1);
     testProviderFailures(module, ids, UINT32_MAX);
     testConstantExpressions(module, ids);
+    testFloatConstantLocales();
     testMemoryEdges();
     testOutputBuffer();
     testOutputFormatting();
