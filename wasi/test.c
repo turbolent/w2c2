@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <limits.h>
 #include "mac.h"
+#if HAS_UNISTD
+#include <unistd.h>
+#endif
 
 extern char** environ;
 
@@ -108,6 +111,83 @@ wasmMemory* wasiMemory(wasmModuleInstance* instance) {
     UNUSED_PARAMETER(instance);
     return &testMemory;
 }
+
+#if HAS_UNISTD
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
+    wasmModuleInstance*, U32, U32, U32, U32, U32
+);
+extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
+    wasmModuleInstance*, U32, U32, U32, U32, U32
+);
+
+#define CHECK_IO(condition) \
+    do { \
+        if (!(condition)) { \
+            fprintf(stderr, "FAIL WASI I/O: line %d\n", __LINE__); \
+            exit(1); \
+        } \
+    } while (0)
+
+static void testPositionalIO(void) {
+    FILE* file = tmpfile();
+    U32 wasiFD;
+    int fd;
+    char bytes[6];
+    CHECK_IO(file != NULL);
+    fd = dup(fileno(file));
+    CHECK_IO(fd >= 0);
+    CHECK_IO(write(fd, "abcdef", 6) == 6);
+    CHECK_IO(lseek(fd, 4, SEEK_SET) == 4);
+    CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+    i32_store(&testMemory, 0, 128);
+    i32_store(&testMemory, 4, 2);
+    i32_store(&testMemory, 8, 256);
+    i32_store(&testMemory, 12, 3);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(NULL, wasiFD, 0, 2, 1, 512)
+        == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 5);
+    CHECK_IO(memcmp(testMemory.data + 128, "bc", 2) == 0);
+    CHECK_IO(memcmp(testMemory.data + 256, "def", 3) == 0);
+    CHECK_IO(lseek(fd, 0, SEEK_CUR) == 4);
+    memcpy(testMemory.data + 128, "12", 2);
+    memcpy(testMemory.data + 256, "345", 3);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(NULL, wasiFD, 0, 2, 1, 512)
+        == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 5);
+    CHECK_IO(lseek(fd, 0, SEEK_CUR) == 4);
+    CHECK_IO(lseek(fd, 0, SEEK_SET) == 0);
+    CHECK_IO(read(fd, bytes, sizeof(bytes)) == (ssize_t)sizeof(bytes));
+    CHECK_IO(memcmp(bytes, "a12345", sizeof(bytes)) == 0);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(fclose(file) == 0);
+    fprintf(stderr, "OK positional I/O preserves file offset\n");
+}
+
+#ifdef PLAN9
+extern U32 i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+    wasmModuleInstance*, U32, U32, U32, U64, U32
+);
+
+static void testPlan9DirectoryCookies(void) {
+    static const U64 cookies[] = {0, 1, 0, 1};
+    U32 wasiFD;
+    size_t i;
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    for (i = 0; i < sizeof(cookies) / sizeof(cookies[0]); i++) {
+        /* A header-only buffer forces the caller to retry a truncated entry. */
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+            NULL, wasiFD, 0, 24, cookies[i], 512
+        ) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(i32_load(&testMemory, 512) == 24);
+        CHECK_IO(i64_load(&testMemory, 0) == cookies[i] + 1);
+    }
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    fprintf(stderr, "OK Plan 9 directory cookies\n");
+}
+#endif
+
+#endif
 
 #if HAS_POLL
 
@@ -734,6 +814,13 @@ main(int argc, char* argv[]) {
         fprintf(stderr, "failed to initialize WASI\n");
         exit(1);
     }
+
+#if HAS_UNISTD
+    testPositionalIO();
+#ifdef PLAN9
+    testPlan9DirectoryCookies();
+#endif
+#endif
 
     testResolvePath("/", "", "", false);
     testResolvePath("/", "/bar", "/bar", true);

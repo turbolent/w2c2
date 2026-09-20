@@ -800,7 +800,7 @@ wasiFDWrite(
                 ));
             }
 
-            iovecs[ciovecIndex].iov_base = memory->data + bufferPointer;
+            iovecs[ciovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[ciovecIndex].iov_len = length;
         }
     }
@@ -860,7 +860,7 @@ static
 W2C2_INLINE
 ssize_t
 wrapPositional(
-    ssize_t f(int, const struct iovec*, int),
+    ssize_t f(int, const struct iovec*, int, off_t),
     int fd,
     const struct iovec* iovecs,
     int count,
@@ -877,7 +877,7 @@ wrapPositional(
         return -1;
     }
 
-    res = f(fd, iovecs, count);
+    res = f(fd, iovecs, count, 0);
 
     currentErrno = errno;
     if (lseek(fd, origLoc, SEEK_SET) == (off_t)-1) {
@@ -899,7 +899,7 @@ pwritevFallback(
     int count,
     off_t offset
 ) {
-    return wrapPositional(writev, fd, iovecs, count, offset);
+    return wrapPositional(writevWrapper, fd, iovecs, count, offset);
 }
 
 WASI_IMPORT(U32, 9_fdX5Fpwrite, (
@@ -978,7 +978,7 @@ wasiFDRead(
                 iovecsPointer + iovecIndex * iovecSize;
             U32 bufferPointer = i32_load(memory, iovecPointer);
             U32 length = i32_load(memory, iovecPointer + 4);
-            iovecs[iovecIndex].iov_base = memory->data + bufferPointer;
+            iovecs[iovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[iovecIndex].iov_len = length;
         }
     }
@@ -1045,7 +1045,7 @@ preadvFallback(
     int count,
     off_t offset
 ) {
-    return wrapPositional(readv, fd, iovecs, count, offset);
+    return wrapPositional(readvWrapper, fd, iovecs, count, offset);
 }
 
 WASI_IMPORT(U32, 8_fdX5Fpread, (
@@ -1525,7 +1525,21 @@ wasiFDReaddir(
         }
     }
 
-#if !defined(_WIN32) && !defined(macintosh)
+#ifdef PLAN9
+    /* APE has no seekdir or telldir;
+     * use entry counts as cookies and replay the directory. */
+    rewinddir(descriptor.dir);
+    while (next < cookie) {
+        errno = 0;
+        if (readdir(descriptor.dir) == NULL) {
+            if (errno != 0) {
+                return wasiErrno();
+            }
+            break;
+        }
+        next++;
+    }
+#elif !defined(_WIN32) && !defined(macintosh)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
@@ -1538,7 +1552,9 @@ wasiFDReaddir(
     );
 
     while (bufferUsed < bufferLength) {
+#ifndef PLAN9
         long tell = 0;
+#endif
         U32 bufferRemaining = bufferLength - bufferUsed;
         U32 resultPointer = bufferPointer + bufferUsed;
 
@@ -1555,6 +1571,9 @@ wasiFDReaddir(
             break;
         }
 
+#ifdef PLAN9
+        next++;
+#else
 #if !defined(_WIN32) && !defined(macintosh)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
@@ -1564,7 +1583,8 @@ wasiFDReaddir(
 #endif
 
         next = (U64)tell;
-#if (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
+#endif
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
         inode = 0;
 #else
         inode = entry->d_ino;
@@ -4603,7 +4623,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-#if (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000)
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000)
     /* Fall back to rand */
     {
         U32 i = 0;

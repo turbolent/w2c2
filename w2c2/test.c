@@ -1,6 +1,7 @@
 #include "leb128_test.h"
 #include "allocation_test.h"
 #include "runtime_memory_test.h"
+#include "runtime_plan9_test.h"
 #include "runtime_shared_memory_test.h"
 #include "typestack_test.h"
 #include "opcode_test.h"
@@ -19,6 +20,7 @@ main(void) {
     testReadI32LEB128();
     testAllocations();
     testRuntimeMemory();
+    testRuntimePlan9();
     testRuntimeSharedMemory();
     testTypeStack();
     testOpcodes();

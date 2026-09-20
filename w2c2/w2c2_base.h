@@ -5,7 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#if !(defined(__NeXT__) || (defined(_MSC_VER) && _MSC_VER <= 1000))
+#if !(defined(PLAN9) || defined(__NeXT__) || (defined(_MSC_VER) && _MSC_VER <= 1000))
 #include <stdint.h>
 #endif
 
@@ -86,8 +86,8 @@ typedef U32 WasmPtr;
 #define W2C2_LOOP_START
 #endif
 
-#define MUST(_) { if (!(_)) { return false; }; }
-#define MUST_OR_GOTO(LABEL, _) { if (!(_)) { goto LABEL; }; }
+#define MUST(x) { if (!(x)) { return false; }; }
+#define MUST_OR_GOTO(LABEL, x) { if (!(x)) { goto LABEL; }; }
 
 #define WASM_LITTLE_ENDIAN  0
 #define WASM_BIG_ENDIAN     1
@@ -205,6 +205,8 @@ typedef U32 WasmPtr;
 
 #ifdef _MSC_VER
 #define W2C2_INLINE __inline
+#elif defined(PLAN9)
+#define W2C2_INLINE inline
 #else
 #define W2C2_INLINE __inline__
 #endif
@@ -585,6 +587,83 @@ DEFINE_REINTERPRET(f32_reinterpret_i32, U32, F32)
 DEFINE_REINTERPRET(i32_reinterpret_f32, F32, U32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
+
+#ifdef PLAN9
+/* APE lacks the C99 math operations used by generated code. */
+#ifndef NAN
+#define NAN f32_reinterpret_i32(0x7fc00000U)
+#endif
+#undef INFINITY
+#define INFINITY f32_reinterpret_i32(0x7f800000U)
+#undef signbit
+#define signbit(x) ((i64_reinterpret_f64((F64)(x)) >> 63) != 0)
+#define fabsf(x) f32_reinterpret_i32(i32_reinterpret_f32(x) & 0x7fffffffU)
+#define sqrtf(x) ((F32)sqrt((F64)(x)))
+#define ceilf(x) ((F32)ceil((F64)(x)))
+#define floorf(x) ((F32)floor((F64)(x)))
+
+static
+W2C2_INLINE
+F64
+wasmPlan9Copysign(F64 value, F64 sign) {
+    const U64 signMask = W2C2_LL(0x8000000000000000U);
+    return f64_reinterpret_i64(
+        (i64_reinterpret_f64(value) & ~signMask)
+        | (i64_reinterpret_f64(sign) & signMask)
+    );
+}
+
+static
+W2C2_INLINE
+F32
+wasmPlan9CopysignF32(F32 value, F32 sign) {
+    return f32_reinterpret_i32(
+        (i32_reinterpret_f32(value) & 0x7fffffffU)
+        | (i32_reinterpret_f32(sign) & 0x80000000U)
+    );
+}
+
+static
+W2C2_INLINE
+F64
+wasmPlan9Round(F64 value, bool nearest) {
+    U64 bits = i64_reinterpret_f64(value);
+    const U64 signMask = W2C2_LL(0x8000000000000000U);
+    const I32 exponent = (I32)((bits >> 52) & 0x7ffU) - 1023;
+    U64 unit;
+    U64 fraction;
+    if (exponent >= 52) {
+        /* Integers, infinities, and NaNs need no rounding. */
+        return value;
+    }
+    if (exponent < 0) {
+        const bool roundToOne = nearest
+            && (bits & ~signMask) > W2C2_LL(0x3fe0000000000000U);
+        return f64_reinterpret_i64(
+            (bits & signMask)
+            | (roundToOne ? W2C2_LL(0x3ff0000000000000U) : 0)
+        );
+    }
+    unit = W2C2_LL(1U) << (52 - exponent);
+    fraction = bits & (unit - 1);
+    bits &= ~(unit - 1);
+    /* Round ties to even without depending on the host rounding mode. */
+    if (nearest && (fraction > (unit >> 1)
+        || (fraction == (unit >> 1) && (bits & unit) != 0))) {
+        bits += unit;
+    }
+    return f64_reinterpret_i64(bits);
+}
+
+#undef copysign
+#define copysign(x, y) wasmPlan9Copysign(x, y)
+#undef copysignf
+#define copysignf(x, y) wasmPlan9CopysignF32(x, y)
+#define trunc(x) wasmPlan9Round(x, false)
+#define truncf(x) ((F32)wasmPlan9Round((F64)(x), false))
+#define nearbyint(x) wasmPlan9Round(x, true)
+#define nearbyintf(x) ((F32)wasmPlan9Round((F64)(x), true))
+#endif
 
 #ifdef WASM_THREADS_PTHREADS
 #define WASM_THREAD_TYPE pthread_t

@@ -4217,6 +4217,13 @@ wasmCWriteFunctionReturn(
             MUST (wasmCWriteStackName(writer->output, stackIndex0, returnType))
             MUST (wasmCWrite(writer, ";\n"))
         }
+    } else {
+        /*
+         * A result without a stack slot is unreachable,
+         * but some C compilers still require a return statement.
+         */
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "return 0;\n"))
     }
 
     return true;
@@ -4984,6 +4991,11 @@ wasmCWriteDataSegments(
                 }
                 {
                     U32 byteIndex = 0;
+                    /* C89 requires an element even for an empty data segment.
+                     * The segment's logical length remains zero. */
+                    if (byteCount == 0) {
+                        wasmOutputChar(file, '0');
+                    }
                     for (; byteIndex < byteCount; byteIndex++) {
                         U8 value = dataSegment.bytes.data[byteIndex];
                         if (byteIndex > 0) {

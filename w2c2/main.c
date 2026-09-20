@@ -9,6 +9,8 @@
 #endif /* HAS_GETOPT */
 #if HAS_GLOB
 #include <glob.h>
+#elif defined(PLAN9)
+#include <dirent.h>
 #endif /* HAS_GLOB */
 #if _WIN32
 #include <direct.h>
@@ -170,7 +172,9 @@ void
 cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     const char* name;
     char* path;
+#if HAS_GLOB || _WIN32
     char* pattern;
+#endif
     char kind;
     U32 fileIndex;
 #if HAS_GLOB
@@ -230,6 +234,15 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     }
     do {
         name = findFileData.cFileName;
+#elif defined(PLAN9)
+    struct dirent* entry;
+    DIR* dir = opendir(directory);
+    if (dir == NULL) {
+        fprintf(stderr, "w2c2: failed to open directory to clean\n");
+        return;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+        name = entry->d_name;
 #else
 #error "Unable to find files"
 #endif
@@ -256,6 +269,8 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     globfree(&globbuf);
 #elif _WIN32
     FindClose(hFind);
+#elif defined(PLAN9)
+    closedir(dir);
 #endif
 }
 
