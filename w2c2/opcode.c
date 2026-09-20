@@ -565,7 +565,7 @@ wasmOpcodeResultType(
                 wasmOpcodeDescription(opcode)
             );
             abort();
-			return 0;
+            return 0;
         }
     }
 }
@@ -773,7 +773,7 @@ wasmOpcodeParameter1Type(
                 wasmOpcodeDescription(opcode)
             );
             abort();
-			return 0;
+            return 0;
         }
     }
 }

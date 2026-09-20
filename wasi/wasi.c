@@ -16,7 +16,6 @@ typedef signed int ssize_t; /* assuming target machine is ILP32 ! */
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
-#define INT64_C(val) val##i64
 #endif /* _MSC_VER */
 
 #ifdef _NEXT_SOURCE
@@ -58,6 +57,10 @@ struct timespec {
 #include <sys/uio.h>
 #endif /* HAS_SYSUIO */
 
+#if HAS_POLL
+#include <poll.h>
+#endif /* HAS_POLL */
+
 #if HAS_GETENTROPY && defined(__APPLE__)
 #include <AvailabilityMacros.h>
 #ifndef MAC_OS_X_VERSION_10_12
@@ -97,17 +100,18 @@ struct timespec {
 #define O_TRUNC  _O_TRUNC
 #define O_EXCL   _O_EXCL
 
-#define open    _open
-#define read    _read
-#define write   _write
-#define close   _close
-#define mkdir   _mkdir
-#define rmdir   _rmdir
-#define unlink  _unlink
-#define stat    _stat
-#define fstat   _fstat
-#define lseek   _lseek
-#define isatty  _isatty
+#define open      _open
+#define read      _read
+#define write     _write
+#define close     _close
+#define mkdir     _mkdir
+#define rmdir     _rmdir
+#define unlink    _unlink
+#define stat      _stat
+#define fstat     _fstat
+#define lseek     _lseek
+#define isatty    _isatty
+#define ftruncate _chsize
 
 /* TODO: could be redirected, use _fileno */
 #define STDIN_FILENO  0
@@ -214,7 +218,7 @@ readv(
      int i = 0;
      ssize_t ret = 0;
      while (i < iovcnt) {
-         ssize_t n = read(fd, iov[i].iov_base, iov[i].iov_len);
+         ssize_t n = read(fd, iov[i].iov_base, (unsigned int)iov[i].iov_len);
          if (n > 0) {
              ret += n;
          } else if (!n) {
@@ -256,7 +260,7 @@ writev(
         } else
 #endif
         {
-            n = write(fd, iov[i].iov_base, iov[i].iov_len);
+            n = write(fd, iov[i].iov_base, (unsigned int)iov[i].iov_len);
         }
         if (n > 0) {
             ret += n;
@@ -350,6 +354,8 @@ wasiToNativePath(
         *pos = PATH_SEPARATOR;
     }
 #endif
+#else
+    UNUSED_PARAMETER(path);
 #endif /* HAS_NONPOSIXPATH */
 }
 
@@ -390,6 +396,8 @@ wasiFromNativePath(
         *pos = '/';
     }
 #endif
+#else
+    UNUSED_PARAMETER(path);
 #endif /* HAS_NONPOSIXPATH */
 }
 
@@ -413,8 +421,6 @@ tracePrintf(const char* fmt, ...) {
 #define WASI_TRACE(args)
 #endif
 
-extern wasmMemory* wasiMemory(void* instance);
-
 static WASI wasi;
 
 #ifndef O_DSYNC
@@ -426,11 +432,12 @@ static WASI wasi;
 #endif
 #endif
 
+/* name is the length-prefixed, escaped import-name component. */
 #define WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
-  returnType wasi_unstable__ ## name parameters body
+  returnType i13_wasiX5Funstable ## name parameters body
 
 #define WASI_PREVIEW1_IMPORT(returnType, name, parameters, body) \
-  returnType wasi_snapshot_preview1__ ## name parameters body
+  returnType i22_wasiX5FsnapshotX5Fpreview1 ## name parameters body
 
 #define WASI_IMPORT(returnType, name, parameters, body) \
   WASI_UNSTABLE_IMPORT(returnType, name, parameters, body) \
@@ -496,9 +503,10 @@ wasiFileDescriptorAdd(
     char* path,
     U32* wasiFD
 ) {
+    MUST ((U64)wasi.fds.length <= (U64)UINT32_MAX)
     MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path))
     if (wasiFD != NULL) {
-        *wasiFD = wasi.fds.length - 1;
+        *wasiFD = (U32)(wasi.fds.length - 1);
     }
     return true;
 }
@@ -708,10 +716,12 @@ resolvePath(
     return true;
 }
 
-WASI_IMPORT(void, proc_exit, (
-    void* UNUSED(instance),
+WASI_IMPORT(void, 9_procX5Fexit, (
+    wasmModuleInstance* instance,
     U32 code
 ), {
+    UNUSED_PARAMETER(instance);
+
     WASI_TRACE((
         "proc_exit("
         "code=%d"
@@ -722,7 +732,7 @@ WASI_IMPORT(void, proc_exit, (
     exit(code);
 })
 
-static const size_t ciovecSize = 8;
+static const U32 ciovecSize = 8;
 
 static
 W2C2_INLINE
@@ -775,7 +785,8 @@ wasiFDWrite(
     {
         U32 ciovecIndex = 0;
         for (; ciovecIndex < ciovecsCount; ciovecIndex++) {
-            U64 ciovecPointer = ciovecsPointer + ciovecIndex * ciovecSize;
+            WasmPtr ciovecPointer =
+                ciovecsPointer + ciovecIndex * ciovecSize;
             U32 bufferPointer = i32_load(memory, ciovecPointer);
             U32 length = i32_load(memory, ciovecPointer + 4);
 
@@ -803,9 +814,12 @@ wasiFDWrite(
         WASI_TRACE(("fd_write: writev failed: %s", strerror(errno)));
         return wasiErrno();
     }
+    if ((U64)total > (U64)UINT32_MAX) {
+        return WASI_ERRNO_OVERFLOW;
+    }
 
     /* Store the amount of written bytes at the result pointer */
-    i32_store(memory, resultPointer, total);
+    i32_store(memory, resultPointer, (U32)total);
 
     return WASI_ERRNO_SUCCESS;
 }
@@ -815,13 +829,14 @@ writevWrapper(
     int fd,
     const struct iovec* iovecs,
     int count,
-    off_t UNUSED(offset)
+    off_t offset
 ) {
+    UNUSED_PARAMETER(offset);
     return writev(fd, iovecs, count);
 }
 
-WASI_IMPORT(U32, fd_write, (
-    void* instance,
+WASI_IMPORT(U32, 8_fdX5Fwrite, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 ciovecsPointer,
     U32 ciovecsCount,
@@ -845,7 +860,7 @@ static
 W2C2_INLINE
 ssize_t
 wrapPositional(
-    ssize_t f(int, const struct iovec*, int),
+    ssize_t f(int, const struct iovec*, int, off_t),
     int fd,
     const struct iovec* iovecs,
     int count,
@@ -862,7 +877,7 @@ wrapPositional(
         return -1;
     }
 
-    res = f(fd, iovecs, count);
+    res = f(fd, iovecs, count, 0);
 
     currentErrno = errno;
     if (lseek(fd, origLoc, SEEK_SET) == (off_t)-1) {
@@ -884,11 +899,11 @@ pwritevFallback(
     int count,
     off_t offset
 ) {
-    return wrapPositional(writev, fd, iovecs, count, offset);
+    return wrapPositional(writevWrapper, fd, iovecs, count, offset);
 }
 
-WASI_IMPORT(U32, fd_pwrite, (
-    void* instance,
+WASI_IMPORT(U32, 9_fdX5Fpwrite, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -907,7 +922,7 @@ WASI_IMPORT(U32, fd_pwrite, (
     );
 })
 
-static const size_t iovecSize = 8;
+static const U32 iovecSize = 8;
 
 static
 U32
@@ -959,10 +974,10 @@ wasiFDRead(
     {
         U32 iovecIndex = 0;
         for (; iovecIndex < iovecsCount; iovecIndex++) {
-            U64 iovecPointer = iovecsPointer + iovecIndex * iovecSize;
+            WasmPtr iovecPointer =
+                iovecsPointer + iovecIndex * iovecSize;
             U32 bufferPointer = i32_load(memory, iovecPointer);
             U32 length = i32_load(memory, iovecPointer + 4);
-
             iovecs[iovecIndex].iov_base = (void*)(memory->data + bufferPointer);
             iovecs[iovecIndex].iov_len = length;
         }
@@ -980,8 +995,12 @@ wasiFDRead(
 
     free(iovecs);
 
+    if ((U64)total > (U64)UINT32_MAX) {
+        return WASI_ERRNO_OVERFLOW;
+    }
+
     /* Store the amount of read bytes at the result pointer */
-    i32_store(memory, resultPointer, total);
+    i32_store(memory, resultPointer, (U32)total);
 
     return WASI_ERRNO_SUCCESS;
 }
@@ -991,13 +1010,14 @@ readvWrapper(
     int fd,
     const struct iovec* iovecs,
     int count,
-    off_t UNUSED(offset)
+    off_t offset
 ) {
+    UNUSED_PARAMETER(offset);
     return readv(fd, iovecs, count);
 }
 
-WASI_IMPORT(U32, fd_read, (
-    void* instance,
+WASI_IMPORT(U32, 7_fdX5Fread, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -1025,11 +1045,11 @@ preadvFallback(
     int count,
     off_t offset
 ) {
-    return wrapPositional(readv, fd, iovecs, count, offset);
+    return wrapPositional(readvWrapper, fd, iovecs, count, offset);
 }
 
-WASI_IMPORT(U32, fd_pread, (
-    void* instance,
+WASI_IMPORT(U32, 8_fdX5Fpread, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -1048,15 +1068,15 @@ WASI_IMPORT(U32, fd_pread, (
     );
 })
 
-WASI_IMPORT(U32, environ_sizes_get, (
-    void* instance,
+WASI_IMPORT(U32, 17_environX5FsizesX5Fget, (
+    wasmModuleInstance* instance,
     U32 envcPointer,
     U32 envpBufSizePointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
 
     int envpIndex = 0;
-    size_t envpBufSize = 0;
+    U32 envpBufSize = 0;
 
     WASI_TRACE((
         "environ_sizes_get("
@@ -1068,7 +1088,11 @@ WASI_IMPORT(U32, environ_sizes_get, (
     ));
 
     while (wasi.envp[envpIndex] != NULL) {
-        envpBufSize += strlen(wasi.envp[envpIndex]) + 1;
+        const size_t length = strlen(wasi.envp[envpIndex]) + 1;
+        if ((U64)length > (U64)UINT32_MAX - envpBufSize) {
+            return WASI_ERRNO_OVERFLOW;
+        }
+        envpBufSize += (U32)length;
         envpIndex++;
     }
 
@@ -1082,7 +1106,7 @@ static
 W2C2_INLINE
 U32
 wasiEnvironGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 envpPointer,
     U32 envpBufPointer
 ) {
@@ -1102,6 +1126,9 @@ wasiEnvironGet(
     for (; wasi.envp[index] != NULL; index++) {
         char* env = wasi.envp[index];
         size_t length = strlen(env) + 1;
+        if ((U64)length > (U64)UINT32_MAX) {
+            return WASI_ERRNO_OVERFLOW;
+        }
         memcpy(
             memory->data + envpBufPointer,
             env,
@@ -1109,17 +1136,17 @@ wasiEnvironGet(
         );
         i32_store(
             memory,
-            envpPointer + index * sizeof(U32),
+            envpPointer + index * (U32)sizeof(U32),
             envpBufPointer
         );
-        envpBufPointer += length;
+        envpBufPointer += (U32)length;
     }
 
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, environ_get, (
-    void* instance,
+WASI_IMPORT(U32, 11_environX5Fget, (
+    wasmModuleInstance* instance,
     U32 envpPointer,
     U32 envpBufPointer
 ), {
@@ -1130,15 +1157,15 @@ WASI_IMPORT(U32, environ_get, (
     );
 })
 
-WASI_IMPORT(U32, args_sizes_get, (
-    void* instance,
+WASI_IMPORT(U32, 14_argsX5FsizesX5Fget, (
+    wasmModuleInstance* instance,
     U32 argcPointer,
     U32 argvBufSizePointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
 
-    size_t argvBufSize = 0;
-    U32 argvIndex = 0;
+    U32 argvBufSize = 0;
+    int argvIndex = 0;
 
     WASI_TRACE((
         "args_sizes_get("
@@ -1150,7 +1177,11 @@ WASI_IMPORT(U32, args_sizes_get, (
     ));
 
     for (; argvIndex < wasi.argc; argvIndex++) {
-        argvBufSize += strlen(wasi.argv[argvIndex]) + 1;
+        const size_t length = strlen(wasi.argv[argvIndex]) + 1;
+        if ((U64)length > (U64)UINT32_MAX - argvBufSize) {
+            return WASI_ERRNO_OVERFLOW;
+        }
+        argvBufSize += (U32)length;
     }
 
     i32_store(memory, argcPointer, wasi.argc);
@@ -1163,13 +1194,13 @@ static
 W2C2_INLINE
 U32
 wasiArgsGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 argvPointer,
     U32 argvBufPointer
 ) {
     wasmMemory* memory = wasiMemory(instance);
 
-    U32 index = 0;
+    int index = 0;
 
     WASI_TRACE((
         "args_get("
@@ -1183,6 +1214,9 @@ wasiArgsGet(
     for (; index < wasi.argc; index++) {
         char* arg = wasi.argv[index];
         size_t length = strlen(arg) + 1;
+        if ((U64)length > (U64)UINT32_MAX) {
+            return WASI_ERRNO_OVERFLOW;
+        }
         memcpy(
             memory->data + argvBufPointer,
             arg,
@@ -1190,17 +1224,17 @@ wasiArgsGet(
         );
         i32_store(
             memory,
-            argvPointer + index * sizeof(U32),
+            argvPointer + (U32)index * (U32)sizeof(U32),
             argvBufPointer
         );
-        argvBufPointer += length;
+        argvBufPointer += (U32)length;
     }
 
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, args_get, (
-    void* instance,
+WASI_IMPORT(U32, 8_argsX5Fget, (
+    wasmModuleInstance* instance,
     U32 argvPointer,
     U32 argvBufPointer
 ), {
@@ -1263,8 +1297,8 @@ convertPreview1Whence(
     }
 }
 
-WASI_PREVIEW1_IMPORT(U32, fd_seek, (
-    void* instance,
+WASI_PREVIEW1_IMPORT(U32, 7_fdX5Fseek, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U64 offset,
     U32 whence,
@@ -1321,8 +1355,8 @@ convertUnstableWhence(
     }
 }
 
-WASI_UNSTABLE_IMPORT(U32, fd_seek, (
-    void* instance,
+WASI_UNSTABLE_IMPORT(U32, 7_fdX5Fseek, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U64 offset,
     U32 whence,
@@ -1360,8 +1394,8 @@ WASI_UNSTABLE_IMPORT(U32, fd_seek, (
     );
 })
 
-WASI_IMPORT(U32, fd_tell, (
-    void* instance,
+WASI_IMPORT(U32, 7_fdX5Ftell, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ), {
@@ -1420,7 +1454,7 @@ static
 W2C2_INLINE
 U32
 wasiFDReaddir(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 bufferPointer,
     U32 bufferLength,
@@ -1433,7 +1467,7 @@ wasiFDReaddir(
     char* name = NULL;
     struct dirent* entry;
     size_t nameLength = 0;
-    size_t adjustedNameLength = 0;
+    U32 adjustedNameLength = 0;
     /* NOTE: use target types, e.g. U8 for file type, instead of internal types */
     U8 fileType = WASI_FILE_TYPE_UNKNOWN;
     U32 bufferUsed = 0;
@@ -1491,7 +1525,21 @@ wasiFDReaddir(
         }
     }
 
-#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
+#ifdef PLAN9
+    /* APE has no seekdir or telldir;
+     * use entry counts as cookies and replay the directory. */
+    rewinddir(descriptor.dir);
+    while (next < cookie) {
+        errno = 0;
+        if (readdir(descriptor.dir) == NULL) {
+            if (errno != 0) {
+                return wasiErrno();
+            }
+            break;
+        }
+        next++;
+    }
+#elif !defined(_WIN32) && !defined(macintosh)
     if (cookie != WASI_DIRCOOKIE_START) {
         seekdir(descriptor.dir, (long)cookie);
     }
@@ -1504,11 +1552,13 @@ wasiFDReaddir(
     );
 
     while (bufferUsed < bufferLength) {
+#ifndef PLAN9
         long tell = 0;
-        ssize_t bufferRemaining = bufferLength - bufferUsed;
+#endif
+        U32 bufferRemaining = bufferLength - bufferUsed;
         U32 resultPointer = bufferPointer + bufferUsed;
 
-        WASI_TRACE(("fd_readdir: bufferRemaining=%ld", bufferRemaining));
+        WASI_TRACE(("fd_readdir: bufferRemaining=%u", bufferRemaining));
 
         errno = 0;
         entry = readdir(descriptor.dir);
@@ -1521,7 +1571,10 @@ wasiFDReaddir(
             break;
         }
 
-#if !defined(_WIN32) && !defined(macintosh) && !defined(PLAN9)
+#ifdef PLAN9
+        next++;
+#else
+#if !defined(_WIN32) && !defined(macintosh)
         tell = telldir(descriptor.dir);
         if (tell < 0) {
             WASI_TRACE(("fd_readdir: telldir failed: %s", strerror(errno)));
@@ -1530,6 +1583,7 @@ wasiFDReaddir(
 #endif
 
         next = (U64)tell;
+#endif
 #if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || defined(__MSDOS__)
         inode = 0;
 #else
@@ -1537,6 +1591,9 @@ wasiFDReaddir(
 #endif
         name = entry->d_name;
         nameLength = strlen(name);
+        if ((U64)nameLength > (U64)UINT32_MAX) {
+            return WASI_ERRNO_OVERFLOW;
+        }
 
         /*
          * Some operating systems don't support d_type.  Linux, Mac and some BSDs do.
@@ -1608,7 +1665,7 @@ wasiFDReaddir(
 
         i64_store(memory, resultPointer, next);
         i64_store(memory, resultPointer + 8, inode);
-        i32_store(memory, resultPointer + 16, nameLength);
+        i32_store(memory, resultPointer + 16, (U32)nameLength);
         i32_store8(memory, resultPointer + 20, fileType);
 
         bufferUsed += WASI_DIRENT_SIZE;
@@ -1620,7 +1677,7 @@ wasiFDReaddir(
         adjustedNameLength =
             nameLength > bufferRemaining
             ? bufferRemaining
-            : nameLength;
+            : (U32)nameLength;
 
         memcpy(
             memory->data + resultPointer,
@@ -1640,8 +1697,8 @@ wasiFDReaddir(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, fd_readdir, (
-    void* instance,
+WASI_IMPORT(U32, 10_fdX5Freaddir, (
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 bufferPointer,
     U32 bufferLength,
@@ -1658,10 +1715,12 @@ WASI_IMPORT(U32, fd_readdir, (
     );
 })
 
-WASI_IMPORT(U32, fd_close, (
-    void* UNUSED(instance),
+WASI_IMPORT(U32, 8_fdX5Fclose, (
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
+    UNUSED_PARAMETER(instance);
+
     WASI_TRACE((
         "fd_close("
         "wasiFD=%d"
@@ -1727,26 +1786,11 @@ addTimevals(
 static
 W2C2_INLINE
 U32
-wasiClockTimeGet(
-    void* instance,
+wasiClockTime(
     U32 clockID,
-    U64 UNUSED(precision),
-    U32 resultPointer
+    I64* timestamp
 ) {
-    wasmMemory* memory = wasiMemory(instance);
-
     I64 result = 0;
-
-    WASI_TRACE((
-        "clock_time_get("
-        "clockID=%d, "
-        "precision=%lld, "
-        "resultPointer=0x%x"
-        ")",
-        clockID,
-        precision,
-        resultPointer
-    ));
 
 #if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0) && !WASI_FALLBACK_TIMERS_ENABLED && !defined(__wii__)
 
@@ -1817,7 +1861,7 @@ wasiClockTimeGet(
 /* Number of 100ns-seconds between the beginning of the Windows epoch
  * (Jan. 1, 1601) and the Unix epoch (Jan. 1, 1970)
  */
-#define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
+#define DELTA_EPOCH_IN_100NS W2C2_LL(116444736000000000)
 
     {
         struct timespec tp;
@@ -1979,6 +2023,41 @@ wasiClockTimeGet(
     }
 #endif
 
+    *timestamp = result;
+
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+U32
+wasiClockTimeGet(
+    wasmModuleInstance* instance,
+    U32 clockID,
+    U64 precision,
+    U32 resultPointer
+) {
+    wasmMemory* memory = wasiMemory(instance);
+    I64 result = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+    UNUSED_PARAMETER(precision);
+
+    WASI_TRACE((
+        "clock_time_get("
+        "clockID=%d, "
+        "precision=%lld, "
+        "resultPointer=0x%x"
+        ")",
+        clockID,
+        precision,
+        resultPointer
+    ));
+
+    error = wasiClockTime(clockID, &result);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+
     WASI_TRACE((
         "clock_time_get: "
         "result=%lld",
@@ -1994,8 +2073,8 @@ wasiClockTimeGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, clock_time_get, (
-    void* instance,
+WASI_IMPORT(U32, 14_clockX5FtimeX5Fget, (
+    wasmModuleInstance* instance,
     U32 clockID,
     U64 precision,
     U32 resultPointer
@@ -2012,7 +2091,7 @@ static
 W2C2_INLINE
 U32
 wasiClockResGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 clockID,
     U32 resultPointer
 ) {
@@ -2121,8 +2200,8 @@ wasiClockResGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, clock_res_get, (
-    void* instance,
+WASI_IMPORT(U32, 13_clockX5FresX5Fget, (
+    wasmModuleInstance* instance,
     U32 clockID,
     U32 resultPointer
 ), {
@@ -2139,7 +2218,7 @@ static
 W2C2_INLINE
 U32
 wasiFdFdstatGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ) {
@@ -2148,7 +2227,6 @@ wasiFdFdstatGet(
     WasiFileType fileType = WASI_FILE_TYPE_UNKNOWN;
     U16 wasiFlags = 0;
     struct stat st;
-    int nativeFlags = 0;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     WasiRights baseRights = 0;
     WasiRights inheritingRights = 0;
@@ -2223,6 +2301,8 @@ wasiFdFdstatGet(
 
     if (descriptor.fd >= 0) {
 #if HAS_FCNTL
+        int nativeFlags = 0;
+
         /* Get flags */
         nativeFlags = fcntl(descriptor.fd, F_GETFL);
         if (nativeFlags < 0) {
@@ -2278,8 +2358,8 @@ wasiFdFdstatGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, fd_fdstat_get, (
-    void* instance,
+WASI_IMPORT(U32, 13_fdX5FfdstatX5Fget, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ), {
@@ -2294,13 +2374,14 @@ static
 W2C2_INLINE
 U32
 wasiFDDatasync(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ) {
 #if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)) || \
     (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500))
 
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    UNUSED_PARAMETER(instance);
 
     WASI_TRACE((
         "fd_datasync("
@@ -2324,12 +2405,14 @@ wasiFDDatasync(
 
     return WASI_ERRNO_SUCCESS;
 #else
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(wasiFD);
     return WASI_ERRNO_NOSYS;
 #endif
 }
 
-WASI_IMPORT(U32, fd_datasync, (
-    void* instance,
+WASI_IMPORT(U32, 11_fdX5Fdatasync, (
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
     return wasiFDDatasync(
@@ -2342,13 +2425,14 @@ static
 W2C2_INLINE
 U32
 wasiFDSync(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ) {
 #if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
     defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE)
 
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    UNUSED_PARAMETER(instance);
 
     WASI_TRACE((
        "fd_sync("
@@ -2372,12 +2456,14 @@ wasiFDSync(
 
     return WASI_ERRNO_SUCCESS;
 #else
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(wasiFD);
     return WASI_ERRNO_NOSYS;
 #endif
 }
 
-WASI_IMPORT(U32, fd_sync, (
-    void* instance,
+WASI_IMPORT(U32, 7_fdX5Fsync, (
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
     return wasiFDSync(
@@ -2386,8 +2472,8 @@ WASI_IMPORT(U32, fd_sync, (
     );
 })
 
-WASI_IMPORT(U32, fd_prestat_get, (
-    void* instance,
+WASI_IMPORT(U32, 14_fdX5FprestatX5Fget, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 prestatPointer
 ), {
@@ -2418,7 +2504,7 @@ WASI_IMPORT(U32, fd_prestat_get, (
         return WASI_ERRNO_BADF;
     }
 
-    length = strlen(path);
+    length = (U32)strlen(path);
     i32_store(memory, prestatPointer, WASI_PREOPEN_TYPE_DIRECTORY);
     i32_store(memory, prestatPointer + 4, length);
 
@@ -2429,7 +2515,7 @@ static
 W2C2_INLINE
 U32
 wasiFdPrestatDirName(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 pathPointer,
     U32 pathLength
@@ -2477,8 +2563,8 @@ wasiFdPrestatDirName(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, fd_prestat_dir_name, (
-    void* instance,
+WASI_IMPORT(U32, 19_fdX5FprestatX5FdirX5Fname, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 pathPointer,
     U32 pathLength
@@ -2495,14 +2581,14 @@ static
 W2C2_INLINE
 U32
 wasiPathOpen(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
-    U32 UNUSED(dirFlags),
+    U32 dirFlags,
     U32 pathPointer,
     U32 pathLength,
     U32 oflags,
     U64 fsRightsBase,
-    U64 UNUSED(fsRightsInheriting),
+    U64 fsRightsInheriting,
     U32 fdFlags,
     U32 fdPointer
 ) {
@@ -2526,6 +2612,8 @@ wasiPathOpen(
                                    | WASI_RIGHTS_FD_WRITE
                                    | WASI_RIGHTS_FD_ALLOCATE
                                    | WASI_RIGHTS_FD_FILESTAT_SET_SIZE);
+    UNUSED_PARAMETER(dirFlags);
+    UNUSED_PARAMETER(fsRightsInheriting);
 
     WASI_TRACE((
         "path_open("
@@ -2707,8 +2795,8 @@ wasiPathOpen(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, path_open, (
-    void* instance,
+WASI_IMPORT(U32, 9_pathX5Fopen, (
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 dirFlags,
     U32 pathPointer,
@@ -2877,8 +2965,8 @@ wasiFDFilestatGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_PREVIEW1_IMPORT(U32, fd_filestat_get, (
-    void* instance,
+WASI_PREVIEW1_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 statPointer
 ), {
@@ -2970,8 +3058,8 @@ storeUnstableFilestat(
     }
 }
 
-WASI_UNSTABLE_IMPORT(U32, fd_filestat_get, (
-    void* instance,
+WASI_UNSTABLE_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 statPointer
 ), {
@@ -3005,7 +3093,7 @@ U32
 wasiPathFilestatGet(
     wasmMemory* memory,
     U32 wasiFD,
-    U32 UNUSED(lookupFlags),
+    U32 lookupFlags,
     U32 pathPointer,
     U32 pathLength,
     struct stat* st
@@ -3016,6 +3104,7 @@ wasiPathFilestatGet(
     int res = 0;
     char* preopenPath = NULL;
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
+    UNUSED_PARAMETER(lookupFlags);
 
     if (!wasiFileDescriptorGet(wasiFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_filestat_get: bad preopen FD"));
@@ -3071,29 +3160,74 @@ wasiPathFilestatGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, fd_filestat_set_size, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U64 UNUSED(size)
-), {
-    /* TODO: */
-    WASI_TRACE(("fd_filestat_set_size: unimplemented function"));
+static
+W2C2_INLINE
+U32
+wasiFdFilestatSetSize(
+    U32 wasiFD,
+    U64 size
+) {
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)) || \
+    defined(_BSD_SOURCE) || defined(_WIN32)
+
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+
+    WASI_TRACE((
+        "fd_filestat_set_size("
+        "wasiFD=%d, "
+        "size=%llu"
+        ")",
+        wasiFD,
+        size
+    ));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        WASI_TRACE(("fd_filestat_set_size: bad FD"));
+        return WASI_ERRNO_BADF;
+    }
+
+    if (descriptor.fd < 0) {
+        return WASI_ERRNO_INVAL;
+    }
+
+    if (ftruncate(descriptor.fd, (off_t)size) != 0) {
+        return wasiErrno();
+    }
+
+    return WASI_ERRNO_SUCCESS;
+#else
     return WASI_ERRNO_NOSYS;
+#endif
+}
+
+WASI_IMPORT(U32, 20_fdX5FfilestatX5FsetX5Fsize, (
+    wasmModuleInstance* instance,
+    U32 wasiFD,
+    U64 size
+), {
+    UNUSED_PARAMETER(instance);
+    return wasiFdFilestatSetSize(wasiFD, size);
 })
 
-WASI_IMPORT(U32, fd_filestat_set_times, (
-    void* UNUSED(instance),
-    U64 UNUSED(atime),
-    U64 UNUSED(mtime),
-    U32 UNUSED(fstFlags)
+WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
+    wasmModuleInstance* instance,
+    U64 atime,
+    U64 mtime,
+    U32 fstFlags
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(atime);
+    UNUSED_PARAMETER(mtime);
+    UNUSED_PARAMETER(fstFlags);
+
     /* TODO: */
     WASI_TRACE(("fd_filestat_set_times: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_PREVIEW1_IMPORT(U32, path_filestat_get, (
-    void* instance,
+WASI_PREVIEW1_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
@@ -3130,8 +3264,8 @@ WASI_PREVIEW1_IMPORT(U32, path_filestat_get, (
     return WASI_ERRNO_SUCCESS;
 })
 
-WASI_UNSTABLE_IMPORT(U32, path_filestat_get, (
-    void* instance,
+WASI_UNSTABLE_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
@@ -3168,16 +3302,25 @@ WASI_UNSTABLE_IMPORT(U32, path_filestat_get, (
     return WASI_ERRNO_SUCCESS;
 })
 
-WASI_IMPORT(U32, path_filestat_set_times, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(flags),
-    U32 UNUSED(path),
-    U32 UNUSED(pathLen),
-    U64 UNUSED(atime),
-    U64 UNUSED(mtime),
-    U32 UNUSED(fstFlags)
+WASI_IMPORT(U32, 23_pathX5FfilestatX5FsetX5Ftimes, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 flags,
+    U32 path,
+    U32 pathLen,
+    U64 atime,
+    U64 mtime,
+    U32 fstFlags
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(path);
+    UNUSED_PARAMETER(pathLen);
+    UNUSED_PARAMETER(atime);
+    UNUSED_PARAMETER(mtime);
+    UNUSED_PARAMETER(fstFlags);
+
     /* TODO: */
     WASI_TRACE(("path_filestat_set_times: unimplemented function"));
     return WASI_ERRNO_NOSYS;
@@ -3187,7 +3330,7 @@ static
 W2C2_INLINE
 U32
 wasiPathRename(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
@@ -3303,8 +3446,8 @@ wasiPathRename(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, path_rename, (
-    void* instance,
+WASI_IMPORT(U32, 11_pathX5Frename, (
+    wasmModuleInstance* instance,
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
@@ -3327,7 +3470,7 @@ static
 W2C2_INLINE
 U32
 wasiPathUnlinkFile(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3402,8 +3545,8 @@ wasiPathUnlinkFile(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, path_unlink_file, (
-    void* instance,
+WASI_IMPORT(U32, 16_pathX5FunlinkX5Ffile, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3420,7 +3563,7 @@ static
 W2C2_INLINE
 U32
 wasiPathRemoveDirectory(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3495,8 +3638,8 @@ wasiPathRemoveDirectory(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, path_remove_directory, (
-    void* instance,
+WASI_IMPORT(U32, 21_pathX5FremoveX5Fdirectory, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3513,7 +3656,7 @@ static
 W2C2_INLINE
 U32
 wasiPathCreateDirectory(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3587,8 +3730,8 @@ wasiPathCreateDirectory(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, path_create_directory, (
-    void* instance,
+WASI_IMPORT(U32, 21_pathX5FcreateX5Fdirectory, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3605,13 +3748,23 @@ static
 W2C2_INLINE
 U32
 wasiPathSymlink(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
     U32 newPathPointer,
     U32 newPathLength
 ) {
+#if defined(_WIN32) || \
+    (defined(__MWERKS__) && defined(macintosh)) || \
+    defined(__wii__)
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(oldPathPointer);
+    UNUSED_PARAMETER(oldPathLength);
+    UNUSED_PARAMETER(dirFD);
+    UNUSED_PARAMETER(newPathPointer);
+    UNUSED_PARAMETER(newPathLength);
+#else
     wasmMemory* memory = wasiMemory(instance);
 
     char* newPath = (char*) memory->data + newPathPointer;
@@ -3622,6 +3775,7 @@ wasiPathSymlink(
     int res = -1;
     char* preopenPath = NULL;
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
+#endif
 
     WASI_TRACE((
         "path_symlink("
@@ -3723,8 +3877,8 @@ wasiPathSymlink(
 #endif /* _WIN32 */
 }
 
-WASI_IMPORT(U32, path_symlink, (
-    void* instance,
+WASI_IMPORT(U32, 12_pathX5Fsymlink, (
+    wasmModuleInstance* instance,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
@@ -3741,16 +3895,25 @@ WASI_IMPORT(U32, path_symlink, (
     );
 })
 
-WASI_IMPORT(U32, path_link, (
-    void* instance,
-    U32 UNUSED(oldFD),
-    U32 UNUSED(lookupFlags),
-    U32 UNUSED(oldPathPointer),
-    U32 UNUSED(oldPathLength),
-    U32 UNUSED(newFD),
-    U32 UNUSED(newPathPointer),
-    U32 UNUSED(newPathLength)
+WASI_IMPORT(U32, 9_pathX5Flink, (
+    wasmModuleInstance* instance,
+    U32 oldFD,
+    U32 lookupFlags,
+    U32 oldPathPointer,
+    U32 oldPathLength,
+    U32 newFD,
+    U32 newPathPointer,
+    U32 newPathLength
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(oldFD);
+    UNUSED_PARAMETER(lookupFlags);
+    UNUSED_PARAMETER(oldPathPointer);
+    UNUSED_PARAMETER(oldPathLength);
+    UNUSED_PARAMETER(newFD);
+    UNUSED_PARAMETER(newPathPointer);
+    UNUSED_PARAMETER(newPathLength);
+
     /* TODO: */
     WASI_TRACE(("path_link: unimplemented function"));
     return WASI_ERRNO_NOSYS;
@@ -3760,7 +3923,7 @@ static
 W2C2_INLINE
 U32
 wasiPathReadlink(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
@@ -3768,6 +3931,17 @@ wasiPathReadlink(
     U32 bufferLength,
     U32 lengthPointer
 ) {
+#if defined(_WIN32) || \
+    (defined(__MWERKS__) && defined(macintosh)) || \
+    defined(__wii__)
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(dirFD);
+    UNUSED_PARAMETER(pathPointer);
+    UNUSED_PARAMETER(pathLength);
+    UNUSED_PARAMETER(bufferPointer);
+    UNUSED_PARAMETER(bufferLength);
+    UNUSED_PARAMETER(lengthPointer);
+#else
     wasmMemory* memory = wasiMemory(instance);
 
     char* path = (char*) memory->data + pathPointer;
@@ -3777,6 +3951,7 @@ wasiPathReadlink(
     long length = 0;
     char* preopenPath = NULL;
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
+#endif
 
     WASI_TRACE((
         "path_readlink("
@@ -3867,8 +4042,8 @@ wasiPathReadlink(
 #endif /* _WIN32 */
 }
 
-WASI_IMPORT(U32, path_readlink, (
-    void* instance,
+WASI_IMPORT(U32, 13_pathX5Freadlink, (
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
@@ -3887,39 +4062,486 @@ WASI_IMPORT(U32, path_readlink, (
     );
 })
 
-WASI_IMPORT(U32, fd_fdstat_set_flags, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(flags)
+WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 flags
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(flags);
+
     /* TODO: */
     WASI_TRACE(("fd_fdstat_set_flags: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, poll_oneoff, (
-    void* UNUSED(instance),
-    U32 UNUSED(inPointer),
-    U32 UNUSED(outPointer),
-    U32 UNUSED(subscriptionCount),
-    U32 UNUSED(eventCount)
-), {
-    /* TODO: */
-    WASI_TRACE(("poll_oneoff: unimplemented function"));
+#if HAS_POLL
+
+static const U32 wasiSubscriptionSize = 48;
+static const U32 wasiSubscriptionUserdataOffset = 0;
+static const U32 wasiSubscriptionTypeOffset = 8;
+static const U32 wasiSubscriptionClockIDOffset = 16;
+static const U32 wasiSubscriptionClockTimeoutOffset = 24;
+static const U32 wasiSubscriptionClockFlagsOffset = 40;
+static const U32 wasiSubscriptionFDOffset = 16;
+
+static const U32 wasiEventSize = 32;
+static const U32 wasiEventUserdataOffset = 0;
+static const U32 wasiEventErrorOffset = 8;
+static const U32 wasiEventTypeOffset = 10;
+static const U32 wasiEventFDReadwriteOffset = 16;
+static const U32 wasiEventFDReadwriteFlagsOffset = 24;
+
+#ifndef NSEC_PER_MSEC
+#define NSEC_PER_MSEC W2C2_LL(1000000)
+#endif
+
+typedef struct WasiPollSubscription {
+    U64 userdata;
+    U64 deadline;
+    U32 clockID;
+    U16 error;
+    WasiEventType type;
+} WasiPollSubscription;
+
+static
+W2C2_INLINE
+bool
+wasiMemoryRangeIsValid(
+    wasmMemory* memory,
+    U32 pointer,
+    U32 count,
+    U32 size
+) {
+    U64 length = (U64)count * size;
+    U64 end = (U64)pointer + length;
+
+    return memory != NULL
+           && length <= UINT32_MAX
+           && end <= (U64)wasmMemorySize(memory) * WASM_PAGE_SIZE;
+}
+
+static
+W2C2_INLINE
+U32
+wasiPollClockTime(
+    U32 clockID,
+    U64* timestamp
+) {
+    I64 result = 0;
+    U32 error = wasiClockTime(clockID, &result);
+
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    if (result < 0) {
+        return WASI_ERRNO_INVAL;
+    }
+
+    *timestamp = (U64)result;
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+U32
+wasiPollTimeout(
+    WasiPollSubscription* subscriptions,
+    U32 subscriptionCount,
+    bool hasImmediateEvent,
+    int* timeout
+) {
+    U64 minimum = UINT64_MAX;
+    U32 i = 0;
+
+    if (hasImmediateEvent) {
+        minimum = 0;
+    }
+
+    for (i = 0; i < subscriptionCount; i++) {
+        WasiPollSubscription* subscription = &subscriptions[i];
+        U64 now = 0;
+        U64 remaining = 0;
+        U32 error = WASI_ERRNO_SUCCESS;
+
+        if (subscription->type != WASI_EVENT_TYPE_CLOCK) {
+            continue;
+        }
+
+        error = wasiPollClockTime(subscription->clockID, &now);
+        if (error != WASI_ERRNO_SUCCESS) {
+            return error;
+        }
+
+        if (subscription->deadline > now) {
+            remaining = subscription->deadline - now;
+        }
+        if (remaining < minimum) {
+            minimum = remaining;
+        }
+    }
+
+    if (minimum == UINT64_MAX) {
+        *timeout = -1;
+    } else {
+        U64 milliseconds = minimum / NSEC_PER_MSEC;
+
+        if (minimum % NSEC_PER_MSEC != 0) {
+            milliseconds++;
+        }
+        if (milliseconds > INT_MAX) {
+            milliseconds = INT_MAX;
+        }
+        *timeout = (int)milliseconds;
+    }
+
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+W2C2_INLINE
+void
+wasiPollWriteEvent(
+    wasmMemory* memory,
+    U32 outPointer,
+    U32 eventIndex,
+    WasiPollSubscription* subscription,
+    U16 error,
+    WasiEventRwFlags flags
+) {
+    U32 eventPointer = outPointer + eventIndex * wasiEventSize;
+
+    memset(memory->data + eventPointer, 0, wasiEventSize);
+    i64_store(
+        memory,
+        eventPointer + wasiEventUserdataOffset,
+        subscription->userdata
+    );
+    i32_store16(
+        memory,
+        eventPointer + wasiEventErrorOffset,
+        error
+    );
+    i32_store8(
+        memory,
+        eventPointer + wasiEventTypeOffset,
+        subscription->type
+    );
+    i64_store(
+        memory,
+        eventPointer + wasiEventFDReadwriteOffset,
+        0
+    );
+    i32_store16(
+        memory,
+        eventPointer + wasiEventFDReadwriteFlagsOffset,
+        flags
+    );
+}
+
+#endif /* HAS_POLL */
+
+static
+W2C2_INLINE
+U32
+wasiPollOneoff(
+    wasmModuleInstance* instance,
+    U32 inPointer,
+    U32 outPointer,
+    U32 subscriptionCount,
+    U32 eventCountPointer
+) {
+#if HAS_POLL
+    wasmMemory* memory = wasiMemory(instance);
+    WasiPollSubscription* subscriptions = NULL;
+    struct pollfd* pollFDs = NULL;
+    U32 result = WASI_ERRNO_SUCCESS;
+    U32 i = 0;
+    U32 eventCount = 0;
+    bool hasImmediateEvent = false;
+
+    WASI_TRACE((
+        "poll_oneoff("
+        "inPointer=0x%x, "
+        "outPointer=0x%x, "
+        "subscriptionCount=%d, "
+        "eventCountPointer=0x%x"
+        ")",
+        inPointer,
+        outPointer,
+        subscriptionCount,
+        eventCountPointer
+    ));
+
+    if (subscriptionCount == 0) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!wasiMemoryRangeIsValid(
+        memory,
+        inPointer,
+        subscriptionCount,
+        wasiSubscriptionSize
+    ) || !wasiMemoryRangeIsValid(
+        memory,
+        outPointer,
+        subscriptionCount,
+        wasiEventSize
+    ) || !wasiMemoryRangeIsValid(
+        memory,
+        eventCountPointer,
+        1,
+        sizeof(U32)
+    )) {
+        return WASI_ERRNO_FAULT;
+    }
+
+    subscriptions = (WasiPollSubscription*)calloc(
+        subscriptionCount,
+        sizeof(WasiPollSubscription)
+    );
+    pollFDs = (struct pollfd*)calloc(
+        subscriptionCount,
+        sizeof(struct pollfd)
+    );
+    if (subscriptions == NULL || pollFDs == NULL) {
+        result = WASI_ERRNO_NOMEM;
+        goto done;
+    }
+
+    for (i = 0; i < subscriptionCount; i++) {
+        U32 subscriptionPointer = inPointer + i * wasiSubscriptionSize;
+        WasiPollSubscription* subscription = &subscriptions[i];
+        struct pollfd* pollFD = &pollFDs[i];
+
+        subscription->userdata = i64_load(
+            memory,
+            subscriptionPointer + wasiSubscriptionUserdataOffset
+        );
+        subscription->type = (WasiEventType)i32_load8_u(
+            memory,
+            subscriptionPointer + wasiSubscriptionTypeOffset
+        );
+        pollFD->fd = -1;
+
+        switch (subscription->type) {
+            case WASI_EVENT_TYPE_CLOCK: {
+                U64 timeout = i64_load(
+                    memory,
+                    subscriptionPointer
+                    + wasiSubscriptionClockTimeoutOffset
+                );
+                WasiSubclockFlags flags = (WasiSubclockFlags)i32_load16_u(
+                    memory,
+                    subscriptionPointer
+                    + wasiSubscriptionClockFlagsOffset
+                );
+
+                subscription->clockID = i32_load(
+                    memory,
+                    subscriptionPointer + wasiSubscriptionClockIDOffset
+                );
+                if (subscription->clockID != WASI_CLOCK_REALTIME
+                    && subscription->clockID != WASI_CLOCK_MONOTONIC) {
+                    result = WASI_ERRNO_NOTSUP;
+                    goto done;
+                }
+                if ((flags & ~WASI_SUBCLOCK_FLAGS_ABSTIME) != 0) {
+                    result = WASI_ERRNO_INVAL;
+                    goto done;
+                }
+
+                if ((flags & WASI_SUBCLOCK_FLAGS_ABSTIME) != 0) {
+                    subscription->deadline = timeout;
+                } else {
+                    U64 now = 0;
+
+                    result = wasiPollClockTime(
+                        subscription->clockID,
+                        &now
+                    );
+                    if (result != WASI_ERRNO_SUCCESS) {
+                        goto done;
+                    }
+                    if (timeout > UINT64_MAX - now) {
+                        subscription->deadline = UINT64_MAX;
+                    } else {
+                        subscription->deadline = now + timeout;
+                    }
+                }
+                break;
+            }
+            case WASI_EVENT_TYPE_FD_READ:
+            case WASI_EVENT_TYPE_FD_WRITE: {
+                U32 wasiFD = i32_load(
+                    memory,
+                    subscriptionPointer + wasiSubscriptionFDOffset
+                );
+
+                if (wasiFD >= wasi.fds.length
+                    || wasi.fds.fds[wasiFD].fd < 0) {
+                    subscription->error = WASI_ERRNO_BADF;
+                    hasImmediateEvent = true;
+                } else {
+                    pollFD->fd = wasi.fds.fds[wasiFD].fd;
+                }
+
+                if (subscription->type == WASI_EVENT_TYPE_FD_READ) {
+                    pollFD->events = POLLIN;
+                } else {
+                    pollFD->events = POLLOUT;
+                }
+                break;
+            }
+            default: {
+                result = WASI_ERRNO_INVAL;
+                goto done;
+            }
+        }
+    }
+
+    for (;;) {
+        int timeout = -1;
+        int pollResult = 0;
+
+        result = wasiPollTimeout(
+            subscriptions,
+            subscriptionCount,
+            hasImmediateEvent,
+            &timeout
+        );
+        if (result != WASI_ERRNO_SUCCESS) {
+            goto done;
+        }
+
+        pollResult = poll(pollFDs, subscriptionCount, timeout);
+        if (pollResult < 0) {
+            result = wasiErrno();
+            goto done;
+        }
+
+        eventCount = 0;
+        for (i = 0; i < subscriptionCount; i++) {
+            WasiPollSubscription* subscription = &subscriptions[i];
+            struct pollfd* pollFD = &pollFDs[i];
+
+            if (subscription->type == WASI_EVENT_TYPE_CLOCK) {
+                U64 now = 0;
+
+                result = wasiPollClockTime(
+                    subscription->clockID,
+                    &now
+                );
+                if (result != WASI_ERRNO_SUCCESS) {
+                    goto done;
+                }
+                if (subscription->deadline > now) {
+                    continue;
+                }
+
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    WASI_ERRNO_SUCCESS,
+                    0
+                );
+                eventCount++;
+                continue;
+            }
+
+            if (subscription->error != WASI_ERRNO_SUCCESS) {
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    subscription->error,
+                    0
+                );
+                eventCount++;
+                continue;
+            }
+
+            if (pollFD->revents != 0) {
+                U16 error = WASI_ERRNO_SUCCESS;
+                WasiEventRwFlags flags = 0;
+
+                if ((pollFD->revents & POLLNVAL) != 0) {
+                    error = WASI_ERRNO_BADF;
+                } else if ((pollFD->revents & POLLHUP) != 0) {
+                    error = WASI_ERRNO_PIPE;
+                } else if ((pollFD->revents & POLLERR) != 0) {
+                    error = WASI_ERRNO_IO;
+                }
+                if ((pollFD->revents & POLLHUP) != 0) {
+                    flags |= WASI_EVENT_RW_FLAGS_HANGUP;
+                }
+
+                wasiPollWriteEvent(
+                    memory,
+                    outPointer,
+                    eventCount,
+                    subscription,
+                    error,
+                    flags
+                );
+                eventCount++;
+            }
+        }
+
+        if (eventCount > 0) {
+            break;
+        }
+    }
+
+    i32_store(memory, eventCountPointer, eventCount);
+
+done:
+    free(pollFDs);
+    free(subscriptions);
+    return result;
+#else
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(inPointer);
+    UNUSED_PARAMETER(outPointer);
+    UNUSED_PARAMETER(subscriptionCount);
+    UNUSED_PARAMETER(eventCountPointer);
+    WASI_TRACE(("poll_oneoff: not supported on this host"));
     return WASI_ERRNO_NOSYS;
+#endif /* HAS_POLL */
+}
+
+WASI_IMPORT(U32, 11_pollX5Foneoff, (
+    wasmModuleInstance* instance,
+    U32 inPointer,
+    U32 outPointer,
+    U32 subscriptionCount,
+    U32 eventCountPointer
+), {
+    return wasiPollOneoff(
+        instance,
+        inPointer,
+        outPointer,
+        subscriptionCount,
+        eventCountPointer
+    );
 })
 
 static
 W2C2_INLINE
 U32
 wasiRandomGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 bufferPointer,
     U32 bufferLength
 ) {
     wasmMemory* memory = wasiMemory(instance);
     U8* bufferStart = NULL;
+#if !(defined(_WIN32) && !(defined(_MSC_VER) && _MSC_VER <= 1000))
     ssize_t result = 0;
+#endif
 
     WASI_TRACE((
         "random_get("
@@ -4001,7 +4623,7 @@ wasiRandomGet(
             return WASI_ERRNO_SUCCESS;
         }
     }
-#if (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000) || defined(PLAN9)
+#if defined(PLAN9) || (defined(__MWERKS__) && defined(macintosh)) || (defined(_MSC_VER) && _MSC_VER <= 1000)
     /* Fall back to rand */
     {
         U32 i = 0;
@@ -4026,8 +4648,8 @@ wasiRandomGet(
     return WASI_ERRNO_SUCCESS;
 }
 
-WASI_IMPORT(U32, random_get, (
-    void* instance,
+WASI_IMPORT(U32, 10_randomX5Fget, (
+    wasmModuleInstance* instance,
     U32 bufferPointer,
     U32 bufferLength
 ), {
@@ -4038,87 +4660,122 @@ WASI_IMPORT(U32, random_get, (
     );
 })
 
-WASI_IMPORT(U32, sched_yield, (
-    void* UNUSED(instance)
+WASI_IMPORT(U32, 11_schedX5Fyield, (
+    wasmModuleInstance* instance
 ), {
+    UNUSED_PARAMETER(instance);
+
     /* TODO: */
     WASI_TRACE(("sched_yield: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, fd_allocate, (
-    void* UNUSED(instance),
-    U64 UNUSED(offset),
-    U64 UNUSED(len)
+WASI_IMPORT(U32, 11_fdX5Fallocate, (
+    wasmModuleInstance* instance,
+    U64 offset,
+    U64 len
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(offset);
+    UNUSED_PARAMETER(len);
+
     /* TODO: */
     WASI_TRACE(("fd_allocate: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, fd_advise, (
-    void* UNUSED(instance),
-    U64 UNUSED(offset),
-    U64 UNUSED(len),
-    U32 UNUSED(advise)
+WASI_IMPORT(U32, 9_fdX5Fadvise, (
+    wasmModuleInstance* instance,
+    U64 offset,
+    U64 len,
+    U32 advise
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(offset);
+    UNUSED_PARAMETER(len);
+    UNUSED_PARAMETER(advise);
+
     /* TODO: */
     WASI_TRACE(("fd_advise: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, sock_accept, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(flags),
-    U32 UNUSED(resultPointer)
+WASI_IMPORT(U32, 11_sockX5Faccept, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 flags,
+    U32 resultPointer
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(resultPointer);
+
     /* TODO: */
     WASI_TRACE(("sock_accept: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, sock_recv, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(ciovecsPointer),
-    U32 UNUSED(ciovecsCount),
-    U32 UNUSED(flags),
-    U32 UNUSED(sizeResultPointer),
-    U32 UNUSED(flagsResultPointer)
+WASI_IMPORT(U32, 9_sockX5Frecv, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 ciovecsPointer,
+    U32 ciovecsCount,
+    U32 flags,
+    U32 sizeResultPointer,
+    U32 flagsResultPointer
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(ciovecsPointer);
+    UNUSED_PARAMETER(ciovecsCount);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(sizeResultPointer);
+    UNUSED_PARAMETER(flagsResultPointer);
+
     /* TODO: */
     WASI_TRACE(("sock_recv: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, sock_send, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(ciovecsPointer),
-    U32 UNUSED(ciovecsCount),
-    U32 UNUSED(flags),
-    U32 UNUSED(resultPointer)
+WASI_IMPORT(U32, 9_sockX5Fsend, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 ciovecsPointer,
+    U32 ciovecsCount,
+    U32 flags,
+    U32 resultPointer
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(ciovecsPointer);
+    UNUSED_PARAMETER(ciovecsCount);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(resultPointer);
+
     /* TODO: */
     WASI_TRACE(("sock_send: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-WASI_IMPORT(U32, sock_shutdown, (
-    void* UNUSED(instance),
-    U32 UNUSED(fd),
-    U32 UNUSED(how)
+WASI_IMPORT(U32, 13_sockX5Fshutdown, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U32 how
 ), {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(how);
+
     /* TODO: */
     WASI_TRACE(("sock_shutdown: unimplemented function"));
     return WASI_ERRNO_NOSYS;
 })
 
-typedef void (*wasiThreadStartFunc)(void* instance, U32 threadID, U32 startArg);
+typedef void (*wasiThreadStartFunc)(wasmModuleInstance* instance, U32 threadID, U32 startArg);
 
 typedef struct ThreadStartArg {
-    void* instance;
+    wasmModuleInstance* instance;
     U32 startArg;
     U32 threadID;
     wasiThreadStartFunc startFunc;
@@ -4130,19 +4787,20 @@ wasiThreadSpawn(
     void* arg
 ) {
     ThreadStartArg* threadStartArg = (ThreadStartArg*) arg;
-    void* instance = threadStartArg->instance;
+    wasmModuleInstance* instance = threadStartArg->instance;
     U32 threadID = threadStartArg->threadID;
     U32 startArg = threadStartArg->startArg;
     wasiThreadStartFunc startFunc = threadStartArg->startFunc;
     free(threadStartArg);
 
     startFunc(instance, threadID, startArg);
+    instance->freeChild(instance);
 
     return NULL;
 }
 
 U32
-wasi__threadX2Dspawn(
+i4_wasi12_threadX2Dspawn(
     wasmModuleInstance* instance,
     U32 startArg
 ) {
@@ -4159,14 +4817,15 @@ wasi__threadX2Dspawn(
 
     /* Find the thread start function that must be exported by the module */
     for (; funcExport->func != NULL; funcExport++) {
-        if (strcmp(funcExport->name, "wasi_thread_start") == 0) {
+        if (funcExport->name.length == sizeof("wasi_thread_start") - 1
+            && memcmp(funcExport->name.data, "wasi_thread_start", funcExport->name.length) == 0) {
             startFunc = funcExport->func;
             break;
         }
     }
     if (startFunc == NULL) {
         WASI_TRACE(("thread-spawn: wasi_thread_start not found"));
-        return -1;
+        return UINT32_MAX;
     }
 
     /* Allocate and set up the argument for the thread.
@@ -4176,12 +4835,11 @@ wasi__threadX2Dspawn(
     threadStartArg = calloc(1, sizeof(ThreadStartArg));
     if (threadStartArg == NULL) {
         WASI_TRACE(("thread-spawn: allocation failed"));
-        return -1;
+        return UINT32_MAX;
     }
 
     threadID = atomic_add_U32(&nextThreadID, 1);
 
-    /* TODO: schedule free/cleanup of child instance */
     threadStartArg->instance = instance->newChild(instance);
     threadStartArg->startArg = startArg;
     threadStartArg->threadID = threadID;
@@ -4192,15 +4850,18 @@ wasi__threadX2Dspawn(
         WASM_THREAD_TYPE thread;
         if (!WASM_THREAD_CREATE(&thread, wasiThreadSpawn, threadStartArg)) {
             WASI_TRACE(("thread-spawn: pthread_create failed"));
-            return -1;
+            threadStartArg->instance->freeChild(threadStartArg->instance);
+            free(threadStartArg);
+            return UINT32_MAX;
         }
+        WASM_THREAD_DETACH(thread);
     }
 
     WASI_TRACE(("thread-spawn: threadID=%d", threadID));
 
 #else
     WASI_TRACE(("thread-spawn: missing threads and atomics implementation"))
-    return -1;
+    return UINT32_MAX;
 #endif
 
     return threadID;

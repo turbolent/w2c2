@@ -5,7 +5,7 @@
 #include "test_const.31.h"
 
 void test() {
-    const31Instance instance;
-    const31Instantiate(&instance, resolveTestImports);
+    m8_constX2E31Instance instance;
+    m8_constX2E31Instantiate(&instance, resolveTestImports);
     printStart("const.31.wasm");
 }

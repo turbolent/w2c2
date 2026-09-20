@@ -2,8 +2,23 @@
 #define W2C2_ARRAY_H
 
 #include "w2c2_base.h"
+#include "api.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Overflow leaves the result unchanged. */
+static
+W2C2_INLINE
 bool
+arrayLengthAdd(const size_t length, const size_t extra, size_t* result) {
+    MUST (extra <= (size_t)-1 - length)
+    *result = length + extra;
+    return true;
+}
+
+WasmBool
 arrayEnsureCapacitySlowPath(
     void** items,
     size_t length,
@@ -52,7 +67,8 @@ INSTANCE ## Append(                                           \
     TYPE ITEM                                                 \
 ) {                                                           \
     const size_t length = INSTANCE->length;                   \
-    const size_t newLength = length + 1;                      \
+    size_t newLength;                                        \
+    MUST (arrayLengthAdd(length, 1, &newLength))              \
     MUST (INSTANCE ## EnsureCapacity(INSTANCE, newLength))    \
                                                               \
     INSTANCE->ITEMS[length] = ITEM;                           \
@@ -65,7 +81,13 @@ static W2C2_INLINE void                                       \
 INSTANCE ## Free(NAME* INSTANCE) {                            \
     free(INSTANCE->ITEMS);                                    \
     INSTANCE->ITEMS = NULL;                                   \
+    INSTANCE->length = 0;                                     \
+    INSTANCE->capacity = 0;                                   \
 }
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_ARRAY_H */

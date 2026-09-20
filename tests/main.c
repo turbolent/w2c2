@@ -5,11 +5,13 @@ static U32 spectest_global_i32 = 666;
 
 static U64 spectest_global_i64 = 666;
 
-void spectest__print() {
+void i8_spectest5_print(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     printf("spectest.print()\n");
 }
 
-void spectest__print_i32(U32 l0) {
+void i8_spectest9_printX5Fi32(wasmModuleInstance* instance, U32 l0) {
+    UNUSED_PARAMETER(instance);
     printf("spectest.print_i32(%u)\n", l0);
 }
 
@@ -19,35 +21,41 @@ static wasmMemory* spectest_shared_memory;
 
 void*
 resolveTestImports(
-    const char* module,
-    const char* name
+    WasmName module,
+    WasmName name
 ) {
-    if (strcmp(module, "spectest") != 0) {
-        fprintf(stderr, "FAIL: import of unknown module: %s\n", module);
+    if (module.length != sizeof("spectest") - 1
+        || memcmp(module.data, "spectest", module.length) != 0) {
+        fprintf(stderr, "FAIL: import of unknown module: %s\n", module.data);
         return NULL;
     }
 
-    if (strcmp(name, "table") == 0) {
+    if (name.length == sizeof("table") - 1
+        && memcmp(name.data, "table", name.length) == 0) {
         return (void*)&spectest_table;
     }
 
-    if (strcmp(name, "memory") == 0) {
-        return (void*)&spectest_memory;
+    if (name.length == sizeof("memory") - 1
+        && memcmp(name.data, "memory", name.length) == 0) {
+        return (void*)spectest_memory;
     }
 
-    if (strcmp(name, "global_i32") == 0) {
+    if (name.length == sizeof("global_i32") - 1
+        && memcmp(name.data, "global_i32", name.length) == 0) {
         return (void*)&spectest_global_i32;
     }
 
-    if (strcmp(name, "global_i64") == 0) {
+    if (name.length == sizeof("global_i64") - 1
+        && memcmp(name.data, "global_i64", name.length) == 0) {
         return (void*)&spectest_global_i64;
     }
 
-    if (strcmp(name, "shared_memory") == 0) {
-        return (void*)&spectest_shared_memory;
+    if (name.length == sizeof("shared_memory") - 1
+        && memcmp(name.data, "shared_memory", name.length) == 0) {
+        return (void*)spectest_shared_memory;
     }
 
-    fprintf(stderr, "FAIL: import of unknown spectest item: %s\n", name);
+    fprintf(stderr, "FAIL: import of unknown spectest item: %s\n", name.data);
 
     return NULL;
 }

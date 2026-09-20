@@ -2,8 +2,10 @@
 #define W2C2_IMPORT_H
 
 #include "w2c2_base.h"
+#include "api.h"
 #include "global.h"
 #include "array.h"
+#include "name.h"
 
 typedef enum WasmImportKind {
     wasmImportKindFunction,
@@ -16,12 +18,12 @@ typedef enum WasmImportKind {
 /* Function imports */
 
 typedef struct WasmFunctionImport {
-    char* module;
-    char* name;
+    WasmName module;
+    WasmName name;
     U32 functionTypeIndex;
 } WasmFunctionImport;
 
-static const WasmFunctionImport wasmEmptyFunctionImport = {NULL, NULL, 0};
+static const WasmFunctionImport wasmEmptyFunctionImport = {{NULL, 0}, {NULL, 0}, 0};
 
 ARRAY_TYPE(
     WasmFunctionImports,
@@ -34,12 +36,12 @@ ARRAY_TYPE(
 /* Global imports */
 
 typedef struct WasmGlobalImport {
-    char* module;
-    char* name;
+    WasmName module;
+    WasmName name;
     WasmGlobalType globalType;
 } WasmGlobalImport;
 
-static const WasmGlobalImport wasmEmptyGlobalImport = {NULL, NULL, {0, false}};
+static const WasmGlobalImport wasmEmptyGlobalImport = {{NULL, 0}, {NULL, 0}, {0, false}};
 
 ARRAY_TYPE(
     WasmGlobalImports,
@@ -52,14 +54,14 @@ ARRAY_TYPE(
 /* Memory imports */
 
 typedef struct WasmMemoryImport {
-    char* module;
-    char* name;
+    WasmName module;
+    WasmName name;
     U32 min;
     U32 max;
-    bool shared;
+    WasmBool shared;
 } WasmMemoryImport;
 
-static const WasmMemoryImport wasmEmptyMemoryImport = {NULL, NULL, 0, 0, false};
+static const WasmMemoryImport wasmEmptyMemoryImport = {{NULL, 0}, {NULL, 0}, 0, 0, false};
 
 ARRAY_TYPE(
     WasmMemoryImports,
@@ -72,14 +74,14 @@ ARRAY_TYPE(
 /* Table imports */
 
 typedef struct WasmTableImport {
-    char* module;
-    char* name;
+    WasmName module;
+    WasmName name;
     U32 min;
     U32 max;
-    bool shared;
+    WasmBool shared;
 } WasmTableImport;
 
-static const WasmTableImport wasmEmptyTableImport = {NULL, NULL, 0, 0, false};
+static const WasmTableImport wasmEmptyTableImport = {{NULL, 0}, {NULL, 0}, 0, 0, false};
 
 ARRAY_TYPE(
     WasmTableImports,

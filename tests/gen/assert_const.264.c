@@ -5,11 +5,11 @@
 #include "test_const.264.h"
 
 void test() {
-    const264Instance instance;
-    const264Instantiate(&instance, resolveTestImports);
+    m9_constX2E264Instance instance;
+    m9_constX2E264Instantiate(&instance, resolveTestImports);
     printStart("const.264.wasm");
     assertEqualF32(
-        const264_f(&instance),
+        m9_constX2E264Export1_f(&instance),
         1125900309495808.0,
         "f()"
     );

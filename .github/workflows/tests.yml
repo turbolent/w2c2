@@ -1,11 +1,11 @@
 name: tests
 
 on:
-  create:
-    tags:
   push:
     branches:
       - main
+    tags:
+      - '**'
   pull_request:
 
 concurrency:
@@ -35,7 +35,7 @@ jobs:
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static                        }
 
           # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
-          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true }
+          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true, cflags: -Wno-atomic-alignment }
           - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static                         }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static,       linkAtomic: true }
           - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static,     linkAtomic: true }
@@ -52,6 +52,7 @@ jobs:
 
     env:
       CC: ${{ matrix.system.cc }}
+      CFLAGS: -Werror ${{ matrix.system.cflags }}
 
     steps:
       - uses: actions/checkout@v3
@@ -72,11 +73,15 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
@@ -92,19 +97,22 @@ jobs:
         working-directory: ./w2c2
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.system.target == 'clang' && matrix.build == 'debug'
+        name: Test w2c2 with ASan
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./w2c2
+        run: |
+          make clean
+          make BUILD=debug SANITIZERS=address FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+          make test BUILD=debug SANITIZERS=address FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
+
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Build futex
         working-directory: ./futex
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
-        name: Test futex
-        env:
-          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
-        working-directory: ./futex
-        run: make test BUILD=${{ matrix.build }}
-
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Run WebAssembly tests
         env:
           LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
@@ -113,17 +121,47 @@ jobs:
         shell: bash
         run: make run-tests
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target != 'clang'
+        name: Test futex
+        env:
+          LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
+        working-directory: ./futex
+        run: make test BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target == 'clang'
+        name: Test futex with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./futex
+        run: |
+          make clean
+          make test BUILD=${{ matrix.build }} SANITIZERS=address
+
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads && matrix.system.target == 'clang' && matrix.build == 'debug'
+        name: Test runtime ownership with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./tests
+        run: make runtime-lifecycle-test SANITIZERS=address
+
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target != 'clang'
         name: Build wasi
         working-directory: ./wasi
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target != 'clang'
         name: Test wasi
         env:
           LDFLAGS: -static ${{ matrix.system.linkAtomic && '-latomic' || '' }}
         working-directory: ./wasi
         run: make test BUILD=${{ matrix.build }}
+
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads && matrix.system.target == 'clang'
+        name: Test WASI with AddressSanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        working-directory: ./wasi
+        run: make test BUILD=${{ matrix.build }} SANITIZERS=address
   macos:
     runs-on: macos-latest
     name: "macOS (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
@@ -134,6 +172,9 @@ jobs:
         build: [release, debug]
         threads: [true, false]
 
+    env:
+      CFLAGS: -Werror
+
     steps:
       - uses: actions/checkout@v3
 
@@ -142,11 +183,15 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
               - 'futex/**'
               - 'tests/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
@@ -158,34 +203,66 @@ jobs:
         working-directory: ./w2c2
         run: make test BUILD=${{ matrix.build }} FEATURES="unistd libgen getopt glob ${{ matrix.threads && 'threads' || '' }}"
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Build futex
         working-directory: ./futex
         run: make BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Test futex
         working-directory: ./futex
         run: make test BUILD=${{ matrix.build }}
 
-      - if: steps.changes.outputs.w2c2 == 'true'
+      - if: steps.changes.outputs.w2c2 == 'true' && matrix.threads
         name: Run WebAssembly tests
         working-directory: ./tests
         shell: bash
         run: make run-tests
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Build wasi
         working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
+        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
 
-      - if: steps.changes.outputs.wasi == 'true'
+      - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Test wasi
         working-directory: ./wasi
-        run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat pthreads"
+        run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
+
+  library:
+    runs-on: ${{ matrix.os }}
+    name: "Library (${{ matrix.os }}, shared=${{ matrix.shared }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        shared: ["OFF", "ON"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and test library
+        run: |
+          cmake -S w2c2 -B build -DSHARED_LIB=${{ matrix.shared }}
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
+      - name: Test relocated installation
+        run: |
+          cmake --install build --prefix "$PWD/install"
+          mv install relocated
+          cmake -S tests/embedding -B consumer -DCMAKE_PREFIX_PATH="$PWD/relocated"
+          cmake --build consumer --parallel 4
+          ctest --test-dir consumer --output-on-failure
+          printf '\000asm\001\000\000\000' > empty.wasm
+          relocated/bin/w2c2 empty.wasm empty.c
+      - name: Test Make library and installation
+        run: |
+          shared=0
+          if [ "${{ matrix.shared }}" = "ON" ]; then shared=1; fi
+          make -C w2c2 test SHARED_LIB=$shared
+          make -C w2c2 install SHARED_LIB=$shared PREFIX=/w2c2 DESTDIR="$PWD/stage"
+          stage/w2c2/bin/w2c2 empty.wasm make.c
 
   windows-msvc:
-    runs-on: windows-2019
+    runs-on: windows-latest
     name: "Windows (MSVC)"
 
     steps:
@@ -195,20 +272,39 @@ jobs:
         with:
           filters: |
             w2c2:
+              - '.github/workflows/tests.yml'
               - 'w2c2/**'
+              - 'examples/embed/**'
+              - 'tests/embedding/**'
             wasi:
+              - '.github/workflows/tests.yml'
               - 'wasi/**'
+              - 'w2c2/w2c2_base.h'
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Build w2c2
         working-directory: ./w2c2
         run: |
-          cmake -Bbuild
+          cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
+          ctest --test-dir build -C Debug --output-on-failure
+          cmake --install build --config Debug --prefix "$PWD/install"
+          Move-Item install relocated
+          cmake -S ../tests/embedding -B consumer -DCMAKE_PREFIX_PATH="$PWD/relocated"
+          cmake --build consumer
+          ctest --test-dir consumer -C Debug --output-on-failure
+
+      - if: steps.changes.outputs.w2c2 == 'true'
+        name: Reject Windows shared library configuration
+        working-directory: ./w2c2
+        run: |
+          cmake -B shared-build -DSHARED_LIB=ON
+          if ($LASTEXITCODE -eq 0) { throw "Windows shared libraries must be rejected" }
+          exit 0
 
       - if: steps.changes.outputs.wasi == 'true'
         name: Build wasi
         working-directory: ./wasi
         run: |
-          cmake -Bbuild
+          cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build

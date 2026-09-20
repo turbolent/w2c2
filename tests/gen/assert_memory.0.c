@@ -5,7 +5,7 @@
 #include "test_memory.0.h"
 
 void test() {
-    memory0Instance instance;
-    memory0Instantiate(&instance, resolveTestImports);
+    m8_memoryX2E0Instance instance;
+    m8_memoryX2E0Instantiate(&instance, resolveTestImports);
     printStart("memory.0.wasm");
 }

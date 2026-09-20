@@ -5,11 +5,11 @@
 #include "test_const.265.h"
 
 void test() {
-    const265Instance instance;
-    const265Instantiate(&instance, resolveTestImports);
+    m9_constX2E265Instance instance;
+    m9_constX2E265Instantiate(&instance, resolveTestImports);
     printStart("const.265.wasm");
     assertEqualF32(
-        const265_f(&instance),
+        m9_constX2E265Export1_f(&instance),
         -1125900309495808.0,
         "f()"
     );

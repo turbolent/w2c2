@@ -5,7 +5,7 @@
 #include "test_const.80.h"
 
 void test() {
-    const80Instance instance;
-    const80Instantiate(&instance, resolveTestImports);
+    m8_constX2E80Instance instance;
+    m8_constX2E80Instantiate(&instance, resolveTestImports);
     printStart("const.80.wasm");
 }

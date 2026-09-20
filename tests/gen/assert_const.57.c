@@ -5,7 +5,7 @@
 #include "test_const.57.h"
 
 void test() {
-    const57Instance instance;
-    const57Instantiate(&instance, resolveTestImports);
+    m8_constX2E57Instance instance;
+    m8_constX2E57Instantiate(&instance, resolveTestImports);
     printStart("const.57.wasm");
 }

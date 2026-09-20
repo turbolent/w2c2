@@ -5,7 +5,7 @@
 #include "test_const.86.h"
 
 void test() {
-    const86Instance instance;
-    const86Instantiate(&instance, resolveTestImports);
+    m8_constX2E86Instance instance;
+    m8_constX2E86Instantiate(&instance, resolveTestImports);
     printStart("const.86.wasm");
 }

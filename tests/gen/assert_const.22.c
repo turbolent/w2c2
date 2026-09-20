@@ -5,7 +5,7 @@
 #include "test_const.22.h"
 
 void test() {
-    const22Instance instance;
-    const22Instantiate(&instance, resolveTestImports);
+    m8_constX2E22Instance instance;
+    m8_constX2E22Instantiate(&instance, resolveTestImports);
     printStart("const.22.wasm");
 }

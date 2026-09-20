@@ -5,7 +5,7 @@
 #include "test_const.1.h"
 
 void test() {
-    const1Instance instance;
-    const1Instantiate(&instance, resolveTestImports);
+    m7_constX2E1Instance instance;
+    m7_constX2E1Instantiate(&instance, resolveTestImports);
     printStart("const.1.wasm");
 }

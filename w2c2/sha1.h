@@ -9,6 +9,10 @@
 
 #include "w2c2_base.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SHA1_DIGEST_LENGTH 20
 
 #define SHA1_DIGEST_EMPTY { \
@@ -17,5 +21,9 @@
 }
 
 void SHA1(const unsigned char *data, size_t count, unsigned char *result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_SHA1_H */

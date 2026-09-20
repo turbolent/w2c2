@@ -5,18 +5,18 @@ W2C2 ?= ../../w2c2/w2c2
 MODE ?= gnu-ld
 
 ifneq (,$(findstring sectcreate,$(MODE)))
-	LDFLAGS += -sectcreate __DATA __datasegments datasegments
+	LDFLAGS += -sectcreate __DATA m4_llvm m4_llvm.data
 endif
 ifeq ($(MODE),gnu-ld)
-    OBJS += datasegments.o
+    OBJS += m4_llvm.data.o
 endif
 
-clang: clang.o
+sys/bin/llvm: llvm.o
 	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
-clang.c: clang.wasm
+llvm.c: llvm.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 .PHONY: clean
 clean:
-	rm -f clang clang.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f sys/bin/llvm llvm.h m4_llvm.data $(filter-out main.c,$(wildcard *.c)) *.o

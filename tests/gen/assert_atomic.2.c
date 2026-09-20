@@ -5,7 +5,7 @@
 #include "test_atomic.2.h"
 
 void test() {
-    atomic2Instance instance;
-    atomic2Instantiate(&instance, resolveTestImports);
+    m8_atomicX2E2Instance instance;
+    m8_atomicX2E2Instantiate(&instance, resolveTestImports);
     printStart("atomic.2.wasm");
 }

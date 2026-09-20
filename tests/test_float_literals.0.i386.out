@@ -38,6 +38,11 @@ OK: f32_dec.misc_int()
 OK: f32_dec.large_int()
 OK: f32_dec.min_int32()
 OK: f32_dec.min_int64()
+OK: f64.nan()
+OK: f64.positive_nan()
+OK: f64.negative_nan()
+OK: f64.plain_nan()
+FAIL: f64.informally_known_as_plain_snan(): 9222246136947933184 != 9219994337134247936
 OK: f64.all_ones_nan()
 FAIL: f64.misc_nan(): 9221140253039434428 != 9218888453225749180
 FAIL: f64.misc_positive_nan(): 9221969081593694217 != 9219717281780008969

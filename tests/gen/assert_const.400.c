@@ -5,11 +5,11 @@
 #include "test_const.400.h"
 
 void test() {
-    const400Instance instance;
-    const400Instantiate(&instance, resolveTestImports);
+    m9_constX2E400Instance instance;
+    m9_constX2E400Instantiate(&instance, resolveTestImports);
     printStart("const.400.wasm");
     assertEqualF64(
-        const400_f(&instance),
+        m9_constX2E400Export1_f(&instance),
         4.149515568880995e+180,
         "f()"
     );

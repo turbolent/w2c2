@@ -5,21 +5,21 @@
 #include "test_exports.11.h"
 
 void test() {
-    exports11Instance instance;
-    exports11Instantiate(&instance, resolveTestImports);
+    m10_exportsX2E11Instance instance;
+    m10_exportsX2E11Instantiate(&instance, resolveTestImports);
     printStart("exports.11.wasm");
     assertEqualU32(
-        exports11_a(&instance),
+        m10_exportsX2E11Export1_a(&instance),
         42u,
         "a()"
     );
     assertEqualU32(
-        exports11_b(&instance),
+        m10_exportsX2E11Export1_b(&instance),
         42u,
         "b()"
     );
     assertEqualU32(
-        exports11_c(&instance),
+        m10_exportsX2E11Export1_c(&instance),
         42u,
         "c()"
     );

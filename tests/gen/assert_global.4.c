@@ -5,7 +5,7 @@
 #include "test_global.4.h"
 
 void test() {
-    global4Instance instance;
-    global4Instantiate(&instance, resolveTestImports);
+    m8_globalX2E4Instance instance;
+    m8_globalX2E4Instantiate(&instance, resolveTestImports);
     printStart("global.4.wasm");
 }

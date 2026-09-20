@@ -1,13 +1,16 @@
-OBJLIST=$(filter-out clang.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+OBJCOPY ?= objcopy
 
-clang: clang.o
+OBJLIST=$(filter-out llvm.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+sys/bin/llvm: llvm.o
 	$(MAKE) -f Submake $(OBJLIST)
-	$(CC) $(CFLAGS) $(OBJLIST) clang.o -o clang $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJLIST) llvm.o -o $@ $(LDFLAGS)
 
-datasegments.o: clang.c
-	ld -r -b binary -o datasegments.o datasegments
-
-clang.o: CFLAGS += -O0
+m4_llvm.data.o: llvm.c
+	ld -r -b binary -o m4_llvm.data.o m4_llvm.data
+	$(OBJCOPY) --redefine-sym _binary_m4_llvm_data_start=m4_llvmData \
+		--redefine-sym _binary_m4_llvm_data_end=m4_llvmDataEnd \
+		--redefine-sym _binary_m4_llvm_data_size=m4_llvmDataSize m4_llvm.data.o
 
 %.o: %.c
-	$(CC) -I.. -O3 $(CFLAGS) -c $< -o $@
+	$(CC) -I.. $(CFLAGS) -c $< -o $@

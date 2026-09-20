@@ -1,11 +1,16 @@
+OBJCOPY ?= objcopy
+
 OBJLIST=$(filter-out rustwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 rust-wasi: rustwasi.o
 	$(MAKE) -f Submake $(OBJLIST)
 	$(CC) $(CFLAGS) $(OBJLIST) rustwasi.o -o rust-wasi $(LDFLAGS)
 
-datasegments.o: rustwasi.c
-	ld -r -b binary -o datasegments.o datasegments
+m9_rustx2dwasi.data.o: rustwasi.c
+	ld -r -b binary -o m9_rustx2dwasi.data.o m9_rustx2dwasi.data
+	$(OBJCOPY) --redefine-sym _binary_m9_rustx2dwasi_data_start=m9_rustX2DwasiData \
+		--redefine-sym _binary_m9_rustx2dwasi_data_end=m9_rustX2DwasiDataEnd \
+		--redefine-sym _binary_m9_rustx2dwasi_data_size=m9_rustX2DwasiDataSize m9_rustx2dwasi.data.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

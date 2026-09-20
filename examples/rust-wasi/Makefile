@@ -5,10 +5,10 @@ W2C2 ?= ../../w2c2/w2c2
 MODE ?= gnu-ld
 
 ifneq (,$(findstring sectcreate,$(MODE)))
-	LDFLAGS += -sectcreate __DATA __datasegments datasegments
+	LDFLAGS += -sectcreate __DATA m9_rustX2Dwasi m9_rustx2dwasi.data
 endif
 ifeq ($(MODE),gnu-ld)
-    OBJS += datasegments.o
+    OBJS += m9_rustx2dwasi.data.o
 endif
 
 rust-wasi: rustwasi.o
@@ -23,4 +23,4 @@ target/wasm32-wasi/debug/rust-wasi.wasm:
 
 .PHONY: clean
 clean:
-	rm -f rust-wasi rustwasi.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f rust-wasi rustwasi.h m9_rustx2dwasi.data $(filter-out main.c,$(wildcard *.c)) *.o

@@ -16,16 +16,16 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
-    return threads_memory((threadsInstance*)instance);
+    return m7_threadsExport6_memory((m7_threadsInstance*)instance);
 }
 
 extern char** environ;
 
 int main(int argc, char** argv) {
-    threadsInstance instance;
-    threadsInstantiate(&instance, NULL);
+    m7_threadsInstance instance;
+    m7_threadsInstantiate(&instance, NULL);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
@@ -37,9 +37,9 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    threads__start(&instance);
+    m7_threadsExport6_X5Fstart(&instance);
 
-    threadsFreeInstance(&instance);
+    m7_threadsFreeInstance(&instance);
 
     return 0;
 }

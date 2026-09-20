@@ -6,7 +6,8 @@
 #include "dino.h"
 
 F32
-Math__random() {
+i4_Math6_random(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -28,9 +29,9 @@ static const U32 frameDuration = 1.0 / 60 * 1000;
 /* Main */
 
 int main() {
-    dinoInstance instance;
-    dinoInstantiate(&instance, NULL);
-    wasmMemory* mem = dino_mem(&instance);
+    m4_dinoInstance instance;
+    m4_dinoInstantiate(&instance, NULL);
+    wasmMemory* mem = m4_dinoExport3_mem(&instance);
 
     /* Initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -73,7 +74,7 @@ int main() {
     );
 
     /* Draw initial frame */
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     bool running = false;
     U32 last = SDL_GetTicks();
@@ -115,7 +116,7 @@ int main() {
 
         /* Advance game loop */
         if (running) {
-            dino_run(&instance);
+            m4_dinoExport3_run(&instance);
         }
 
         /* Render */

@@ -10,9 +10,7 @@ typedef long ssize_t;
 #include <sys/types.h>
 #endif
 
-#ifndef PLAN9
 #include <limits.h>
-#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -51,6 +49,8 @@ typedef struct WASI {
     char** argv;
     WasiFileDescriptors fds;
 } WASI;
+
+extern wasmMemory* wasiMemory(wasmModuleInstance* instance);
 
 bool
 WARN_UNUSED_RESULT
@@ -629,6 +629,30 @@ typedef U32 WasiClock;
 
 /* The CPU-time clock associated with the current thread */
 #define WASI_CLOCK_THREAD_CPUTIME_ID 3
+
+/* The type of an event or subscription */
+typedef U8 WasiEventType;
+
+/* A clock reached its subscribed time */
+#define WASI_EVENT_TYPE_CLOCK 0
+
+/* A file descriptor has data available for reading */
+#define WASI_EVENT_TYPE_FD_READ 1
+
+/* A file descriptor has capacity available for writing */
+#define WASI_EVENT_TYPE_FD_WRITE 2
+
+/* Flags that control a clock subscription */
+typedef U16 WasiSubclockFlags;
+
+/* Interpret a clock subscription's timeout as an absolute timestamp */
+#define WASI_SUBCLOCK_FLAGS_ABSTIME (1 << 0)
+
+/* Flags that describe a file descriptor event */
+typedef U16 WasiEventRwFlags;
+
+/* The peer closed or disconnected */
+#define WASI_EVENT_RW_FLAGS_HANGUP (1 << 0)
 
 /* Permanent reference to the first directory entry within a directory */
 #define WASI_DIRCOOKIE_START 0

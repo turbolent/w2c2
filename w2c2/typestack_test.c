@@ -9,7 +9,7 @@ testTypeStack(void) {
     {
         const size_t actualLength = typeStack.length;
         if (actualLength != 0) {
-            fprintf(stderr, "FAIL testTypeStack: incorrect length: %ld != %d\n", actualLength, 0);
+            fprintf(stderr, "FAIL testTypeStack: incorrect length: %llu != %d\n", (U64)actualLength, 0);
             exit(1);
         }
     }
@@ -46,9 +46,9 @@ testTypeStack(void) {
         if (actualLength != expectedLength) {
             fprintf(
                 stderr,
-                "FAIL testTypeStack: incorrect length after sets: %ld != %ld\n",
-                actualLength,
-                expectedLength
+                "FAIL testTypeStack: incorrect length after sets: %llu != %llu\n",
+                (U64)actualLength,
+                (U64)expectedLength
             );
             exit(1);
         }
@@ -81,5 +81,6 @@ testTypeStack(void) {
             }
         }
     }
+    wasmTypeStackFree(&typeStack);
     fprintf(stderr, "PASS testTypeStack\n");
 }

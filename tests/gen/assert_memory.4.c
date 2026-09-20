@@ -5,7 +5,7 @@
 #include "test_memory.4.h"
 
 void test() {
-    memory4Instance instance;
-    memory4Instantiate(&instance, resolveTestImports);
+    m8_memoryX2E4Instance instance;
+    m8_memoryX2E4Instantiate(&instance, resolveTestImports);
     printStart("memory.4.wasm");
 }

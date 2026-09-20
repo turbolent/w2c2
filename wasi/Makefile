@@ -17,6 +17,10 @@ endif
 
 CFLAGS += -std=c89 $(WARNS)
 
+ifeq ($(UNAME),Darwin)
+	CFLAGS += -D_BSD_SOURCE=1
+endif
+
 # By default assume the system has
 # - unistd.h
 # - sys/uio.h
@@ -27,8 +31,13 @@ CFLAGS += -std=c89 $(WARNS)
 # - timespec
 # - lstat
 # - getentropy
+# - poll
 # - threads
-FEATURES ?= unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
+DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
+ifneq ($(UNAME),Windows)
+DEFAULT_FEATURES += poll
+endif
+FEATURES ?= $(DEFAULT_FEATURES)
 
 ifeq ($(UNAME),Linux)
 	LDFLAGS += -lm
@@ -70,6 +79,10 @@ ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
 endif
 
+ifneq (,$(findstring poll,$(FEATURES)))
+	CFLAGS += -DHAS_POLL=1
+endif
+
 ifneq (,$(findstring threads,$(FEATURES)))
 ifeq ($(UNAME),Windows)
 	CFLAGS += -DWASM_THREADS_WIN32
@@ -89,7 +102,7 @@ ifneq (,$(findstring clang,$(SANITIZERS)))
 CFLAGS += -fsanitize=integer -fsanitize=implicit-conversion
 endif
 ifneq (,$(findstring address,$(SANITIZERS)))
-CFLAGS += -fsanitize=address
+CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 ifneq (,$(findstring thread,$(SANITIZERS)))
 CFLAGS += -fsanitize=thread
@@ -97,7 +110,11 @@ endif
 
 .PHONY: clean
 
-OBJECTS = $(patsubst %.c,%.o,$(filter-out test.c,$(wildcard *.c)))
+SOURCES := $(filter-out test.c,$(wildcard *.c))
+ifneq ($(UNAME),Windows)
+SOURCES := $(filter-out win32.c,$(SOURCES))
+endif
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

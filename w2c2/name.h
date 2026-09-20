@@ -5,7 +5,7 @@
 
 ARRAY_TYPE(
     WasmNames,
-    char*,
+    WasmName,
     wasmNames,
     names,
     name

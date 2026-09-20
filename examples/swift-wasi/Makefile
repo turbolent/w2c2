@@ -5,10 +5,10 @@ W2C2 ?= ../../w2c2/w2c2
 MODE ?= gnu-ld
 
 ifneq (,$(findstring sectcreate,$(MODE)))
-	LDFLAGS += -sectcreate __DATA __datasegments datasegments
+	LDFLAGS += -sectcreate __DATA m10_swiftX2Dwasi m10_swiftx2dwasi.data
 endif
 ifeq ($(MODE),gnu-ld)
-    OBJS += datasegments.o
+    OBJS += m10_swiftx2dwasi.data.o
 endif
 
 swift-wasi: swiftwasi.o
@@ -25,4 +25,4 @@ swift-wasi.wasm: .build/wasm32-unknown-wasi/release/swift-wasi.wasm
 
 .PHONY: clean
 clean:
-	rm -f swift-wasi swiftwasi.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f swift-wasi swiftwasi.h m10_swiftx2dwasi.data $(filter-out main.c,$(wildcard *.c)) *.o

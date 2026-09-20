@@ -5,11 +5,11 @@
 #include "test_const.368.h"
 
 void test() {
-    const368Instance instance;
-    const368Instantiate(&instance, resolveTestImports);
+    m9_constX2E368Instance instance;
+    m9_constX2E368Instantiate(&instance, resolveTestImports);
     printStart("const.368.wasm");
     assertEqualF64(
-        const368_f(&instance),
+        m9_constX2E368Export1_f(&instance),
         2.409919865102885e-181,
         "f()"
     );

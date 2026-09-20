@@ -16,17 +16,17 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
-    return ls_memory((lsInstance*)instance);
+    return m2_lsExport6_memory((m2_lsInstance*)instance);
 }
 
 extern char** environ;
 
 
 int main(int argc, char** argv) {
-    lsInstance instance;
-    lsInstantiate(&instance, NULL);
+    m2_lsInstance instance;
+    m2_lsInstantiate(&instance, NULL);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
@@ -39,9 +39,9 @@ int main(int argc, char** argv) {
     }
 
 
-    ls__start(&instance);
+    m2_lsExport6_X5Fstart(&instance);
 
-    lsFreeInstance(&instance);
+    m2_lsFreeInstance(&instance);
 
     return 0;
 }

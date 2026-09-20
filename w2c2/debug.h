@@ -4,9 +4,15 @@
 #include "w2c2_base.h"
 #include "buffer.h"
 #include "array.h"
+#include "diagnostic.h"
+#include "name.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct WasmDebugSection {
-    char* name;
+    WasmName name;
     Buffer buffer;
 } WasmDebugSection;
 
@@ -36,7 +42,12 @@ static const WasmDebugLines emptyWasmDebugLines = {0, 0, NULL};
 
 WasmDebugLines
 wasmParseDebugInfo(
-    WasmDebugSections sections
+    WasmDebugSections sections,
+    WasmDiagnostics diagnostics
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_DEBUG_H */

@@ -5,7 +5,7 @@
 #include "test_float_exprs.9.h"
 
 void test() {
-    floatexprs9Instance instance;
-    floatexprs9Instantiate(&instance, resolveTestImports);
+    m13_floatX5FexprsX2E9Instance instance;
+    m13_floatX5FexprsX2E9Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.9.wasm");
 }

@@ -1,10 +1,9 @@
 // -*- C++ -*-
-//===--------------------------- complex.h --------------------------------===//
+//===----------------------------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -21,17 +20,13 @@
 #include <__config>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
 #ifdef __cplusplus
+#  include <ccomplex>
+#elif __has_include_next(<complex.h>)
+#  include_next <complex.h>
+#endif
 
-#include <ccomplex>
-
-#else  // __cplusplus
-
-#include_next <complex.h>
-
-#endif  // __cplusplus
-
-#endif  // _LIBCPP_COMPLEX_H
+#endif // _LIBCPP_COMPLEX_H

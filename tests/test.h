@@ -40,6 +40,6 @@ printOK(
 
 void*
 resolveTestImports(
-    const char* module,
-    const char* name
+    WasmName module,
+    WasmName name
 );

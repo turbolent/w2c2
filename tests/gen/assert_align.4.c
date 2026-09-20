@@ -5,7 +5,7 @@
 #include "test_align.4.h"
 
 void test() {
-    align4Instance instance;
-    align4Instantiate(&instance, resolveTestImports);
+    m7_alignX2E4Instance instance;
+    m7_alignX2E4Instantiate(&instance, resolveTestImports);
     printStart("align.4.wasm");
 }

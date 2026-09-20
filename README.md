@@ -30,7 +30,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
 - Support for many architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
 - Support for big-endian systems (e.g. PowerPC, SPARC, PA-RISC, etc.)
-- Support for various compilers (e.g. old GCC, MSVC, CodeWarrior, etc.) 
+- Support for various compilers (e.g. old GCC, MSVC, CodeWarrior, etc.)
 - Streaming/single-pass compilation, low memory usage
 - Separate compilation into multiple files
 - Parallel compilation
@@ -102,6 +102,46 @@ For example, to compile using 2 threads:
 ./w2c2 -t 2 module.wasm module.c
 ```
 
+## Embedding
+
+w2c2 builds a static translator library by default.
+Use `-DSHARED_LIB=ON` with CMake,
+or `SHARED_LIB=1` with Make,
+for a shared library on POSIX systems.
+Windows supports static libraries only.
+
+```sh
+cmake -S w2c2 -B build -DCMAKE_INSTALL_PREFIX=/your/prefix
+cmake --build build
+ctest --test-dir build --output-on-failure
+cmake --install build
+```
+
+CMake installs the library, public headers, CLI, and a relocatable package.
+Consumers can use:
+
+```cmake
+find_package(w2c2 CONFIG REQUIRED)
+target_link_libraries(my_translator PRIVATE w2c2::w2c2_lib)
+```
+
+Pass `-DCMAKE_PREFIX_PATH=/your/prefix` when configuring the consumer.
+The package supplies the library's thread and libdwarf dependencies when enabled.
+
+With Make:
+
+```sh
+make -C w2c2
+make -C w2c2 test
+make -C w2c2 install PREFIX=/your/prefix
+cc -I/your/prefix/include/w2c2 examples/embed/main.c /your/prefix/lib/libw2c2.a -lm -pthread -o embed
+```
+
+Make installation supports `DESTDIR` for staging.
+Add `-ldwarf` when the library was built with libdwarf support.
+The CMake package is installed by CMake only.
+Run `make clean` before changing build features or switching library types.
+
 ## Examples
 
 Coremark:
@@ -138,7 +178,7 @@ make run-tests
 - [ ] `fd_fdstat_set_flags`
 - [ ] `fd_fdstat_set_rights`
 - [x] `fd_filestat_get`
-- [ ] `fd_filestat_set_size`
+- [x] `fd_filestat_set_size`
 - [ ] `fd_filestat_set_times`
 - [x] `fd_pread`
 - [x] `fd_prestat_get`
@@ -161,7 +201,7 @@ make run-tests
 - [x] `path_rename`
 - [x] `path_symlink`
 - [x] `path_unlink_file`
-- [ ] `poll_oneoff`
+- [x] `poll_oneoff`
 - [x] `proc_exit`
 - [x] `random_get`
 - [ ] `sched_yield`
@@ -184,8 +224,10 @@ To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e
 
 - On Linux, try installing a package named like `libdwarf-dev`
 - On macOS, you can use [Homebrew](https://brew.sh/) and install `libdwarf` (not `dwarf`!)
-- w2c2 currently defaults to using the libdwarf API of >=v0.4.2. v0.6.0 has been tested to work successfully too.
-- If using a version <0.4.2, try passing `-DDWARF_OLD=1` to CMake. Version 20200114 is known to work.
+- w2c2 currently defaults to using the libdwarf API of >=v0.4.2.
+  v0.6.0 has been tested to work successfully too.
+- If using a version <0.4.2, try passing `-DDWARF_OLD=1` to CMake.
+  Version 20201020 or later is required.
 - Since version 0.1.1, libdwarf ships with a pkg-config file, which CMake should be able to detect automatically.
 
   If libdwarf cannot be automatically found by CMake, you get the following message:
@@ -200,4 +242,3 @@ To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e
   ```
   -DDWARF_FOUND=1 -DDWARF_LIBRARIES=-ldwarf -DDWARF_LIBRARY_DIRS=/usr/lib -DDWARF_INCLUDE_DIRS=/usr/include/libdwarf
   ```
-

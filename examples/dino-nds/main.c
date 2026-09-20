@@ -7,7 +7,8 @@
 #define FP(o) (mem->data[0x5000 + (o)] / 8)
 
 F32
-Math__random() {
+i4_Math6_random(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -19,7 +20,7 @@ trap(
 }
 
 static wasmMemory* mem = NULL;
-static dinoInstance instance;
+static m4_dinoInstance instance;
 
 void vblank() {
     scanKeys();
@@ -40,7 +41,7 @@ void vblank() {
         INPUT |= 2;
     }
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
@@ -59,8 +60,8 @@ void vblank() {
 }
 
 int main(int argc, char* argv[]) {
-    dinoInstantiate(&instance, NULL);
-    mem = dino_mem(&instance);
+    m4_dinoInstantiate(&instance, NULL);
+    mem = m4_dinoExport3_mem(&instance);
 
     powerOn(POWER_ALL_2D);
     vramSetBankA(VRAM_A_LCD);

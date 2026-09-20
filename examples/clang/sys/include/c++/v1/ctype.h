@@ -1,10 +1,9 @@
 // -*- C++ -*-
-//===---------------------------- ctype.h ---------------------------------===//
+//===----------------------------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -33,28 +32,30 @@ int toupper(int c);
 #include <__config>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
-#include_next <ctype.h>
+#if __has_include_next(<ctype.h>)
+#  include_next <ctype.h>
+#endif
 
 #ifdef __cplusplus
 
-#undef isalnum
-#undef isalpha
-#undef isblank
-#undef iscntrl
-#undef isdigit
-#undef isgraph
-#undef islower
-#undef isprint
-#undef ispunct
-#undef isspace
-#undef isupper
-#undef isxdigit
-#undef tolower
-#undef toupper
+#  undef isalnum
+#  undef isalpha
+#  undef isblank
+#  undef iscntrl
+#  undef isdigit
+#  undef isgraph
+#  undef islower
+#  undef isprint
+#  undef ispunct
+#  undef isspace
+#  undef isupper
+#  undef isxdigit
+#  undef tolower
+#  undef toupper
 
 #endif
 
-#endif  // _LIBCPP_CTYPE_H
+#endif // _LIBCPP_CTYPE_H
