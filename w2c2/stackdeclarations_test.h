@@ -1,0 +1,6 @@
+#ifndef W2C2_STACKDECLARATIONS_TEST_H
+#define W2C2_STACKDECLARATIONS_TEST_H
+
+void testStackDeclarations(void);
+
+#endif /* W2C2_STACKDECLARATIONS_TEST_H */

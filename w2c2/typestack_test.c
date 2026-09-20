@@ -2,85 +2,47 @@
 #include "typestack.h"
 #include "typestack_test.h"
 
+#define CHECK(condition) \
+    do { \
+        if (!(condition)) { \
+            fprintf(stderr, "FAIL testTypeStack: line %d: %s\n", __LINE__, #condition); \
+            exit(1); \
+        } \
+    } while (0)
+
 void
 testTypeStack(void) {
-    WasmTypeStack typeStack = wasmEmptyTypeStack;
+    WasmTypeStack stack = wasmEmptyTypeStack;
+    WasmValueType* values;
+    size_t capacity;
+    size_t index;
 
-    {
-        const size_t actualLength = typeStack.length;
-        if (actualLength != 0) {
-            fprintf(stderr, "FAIL testTypeStack: incorrect length: %llu != %d\n", (U64)actualLength, 0);
-            exit(1);
-        }
+    CHECK(stack.length == 0);
+    for (index = 0; index < 1024; index++) {
+        CHECK(wasmTypeStackAppend(&stack, (WasmValueType)(index % wasmValueType_count)));
     }
-
-    if (!wasmTypeStackSet(&typeStack, 1, wasmValueTypeI64)) {
-        fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        exit(1);
+    wasmTypeStackDrop(&stack, 512);
+    CHECK(stack.length == 512);
+    CHECK(wasmTypeStackAppend(&stack, wasmValueTypeF64));
+    for (index = 0; index < 512; index++) {
+        CHECK(stack.valueTypes[index] == (WasmValueType)(index % wasmValueType_count));
     }
+    CHECK(stack.valueTypes[512] == wasmValueTypeF64);
+    CHECK(wasmTypeStackGetTopIndex(&stack, 0) == 512);
+    CHECK(wasmTypeStackGetTopIndex(&stack, 512) == 0);
 
-    if (!wasmTypeStackSet(&typeStack, 5, wasmValueTypeI32)) {
-        fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        exit(1);
-    }
-
-    if (!wasmTypeStackSet(&typeStack, 0, wasmValueTypeF64)) {
-        fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        exit(1);
-    }
-
-    if (!wasmTypeStackSet(&typeStack, 3, wasmValueTypeF32)) {
-        fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        exit(1);
-    }
-
-    if (!wasmTypeStackSet(&typeStack, 1, wasmValueTypeI32)) {
-        fprintf(stderr, "FAIL testTypeStack: failed to set\n");
-        exit(1);
-    }
-
-    {
-        const size_t expectedLength = 6;
-        const size_t actualLength = typeStack.length;
-
-        if (actualLength != expectedLength) {
-            fprintf(
-                stderr,
-                "FAIL testTypeStack: incorrect length after sets: %llu != %llu\n",
-                (U64)actualLength,
-                (U64)expectedLength
-            );
-            exit(1);
-        }
-
-        {
-            const WasmValueType expectedValues[6] = {
-                1 << wasmValueTypeF64,
-                (1 << wasmValueTypeI64) | (1 << wasmValueTypeI32),
-                0,
-                1 << wasmValueTypeF32,
-                0,
-                1 << wasmValueTypeI32
-            };
-
-            U32 index = 0;
-            for (; index < actualLength; index++) {
-                const WasmValueType actual = typeStack.valueTypes[index];
-                const WasmValueType expected = expectedValues[index];
-
-                if (actual != expected) {
-                    fprintf(
-                        stderr,
-                        "FAIL testTypeStack: incorrect value at index %u: %u != %u\n",
-                        index,
-                        actual,
-                        expected
-                    );
-                    exit(1);
-                }
-            }
-        }
-    }
-    wasmTypeStackFree(&typeStack);
+    values = stack.valueTypes;
+    capacity = stack.capacity;
+    wasmTypeStackClear(&stack);
+    CHECK(stack.length == 0 && stack.valueTypes == values && stack.capacity == capacity);
+    CHECK(wasmTypeStackAppend(&stack, wasmValueTypeI64));
+    CHECK(wasmTypeStackAppend(&stack, wasmValueTypeF32));
+    wasmTypeStackDrop(&stack, 1);
+    CHECK(wasmTypeStackAppend(&stack, wasmValueTypeF64));
+    CHECK(stack.length == 2 && stack.valueTypes[0] == wasmValueTypeI64);
+    CHECK(stack.valueTypes[1] == wasmValueTypeF64);
+    CHECK(stack.valueTypes == values && stack.capacity == capacity);
+    wasmTypeStackFree(&stack);
+    CHECK(stack.length == 0 && stack.capacity == 0 && stack.valueTypes == NULL);
     fprintf(stderr, "PASS testTypeStack\n");
 }

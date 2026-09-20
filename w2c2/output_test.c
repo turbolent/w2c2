@@ -1184,8 +1184,9 @@ testMemoryEdges(void) {
 
 static
 void
-testFunctionBufferReuse(void) {
+testFunctionBufferReuse(const bool nested) {
     static const size_t instructionCounts[] = {1024, 1, 0, 2048, 0, 2};
+    static const size_t nestingDepths[] = {64, 1, 0, 128, 0, 2};
     static const U32 fileSizes[] = {1, 2, 6};
     WasmModule module;
     WasmFunctionType type = wasmEmptyFunctionType;
@@ -1201,17 +1202,33 @@ testFunctionBufferReuse(void) {
     module.functions.functions = functions;
     module.functions.count = 6;
     for (index = 0; index < 6; index++) {
+        const size_t count = (nested ? nestingDepths : instructionCounts)[index];
+        const size_t length = (nested ? 6 : 3) * count;
         size_t instruction;
-        for (instruction = 0; instruction < instructionCounts[index]; instruction++) {
-            /* i32.const 42; drop */
-            code[index][3 * instruction] = 0x41;
-            code[index][3 * instruction + 1] = 42;
-            code[index][3 * instruction + 2] = 0x1A;
+        if (nested) {
+            /* Grow operand and label stacks together,
+             * alternating i64 and i32 between functions.
+             */
+            for (instruction = 0; instruction < count; instruction++) {
+                code[index][4 * instruction] = 0x02;
+                code[index][4 * instruction + 1] = 0x40;
+                code[index][4 * instruction + 2] = index % 2 == 0 ? 0x42 : 0x41;
+                code[index][4 * instruction + 3] = 42;
+                code[index][4 * count + 2 * instruction] = 0x1A;
+                code[index][4 * count + 2 * instruction + 1] = 0x0B;
+            }
+        } else {
+            for (instruction = 0; instruction < count; instruction++) {
+                /* i32.const 42; drop */
+                code[index][3 * instruction] = 0x41;
+                code[index][3 * instruction + 1] = 42;
+                code[index][3 * instruction + 2] = 0x1A;
+            }
         }
-        code[index][3 * instructionCounts[index]] = 0x0B;
+        code[index][length] = 0x0B;
         functions[index] = wasmEmptyFunction;
         functions[index].code.data = code[index];
-        functions[index].code.length = 3 * instructionCounts[index] + 1;
+        functions[index].code.length = length + 1;
     }
     ids = outputFunctionIDs(&module);
 
@@ -1691,7 +1708,8 @@ testOutputs(void) {
     testFloatConstantLocales();
     testMemorySize();
     testMemoryEdges();
-    testFunctionBufferReuse();
+    testFunctionBufferReuse(false);
+    testFunctionBufferReuse(true);
     testOutputBuffer();
     testOutputFormatting();
     testBorrowedBuffer();
