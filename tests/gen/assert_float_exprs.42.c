@@ -16,46 +16,46 @@ void test() {
     printOK("init(8u, 15.300000190734863)");
     m14_floatX5FexprsX2E42Export4_init(&instance, 12u, 15.399999618530273);
     printOK("init(12u, 15.399999618530273)");
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 0u),
-        15.100000381469727,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 0u)),
+        1097963930u,
         "check(0u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 4u),
-        15.199999809265137,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 4u)),
+        1098068787u,
         "check(4u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 8u),
-        15.300000190734863,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 8u)),
+        1098173645u,
         "check(8u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 12u),
-        15.399999618530273,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 12u)),
+        1098278502u,
         "check(12u)"
     );
     m14_floatX5FexprsX2E42Export3_run(&instance, 16u, 3.0);
     printOK("run(16u, 3.0)");
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 0u),
-        5.0333333015441895,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 0u)),
+        1084297489u,
         "check(0u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 4u),
-        5.066666603088379,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 4u)),
+        1084367394u,
         "check(4u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 8u),
-        5.099999904632568,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 8u)),
+        1084437299u,
         "check(8u)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E42Export5_check(&instance, 12u),
-        5.133333206176758,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E42Export5_check(&instance, 12u)),
+        1084507204u,
         "check(12u)"
     );
 }

@@ -92,30 +92,6 @@ void assertEqualU64(
     }
 }
 
-void assertEqualF32(
-    F32 actual,
-    F32 expected,
-    const char *description
-) {
-    if (actual != expected) {
-        fprintf(stderr, "FAIL: %s: %f != %f\n", description, actual, expected);
-    } else {
-        fprintf(stderr, "OK: %s\n", description);
-    }
-}
-
-void assertEqualF64(
-    F64 actual,
-    F64 expected,
-    const char *description
-) {
-    if (actual != expected) {
-        fprintf(stderr, "FAIL: %s: %f != %f\n", description, actual, expected);
-    } else {
-        fprintf(stderr, "OK: %s\n", description);
-    }
-}
-
 void printStart(const char* name) {
     fprintf(stderr, "START: %s\n", name);
 }

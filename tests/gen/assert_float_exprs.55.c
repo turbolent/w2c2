@@ -8,19 +8,19 @@ void test() {
     m14_floatX5FexprsX2E55Instance instance;
     m14_floatX5FexprsX2E55Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.55.wasm");
-    assertEqualF64(
-        m14_floatX5FexprsX2E55Export8_thepast0(&instance, 4.450147717014403e-308, 0.9999999999999999, 2.0, 0.5),
-        4.4501477170144023e-308,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E55Export8_thepast0(&instance, 4.450147717014403e-308, 0.9999999999999999, 2.0, 0.5)),
+        9007199254740991ull,
         "thepast0(4.450147717014403e-308, 0.9999999999999999, 2.0, 0.5)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E55Export8_thepast1(&instance, 5.551115123125783e-17, 0.9999999999999999, 5.551115123125783e-17),
-        -6.162975822039155e-33,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E55Export8_thepast1(&instance, 5.551115123125783e-17, 0.9999999999999999, 5.551115123125783e-17)),
+        13348669295526150144ull,
         "thepast1(5.551115123125783e-17, 0.9999999999999999, 5.551115123125783e-17)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E55Export8_thepast2(&instance, 2.350988701644575e-38, 0.5, 1.0),
-        1.1754943508222875e-38,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E55Export8_thepast2(&instance, 2.350988701644575e-38, 0.5, 1.0)),
+        8388608u,
         "thepast2(2.350988701644575e-38, 0.5, 1.0)"
     );
 }

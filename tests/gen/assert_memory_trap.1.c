@@ -29,14 +29,14 @@ void test() {
         0ull,
         "i64.load(65528u)"
     );
-    assertEqualF32(
-        m13_memoryX5FtrapX2E1Export8_f32X2Eload(&instance, 65532u),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m13_memoryX5FtrapX2E1Export8_f32X2Eload(&instance, 65532u)),
+        0u,
         "f32.load(65532u)"
     );
-    assertEqualF64(
-        m13_memoryX5FtrapX2E1Export8_f64X2Eload(&instance, 65528u),
-        0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m13_memoryX5FtrapX2E1Export8_f64X2Eload(&instance, 65528u)),
+        0ull,
         "f64.load(65528u)"
     );
 }

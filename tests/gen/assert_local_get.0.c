@@ -18,14 +18,14 @@ void test() {
         0ull,
         "type-local-i64()"
     );
-    assertEqualF32(
-        m11_localX5FgetX2E0Export14_typeX2DlocalX2Df32(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m11_localX5FgetX2E0Export14_typeX2DlocalX2Df32(&instance)),
+        0u,
         "type-local-f32()"
     );
-    assertEqualF64(
-        m11_localX5FgetX2E0Export14_typeX2DlocalX2Df64(&instance),
-        0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FgetX2E0Export14_typeX2DlocalX2Df64(&instance)),
+        0ull,
         "type-local-f64()"
     );
     assertEqualU32(
@@ -38,14 +38,14 @@ void test() {
         3ull,
         "type-param-i64(3ull)"
     );
-    assertEqualF32(
-        m11_localX5FgetX2E0Export14_typeX2DparamX2Df32(&instance, 4.400000095367432),
-        4.400000095367432,
+    assertEqualU32(
+        i32_reinterpret_f32(m11_localX5FgetX2E0Export14_typeX2DparamX2Df32(&instance, 4.400000095367432)),
+        1082969293u,
         "type-param-f32(4.400000095367432)"
     );
-    assertEqualF64(
-        m11_localX5FgetX2E0Export14_typeX2DparamX2Df64(&instance, 5.5),
-        5.5,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FgetX2E0Export14_typeX2DparamX2Df64(&instance, 5.5)),
+        4617878467915022336ull,
         "type-param-f64(5.5)"
     );
     assertEqualU32(
@@ -94,9 +94,9 @@ void test() {
         "as-if-else(0u)"
     );
     m11_localX5FgetX2E0Export10_typeX2Dmixed(&instance, 1ull, 2.200000047683716, 3.3, 4u, 5u);
-    assertEqualF64(
-        m11_localX5FgetX2E0Export4_read(&instance, 1ull, 2.0, 3.3, 4u, 5u),
-        34.8,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FgetX2E0Export4_read(&instance, 1ull, 2.0, 3.3, 4u, 5u)),
+        4630094481904264806ull,
         "read(1ull, 2.0, 3.3, 4u, 5u)"
     );
 }

@@ -8,9 +8,9 @@ void test() {
     m9_constX2E267Instance instance;
     m9_constX2E267Instantiate(&instance, resolveTestImports);
     printStart("const.267.wasm");
-    assertEqualF32(
-        m9_constX2E267Export1_f(&instance),
-        -1125899906842624.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E267Export1_f(&instance)),
+        3632267264u,
         "f()"
     );
 }

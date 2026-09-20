@@ -223,84 +223,84 @@ void test() {
         2432902008176640000ull,
         "for(20ull)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 0.0, 7.0),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 0.0, 7.0)),
+        0u,
         "nesting(0.0, 7.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 7.0, 0.0),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 7.0, 0.0)),
+        0u,
         "nesting(7.0, 0.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 1.0),
-        1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 1.0)),
+        1065353216u,
         "nesting(1.0, 1.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 2.0),
-        2.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 2.0)),
+        1073741824u,
         "nesting(1.0, 2.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 3.0),
-        4.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 3.0)),
+        1082130432u,
         "nesting(1.0, 3.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 4.0),
-        6.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 4.0)),
+        1086324736u,
         "nesting(1.0, 4.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 100.0),
-        2550.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 100.0)),
+        1159684096u,
         "nesting(1.0, 100.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 1.0, 101.0),
-        2601.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 1.0, 101.0)),
+        1159892992u,
         "nesting(1.0, 101.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 2.0, 1.0),
-        1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 2.0, 1.0)),
+        1065353216u,
         "nesting(2.0, 1.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 3.0, 1.0),
-        1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 3.0, 1.0)),
+        1065353216u,
         "nesting(3.0, 1.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 10.0, 1.0),
-        1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 10.0, 1.0)),
+        1065353216u,
         "nesting(10.0, 1.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 2.0, 2.0),
-        3.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 2.0, 2.0)),
+        1077936128u,
         "nesting(2.0, 2.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 2.0, 3.0),
-        4.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 2.0, 3.0)),
+        1082130432u,
         "nesting(2.0, 3.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 7.0, 4.0),
-        10.309523582458496,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 7.0, 4.0)),
+        1092940751u,
         "nesting(7.0, 4.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 7.0, 100.0),
-        4381.5478515625,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 7.0, 100.0)),
+        1166601314u,
         "nesting(7.0, 100.0)"
     );
-    assertEqualF32(
-        m6_loopX2E0Export7_nesting(&instance, 7.0, 101.0),
-        2601.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_loopX2E0Export7_nesting(&instance, 7.0, 101.0)),
+        1159892992u,
         "nesting(7.0, 101.0)"
     );
 }

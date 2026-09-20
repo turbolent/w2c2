@@ -8,54 +8,54 @@ void test() {
     m14_floatX5FexprsX2E16Instance instance;
     m14_floatX5FexprsX2E16Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.16.wasm");
-    assertEqualF32(
-        m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1361678981660672.0),
-        -453892982702080.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1361678981660672.0)),
+        3620628505u,
         "f32.no_fold_div_3(-1361678981660672.0)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1.873688036745896e+28),
-        -6.245626592387716e+27,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1.873688036745896e+28)),
+        3986780695u,
         "f32.no_fold_div_3(-1.873688036745896e+28)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1.2045130720366438e-25),
-        -4.0150434707392155e-26,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -1.2045130720366438e-25)),
+        2504446137u,
         "f32.no_fold_div_3(-1.2045130720366438e-25)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -5.281345934922403e-38),
-        -1.7604485982641855e-38,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -5.281345934922403e-38)),
+        2160046629u,
         "f32.no_fold_div_3(-5.281345934922403e-38)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -2.5495562672178882e-17),
-        -8.498520614999423e-18,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E16Export17_f32X2EnoX5FfoldX5FdivX5F3(&instance, -2.5495562672178882e-17)),
+        2736571681u,
         "f32.no_fold_div_3(-2.5495562672178882e-17)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -2.9563579573969634e+190),
-        -9.854526524656545e+189,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -2.9563579573969634e+190)),
+        16672802667330368301ull,
         "f64.no_fold_div_3(-2.9563579573969634e+190)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -9.291150921449772e-51),
-        -3.097050307149924e-51,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -9.291150921449772e-51)),
+        13074664638073319671ull,
         "f64.no_fold_div_3(-9.291150921449772e-51)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, 1.3808061543557006e-263),
-        4.602687181185669e-264,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, 1.3808061543557006e-263)),
+        667250911628840899ull,
         "f64.no_fold_div_3(1.3808061543557006e-263)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -1.378076163468349e+303),
-        -4.593587211561163e+302,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, -1.378076163468349e+303)),
+        18358201936817915643ull,
         "f64.no_fold_div_3(-1.378076163468349e+303)"
     );
-    assertEqualF64(
-        m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, 8.632400808831366e+124),
-        2.877466936277122e+124,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E16Export17_f64X2EnoX5FfoldX5FdivX5F3(&instance, 8.632400808831366e+124)),
+        6468791534604471399ull,
         "f64.no_fold_div_3(8.632400808831366e+124)"
     );
 }

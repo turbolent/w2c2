@@ -22,9 +22,9 @@ void test() {
     );
     m19_memoryX5FredundancyX2E0Export15_zeroX5Feverything(&instance);
     printOK("zero_everything()");
-    assertEqualF32(
-        m19_memoryX5FredundancyX2E0Export15_testX5FdeadX5Fstore(&instance),
-        4.90454462513686e-44,
+    assertEqualU32(
+        i32_reinterpret_f32(m19_memoryX5FredundancyX2E0Export15_testX5FdeadX5Fstore(&instance)),
+        35u,
         "test_dead_store()"
     );
     m19_memoryX5FredundancyX2E0Export15_zeroX5Feverything(&instance);

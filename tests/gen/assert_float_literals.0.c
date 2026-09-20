@@ -398,104 +398,104 @@ void test() {
         14114281232179134464ull,
         "f64_dec.min_int64()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep1(&instance),
-        1000000.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep1(&instance)),
+        1232348160u,
         "f32-dec-sep1()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep2(&instance),
-        1000.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep2(&instance)),
+        1148846080u,
         "f32-dec-sep2()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep3(&instance),
-        1003.1416015625,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep3(&instance)),
+        1148897552u,
         "f32-dec-sep3()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep4(&instance),
-        990000028057600.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep4(&instance)),
+        1482758550u,
         "f32-dec-sep4()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep5(&instance),
-        1.2200011857269034e+28,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep5(&instance)),
+        1847438964u,
         "f32-dec-sep5()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep1(&instance),
-        168755360.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep1(&instance)),
+        1294004234u,
         "f32-hex-sep1()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep2(&instance),
-        109071.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep2(&instance)),
+        1205143424u,
         "f32-hex-sep2()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep3(&instance),
-        41215.94140625,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep3(&instance)),
+        1193345009u,
         "f32-hex-sep3()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep4(&instance),
-        1966080.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep4(&instance)),
+        1240465408u,
         "f32-hex-sep4()"
     );
-    assertEqualF32(
-        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep5(&instance),
-        23605224144896.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep5(&instance)),
+        1437319208u,
         "f32-hex-sep5()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep1(&instance),
-        1000000.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep1(&instance)),
+        4696837146684686336ull,
         "f64-dec-sep1()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep2(&instance),
-        1000.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep2(&instance)),
+        4652007308841189376ull,
         "f64-dec-sep2()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep3(&instance),
-        1003.141592,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep3(&instance)),
+        4652034942576659200ull,
         "f64-dec-sep3()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep4(&instance),
-        9.9e-122,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep4(&instance)),
+        2796837019126844485ull,
         "f64-dec-sep4()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep5(&instance),
-        1.2200011354e+28,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep5(&instance)),
+        5027061507362119324ull,
         "f64-dec-sep5()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep1(&instance),
-        3078696982321561.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep1(&instance)),
+        4838519794133185330ull,
         "f64-hex-sep1()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep2(&instance),
-        109071.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep2(&instance)),
+        4682231715257647104ull,
         "f64-hex-sep2()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep3(&instance),
-        41215.94240794191,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep3(&instance)),
+        4675897489574114112ull,
         "f64-hex-sep3()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep4(&instance),
-        1966080.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep4(&instance)),
+        4701195061021376512ull,
         "f64-hex-sep4()"
     );
-    assertEqualF64(
-        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep5(&instance),
-        23605225168752.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep5(&instance)),
+        4806880140420149248ull,
         "f64-hex-sep5()"
     );
 }

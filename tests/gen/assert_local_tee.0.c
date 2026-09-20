@@ -18,14 +18,14 @@ void test() {
         0ull,
         "type-local-i64()"
     );
-    assertEqualF32(
-        m11_localX5FteeX2E0Export14_typeX2DlocalX2Df32(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m11_localX5FteeX2E0Export14_typeX2DlocalX2Df32(&instance)),
+        0u,
         "type-local-f32()"
     );
-    assertEqualF64(
-        m11_localX5FteeX2E0Export14_typeX2DlocalX2Df64(&instance),
-        0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FteeX2E0Export14_typeX2DlocalX2Df64(&instance)),
+        0ull,
         "type-local-f64()"
     );
     assertEqualU32(
@@ -38,14 +38,14 @@ void test() {
         11ull,
         "type-param-i64(3ull)"
     );
-    assertEqualF32(
-        m11_localX5FteeX2E0Export14_typeX2DparamX2Df32(&instance, 4.400000095367432),
-        11.100000381469727,
+    assertEqualU32(
+        i32_reinterpret_f32(m11_localX5FteeX2E0Export14_typeX2DparamX2Df32(&instance, 4.400000095367432)),
+        1093769626u,
         "type-param-f32(4.400000095367432)"
     );
-    assertEqualF64(
-        m11_localX5FteeX2E0Export14_typeX2DparamX2Df64(&instance, 5.5),
-        12.2,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FteeX2E0Export14_typeX2DparamX2Df64(&instance, 5.5)),
+        4623057607486498406ull,
         "type-param-f64(5.5)"
     );
     assertEqualU32(
@@ -197,6 +197,11 @@ void test() {
     m11_localX5FteeX2E0Export17_asX2DstoreNX2Daddress(&instance, 0u);
     m11_localX5FteeX2E0Export15_asX2DstoreNX2Dvalue(&instance, 0u);
     assertEqualU32(
+        i32_reinterpret_f32(m11_localX5FteeX2E0Export16_asX2DunaryX2Doperand(&instance, 0.0)),
+        4286640610u,
+        "as-unary-operand(0.0)"
+    );
+    assertEqualU32(
         m11_localX5FteeX2E0Export14_asX2DbinaryX2Dleft(&instance, 0u),
         13u,
         "as-binary-left(0u)"
@@ -237,9 +242,9 @@ void test() {
         56ull,
         "write(1ull, 2.0, 3.3, 4u, 5u)"
     );
-    assertEqualF64(
-        m11_localX5FteeX2E0Export6_result(&instance, 18446744073709551615ull, -2.0, -3.3, 4294967292u, 4294967291u),
-        34.8,
+    assertEqualU64(
+        i64_reinterpret_f64(m11_localX5FteeX2E0Export6_result(&instance, 18446744073709551615ull, -2.0, -3.3, 4294967292u, 4294967291u)),
+        4630094481904264806ull,
         "result(18446744073709551615ull, -2.0, -3.3, 4294967292u, 4294967291u)"
     );
 }
