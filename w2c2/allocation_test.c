@@ -40,7 +40,7 @@ static void* testRealloc(void* items, size_t size) {
 #undef calloc
 #undef realloc
 
-#include "typestack.h"
+#include "stackdeclarations.h"
 
 ARRAY_TYPE(AllocationValues, U32, allocationValues, values, value)
 
@@ -142,22 +142,22 @@ static void testArrayLimits(void) {
     CHECK(allocationCalls == 0 && saved == 42);
 }
 
-static void testTypeStackAllocation(void) {
-    WasmValueType saved = (WasmValueType)(1 << wasmValueTypeI32);
-    WasmTypeStack stack = {1, 1, NULL};
+static void testStackDeclarationsAllocation(void) {
+    U8 saved = (U8)(1U << wasmValueTypeI32);
+    WasmStackDeclarations stack = {1, 1, NULL};
     const U64 length = (U64)UINT32_MAX + 1;
-    stack.valueTypes = &saved;
+    stack.typeMasks = &saved;
     failAllocations = true;
     allocationCalls = 0;
     allocationBytes = 0;
-    CHECK(!wasmTypeStackSet(&stack, UINT32_MAX, wasmValueTypeF64));
-    CHECK(stack.valueTypes == &saved && stack.length == 1 && stack.capacity == 1);
+    CHECK(!wasmStackDeclarationsSet(&stack, UINT32_MAX, wasmValueTypeF64));
+    CHECK(stack.typeMasks == &saved && stack.length == 1 && stack.capacity == 1);
     CHECK(saved == (1 << wasmValueTypeI32));
-    if (length > (U64)((size_t)-1 / sizeof(WasmValueType))) {
+    if (length > (U64)((size_t)-1 / sizeof(U8))) {
         CHECK(allocationCalls == 0);
     } else {
         CHECK(allocationCalls == 1);
-        CHECK((U64)allocationBytes == length * sizeof(WasmValueType));
+        CHECK((U64)allocationBytes == length * sizeof(U8));
     }
 }
 
@@ -165,7 +165,7 @@ void testAllocations(void) {
     testLengthAddition();
     testArrayGrowth();
     testArrayLimits();
-    testTypeStackAllocation();
+    testStackDeclarationsAllocation();
     failAllocations = false;
     fprintf(stderr, "PASS testAllocations\n");
 }

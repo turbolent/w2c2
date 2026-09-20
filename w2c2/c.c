@@ -13,6 +13,7 @@
 #include "c_file.h"
 #include "instruction.h"
 #include "typestack.h"
+#include "stackdeclarations.h"
 #include "labelstack.h"
 
 static const char localNamePrefix = 'l';
@@ -316,7 +317,7 @@ typedef struct WasmCFunctionWriter {
     WasmOutput* output;
     WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
-    WasmTypeStack* stackDeclarations;
+    WasmStackDeclarations* stackDeclarations;
     WasmLabelStack* labelStack;
     const WasmModule* module;
     const char* moduleName;
@@ -458,7 +459,7 @@ wasmCWriteCallExpr(
                     resultStackIndex -= parameterCount;
                 }
 
-                MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
+                MUST (wasmStackDeclarationsSet(writer->stackDeclarations, resultStackIndex, resultType))
                 MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
                 MUST (wasmCWriteAssign(writer))
             }
@@ -591,7 +592,7 @@ wasmCWriteCallIndirectExpr(
                 resultStackIndex -= parameterCount;
             }
 
-            MUST (wasmTypeStackSet(writer->stackDeclarations, resultStackIndex, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, resultStackIndex, resultType))
             MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
             MUST (wasmCWriteAssign(writer))
         }
@@ -672,7 +673,7 @@ wasmCWriteLocalGetExpr(
         MUST (wasmTypeStackAppend(writer->typeStack, localType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, localType))
@@ -721,7 +722,7 @@ wasmCWriteLocalAssignmentExpr(
         }
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, localType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, localType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteLocalName(writer->output, instruction.localIndex))
@@ -775,7 +776,7 @@ wasmCWriteGlobalGetExpr(
         MUST (wasmTypeStackAppend(writer->typeStack, globalType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, globalType))
@@ -824,7 +825,7 @@ wasmCWriteGlobalSetExpr(
         }
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, globalType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteGlobalUse(writer->output, writer->module, instruction.globalIndex, false))
@@ -902,7 +903,7 @@ wasmCWriteConstExpr(
         MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
@@ -924,7 +925,7 @@ wasmCWriteLoad(
     WasmValueType resultType
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
@@ -1212,7 +1213,7 @@ wasmCWriteMemorySizeExpr(
         MUST (wasmTypeStackAppend(writer->typeStack, resultType))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(
@@ -1271,7 +1272,7 @@ wasmCWriteMemoryGrowExpr(
 
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
@@ -1527,7 +1528,7 @@ wasmCWriteUnaryExpr(
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
@@ -1559,7 +1560,7 @@ wasmCWriteInfixBinaryExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
@@ -1612,7 +1613,7 @@ wasmCWriteSignedInfixBinaryExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
@@ -1665,7 +1666,7 @@ wasmCWritePrefixBinaryExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex1, resultType))
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
@@ -1703,7 +1704,7 @@ wasmCWriteSignedShiftRightExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(
+    MUST (wasmStackDeclarationsSet(
         writer->stackDeclarations,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
@@ -1764,7 +1765,7 @@ wasmCWriteUnsignedShiftRightExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(
+    MUST (wasmStackDeclarationsSet(
         writer->stackDeclarations,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
@@ -1811,7 +1812,7 @@ wasmCWriteShiftLeftExpr(
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-    MUST (wasmTypeStackSet(
+    MUST (wasmStackDeclarationsSet(
         writer->stackDeclarations,
         stackIndex1,
         writer->typeStack->valueTypes[stackIndex1]
@@ -2109,7 +2110,7 @@ wasmCWriteGoto(
 
         if (destinationStackIndex != stackIndex0) {
 
-            MUST (wasmTypeStackSet(writer->stackDeclarations, destinationStackIndex, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, destinationStackIndex, resultType))
 
             MUST (wasmCWriteStackName(writer->output, destinationStackIndex, resultType))
             MUST (wasmCWriteAssign(writer))
@@ -2145,7 +2146,7 @@ wasmCWriteSelectExpr(
     /* same as 2 */
     const WasmValueType resultType = writer->typeStack->valueTypes[stackIndex1];
 
-    MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex2, resultType))
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(
@@ -2441,7 +2442,7 @@ wasmCWriteMemoryAtomicNotifyExpr(
 
         static const WasmValueType resultType = wasmValueTypeI32;
 
-        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+        MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex1, resultType))
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
@@ -2495,7 +2496,7 @@ wasmCWriteMemoryAtomicWaitExpr(
 
         static const WasmValueType resultType = wasmValueTypeI32;
 
-        MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+        MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex2, resultType))
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWriteStackName(writer->output, stackIndex2, resultType))
@@ -3101,7 +3102,7 @@ wasmCWriteAtomicRMWExpr(
             const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex1, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex1, resultType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
@@ -3226,7 +3227,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex2, resultType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex2, resultType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex2, resultType))
@@ -4149,7 +4150,7 @@ static
 void
 wasmCWriteStackDeclarations(
     WasmOutput* file,
-    const WasmTypeStack* stackDeclarations,
+    const WasmStackDeclarations* stackDeclarations,
     const bool pretty
 ) {
     WasmValueType testType = 0;
@@ -4158,11 +4159,7 @@ wasmCWriteStackDeclarations(
 
         U32 stackDeclarationIndex = 0;
         for (; stackDeclarationIndex < stackDeclarations->length; stackDeclarationIndex++) {
-            const WasmValueType entry = stackDeclarations->valueTypes[stackDeclarationIndex];
-            if (!entry) {
-                continue;
-            }
-            if (!wasmTypeStackIsSet(stackDeclarations, stackDeclarationIndex, testType)) {
+            if (!wasmStackDeclarationsIsSet(stackDeclarations, stackDeclarationIndex, testType)) {
                 continue;
             }
             if (written == 0) {
@@ -4210,7 +4207,7 @@ wasmCWriteFunctionReturn(
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
 
-            MUST (wasmTypeStackSet(writer->stackDeclarations, stackIndex0, returnType))
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, returnType))
 
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWrite(writer, "return "))
@@ -4229,7 +4226,7 @@ wasmCWriteFunctionBody(
     WasmOutput* file,
     OutputBuffer* buffer,
     WasmTypeStack* typeStack,
-    WasmTypeStack* stackDeclarations,
+    WasmStackDeclarations* stackDeclarations,
     WasmLabelStack* labelStack,
     const WasmModule* module,
     const char* moduleName,
@@ -4410,7 +4407,7 @@ wasmCWriteFunctionImplementations(
     const size_t functionImportCount = module->functionImports.length;
 
     WasmTypeStack typeStack = wasmEmptyTypeStack;
-    WasmTypeStack stackDeclarations = wasmEmptyTypeStack;
+    WasmStackDeclarations stackDeclarations = wasmEmptyStackDeclarations;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
     bool result = false;
 
@@ -4426,7 +4423,7 @@ wasmCWriteFunctionImplementations(
         diagnostics->location.hasFunctionIndex = true;
         diagnostics->location.functionIndex = assertSizeU32(functionImportCount) + functionIndex;
         wasmTypeStackClear(&typeStack);
-        wasmTypeStackClear(&stackDeclarations);
+        wasmStackDeclarationsClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
 
         if (debug) {
@@ -4480,7 +4477,7 @@ cleanup:
         wasmDiagnosticReportTranslationFailed(diagnostics);
     }
     wasmTypeStackFree(&typeStack);
-    wasmTypeStackFree(&stackDeclarations);
+    wasmStackDeclarationsFree(&stackDeclarations);
     wasmLabelsFree(&labelStack.labels);
     return result;
 }

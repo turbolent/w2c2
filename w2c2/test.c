@@ -3,6 +3,8 @@
 #include "runtime_memory_test.h"
 #include "runtime_shared_memory_test.h"
 #include "typestack_test.h"
+#include "stackdeclarations_test.h"
+#include "labelstack_test.h"
 #include "opcode_test.h"
 #include "sha1_test.h"
 #include "module_test.h"
@@ -21,6 +23,8 @@ main(void) {
     testRuntimeMemory();
     testRuntimeSharedMemory();
     testTypeStack();
+    testStackDeclarations();
+    testLabelStack();
     testOpcodes();
     testSHA1();
     testModuleLifecycle();

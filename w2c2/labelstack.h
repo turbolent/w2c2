@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "w2c2_base.h"
 #include "valuetype.h"
+#include "array.h"
 
 typedef struct WasmLabel {
     U32 index;
@@ -34,11 +35,6 @@ void
 wasmLabelStackClear(
     WasmLabelStack* labelStack
 ) {
-    size_t index = 0;
-    for (; index < labelStack->labels.capacity; index++) {
-        labelStack->labels.labels[index] = wasmEmptyLabel;
-    }
-
     labelStack->labels.length = 0;
     labelStack->nextLabelIndex = 0;
 }
