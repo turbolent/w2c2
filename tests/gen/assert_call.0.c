@@ -18,14 +18,14 @@ void test() {
         356ull,
         "type-i64()"
     );
-    assertEqualF32(
-        m6_callX2E0Export8_typeX2Df32(&instance),
-        3890.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_callX2E0Export8_typeX2Df32(&instance)),
+        1165172736u,
         "type-f32()"
     );
-    assertEqualF64(
-        m6_callX2E0Export8_typeX2Df64(&instance),
-        3940.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m6_callX2E0Export8_typeX2Df64(&instance)),
+        4660882566700597248ull,
         "type-f64()"
     );
     assertEqualU32(
@@ -38,14 +38,14 @@ void test() {
         64ull,
         "type-first-i64()"
     );
-    assertEqualF32(
-        m6_callX2E0Export14_typeX2DfirstX2Df32(&instance),
-        1.3200000524520874,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_callX2E0Export14_typeX2DfirstX2Df32(&instance)),
+        1068037571u,
         "type-first-f32()"
     );
-    assertEqualF64(
-        m6_callX2E0Export14_typeX2DfirstX2Df64(&instance),
-        1.64,
+    assertEqualU64(
+        i64_reinterpret_f64(m6_callX2E0Export14_typeX2DfirstX2Df64(&instance)),
+        4610064722561534525ull,
         "type-first-f64()"
     );
     assertEqualU32(
@@ -58,14 +58,14 @@ void test() {
         64ull,
         "type-second-i64()"
     );
-    assertEqualF32(
-        m6_callX2E0Export15_typeX2DsecondX2Df32(&instance),
-        32.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_callX2E0Export15_typeX2DsecondX2Df32(&instance)),
+        1107296256u,
         "type-second-f32()"
     );
-    assertEqualF64(
-        m6_callX2E0Export15_typeX2DsecondX2Df64(&instance),
-        64.1,
+    assertEqualU64(
+        i64_reinterpret_f64(m6_callX2E0Export15_typeX2DsecondX2Df64(&instance)),
+        4634211053438658150ull,
         "type-second-f64()"
     );
     assertEqualU64(
@@ -261,9 +261,9 @@ void test() {
         1u,
         "as-load-operand()"
     );
-    assertEqualF32(
-        m6_callX2E0Export16_asX2DunaryX2Doperand(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m6_callX2E0Export16_asX2DunaryX2Doperand(&instance)),
+        0u,
         "as-unary-operand()"
     );
     assertEqualU32(

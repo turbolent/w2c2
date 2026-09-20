@@ -8,9 +8,9 @@ void test() {
     m16_floatX5FliteralsX2E1Instance instance;
     m16_floatX5FliteralsX2E1Instantiate(&instance, resolveTestImports);
     printStart("float_literals.1.wasm");
-    assertEqualF64(
-        m16_floatX5FliteralsX2E1Export10_4294967249(&instance),
-        4294967249.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m16_floatX5FliteralsX2E1Export10_4294967249(&instance)),
+        4751297606777307136ull,
         "4294967249()"
     );
 }

@@ -43,7 +43,7 @@ endif
 
 .SILENT:
 
-.PHONY: run-tests runtime-lifecycle-test table-instances-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: run-tests generator-test runtime-lifecycle-test table-instances-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances clean clean-wasm-json clean-assertions clean-compiled
 
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
@@ -103,7 +103,10 @@ test_binary_names$(EXE): binary_names_test.c test_binary_names.c
 test_binary_names.c: gen/binary_names.wasm
 	$(W2C2) $< $@
 
-run-tests: atomic-offsets-test c-strings-test binary-names-test table-instances-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+generator-test:
+	$(PYTHON3) -m unittest gen_test
+
+run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))

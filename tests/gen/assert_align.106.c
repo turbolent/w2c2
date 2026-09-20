@@ -8,49 +8,49 @@ void test() {
     m9_alignX2E106Instance instance;
     m9_alignX2E106Instantiate(&instance, resolveTestImports);
     printStart("align.106.wasm");
-    assertEqualF32(
-        m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 0u),
-        10.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 0u)),
+        1092616192u,
         "f32_align_switch(0u)"
     );
-    assertEqualF32(
-        m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 1u),
-        10.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 1u)),
+        1092616192u,
         "f32_align_switch(1u)"
     );
-    assertEqualF32(
-        m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 2u),
-        10.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 2u)),
+        1092616192u,
         "f32_align_switch(2u)"
     );
-    assertEqualF32(
-        m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 3u),
-        10.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_alignX2E106Export16_f32X5FalignX5Fswitch(&instance, 3u)),
+        1092616192u,
         "f32_align_switch(3u)"
     );
-    assertEqualF64(
-        m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 0u),
-        10.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 0u)),
+        4621819117588971520ull,
         "f64_align_switch(0u)"
     );
-    assertEqualF64(
-        m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 1u),
-        10.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 1u)),
+        4621819117588971520ull,
         "f64_align_switch(1u)"
     );
-    assertEqualF64(
-        m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 2u),
-        10.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 2u)),
+        4621819117588971520ull,
         "f64_align_switch(2u)"
     );
-    assertEqualF64(
-        m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 3u),
-        10.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 3u)),
+        4621819117588971520ull,
         "f64_align_switch(3u)"
     );
-    assertEqualF64(
-        m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 4u),
-        10.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_alignX2E106Export16_f64X5FalignX5Fswitch(&instance, 4u)),
+        4621819117588971520ull,
         "f64_align_switch(4u)"
     );
     assertEqualU32(

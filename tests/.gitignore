@@ -1,2 +1,3 @@
 test_*
 !test_*.out
+__pycache__/

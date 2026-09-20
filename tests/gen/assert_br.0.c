@@ -26,14 +26,14 @@ void test() {
         2ull,
         "type-i64-value()"
     );
-    assertEqualF32(
-        m4_brX2E0Export14_typeX2Df32X2Dvalue(&instance),
-        3.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m4_brX2E0Export14_typeX2Df32X2Dvalue(&instance)),
+        1077936128u,
         "type-f32-value()"
     );
-    assertEqualF64(
-        m4_brX2E0Export14_typeX2Df64X2Dvalue(&instance),
-        4.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m4_brX2E0Export14_typeX2Df64X2Dvalue(&instance)),
+        4616189618054758400ull,
         "type-f64-value()"
     );
     m4_brX2E0Export14_asX2DblockX2Dfirst(&instance);
@@ -206,9 +206,9 @@ void test() {
         1u,
         "as-global.set-value()"
     );
-    assertEqualF32(
-        m4_brX2E0Export15_asX2DloadX2Daddress(&instance),
-        1.7000000476837158,
+    assertEqualU32(
+        i32_reinterpret_f32(m4_brX2E0Export15_asX2DloadX2Daddress(&instance)),
+        1071225242u,
         "as-load-address()"
     );
     assertEqualU64(
@@ -246,9 +246,9 @@ void test() {
         34u,
         "as-storeN-both()"
     );
-    assertEqualF32(
-        m4_brX2E0Export16_asX2DunaryX2Doperand(&instance),
-        3.4000000953674316,
+    assertEqualU32(
+        i32_reinterpret_f32(m4_brX2E0Export16_asX2DunaryX2Doperand(&instance)),
+        1079613850u,
         "as-unary-operand()"
     );
     assertEqualU32(

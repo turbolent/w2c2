@@ -22,14 +22,14 @@ void test() {
         2ull,
         "type-i64-value()"
     );
-    assertEqualF32(
-        m7_brX5FifX2E0Export14_typeX2Df32X2Dvalue(&instance),
-        3.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m7_brX5FifX2E0Export14_typeX2Df32X2Dvalue(&instance)),
+        1077936128u,
         "type-f32-value()"
     );
-    assertEqualF64(
-        m7_brX5FifX2E0Export14_typeX2Df64X2Dvalue(&instance),
-        4.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m7_brX5FifX2E0Export14_typeX2Df64X2Dvalue(&instance)),
+        4616189618054758400ull,
         "type-f64-value()"
     );
     assertEqualU32(
@@ -281,9 +281,9 @@ void test() {
         33u,
         "as-storeN-value()"
     );
-    assertEqualF64(
-        m7_brX5FifX2E0Export16_asX2DunaryX2Doperand(&instance),
-        1.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m7_brX5FifX2E0Export16_asX2DunaryX2Doperand(&instance)),
+        4607182418800017408ull,
         "as-unary-operand()"
     );
     assertEqualU32(

@@ -36,7 +36,8 @@ jobs:
 
           # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
           - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true, cflags: -Wno-atomic-alignment }
-          - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static                         }
+          # The expanded floating-point tests require long calls on HPPA.
+          - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static, cflags: -mlong-calls    }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static,       linkAtomic: true }
           - { target: mipsel,   toolchain: gcc-mipsel-linux-gnu,        cc: mipsel-linux-gnu-gcc,        qemu: qemu-mipsel-static,     linkAtomic: true }
           - { target: mips64,   toolchain: gcc-mips64-linux-gnuabi64,   cc: mips64-linux-gnuabi64-gcc,   qemu: qemu-mips64-static                       }

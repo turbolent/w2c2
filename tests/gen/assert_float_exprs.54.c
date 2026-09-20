@@ -8,9 +8,9 @@ void test() {
     m14_floatX5FexprsX2E54Instance instance;
     m14_floatX5FexprsX2E54Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.54.wasm");
-    assertEqualF32(
-        m14_floatX5FexprsX2E54Export12_llvmX5Fpr27036(&instance, 4269932491u, 14942208u),
-        -10092596.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E54Export12_llvmX5Fpr27036(&instance, 4269932491u, 14942208u)),
+        3407478836u,
         "llvm_pr27036(4269932491u, 14942208u)"
     );
 }

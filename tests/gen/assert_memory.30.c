@@ -13,9 +13,9 @@ void test() {
         1u,
         "data()"
     );
-    assertEqualF64(
-        m9_memoryX2E30Export4_cast(&instance),
-        42.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_memoryX2E30Export4_cast(&instance)),
+        4631107791820423168ull,
         "cast()"
     );
     assertEqualU32(

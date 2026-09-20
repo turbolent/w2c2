@@ -38,24 +38,24 @@ void test() {
         666ull,
         "get-z2()"
     );
-    assertEqualF32(
-        m8_globalX2E0Export5_getX2D3(&instance),
-        -3.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m8_globalX2E0Export5_getX2D3(&instance)),
+        3225419776u,
         "get-3()"
     );
-    assertEqualF64(
-        m8_globalX2E0Export5_getX2D4(&instance),
-        -4.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m8_globalX2E0Export5_getX2D4(&instance)),
+        13839561654909534208ull,
         "get-4()"
     );
-    assertEqualF32(
-        m8_globalX2E0Export5_getX2D7(&instance),
-        -13.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m8_globalX2E0Export5_getX2D7(&instance)),
+        3243245568u,
         "get-7()"
     );
-    assertEqualF64(
-        m8_globalX2E0Export5_getX2D8(&instance),
-        -14.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m8_globalX2E0Export5_getX2D8(&instance)),
+        13847442954257432576ull,
         "get-8()"
     );
     m8_globalX2E0Export5_setX2Dx(&instance, 6u);
@@ -72,14 +72,14 @@ void test() {
         7ull,
         "get-y()"
     );
-    assertEqualF32(
-        m8_globalX2E0Export5_getX2D7(&instance),
-        8.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m8_globalX2E0Export5_getX2D7(&instance)),
+        1090519040u,
         "get-7()"
     );
-    assertEqualF64(
-        m8_globalX2E0Export5_getX2D8(&instance),
-        9.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m8_globalX2E0Export5_getX2D8(&instance)),
+        4621256167635550208ull,
         "get-8()"
     );
     m8_globalX2E0Export5_setX2D7(&instance, 8.0);
@@ -94,14 +94,14 @@ void test() {
         7ull,
         "get-y()"
     );
-    assertEqualF32(
-        m8_globalX2E0Export5_getX2D7(&instance),
-        8.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m8_globalX2E0Export5_getX2D7(&instance)),
+        1090519040u,
         "get-7()"
     );
-    assertEqualF64(
-        m8_globalX2E0Export5_getX2D8(&instance),
-        9.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m8_globalX2E0Export5_getX2D8(&instance)),
+        4621256167635550208ull,
         "get-8()"
     );
     assertEqualU32(

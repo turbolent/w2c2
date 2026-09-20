@@ -15,20 +15,6 @@ assertEqualU64(
 );
 
 void
-assertEqualF32(
-    F32 actual,
-    F32 expected,
-    const char* description
-);
-
-void
-assertEqualF64(
-    F64 actual,
-    F64 expected,
-    const char *description
-);
-
-void
 printStart(
     const char* name
 );

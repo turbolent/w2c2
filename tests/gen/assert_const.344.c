@@ -8,9 +8,9 @@ void test() {
     m9_constX2E344Instance instance;
     m9_constX2E344Instantiate(&instance, resolveTestImports);
     printStart("const.344.wasm");
-    assertEqualF64(
-        m9_constX2E344Export1_f(&instance),
-        2.409919865102885e-181,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E344Export1_f(&instance)),
+        1905022642377719810ull,
         "f()"
     );
 }

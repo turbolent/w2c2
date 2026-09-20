@@ -13,6 +13,11 @@ void test() {
         2141192192u,
         "i32.load()"
     );
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance)),
+        2141192192u,
+        "f32.load()"
+    );
     m14_floatX5FmemoryX2E0Export5_reset(&instance);
     printOK("reset()");
     assertEqualU32(
@@ -20,9 +25,9 @@ void test() {
         0u,
         "i32.load()"
     );
-    assertEqualF32(
-        m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance)),
+        0u,
         "f32.load()"
     );
     m14_floatX5FmemoryX2E0Export9_f32X2Estore(&instance);
@@ -32,6 +37,11 @@ void test() {
         2141192192u,
         "i32.load()"
     );
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance)),
+        2141192192u,
+        "f32.load()"
+    );
     m14_floatX5FmemoryX2E0Export5_reset(&instance);
     printOK("reset()");
     assertEqualU32(
@@ -39,9 +49,9 @@ void test() {
         0u,
         "i32.load()"
     );
-    assertEqualF32(
-        m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance)),
+        0u,
         "f32.load()"
     );
     m14_floatX5FmemoryX2E0Export9_i32X2Estore(&instance);
@@ -50,5 +60,10 @@ void test() {
         m14_floatX5FmemoryX2E0Export8_i32X2Eload(&instance),
         2141192192u,
         "i32.load()"
+    );
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FmemoryX2E0Export8_f32X2Eload(&instance)),
+        2141192192u,
+        "f32.load()"
     );
 }

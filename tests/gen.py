@@ -62,7 +62,10 @@ def convert_value(value, t):
     elif t == "U64":
         return value + "ull"
     elif t == 'F32':
-        value = struct.unpack('f', struct.pack('I', int(value)))[0]
+        bits = int(value)
+        value = struct.unpack('f', struct.pack('I', bits))[0]
+        if math.isnan(value):
+            return 'f32_reinterpret_i32(0x{:08x}u)'.format(bits)
         if value == math.inf:
             return 'INFINITY'
         elif value == -math.inf:
@@ -70,7 +73,10 @@ def convert_value(value, t):
         else:
             return str(value)
     elif t == 'F64':
-        value = struct.unpack('d', struct.pack('Q', int(value)))[0]
+        bits = int(value)
+        value = struct.unpack('d', struct.pack('Q', bits))[0]
+        if math.isnan(value):
+            return 'f64_reinterpret_i64(0x{:016x}ull)'.format(bits)
         if value == math.inf:
             return 'INFINITY'
         elif value == -math.inf:
@@ -135,18 +141,10 @@ void test() {{
                 if not test_file:
                     continue
 
-                # TODO:
-                if 'nan' in (arg['value'] for arg in action['args']):
-                    continue
-
                 args = [
                     convert_value(arg['value'], convert_type(arg['type']))
                     for arg in action['args']
                 ]
-
-                # TODO:
-                if 'nan' in args:
-                    continue
 
                 field = action['field']
 
@@ -171,15 +169,22 @@ void test() {{
 
                     expected_type = convert_type(expected[0]['type'])
                     expected_value = expected[0]['value']
-                    # TODO:
-                    if expected_value.startswith('nan'):
-                        continue
+
+                    # Compare exact results as bits;
+                    # NaN patterns ignore only the bits left unspecified by the assertion.
+                    if expected_type in ('F32', 'F64'):
+                        width = int(expected_type[1:])
+                        expected_type = 'U' + str(width)
+                        call = 'i{0}_reinterpret_f{0}({1})'.format(width, call)
+                        if expected_value in ('nan:canonical', 'nan:arithmetic'):
+                            # Canonical NaNs allow either sign;
+                            # arithmetic NaNs also allow arbitrary lower payload bits.
+                            canonical = 0x7fc00000 if width == 32 else 0x7ff8000000000000
+                            mask = (1 << (width - 1)) - 1 if expected_value == 'nan:canonical' else canonical
+                            call = '({} & {})'.format(call, convert_value(str(mask), expected_type))
+                            expected_value = str(canonical)
 
                     expected_value = convert_value(expected_value, expected_type)
-
-                    # TODO:
-                    if expected_value == 'nan':
-                        continue
 
                     test_file.write("    assertEqual{}(\n".format(expected_type))
                     test_file.write("        {},\n".format(call))

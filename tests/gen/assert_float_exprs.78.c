@@ -68,9 +68,9 @@ void test() {
         0u,
         "f64.recoding_lt(0.0, 1.0)"
     );
-    assertEqualF32(
-        m14_floatX5FexprsX2E78Export15_recodingX5Fdemote(&instance, 2.3860049081905093e-40, 1221.0),
-        2.913312062965535e-37,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E78Export15_recodingX5Fdemote(&instance, 2.3860049081905093e-40, 1221.0)),
+        46548238u,
         "recoding_demote(2.3860049081905093e-40, 1221.0)"
     );
 }

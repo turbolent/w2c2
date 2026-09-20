@@ -168,44 +168,44 @@ void test() {
         12370766947463011818ull,
         "i64_load(12370766947463011818ull)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export8_f32X5Fload(&instance, -1.0),
-        -1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export8_f32X5Fload(&instance, -1.0)),
+        3212836864u,
         "f32_load(-1.0)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export8_f32X5Fload(&instance, 0.01233999989926815),
-        0.01233999989926815,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export8_f32X5Fload(&instance, 0.01233999989926815)),
+        1011494326u,
         "f32_load(0.01233999989926815)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export8_f32X5Fload(&instance, 4242.42431640625),
-        4242.42431640625,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export8_f32X5Fload(&instance, 4242.42431640625)),
+        1166316389u,
         "f32_load(4242.42431640625)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export8_f32X5Fload(&instance, 3.4028234663852886e+38),
-        3.4028234663852886e+38,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export8_f32X5Fload(&instance, 3.4028234663852886e+38)),
+        2139095039u,
         "f32_load(3.4028234663852886e+38)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export8_f64X5Fload(&instance, -1.0),
-        -1.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export8_f64X5Fload(&instance, -1.0)),
+        13830554455654793216ull,
         "f64_load(-1.0)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export8_f64X5Fload(&instance, 1234.56789),
-        1234.56789,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export8_f64X5Fload(&instance, 1234.56789)),
+        4653144502447687399ull,
         "f64_load(1234.56789)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export8_f64X5Fload(&instance, 424242.424242),
-        424242.424242,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export8_f64X5Fload(&instance, 424242.424242)),
+        4691032041816096430ull,
         "f64_load(424242.424242)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export8_f64X5Fload(&instance, 1.7976931348623157e+308),
-        1.7976931348623157e+308,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export8_f64X5Fload(&instance, 1.7976931348623157e+308)),
+        9218868437227405311ull,
         "f64_load(1.7976931348623157e+308)"
     );
     assertEqualU32(
@@ -308,44 +308,44 @@ void test() {
         12370766947463011818ull,
         "i64_store(12370766947463011818ull)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export9_f32X5Fstore(&instance, -1.0),
-        -1.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export9_f32X5Fstore(&instance, -1.0)),
+        3212836864u,
         "f32_store(-1.0)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export9_f32X5Fstore(&instance, 0.01233999989926815),
-        0.01233999989926815,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export9_f32X5Fstore(&instance, 0.01233999989926815)),
+        1011494326u,
         "f32_store(0.01233999989926815)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export9_f32X5Fstore(&instance, 4242.42431640625),
-        4242.42431640625,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export9_f32X5Fstore(&instance, 4242.42431640625)),
+        1166316389u,
         "f32_store(4242.42431640625)"
     );
-    assertEqualF32(
-        m12_endiannessX2E0Export9_f32X5Fstore(&instance, 3.4028234663852886e+38),
-        3.4028234663852886e+38,
+    assertEqualU32(
+        i32_reinterpret_f32(m12_endiannessX2E0Export9_f32X5Fstore(&instance, 3.4028234663852886e+38)),
+        2139095039u,
         "f32_store(3.4028234663852886e+38)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export9_f64X5Fstore(&instance, -1.0),
-        -1.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export9_f64X5Fstore(&instance, -1.0)),
+        13830554455654793216ull,
         "f64_store(-1.0)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export9_f64X5Fstore(&instance, 1234.56789),
-        1234.56789,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export9_f64X5Fstore(&instance, 1234.56789)),
+        4653144502447687399ull,
         "f64_store(1234.56789)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export9_f64X5Fstore(&instance, 424242.424242),
-        424242.424242,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export9_f64X5Fstore(&instance, 424242.424242)),
+        4691032041816096430ull,
         "f64_store(424242.424242)"
     );
-    assertEqualF64(
-        m12_endiannessX2E0Export9_f64X5Fstore(&instance, 1.7976931348623157e+308),
-        1.7976931348623157e+308,
+    assertEqualU64(
+        i64_reinterpret_f64(m12_endiannessX2E0Export9_f64X5Fstore(&instance, 1.7976931348623157e+308)),
+        9218868437227405311ull,
         "f64_store(1.7976931348623157e+308)"
     );
 }
