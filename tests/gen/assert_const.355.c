@@ -5,11 +5,11 @@
 #include "test_const.355.h"
 
 void test() {
-    const355Instance instance;
-    const355Instantiate(&instance, resolveTestImports);
+    m9_constX2E355Instance instance;
+    m9_constX2E355Instantiate(&instance, resolveTestImports);
     printStart("const.355.wasm");
     assertEqualF64(
-        const355_f(&instance),
+        m9_constX2E355Export1_f(&instance),
         -2.4099198651028847e-181,
         "f()"
     );

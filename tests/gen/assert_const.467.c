@@ -5,11 +5,11 @@
 #include "test_const.467.h"
 
 void test() {
-    const467Instance instance;
-    const467Instantiate(&instance, resolveTestImports);
+    m9_constX2E467Instance instance;
+    m9_constX2E467Instantiate(&instance, resolveTestImports);
     printStart("const.467.wasm");
     assertEqualF64(
-        const467_f(&instance),
+        m9_constX2E467Export1_f(&instance),
         -1e-323,
         "f()"
     );

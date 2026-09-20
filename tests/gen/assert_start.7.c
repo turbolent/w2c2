@@ -5,7 +5,7 @@
 #include "test_start.7.h"
 
 void test() {
-    start7Instance instance;
-    start7Instantiate(&instance, resolveTestImports);
+    m7_startX2E7Instance instance;
+    m7_startX2E7Instantiate(&instance, resolveTestImports);
     printStart("start.7.wasm");
 }

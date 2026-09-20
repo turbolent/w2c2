@@ -9,7 +9,7 @@
 /* Imports */
 
 F32
-Math__random() {
+i4_Math6_random() {
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -24,7 +24,7 @@ trap(
 /* Exports */
 
 static wasmMemory* mem = NULL;
-static dinoInstance instance;
+static m4_dinoInstance instance;
 
 /* Config */
 
@@ -100,7 +100,7 @@ void step(DPSTimedEntry timedEntry, double now, void *view) {
         MEM(0) &= ~2;
     }
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     for (y = 0; y < height; y++) {       
         for (x = 0; x < width; x++) {
@@ -159,14 +159,14 @@ void main(int argc, char *argv[]) {
     DinoView *dinoView;
     NXRect bounds;
 
-    dinoInstantiate(&instance, NULL);
-    mem = dino_mem(&instance);
+    m4_dinoInstantiate(&instance, NULL);
+    mem = m4_dinoExport3_mem(&instance);
 
     framebufferSize = width * 4 * height;
     bitmap = malloc(width * height);
     framebuffer = mem->data + mem->size - framebufferOffset - framebufferSize;
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     [Application new];
 

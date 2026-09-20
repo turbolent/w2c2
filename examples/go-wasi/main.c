@@ -15,7 +15,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return gowasi_memory((gowasiInstance*)instance);
+    return m6_gowasiExport6_memory((m6_gowasiInstance*)instance);
 }
 
 extern char** environ;
@@ -31,10 +31,10 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        gowasiInstance instance;
-        gowasiInstantiate(&instance, NULL);
-        gowasi__start(&instance);
-        gowasiFreeInstance(&instance);
+        m6_gowasiInstance instance;
+        m6_gowasiInstantiate(&instance, NULL);
+        m6_gowasiExport6_X5Fstart(&instance);
+        m6_gowasiFreeInstance(&instance);
     }
 
     return 0;

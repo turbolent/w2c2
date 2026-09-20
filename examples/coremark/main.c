@@ -26,7 +26,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return coremark_memory((coremarkInstance*)instance);
+    return m8_coremarkExport6_memory((m8_coremarkInstance*)instance);
 }
 
 #if defined(__MWERKS__) && defined(macintosh)
@@ -65,7 +65,7 @@ initWii() {
 /* Main */
 
 int main(int argc, char* argv[]) {
-    coremarkInstance instance;
+    m8_coremarkInstance instance;
 
 #if defined(__MWERKS__) && defined(macintosh)
     MaxApplZone();
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     initWii();
 #endif
 
-    coremarkInstantiate(&instance, NULL);
+    m8_coremarkInstantiate(&instance, NULL);
 
 #ifdef __MSL__
     SIOUXSetTitle("\pCoreMark");
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    coremark__start(&instance);
+    m8_coremarkExport6_X5Fstart(&instance);
 
 #ifdef __wii__
 	while(1) {

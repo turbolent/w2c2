@@ -5,11 +5,11 @@
 #include "test_memory_init.84.h"
 
 void test() {
-    memoryinit84Instance instance;
-    memoryinit84Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E84Instance instance;
+    m14_memoryX5FinitX2E84Instantiate(&instance, resolveTestImports);
     printStart("memory_init.84.wasm");
     assertEqualU32(
-        memoryinit84_checkRange(&instance, 0u, 1u, 0u),
+        m14_memoryX5FinitX2E84Export10_checkRange(&instance, 0u, 1u, 0u),
         4294967295u,
         "checkRange(0u, 1u, 0u)"
     );

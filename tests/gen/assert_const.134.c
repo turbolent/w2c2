@@ -5,7 +5,7 @@
 #include "test_const.134.h"
 
 void test() {
-    const134Instance instance;
-    const134Instantiate(&instance, resolveTestImports);
+    m9_constX2E134Instance instance;
+    m9_constX2E134Instantiate(&instance, resolveTestImports);
     printStart("const.134.wasm");
 }

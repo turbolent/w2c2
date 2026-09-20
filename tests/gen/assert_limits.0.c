@@ -5,31 +5,31 @@
 #include "test_limits.0.h"
 
 void test() {
-    limits0Instance instance;
-    limits0Instantiate(&instance, resolveTestImports);
+    m8_limitsX2E0Instance instance;
+    m8_limitsX2E0Instantiate(&instance, resolveTestImports);
     printStart("limits.0.wasm");
     assertEqualU32(
-        limits0_size(&instance),
+        m8_limitsX2E0Export4_size(&instance),
         0u,
         "size()"
     );
     assertEqualU32(
-        limits0_grow(&instance, 0u),
+        m8_limitsX2E0Export4_grow(&instance, 0u),
         0u,
         "grow(0u)"
     );
     assertEqualU32(
-        limits0_grow(&instance, 1u),
+        m8_limitsX2E0Export4_grow(&instance, 1u),
         4294967295u,
         "grow(1u)"
     );
     assertEqualU32(
-        limits0_grow(&instance, 4294967295u),
+        m8_limitsX2E0Export4_grow(&instance, 4294967295u),
         4294967295u,
         "grow(4294967295u)"
     );
     assertEqualU32(
-        limits0_size(&instance),
+        m8_limitsX2E0Export4_size(&instance),
         0u,
         "size()"
     );

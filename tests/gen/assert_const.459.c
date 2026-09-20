@@ -5,11 +5,11 @@
 #include "test_const.459.h"
 
 void test() {
-    const459Instance instance;
-    const459Instantiate(&instance, resolveTestImports);
+    m9_constX2E459Instance instance;
+    m9_constX2E459Instantiate(&instance, resolveTestImports);
     printStart("const.459.wasm");
     assertEqualF64(
-        const459_f(&instance),
+        m9_constX2E459Export1_f(&instance),
         -1e-323,
         "f()"
     );

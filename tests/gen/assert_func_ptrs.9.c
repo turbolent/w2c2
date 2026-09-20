@@ -5,16 +5,16 @@
 #include "test_func_ptrs.9.h"
 
 void test() {
-    funcptrs9Instance instance;
-    funcptrs9Instantiate(&instance, resolveTestImports);
+    m11_funcX5FptrsX2E9Instance instance;
+    m11_funcX5FptrsX2E9Instantiate(&instance, resolveTestImports);
     printStart("func_ptrs.9.wasm");
     assertEqualU32(
-        funcptrs9_callt(&instance, 0u),
+        m11_funcX5FptrsX2E9Export5_callt(&instance, 0u),
         1u,
         "callt(0u)"
     );
     assertEqualU32(
-        funcptrs9_callt(&instance, 1u),
+        m11_funcX5FptrsX2E9Export5_callt(&instance, 1u),
         2u,
         "callt(1u)"
     );

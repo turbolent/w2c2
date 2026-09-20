@@ -5,11 +5,11 @@
 #include "test_const.456.h"
 
 void test() {
-    const456Instance instance;
-    const456Instantiate(&instance, resolveTestImports);
+    m9_constX2E456Instance instance;
+    m9_constX2E456Instantiate(&instance, resolveTestImports);
     printStart("const.456.wasm");
     assertEqualF64(
-        const456_f(&instance),
+        m9_constX2E456Export1_f(&instance),
         5e-324,
         "f()"
     );

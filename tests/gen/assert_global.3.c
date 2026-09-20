@@ -5,7 +5,7 @@
 #include "test_global.3.h"
 
 void test() {
-    global3Instance instance;
-    global3Instantiate(&instance, resolveTestImports);
+    m8_globalX2E3Instance instance;
+    m8_globalX2E3Instantiate(&instance, resolveTestImports);
     printStart("global.3.wasm");
 }

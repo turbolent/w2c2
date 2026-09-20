@@ -5,11 +5,11 @@
 #include "test_elem.47.h"
 
 void test() {
-    elem47Instance instance;
-    elem47Instantiate(&instance, resolveTestImports);
+    m7_elemX2E47Instance instance;
+    m7_elemX2E47Instantiate(&instance, resolveTestImports);
     printStart("elem.47.wasm");
     assertEqualU32(
-        elem47_callX2Doverwritten(&instance),
+        m7_elemX2E47Export16_callX2Doverwritten(&instance),
         66u,
         "call-overwritten()"
     );

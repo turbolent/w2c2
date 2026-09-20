@@ -5,11 +5,11 @@
 #include "test_const.330.h"
 
 void test() {
-    const330Instance instance;
-    const330Instantiate(&instance, resolveTestImports);
+    m9_constX2E330Instance instance;
+    m9_constX2E330Instantiate(&instance, resolveTestImports);
     printStart("const.330.wasm");
     assertEqualF64(
-        const330_f(&instance),
+        m9_constX2E330Export1_f(&instance),
         2.4099198651028847e-181,
         "f()"
     );

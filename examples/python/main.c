@@ -39,7 +39,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return python_memory((pythonInstance*)instance);
+    return m6_pythonExport6_memory((m6_pythonInstance*)instance);
 }
 
 #if defined(__MSL__) && defined(macintosh)
@@ -126,7 +126,7 @@ U32 exitCode = 0;
 
 void
 procExit(
-    struct pythonInstance* instance,
+    struct m6_pythonInstance* instance,
     U32 code
 ) {
     UNUSED_PARAMETER(instance);
@@ -219,13 +219,13 @@ int main(int argc, char* argv[]) {
 #endif
 
     {
-        pythonInstance instance;
-        pythonInstantiate(&instance, NULL);
+        m6_pythonInstance instance;
+        m6_pythonInstantiate(&instance, NULL);
 
         // TODO: set procExit
 
-        python__start(&instance);
-        pythonFreeInstance(&instance);
+        m6_pythonExport6_X5Fstart(&instance);
+        m6_pythonFreeInstance(&instance);
     }
 
 #ifdef __wii__

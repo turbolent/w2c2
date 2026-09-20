@@ -5,7 +5,7 @@
 #include "test_binary.98.h"
 
 void test() {
-    binary98Instance instance;
-    binary98Instantiate(&instance, resolveTestImports);
+    m9_binaryX2E98Instance instance;
+    m9_binaryX2E98Instantiate(&instance, resolveTestImports);
     printStart("binary.98.wasm");
 }

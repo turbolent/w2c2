@@ -5,11 +5,11 @@
 #include "test_const.328.h"
 
 void test() {
-    const328Instance instance;
-    const328Instantiate(&instance, resolveTestImports);
+    m9_constX2E328Instance instance;
+    m9_constX2E328Instantiate(&instance, resolveTestImports);
     printStart("const.328.wasm");
     assertEqualF64(
-        const328_f(&instance),
+        m9_constX2E328Export1_f(&instance),
         2.4099198651028847e-181,
         "f()"
     );

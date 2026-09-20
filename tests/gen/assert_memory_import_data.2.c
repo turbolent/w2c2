@@ -5,11 +5,11 @@
 #include "test_memory_import_data.2.h"
 
 void test() {
-    memoryimportdata2Instance instance;
-    memoryimportdata2Instantiate(&instance, resolveTestImports);
+    m20_memoryX5FimportX5FdataX2E2Instance instance;
+    m20_memoryX5FimportX5FdataX2E2Instantiate(&instance, resolveTestImports);
     printStart("memory_import_data.2.wasm");
     assertEqualU32(
-        memoryimportdata2_observed(&instance),
+        m20_memoryX5FimportX5FdataX2E2Export8_observed(&instance),
         1297301847u,
         "observed()"
     );

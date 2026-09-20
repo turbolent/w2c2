@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <math.h>
 #if HAS_PTHREAD
@@ -10,6 +9,7 @@
 #include "output_internal.h"
 #include "w2c2_base.h"
 #include "c.h"
+#include "c_name.h"
 #include "instruction.h"
 #include "typestack.h"
 #include "labelstack.h"
@@ -94,58 +94,12 @@ wasmCWriteLocalName(
 static
 W2C2_INLINE
 void
-wasmCWriteEscaped(
-    WasmOutput* file,
-    const WasmName name
-) {
-    static const char escapeChar = 'X';
-    size_t index;
-    for (index = 0; index < name.length; index++) {
-        const char c = name.data[index];
-        if (c == '_') {
-            /*
-             * Double underscore is reserved for concatenating module name and import name,
-             * so produce triple underscore instead.
-             */
-            const bool wasUnderscore = index > 0 && name.data[index - 1] == '_';
-            if (wasUnderscore) {
-                wasmOutputString(file, "__");
-            } else {
-                wasmOutputChar(file, c);
-            }
-        } else if (c != escapeChar && isalnum(c)) {
-            wasmOutputChar(file, c);
-        } else {
-            wasmOutputChar(file, escapeChar);
-            wasmOutputHex(file, (unsigned int)c, wasmOutputHexUpperPadded);
-        }
-    }
-}
-
-static const char* wasmImportNameSeparator = "__";
-
-static
-W2C2_INLINE
-void
-wasmCWriteGlobalNonImportName(
+wasmCWriteGlobalName(
     WasmOutput* file,
     const U32 globalIndex
 ) {
     wasmOutputChar(file, globalNamePrefix);
     wasmOutputU32(file, globalIndex);
-}
-
-static
-W2C2_INLINE
-void
-wasmCWriteImportName(
-    WasmOutput* file,
-    const WasmName module,
-    const WasmName name
-) {
-    wasmCWriteEscaped(file, module);
-    wasmOutputString(file, wasmImportNameSeparator);
-    wasmCWriteEscaped(file, name);
 }
 
 
@@ -159,12 +113,11 @@ wasmCWriteGlobalUse(
     const bool reference
 ) {
     if (globalIndex < module->globalImports.length) {
-        const WasmGlobalImport import = module->globalImports.imports[globalIndex];
         if (!reference) {
             wasmOutputString(file, "(*");
         }
         wasmOutputString(file, "i->");
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteGlobalName(file, globalIndex);
         if (!reference) {
             wasmOutputChar(file, ')');
         }
@@ -173,7 +126,7 @@ wasmCWriteGlobalUse(
             wasmOutputChar(file, '&');
         }
         wasmOutputString(file, "i->");
-        wasmCWriteGlobalNonImportName(file, globalIndex);
+        wasmCWriteGlobalName(file, globalIndex);
     }
     return !file->failed;
 }
@@ -181,7 +134,7 @@ wasmCWriteGlobalUse(
 static
 W2C2_INLINE
 void
-wasmCWriteMemoryNonImportName(
+wasmCWriteMemoryName(
     WasmOutput* file,
     const U32 memoryIndex
 ) {
@@ -194,7 +147,6 @@ W2C2_INLINE
 bool
 wasmCWriteMemoryUse(
     WasmOutput* file,
-    const WasmModule* module,
     const U32 memoryIndex,
     const char *variableName,
     const bool reference
@@ -208,12 +160,7 @@ wasmCWriteMemoryUse(
     }
     wasmOutputString(file, variableName);
     wasmOutputString(file, "->");
-    if (memoryIndex < module->memoryImports.length) {
-        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        wasmCWriteImportName(file, import.module, import.name);
-    } else {
-        wasmCWriteMemoryNonImportName(file, memoryIndex);
-    }
+    wasmCWriteMemoryName(file, memoryIndex);
     if (!reference) {
         wasmOutputChar(file, ')');
     }
@@ -222,7 +169,7 @@ wasmCWriteMemoryUse(
 
 static
 void
-wasmCWriteTableNonImportName(
+wasmCWriteTableName(
     WasmOutput* file,
     const U32 tableIndex
 ) {
@@ -240,12 +187,11 @@ wasmCWriteTableUse(
     const bool reference
 ) {
     if (tableIndex < module->tableImports.length) {
-        const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (!reference) {
             wasmOutputString(file, "(*");
         }
         wasmOutputString(file, "i->");
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteTableName(file, tableIndex);
         if (!reference) {
             wasmOutputChar(file, ')');
         }
@@ -254,7 +200,7 @@ wasmCWriteTableUse(
             wasmOutputChar(file, '&');
         }
         wasmOutputString(file, "i->");
-        wasmCWriteTableNonImportName(file, tableIndex);
+        wasmCWriteTableName(file, tableIndex);
     }
     return !file->failed;
 }
@@ -274,17 +220,6 @@ wasmCWriteDataSegmentName(
 
 static
 W2C2_INLINE
-void
-wasmCWriteFunctionNonImportName(
-    WasmOutput* file,
-    const U32 functionIndex
-) {
-    wasmOutputString(file, "f");
-    wasmOutputU32(file, functionIndex);
-}
-
-static
-W2C2_INLINE
 bool
 wasmCWriteFunctionUse(
     WasmOutput* file,
@@ -297,15 +232,11 @@ wasmCWriteFunctionUse(
     if (reference) {
         wasmOutputChar(file, '&');
     }
-    if (prefix) {
-        wasmOutputString(file, moduleName);
-        wasmOutputChar(file, '_');
-    }
     if (functionIndex < module->functionImports.length) {
         const WasmFunctionImport import = module->functionImports.imports[functionIndex];
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteFunctionImportName(file, prefix ? moduleName : NULL, import.module, import.name);
     } else {
-        wasmCWriteFunctionNonImportName(file, functionIndex);
+        wasmCWriteFunctionName(file, prefix ? moduleName : NULL, functionIndex);
     }
     return !file->failed;
 }
@@ -597,7 +528,7 @@ wasmCWriteParameters(
     if (voidPointerInstanceType) {
         wasmOutputString(file, "void*");
     } else {
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance*");
     }
 
@@ -1046,7 +977,7 @@ wasmCWriteLoad(
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
+    MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStackName(
         writer->output,
@@ -1194,7 +1125,7 @@ wasmCWriteStore(
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
+    MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStackName(
         writer->output,
@@ -1339,7 +1270,6 @@ wasmCWriteMemorySizeExpr(
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteMemoryUse(
                 writer->output,
-                writer->module,
                 instruction.memoryIndex,
                 NULL,
                 false
@@ -1395,7 +1325,6 @@ wasmCWriteMemoryGrowExpr(
             MUST (wasmCWrite(writer, "wasmMemoryGrow("))
             MUST (wasmCWriteMemoryUse(
                 writer->output,
-                writer->module,
                 instruction.memoryIndex,
                 NULL,
                 true
@@ -1438,7 +1367,6 @@ wasmCWriteMemoryInitExpr(
         MUST (wasmCWrite(writer, "LOAD_DATA("))
         MUST (wasmCWriteMemoryUse(
             writer->output,
-            writer->module,
             instruction.memoryIndex,
             NULL,
             false
@@ -1525,7 +1453,6 @@ wasmCWriteMemoryCopyExpr(
         MUST (wasmCWrite(writer, "wasmMemoryCopy("))
         MUST (wasmCWriteMemoryUse(
             writer->output,
-            writer->module,
             instruction.memoryIndex1,
             NULL,
             true
@@ -1533,7 +1460,6 @@ wasmCWriteMemoryCopyExpr(
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteMemoryUse(
             writer->output,
-            writer->module,
             instruction.memoryIndex2,
             NULL,
             true
@@ -1607,7 +1533,6 @@ wasmCWriteMemoryFillExpr(
         MUST (wasmCWrite(writer, "wasmMemoryFill("))
         MUST (wasmCWriteMemoryUse(
             writer->output,
-            writer->module,
             instruction.memoryIndex,
             NULL,
             true
@@ -2571,7 +2496,6 @@ wasmCWriteMemoryAtomicNotifyExpr(
         MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
         MUST (wasmCWriteMemoryUse(
                 writer->output,
-                writer->module,
                 0,
                 NULL,
                 true
@@ -2626,7 +2550,6 @@ wasmCWriteMemoryAtomicWaitExpr(
         MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
         MUST (wasmCWriteMemoryUse(
                 writer->output,
-                writer->module,
                 0,
                 NULL,
                 true
@@ -3232,7 +3155,7 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
+            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                     writer->output,
@@ -3357,7 +3280,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteMemoryUse(writer->output, writer->module, 0, NULL, true))
+            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                     writer->output,
@@ -4458,11 +4381,7 @@ wasmCWriteFunctionSignature(
     MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
     wasmOutputString(file, returnType);
     wasmOutputChar(file, ' ');
-    if (prefix) {
-        wasmOutputString(file, moduleName);
-        wasmOutputChar(file, '_');
-    }
-    wasmCWriteFunctionNonImportName(file, functionIndex);
+    wasmCWriteFunctionUse(file, module, moduleName, functionIndex, false, prefix);
     wasmCWriteParameters(
         file,
         moduleName,
@@ -4508,12 +4427,9 @@ wasmCWriteFunctionDeclarations(
         if (debug && function.exportName.data == NULL && moduleFunctionIndex < module->functionNames.length) {
             const WasmName functionName = module->functionNames.names[moduleFunctionIndex];
             /* Assembly labels cannot contain NUL bytes. */
-            if (functionName.data != NULL
-                && memchr(functionName.data, 0, functionName.length) == NULL) {
+            if (functionName.data != NULL) {
                 wasmOutputString(file, " __asm__(\"");
-                wasmCWriteStringContents(file, moduleName, strlen(moduleName));
-                wasmOutputString(file, "_");
-                wasmCWriteStringContents(file, functionName.data, functionName.length);
+                wasmCWriteDebugName(file, moduleName, moduleFunctionIndex, functionName);
                 wasmOutputString(file, "\")");
             }
         }
@@ -4643,7 +4559,7 @@ wasmCWriteGlobalImports(
         if (pretty) {
             wasmOutputChar(file, ' ');
         }
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteGlobalName(file, globalIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -4666,7 +4582,7 @@ wasmCWriteGlobals(
         }
         wasmOutputString(file, valueTypeNames[global.type.valueType]);
         wasmOutputChar(file, ' ');
-        wasmCWriteGlobalNonImportName(file, assertSizeU32(globalImportCount) + globalIndex);
+        wasmCWriteGlobalName(file, assertSizeU32(globalImportCount) + globalIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -4731,9 +4647,9 @@ wasmCWriteInitGlobals(
 
     if (globalCount > 0) {
         wasmOutputString(file, "static void ");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitGlobals(");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* i) {\n");
 
         {
@@ -4769,15 +4685,16 @@ W2C2_INLINE
 void
 wasmCWriteInitImportAssignment(
     WasmOutput* file,
-    const WasmName module,
-    const WasmName name,
+    const char prefix,
+    const U32 index,
     const bool pretty
 ) {
     if (pretty) {
         wasmOutputString(file, indentation);
     }
     wasmOutputString(file, "i->");
-    wasmCWriteImportName(file, module, name);
+    wasmOutputChar(file, prefix);
+    wasmOutputU32(file, index);
     if (pretty) {
         wasmOutputString(file, " =\n");
         if (pretty) {
@@ -4828,11 +4745,7 @@ wasmCWriteFunctionImport(
     wasmOutputString(file, returnType);
     wasmOutputChar(file, ' ');
     if (declaration) {
-        if (prefix) {
-            wasmOutputString(file, moduleName);
-            wasmOutputChar(file, '_');
-        }
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteFunctionImportName(file, prefix ? moduleName : NULL, import.module, import.name);
     }
     wasmCWriteParameters(
         file,
@@ -4856,7 +4769,7 @@ wasmCWriteInitGlobalImports(
     U32 globalIndex = 0;
     for (; globalIndex < globalImportCount; globalIndex++) {
         const WasmGlobalImport import = module->globalImports.imports[globalIndex];
-        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, globalNamePrefix, globalIndex, pretty);
         wasmOutputChar(file, '(');
         wasmCWriteGlobalImportType(file, import);
         wasmOutputChar(file, ')');
@@ -4885,7 +4798,7 @@ wasmCWriteInitMemoryImports(
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
         const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
-        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, memoryNamePrefix, memoryIndex, pretty);
         wasmOutputChar(file, '(');
         wasmCWriteMemoryType(file);
         wasmOutputChar(file, ')');
@@ -4914,7 +4827,7 @@ wasmCWriteInitTableImports(
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
         const WasmTableImport import = module->tableImports.imports[tableIndex];
-        wasmCWriteInitImportAssignment(file, import.module, import.name, pretty);
+        wasmCWriteInitImportAssignment(file, tableNamePrefix, tableIndex, pretty);
         wasmOutputChar(file, '(');
         wasmCWriteTableType(file);
         wasmOutputChar(file, ')');
@@ -4932,9 +4845,9 @@ wasmCWriteInitImports(
     const bool pretty
 ) {
     wasmOutputString(file, "static void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitImports(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i, wasmImportResolver resolve) {\n");
     if (pretty) {
         wasmOutputString(file, indentation);
@@ -4948,19 +4861,6 @@ wasmCWriteInitImports(
     wasmOutputString(file, "}\n\n");
 
     return true;
-}
-
-static
-W2C2_INLINE
-void
-wasmCWriteExportName(
-    WasmOutput* file,
-    const char* moduleName,
-    const WasmName name
-) {
-    wasmOutputString(file, moduleName);
-    wasmOutputString(file, "_");
-    wasmCWriteEscaped(file, name);
 }
 
 static
@@ -5028,7 +4928,6 @@ static
 void
 wasmCWriteMemoryExport(
     WasmOutput* file,
-    const WasmModule* module,
     const char* moduleName,
     const WasmExport export,
     const bool writeBody,
@@ -5040,7 +4939,7 @@ wasmCWriteMemoryExport(
     }
     wasmCWriteExportName(file, moduleName, export.name);
     wasmOutputString(file, "(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i)");
     if (writeBody) {
         if (pretty) {
@@ -5051,7 +4950,7 @@ wasmCWriteMemoryExport(
             wasmOutputString(file, indentation);
         }
         wasmOutputString(file, "return ");
-        wasmCWriteMemoryUse(file, module, export.index, NULL, true);
+        wasmCWriteMemoryUse(file, export.index, NULL, true);
         wasmOutputString(file, ";\n}\n\n");
     } else {
         wasmOutputString(file, ";\n\n");
@@ -5092,7 +4991,7 @@ wasmCWriteExports(
                 break;
             }
             case wasmExportKindMemory: {
-                wasmCWriteMemoryExport(file, module, moduleName, export, writeBody, pretty);
+                wasmCWriteMemoryExport(file, moduleName, export, writeBody, pretty);
                 break;
             }
             default: {
@@ -5299,7 +5198,6 @@ wasmCWriteMemoryImports(
 
     U32 memoryIndex = 0;
     for (; memoryIndex < memoryImportCount; memoryIndex++) {
-        const WasmMemoryImport import = module->memoryImports.imports[memoryIndex];
         if (pretty) {
             wasmOutputString(file, indentation);
         }
@@ -5307,7 +5205,7 @@ wasmCWriteMemoryImports(
         if (pretty) {
             wasmOutputChar(file, ' ');
         }
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteMemoryName(file, memoryIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -5329,7 +5227,7 @@ wasmCWriteMemories(
             wasmOutputString(file, indentation);
         }
         wasmOutputString(file, "wasmMemory* ");
-        wasmCWriteMemoryNonImportName(file, moduleMemoryIndex);
+        wasmCWriteMemoryName(file, moduleMemoryIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -5347,11 +5245,11 @@ wasmCWriteInitMemories(
     const U32 memoryCount = module->memories.count;
     if (memoryCount > 0) {
         wasmOutputString(file, "static void ");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitMemories(");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* i, ");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* parent) {\n");
 
         {
@@ -5370,7 +5268,7 @@ wasmCWriteInitMemories(
                             wasmOutputString(file, indentation);
                             wasmOutputString(file, indentation);
                         }
-                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        wasmCWriteMemoryUse(file, moduleMemoryIndex, NULL, true);
                         wasmOutputString(file, "= WASM_MEMORY_ALLOCATE_SHARED(");
                         wasmOutputU32(file, memory.min);
                         wasmOutputString(file, ", ");
@@ -5386,9 +5284,9 @@ wasmCWriteInitMemories(
                             wasmOutputString(file, indentation);
                             wasmOutputString(file, indentation);
                         }
-                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                        wasmCWriteMemoryUse(file, moduleMemoryIndex, NULL, true);
                         wasmOutputString(file, " = ");
-                        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, "parent", true);
+                        wasmCWriteMemoryUse(file, moduleMemoryIndex, "parent", true);
                         wasmOutputString(file, ";\n");
                     }
                     if (pretty) {
@@ -5399,7 +5297,7 @@ wasmCWriteInitMemories(
                     if (pretty) {
                         wasmOutputString(file, indentation);
                     }
-                    wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+                    wasmCWriteMemoryUse(file, moduleMemoryIndex, NULL, true);
                     wasmOutputString(file, " = wasmMemoryAllocate(");
                     wasmOutputU32(file, memory.min);
                     wasmOutputString(file, ", ");
@@ -5428,9 +5326,9 @@ wasmCWriteInitDataSegments(
     const U32 dataSegmentCount = module->dataSegments.count;
     if (dataSegmentCount > 0) {
         wasmOutputString(file, "static void ");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitDataSegments(");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* i) {\n");
 
         {
@@ -5472,7 +5370,6 @@ wasmCWriteInitDataSegments(
                         wasmOutputString(file, "LOAD_DATA(");
                         wasmCWriteMemoryUse(
                             file,
-                            module,
                             dataSegment.memoryIndex,
                             NULL,
                             false
@@ -5528,12 +5425,12 @@ wasmCWriteFreeMemories(
             wasmOutputString(file, indentation);
         }
         wasmOutputString(file, "wasmMemoryFree(");
-        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+        wasmCWriteMemoryUse(file, moduleMemoryIndex, NULL, true);
         wasmOutputString(file, ");\n");
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmCWriteMemoryUse(file, module, moduleMemoryIndex, NULL, true);
+        wasmCWriteMemoryUse(file, moduleMemoryIndex, NULL, true);
         if (pretty) {
             wasmOutputString(file, " = NULL;\n");
         } else {
@@ -5553,7 +5450,6 @@ wasmCWriteTableImports(
 
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
-        const WasmTableImport import = module->tableImports.imports[tableIndex];
         if (pretty) {
             wasmOutputString(file, indentation);
         }
@@ -5561,7 +5457,7 @@ wasmCWriteTableImports(
         if (pretty) {
             wasmOutputChar(file, ' ');
         }
-        wasmCWriteImportName(file, import.module, import.name);
+        wasmCWriteTableName(file, tableIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -5582,7 +5478,7 @@ wasmCWriteTables(
             wasmOutputString(file, indentation);
         }
         wasmOutputString(file, "wasmTable ");
-        wasmCWriteTableNonImportName(file, assertSizeU32(tableImportCount) + tableIndex);
+        wasmCWriteTableName(file, assertSizeU32(tableImportCount) + tableIndex);
         wasmOutputString(file, ";\n");
     }
 }
@@ -5603,9 +5499,9 @@ wasmCWriteInitTables(
     const U32 tableCount = module->tables.count;
     if (tableCount > 0 || elementSegmentCount > 0) {
         wasmOutputString(file, "static void ");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitTables(");
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* i) {\n");
 
         if (elementSegmentCount > 0) {
@@ -5755,7 +5651,7 @@ wasmCWriteModuleInstanceDeclaration(
     const bool pretty
 ) {
     wasmOutputString(file, "typedef struct ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance {\n");
 
     if (pretty) {
@@ -5772,7 +5668,7 @@ wasmCWriteModuleInstanceDeclaration(
     wasmCWriteGlobals(file, module, pretty);
 
     wasmOutputString(file, "} ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance;\n\n");
 }
 
@@ -5804,15 +5700,15 @@ wasmCWriteFreeChildFunction(
     const bool pretty
 ) {
     wasmOutputString(file, "static void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FreeChild(wasmModuleInstance* child) {\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
     }
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i = (");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance*)child;\n");
 
     wasmCWriteFreeMemories(file, module, pretty, false);
@@ -5836,26 +5732,26 @@ wasmCWriteNewChildFunction(
     const bool multipleModules
 ) {
     wasmOutputString(file, "static wasmModuleInstance* ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "NewChild(wasmModuleInstance* instance) {\n");
 
     /* TODO: clean up */
     if (pretty) {
         wasmOutputString(file, indentation);
     }
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* self = (");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance*)instance;\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
     }
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* child = (");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance*)calloc(1, sizeof(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance));\n");
 
     if (pretty) {
@@ -5881,14 +5777,14 @@ wasmCWriteNewChildFunction(
     if (pretty) {
         wasmOutputString(file, indentation);
     }
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitImports(child, self->common.resolveImports);\n");
 
     if (module->memories.count > 0) {
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitMemories(child, self);\n");
     }
 
@@ -5896,7 +5792,7 @@ wasmCWriteNewChildFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitDataSegments(child);\n");
     }
 
@@ -5906,7 +5802,7 @@ wasmCWriteNewChildFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitTables(child);\n");
     }
 
@@ -5914,7 +5810,7 @@ wasmCWriteNewChildFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitGlobals(child);\n");
     }
 
@@ -5945,16 +5841,16 @@ wasmCWriteInstantiateFunction(
     const bool multipleModules
 ) {
     wasmOutputString(file, "void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instantiate(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i, wasmImportResolver resolveImports) {\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
     }
     wasmOutputString(file, "i->common.funcExports = ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FuncExports;\n");
 
     if (pretty) {
@@ -5966,27 +5862,27 @@ wasmCWriteInstantiateFunction(
         wasmOutputString(file, indentation);
     }
     wasmOutputString(file, "i->common.newChild = ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "NewChild;\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
     }
     wasmOutputString(file, "i->common.freeChild = ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FreeChild;\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
     }
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitImports(i, resolveImports);\n");
 
     if (module->memories.count > 0) {
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitMemories(i, NULL);\n");
     }
 
@@ -5994,7 +5890,7 @@ wasmCWriteInstantiateFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitDataSegments(i);\n");
     }
 
@@ -6004,7 +5900,7 @@ wasmCWriteInstantiateFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitTables(i);\n");
     }
 
@@ -6012,7 +5908,7 @@ wasmCWriteInstantiateFunction(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, moduleName);
+        wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitGlobals(i);\n");
     }
 
@@ -6036,9 +5932,9 @@ wasmCWriteFreeFunction(
     const bool pretty
 ) {
     wasmOutputString(file, "void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FreeInstance(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i) {\n");
 
     wasmCWriteFreeMemories(file, module, pretty, true);
@@ -6072,32 +5968,32 @@ wasmCWriteModuleHeader(
     }
 
     wasmOutputString(file, "#ifndef ");
-    wasmOutputString(file, moduleName);
-    wasmOutputString(file, "_H\n");
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Header\n");
     wasmOutputString(file, "#define ");
-    wasmOutputString(file, moduleName);
-    wasmOutputString(file, "_H\n\n");
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Header\n\n");
 
     wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);
     MUST_OR_GOTO (cleanup, wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
     wasmOutputString(file, "void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instantiate(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* instance, wasmImportResolver resolve);\n\n");
     wasmOutputString(file, "void ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FreeInstance(");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* instance);\n\n");
 
     wasmOutputString(file, "#ifdef __cplusplus\n}\n#endif\n\n");
 
     wasmOutputString(file, "#endif /* ");
-    wasmOutputString(file, moduleName);
-    wasmOutputString(file, "_H */\n\n");
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Header */\n\n");
 
     result = true;
 
@@ -6135,7 +6031,7 @@ wasmCWriteModuleFunctionExportsArray(
     }
 
     wasmOutputString(file, "wasmFuncExport ");
-    wasmOutputString(file, moduleName);
+    wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "FuncExports[");
     wasmOutputU32(file, functionExportCount + 1);
     wasmOutputString(file, "] = {\n");

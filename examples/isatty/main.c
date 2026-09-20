@@ -15,7 +15,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return isatty_memory((isattyInstance*)instance);
+    return m6_isattyExport6_memory((m6_isattyInstance*)instance);
 }
 
 extern char** environ;
@@ -23,13 +23,13 @@ extern char** environ;
 /* Main */
 
 int main(int argc, char* argv[]) {
-    isattyInstance instance;
-    isattyInstantiate(&instance, NULL);
+    m6_isattyInstance instance;
+    m6_isattyInstantiate(&instance, NULL);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
         return 1;
     }
 
-    isatty__start(&instance);
+    m6_isattyExport6_X5Fstart(&instance);
 }

@@ -5,11 +5,11 @@
 #include "test_const.384.h"
 
 void test() {
-    const384Instance instance;
-    const384Instantiate(&instance, resolveTestImports);
+    m9_constX2E384Instance instance;
+    m9_constX2E384Instantiate(&instance, resolveTestImports);
     printStart("const.384.wasm");
     assertEqualF64(
-        const384_f(&instance),
+        m9_constX2E384Export1_f(&instance),
         4.149515568880994e+180,
         "f()"
     );

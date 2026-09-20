@@ -5,7 +5,7 @@
 #include "test_memory_copy.95.h"
 
 void test() {
-    memorycopy95Instance instance;
-    memorycopy95Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FcopyX2E95Instance instance;
+    m14_memoryX5FcopyX2E95Instantiate(&instance, resolveTestImports);
     printStart("memory_copy.95.wasm");
 }

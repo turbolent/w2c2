@@ -5,7 +5,7 @@
 #include "test_shared.6.h"
 
 void test() {
-    shared6Instance instance;
-    shared6Instantiate(&instance, resolveTestImports);
+    m8_sharedX2E6Instance instance;
+    m8_sharedX2E6Instantiate(&instance, resolveTestImports);
     printStart("shared.6.wasm");
 }

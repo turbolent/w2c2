@@ -5,11 +5,11 @@
 #include "test_const.240.h"
 
 void test() {
-    const240Instance instance;
-    const240Instantiate(&instance, resolveTestImports);
+    m9_constX2E240Instance instance;
+    m9_constX2E240Instantiate(&instance, resolveTestImports);
     printStart("const.240.wasm");
     assertEqualF32(
-        const240_f(&instance),
+        m9_constX2E240Export1_f(&instance),
         1125900041060352.0,
         "f()"
     );

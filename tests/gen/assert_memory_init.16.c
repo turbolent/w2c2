@@ -5,9 +5,9 @@
 #include "test_memory_init.16.h"
 
 void test() {
-    memoryinit16Instance instance;
-    memoryinit16Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E16Instance instance;
+    m14_memoryX5FinitX2E16Instantiate(&instance, resolveTestImports);
     printStart("memory_init.16.wasm");
-    memoryinit16_test(&instance);
+    m14_memoryX5FinitX2E16Export4_test(&instance);
     printOK("test()");
 }

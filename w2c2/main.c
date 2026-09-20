@@ -78,32 +78,27 @@ readWasmBinary(
 }
 
 static
-void
+bool
 getPathModuleName(
     char* moduleName,
+    const size_t capacity,
     const char* modulePath
 ) {
-    int j = 0;
-    size_t ext;
-    size_t i = strlen(modulePath)-1;
-    while (i && modulePath[i] == PATH_SEPARATOR) {
-        i--;
+    const char* start = strrchr(modulePath, PATH_SEPARATOR);
+    const char* end;
+    size_t length;
+    start = start == NULL ? modulePath : start + 1;
+    end = strrchr(start, '.');
+    if (end == NULL || end == start) {
+        end = start + strlen(start);
     }
-    while (i && modulePath[i] != '.' && modulePath[i] != PATH_SEPARATOR) {
-        i--;
+    length = (size_t)(end - start);
+    if (length == 0 || length >= capacity) {
+        return false;
     }
-    ext = i;
-    while (i && modulePath[i-1] != PATH_SEPARATOR) {
-        i--;
-    }
-
-    for (; i < ext; i++) {
-        if (!isalnum(modulePath[i])) {
-            continue;
-        }
-        moduleName[j++] = modulePath[i];
-    }
-    moduleName[j] = '\0';
+    memcpy(moduleName, start, length);
+    moduleName[length] = '\0';
+    return true;
 }
 
 static
@@ -442,7 +437,10 @@ main(
     }
     outputPath = argv[index++];
 
-    getPathModuleName(moduleName, modulePath);
+    if (!getPathModuleName(moduleName, sizeof(moduleName), modulePath)) {
+        fprintf(stderr, "w2c2: module basename is empty or too long.\n");
+        return 1;
+    }
 
     {
         int result = EXIT_FAILURE;

@@ -5,11 +5,11 @@
 #include "test_const.406.h"
 
 void test() {
-    const406Instance instance;
-    const406Instantiate(&instance, resolveTestImports);
+    m9_constX2E406Instance instance;
+    m9_constX2E406Instantiate(&instance, resolveTestImports);
     printStart("const.406.wasm");
     assertEqualF64(
-        const406_f(&instance),
+        m9_constX2E406Export1_f(&instance),
         4.149515568880995e+180,
         "f()"
     );

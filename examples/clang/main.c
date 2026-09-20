@@ -15,7 +15,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return llvm_memory((llvmInstance*)instance);
+    return m4_llvmExport6_memory((m4_llvmInstance*)instance);
 }
 
 extern char** environ;
@@ -35,10 +35,10 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        llvmInstance instance;
-        llvmInstantiate(&instance, NULL);
-        llvm__start(&instance);
-        llvmFreeInstance(&instance);
+        m4_llvmInstance instance;
+        m4_llvmInstantiate(&instance, NULL);
+        m4_llvmExport6_X5Fstart(&instance);
+        m4_llvmFreeInstance(&instance);
     }
 
     return 0;

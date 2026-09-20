@@ -7,7 +7,7 @@
 #define FP(o) (mem->data[0x5000 + (o)] / 8)
 
 F32
-Math__random() {
+i4_Math6_random() {
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -19,9 +19,9 @@ trap(
 }
 
 int main(int argc, char* argv[]) {
-    dinoInstance instance;
-    dinoInstantiate(&instance, NULL);
-    wasmMemory* mem = dino_mem(&instance);
+    m4_dinoInstance instance;
+    m4_dinoInstantiate(&instance, NULL);
+    wasmMemory* mem = m4_dinoExport3_mem(&instance);
 
     /* Set up the interrupt handlers */
     irqInit();
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     /* Set screen mode & background to display */
     REG_DISPCNT = MODE_3 | BG2_ON;
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     while (true) {
         scanKeys();
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
             INPUT |= 2;
         }
 
-        dino_run(&instance);
+        m4_dinoExport3_run(&instance);
 
         for (int y = 0; y < SCREEN_HEIGHT; y++) {
             for (int x = 0; x < SCREEN_WIDTH; x++) {

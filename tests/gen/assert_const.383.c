@@ -5,11 +5,11 @@
 #include "test_const.383.h"
 
 void test() {
-    const383Instance instance;
-    const383Instantiate(&instance, resolveTestImports);
+    m9_constX2E383Instance instance;
+    m9_constX2E383Instantiate(&instance, resolveTestImports);
     printStart("const.383.wasm");
     assertEqualF64(
-        const383_f(&instance),
+        m9_constX2E383Export1_f(&instance),
         -4.149515568880993e+180,
         "f()"
     );

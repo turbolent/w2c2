@@ -8,7 +8,7 @@ extern char** environ;
 
 extern
 U32
-wasi_snapshot_preview1__poll_oneoff(
+i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
     void* instance,
     U32 inPointer,
     U32 outPointer,
@@ -28,7 +28,7 @@ static wasmMemory testMemory;
 
 extern
 U32
-wasi__threadX2Dspawn(
+i4_wasi12_threadX2Dspawn(
     wasmModuleInstance* instance,
     U32 startArg
 );
@@ -218,7 +218,7 @@ U32
 callPollOneoff(
     U32 subscriptionCount
 ) {
-    return wasi_snapshot_preview1__poll_oneoff(
+    return i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
         NULL,
         TEST_IN_POINTER,
         TEST_OUT_POINTER,
@@ -300,7 +300,7 @@ testPollOneoffValidation(void) {
     error = callPollOneoff(1);
     expectPollU32(name, "invalid clock flags", error, WASI_ERRNO_INVAL);
 
-    error = wasi_snapshot_preview1__poll_oneoff(
+    error = i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
         NULL,
         TEST_MEMORY_SIZE - 1,
         TEST_OUT_POINTER,
@@ -690,7 +690,7 @@ testThreadSpawnCleanup(void) {
         exit(1);
     }
 
-    threadID = wasi__threadX2Dspawn(&root.common, 42);
+    threadID = i4_wasi12_threadX2Dspawn(&root.common, 42);
     if (threadID == (U32)-1) {
         fprintf(stderr, "FAIL thread-spawn: thread creation failed\n");
         exit(1);
@@ -779,7 +779,7 @@ main(int argc, char* argv[]) {
 #if HAS_POLL
     testPollOneoff();
 #else
-    if (wasi_snapshot_preview1__poll_oneoff(NULL, 0, 0, 0, 0)
+    if (i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(NULL, 0, 0, 0, 0)
         != WASI_ERRNO_NOSYS) {
         fprintf(stderr, "FAIL poll_oneoff fallback\n");
         exit(1);

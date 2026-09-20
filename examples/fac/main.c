@@ -11,14 +11,14 @@ int main(int argc, char** argv) {
 
     U64 n = atoi(argv[1]);
 
-    facInstance instance;
-    facInstantiate(&instance, NULL);
+    m3_facInstance instance;
+    m3_facInstantiate(&instance, NULL);
 
-    U64 result = fac_fac(&instance, n);
+    U64 result = m3_facExport3_fac(&instance, n);
 
     printf("fac(%llu) -> %llu\n", n, result);
 
-    facFreeInstance(&instance);
+    m3_facFreeInstance(&instance);
 
     return 0;
 }

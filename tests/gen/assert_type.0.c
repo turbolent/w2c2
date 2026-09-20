@@ -5,7 +5,7 @@
 #include "test_type.0.h"
 
 void test() {
-    type0Instance instance;
-    type0Instantiate(&instance, resolveTestImports);
+    m6_typeX2E0Instance instance;
+    m6_typeX2E0Instantiate(&instance, resolveTestImports);
     printStart("type.0.wasm");
 }

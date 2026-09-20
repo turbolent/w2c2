@@ -5,16 +5,16 @@
 #include "test_float_exprs.57.h"
 
 void test() {
-    floatexprs57Instance instance;
-    floatexprs57Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E57Instance instance;
+    m14_floatX5FexprsX2E57Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.57.wasm");
     assertEqualF32(
-        floatexprs57_f32_sqrt_minus_2(&instance, 4.0),
+        m14_floatX5FexprsX2E57Export16_f32X5FsqrtX5FminusX5F2(&instance, 4.0),
         0.0,
         "f32_sqrt_minus_2(4.0)"
     );
     assertEqualF64(
-        floatexprs57_f64_sqrt_minus_2(&instance, 4.0),
+        m14_floatX5FexprsX2E57Export16_f64X5FsqrtX5FminusX5F2(&instance, 4.0),
         0.0,
         "f64_sqrt_minus_2(4.0)"
     );

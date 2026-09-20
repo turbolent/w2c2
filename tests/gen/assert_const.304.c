@@ -5,11 +5,11 @@
 #include "test_const.304.h"
 
 void test() {
-    const304Instance instance;
-    const304Instantiate(&instance, resolveTestImports);
+    m9_constX2E304Instance instance;
+    m9_constX2E304Instantiate(&instance, resolveTestImports);
     printStart("const.304.wasm");
     assertEqualF32(
-        const304_f(&instance),
+        m9_constX2E304Export1_f(&instance),
         2.802596928649634e-45,
         "f()"
     );

@@ -5,7 +5,7 @@
 #include "test_align.19.h"
 
 void test() {
-    align19Instance instance;
-    align19Instantiate(&instance, resolveTestImports);
+    m8_alignX2E19Instance instance;
+    m8_alignX2E19Instantiate(&instance, resolveTestImports);
     printStart("align.19.wasm");
 }

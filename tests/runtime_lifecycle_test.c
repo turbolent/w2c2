@@ -78,11 +78,11 @@ testTableLifecycle(void) {
 static
 void
 testOwnedInstanceLifecycle(void) {
-    runtimelifecycle0Instance root;
-    runtimelifecycle0Instance* child;
+    m19_runtimeX5FlifecycleX2E0Instance root;
+    m19_runtimeX5FlifecycleX2E0Instance* child;
 
-    runtimelifecycle0Instantiate(&root, NULL);
-    child = (runtimelifecycle0Instance*)root.common.newChild(
+    m19_runtimeX5FlifecycleX2E0Instantiate(&root, NULL);
+    child = (m19_runtimeX5FlifecycleX2E0Instance*)root.common.newChild(
         (wasmModuleInstance*)&root
     );
 
@@ -98,18 +98,18 @@ testOwnedInstanceLifecycle(void) {
     root.m0->data[0] = 1;
     expect(root.t0.data != NULL, "child destruction released the root table");
 
-    runtimelifecycle0FreeInstance(&root);
-    runtimelifecycle0FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E0FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E0FreeInstance(&root);
 }
 
 static
 void
 testSharedMemoryInstanceLifecycle(void) {
-    runtimelifecycle1Instance root;
-    runtimelifecycle1Instance* child;
+    m19_runtimeX5FlifecycleX2E1Instance root;
+    m19_runtimeX5FlifecycleX2E1Instance* child;
 
-    runtimelifecycle1Instantiate(&root, NULL);
-    child = (runtimelifecycle1Instance*)root.common.newChild(
+    m19_runtimeX5FlifecycleX2E1Instantiate(&root, NULL);
+    child = (m19_runtimeX5FlifecycleX2E1Instance*)root.common.newChild(
         (wasmModuleInstance*)&root
     );
 
@@ -117,15 +117,15 @@ testSharedMemoryInstanceLifecycle(void) {
     child->common.freeChild((wasmModuleInstance*)child);
     root.m0->data[0] = 1;
 
-    runtimelifecycle1FreeInstance(&root);
-    runtimelifecycle1FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E1FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E1FreeInstance(&root);
 }
 
 static
 void
 testImportedResourceLifecycle(void) {
-    runtimelifecycle2Instance root;
-    runtimelifecycle2Instance* child;
+    m19_runtimeX5FlifecycleX2E2Instance root;
+    m19_runtimeX5FlifecycleX2E2Instance* child;
     wasmTable table;
 
     importedMemory = wasmMemoryAllocate(1, 2, true);
@@ -133,7 +133,7 @@ testImportedResourceLifecycle(void) {
     wasmTableAllocate(&table, 10, 20);
     importedTable = &table;
 
-    runtimelifecycle2Instantiate(&root, resolveRuntimeImports);
+    m19_runtimeX5FlifecycleX2E2Instantiate(&root, resolveRuntimeImports);
     expect(
         memcmp(importedMemory->data + 12, "data", 4) == 0,
         "active segment did not initialize imported memory"
@@ -143,11 +143,11 @@ testImportedResourceLifecycle(void) {
         "active segment changed surrounding imported memory"
     );
     importedMemory->data[12] = 0;
-    child = (runtimelifecycle2Instance*)root.common.newChild(
+    child = (m19_runtimeX5FlifecycleX2E2Instance*)root.common.newChild(
         (wasmModuleInstance*)&root
     );
     expect(
-        child->spectest__shared_memory == importedMemory,
+        child->m0 == importedMemory,
         "child did not borrow imported memory"
     );
     expect(
@@ -155,12 +155,12 @@ testImportedResourceLifecycle(void) {
         "child did not initialize its active segment"
     );
     expect(
-        child->spectest__table == importedTable,
+        child->t0 == importedTable,
         "child did not borrow imported table"
     );
     child->common.freeChild((wasmModuleInstance*)child);
-    runtimelifecycle2FreeInstance(&root);
-    runtimelifecycle2FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E2FreeInstance(&root);
+    m19_runtimeX5FlifecycleX2E2FreeInstance(&root);
 
     importedMemory->data[0] = 1;
     expect(
