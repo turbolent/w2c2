@@ -1184,6 +1184,98 @@ testMemoryEdges(void) {
 
 static
 void
+testFunctionBufferReuse(void) {
+    static const size_t instructionCounts[] = {1024, 1, 0, 2048, 0, 2};
+    static const U32 fileSizes[] = {1, 2, 6};
+    WasmModule module;
+    WasmFunctionType type = wasmEmptyFunctionType;
+    WasmFunction functions[6];
+    U8 code[6][3 * 2048 + 1];
+    WasmFunctionIDs ids;
+    size_t index;
+    unsigned int mode;
+
+    memset(&module, 0, sizeof(module));
+    module.functionTypes.functionTypes = &type;
+    module.functionTypes.count = 1;
+    module.functions.functions = functions;
+    module.functions.count = 6;
+    for (index = 0; index < 6; index++) {
+        size_t instruction;
+        for (instruction = 0; instruction < instructionCounts[index]; instruction++) {
+            /* i32.const 42; drop */
+            code[index][3 * instruction] = 0x41;
+            code[index][3 * instruction + 1] = 42;
+            code[index][3 * instruction + 2] = 0x1A;
+        }
+        code[index][3 * instructionCounts[index]] = 0x0B;
+        functions[index] = wasmEmptyFunction;
+        functions[index].code.data = code[index];
+        functions[index].code.length = 3 * instructionCounts[index] + 1;
+    }
+    ids = outputFunctionIDs(&module);
+
+    for (mode = 0; mode < 2; mode++) {
+        OutputCapture references[6];
+        const char* bodies[6];
+        size_t layout;
+
+        /* Translate each function separately so its buffer starts empty. */
+        for (index = 0; index < 6; index++) {
+            WasmFunctionIDs singleID = ids;
+            WasmCWriteModuleOptions options;
+            const CapturedOutput* output;
+            singleID.functionIDs = &ids.functionIDs[index];
+            singleID.length = 1;
+            captureInitialize(&references[index]);
+            options = captureOptions(&references[index]);
+            options.pretty = mode != 0;
+            CHECK(wasmCWriteModule(&module, "outputTest", options, singleID, emptyWasmFunctionIDs));
+            CHECK(references[index].diagnosticCount == 0);
+            output = findOutput(&references[index], "m10_outputx54est.s0000000000.c");
+            CHECK(output != NULL);
+            bodies[index] = strstr((const char*)output->bytes, "void f");
+            CHECK(bodies[index] != NULL);
+            checkClosed(&references[index]);
+        }
+
+        for (layout = 0; layout < sizeof(fileSizes) / sizeof(fileSizes[0]); layout++) {
+            U32 threads;
+            for (threads = 1; threads <= 2; threads++) {
+                OutputCapture capture;
+                WasmCWriteModuleOptions options;
+                captureInitialize(&capture);
+                options = captureOptions(&capture);
+                options.functionsPerFile = fileSizes[layout];
+                options.threadCount = threads;
+                options.pretty = mode != 0;
+                CHECK(wasmCWriteModule(&module, "outputTest", options, ids, emptyWasmFunctionIDs));
+                CHECK(capture.diagnosticCount == 0);
+                for (index = 0; index < 6; index++) {
+                    size_t fileIndex;
+                    size_t matches = 0;
+                    for (fileIndex = 0; fileIndex < capture.count; fileIndex++) {
+                        const char* match = strstr((const char*)capture.files[fileIndex].bytes, bodies[index]);
+                        if (match != NULL) {
+                            CHECK(strstr(match + strlen(bodies[index]), bodies[index]) == NULL);
+                            matches++;
+                        }
+                    }
+                    CHECK(matches == 1);
+                }
+                checkClosed(&capture);
+                captureFree(&capture);
+            }
+        }
+        for (index = 0; index < 6; index++) {
+            captureFree(&references[index]);
+        }
+    }
+    wasmFunctionIDsFree(&ids);
+}
+
+static
+void
 testOutputBuffer(void) {
     static const U8 bytes[] = {0, 1, 0xFF, 0};
     OutputBuffer buffer = emptyOutputBuffer;
@@ -1599,6 +1691,7 @@ testOutputs(void) {
     testFloatConstantLocales();
     testMemorySize();
     testMemoryEdges();
+    testFunctionBufferReuse();
     testOutputBuffer();
     testOutputFormatting();
     testBorrowedBuffer();

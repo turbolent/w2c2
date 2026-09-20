@@ -4227,6 +4227,7 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionBody(
     WasmOutput* file,
+    OutputBuffer* buffer,
     WasmTypeStack* typeStack,
     WasmTypeStack* stackDeclarations,
     WasmLabelStack* labelStack,
@@ -4240,11 +4241,9 @@ wasmCWriteFunctionBody(
     WasmDiagnosticContext* diagnostics
 ) {
     Buffer code = function.code;
-    OutputBuffer buffer = emptyOutputBuffer;
     WasmOpcode opcode = wasmOpcodeUnreachable;
     WasmLabel label = wasmEmptyLabel;
     WasmValueType* resultType = NULL;
-    bool result = false;
 
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
@@ -4264,13 +4263,15 @@ wasmCWriteFunctionBody(
         resultType = NULL;
     }
 
-    if (!outputBufferInitialize(&buffer)) {
+    if (buffer->data == NULL && !outputBufferInitialize(buffer)) {
         wasmDiagnosticReportAllocationFailed(diagnostics);
-        goto cleanup;
+        return false;
     }
+    buffer->length = 0;
+    buffer->data[0] = 0;
 
     {
-        WasmOutput output = wasmOutputForBuffer(&buffer, diagnostics);
+        WasmOutput output = wasmOutputForBuffer(buffer, diagnostics);
         WasmCFunctionWriter writer;
         writer.output = &output;
         writer.diagnostics = diagnostics;
@@ -4289,13 +4290,10 @@ wasmCWriteFunctionBody(
         writer.multipleModules = multipleModules;
         writer.debugLines = debugLines;
 
-        MUST_OR_GOTO (
-            cleanup,
-            wasmLabelStackPush(writer.labelStack, 0, resultType, &label)
-        )
-        MUST_OR_GOTO (cleanup, wasmCWriteFunctionCode(&writer, &opcode))
-        MUST_OR_GOTO (cleanup, wasmCWriteLabel(&writer, label.index))
-        MUST_OR_GOTO (cleanup, wasmCWriteFunctionReturn(&writer, functionType))
+        MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
+        MUST (wasmCWriteFunctionCode(&writer, &opcode))
+        MUST (wasmCWriteLabel(&writer, label.index))
+        MUST (wasmCWriteFunctionReturn(&writer, functionType))
     }
 
     wasmOutputString(file, "{\n");
@@ -4308,14 +4306,10 @@ wasmCWriteFunctionBody(
     wasmOutputString(file, "Instance*)instance;\n");
     wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
-    wasmOutputWrite(file, buffer.data, buffer.length);
+    wasmOutputWrite(file, buffer->data, buffer->length);
     wasmOutputString(file, "}\n");
 
-    result = !file->failed;
-
-cleanup:
-    outputBufferFree(&buffer);
-    return result;
+    return !file->failed;
 }
 
 
@@ -4402,6 +4396,7 @@ bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionImplementations(
     WasmOutput* file,
+    OutputBuffer* functionBuffer,
     const WasmModule* module,
     const char* moduleName,
     const U32 startIDIndex,
@@ -4459,6 +4454,7 @@ wasmCWriteFunctionImplementations(
         wasmOutputChar(file, ' ');
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionBody(
             file,
+            functionBuffer,
             &typeStack,
             &stackDeclarations,
             &labelStack,
@@ -6046,6 +6042,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteImplementationFile(
+    OutputBuffer* functionBuffer,
     const WasmModule* module,
     const char* moduleName,
     const WasmCOutputNames* names,
@@ -6091,6 +6088,7 @@ wasmCWriteImplementationFile(
 
     MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
         file,
+        functionBuffer,
         module,
         moduleName,
         startFunctionIDIndex,
@@ -6198,6 +6196,7 @@ wasmCImplementationWriterThread(
     WasmCImplementationConcurrentWriter* writer = (WasmCImplementationConcurrentWriter*)arg;
     WasmDiagnosticContext threadDiagnostics = emptyWasmDiagnosticContext;
     WasmDiagnosticContext* diagnostics = &threadDiagnostics;
+    OutputBuffer functionBuffer = emptyOutputBuffer;
     diagnostics->diagnostics = writer->diagnostics;
 
     while (true) {
@@ -6212,7 +6211,7 @@ wasmCImplementationWriterThread(
 
         if (writer->done) {
             pthread_mutex_unlock(&writer->mutex);
-            return NULL;
+            break;
         }
 
         {
@@ -6237,6 +6236,7 @@ wasmCImplementationWriterThread(
 
             {
                 const bool result = wasmCWriteImplementationFile(
+                    &functionBuffer,
                     module,
                     moduleName,
                     names,
@@ -6262,12 +6262,13 @@ wasmCImplementationWriterThread(
                     pthread_cond_broadcast(&writer->consume);
                     pthread_cond_broadcast(&writer->produce);
                     pthread_mutex_unlock(&writer->mutex);
-                    return NULL;
+                    break;
                 }
             }
         }
     }
 
+    outputBufferFree(&functionBuffer);
     return NULL;
 }
 
@@ -6277,6 +6278,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteModuleImplementationFiles(
+    OutputBuffer* functionBuffer,
     const WasmModule* module,
     const char* moduleName,
     const WasmCOutputNames* names,
@@ -6407,6 +6409,7 @@ finish:
     for (; fileIndex < fileCount; fileIndex++) {
         const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
         if (!wasmCWriteImplementationFile(
+            functionBuffer,
             module,
             moduleName,
             names,
@@ -6445,6 +6448,7 @@ wasmCWriteModuleImplementation(
     WasmOutput* file = &output;
     const char* filename = names->implementation;
     bool result = false;
+    OutputBuffer functionBuffer = emptyOutputBuffer;
 
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
@@ -6496,6 +6500,7 @@ wasmCWriteModuleImplementation(
     if (!names->split) {
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
             file,
+            &functionBuffer,
             module,
             moduleName,
             0,
@@ -6509,6 +6514,7 @@ wasmCWriteModuleImplementation(
     } else {
 
         MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
+            &functionBuffer,
             module,
             moduleName,
             names,
@@ -6519,6 +6525,7 @@ wasmCWriteModuleImplementation(
         ))
 
         MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
+            &functionBuffer,
             module,
             moduleName,
             names,
@@ -6551,6 +6558,7 @@ wasmCWriteModuleImplementation(
     result = true;
 
 cleanup:
+    outputBufferFree(&functionBuffer);
     diagnostics->location.hasFunctionIndex = false;
     diagnostics->location.outputName = filename;
     if (!result) {
