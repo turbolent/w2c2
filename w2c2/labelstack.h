@@ -34,7 +34,7 @@ void
 wasmLabelStackClear(
     WasmLabelStack* labelStack
 ) {
-    U32 index = 0;
+    size_t index = 0;
     for (; index < labelStack->labels.capacity; index++) {
         labelStack->labels.labels[index] = wasmEmptyLabel;
     }

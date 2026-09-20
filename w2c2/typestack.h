@@ -45,7 +45,7 @@ void
 wasmTypeStackClear(
     WasmTypeStack* typeStack
 ) {
-    U32 index = 0;
+    size_t index = 0;
     for (; index < typeStack->capacity; index++) {
         typeStack->valueTypes[index] = 0;
     }
@@ -63,7 +63,9 @@ wasmTypeStackSet(
     const WasmValueType valueType
 ) {
     const size_t currentLength = typeStack->length;
-    const size_t newLength = index + 1;
+    size_t newLength;
+
+    MUST (arrayLengthAdd(index, 1, &newLength))
 
     if (currentLength < newLength) {
         size_t newIndex = currentLength;

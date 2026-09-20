@@ -8,6 +8,16 @@
 extern "C" {
 #endif
 
+/* Overflow leaves the result unchanged. */
+static
+W2C2_INLINE
+bool
+arrayLengthAdd(const size_t length, const size_t extra, size_t* result) {
+    MUST (extra <= (size_t)-1 - length)
+    *result = length + extra;
+    return true;
+}
+
 WasmBool
 arrayEnsureCapacitySlowPath(
     void** items,
@@ -57,7 +67,8 @@ INSTANCE ## Append(                                           \
     TYPE ITEM                                                 \
 ) {                                                           \
     const size_t length = INSTANCE->length;                   \
-    const size_t newLength = length + 1;                      \
+    size_t newLength;                                        \
+    MUST (arrayLengthAdd(length, 1, &newLength))              \
     MUST (INSTANCE ## EnsureCapacity(INSTANCE, newLength))    \
                                                               \
     INSTANCE->ITEMS[length] = ITEM;                           \
