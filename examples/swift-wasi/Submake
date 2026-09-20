@@ -1,3 +1,5 @@
+OBJCOPY ?= objcopy
+
 OBJLIST=$(filter-out swiftwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 swift-wasi: swiftwasi.o
@@ -6,6 +8,9 @@ swift-wasi: swiftwasi.o
 
 datasegments.o: swiftwasi.c
 	ld -r -b binary -o datasegments.o datasegments
+	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m10_swiftX2DwasiData \
+		--redefine-sym _binary_datasegments_end=m10_swiftX2DwasiDataEnd \
+		--redefine-sym _binary_datasegments_size=m10_swiftX2DwasiDataSize datasegments.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

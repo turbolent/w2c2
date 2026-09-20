@@ -214,6 +214,16 @@ wasmDiagnosticReportInvalidWriterArgument(
 }
 
 void
+wasmDiagnosticReportDataSectionNameTooLong(
+    WasmDiagnosticContext* context
+) {
+    WasmDiagnostic diagnostic = wasmDiagnosticInitialize(
+        wasmDiagnosticDataSectionNameTooLong, wasmDiagnosticError
+    );
+    wasmDiagnosticReport(context, &diagnostic);
+}
+
+void
 wasmDiagnosticReportOutputFailed(
     WasmDiagnosticContext* context,
     WasmDiagnosticCode code,

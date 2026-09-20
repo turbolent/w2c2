@@ -40,6 +40,29 @@ wasmCWriteModuleName(
 static
 W2C2_INLINE
 void
+wasmCWriteDataName(
+    WasmOutput* file,
+    const char* moduleName
+) {
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Data");
+}
+
+static
+W2C2_INLINE
+void
+wasmCWriteDataSegmentName(
+    WasmOutput* file,
+    const char* moduleName,
+    const U32 dataSegmentIndex
+) {
+    wasmCWriteDataName(file, moduleName);
+    wasmOutputU32(file, dataSegmentIndex);
+}
+
+static
+W2C2_INLINE
+void
 wasmCWriteFunctionImportName(
     WasmOutput* file,
     const char* moduleName,

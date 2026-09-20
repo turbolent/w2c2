@@ -20,6 +20,10 @@ extern "C" {
  * Function imports use i<import module component><import name component>,
  * or the module prefix followed by Import and both components in multiple-module mode.
  * Imported globals, memories, and tables use g, m, and t followed by their Wasm index.
+ * Data segments use the module prefix followed by Data and their Wasm index.
+ * External data uses the module prefix followed by Data for its base symbol.
+ * Mach-O external-data modes use the module prefix as the section name in __DATA;
+ * the encoded prefix must fit in 16 bytes.
  */
 WasmBool
 WARN_UNUSED_RESULT

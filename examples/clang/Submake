@@ -1,3 +1,5 @@
+OBJCOPY ?= objcopy
+
 OBJLIST=$(filter-out llvm.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 sys/bin/llvm: llvm.o
@@ -6,6 +8,9 @@ sys/bin/llvm: llvm.o
 
 datasegments.o: llvm.c
 	ld -r -b binary -o datasegments.o datasegments
+	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m4_llvmData \
+		--redefine-sym _binary_datasegments_end=m4_llvmDataEnd \
+		--redefine-sym _binary_datasegments_size=m4_llvmDataSize datasegments.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

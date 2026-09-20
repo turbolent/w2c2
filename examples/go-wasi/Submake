@@ -1,3 +1,5 @@
+OBJCOPY ?= objcopy
+
 OBJLIST=$(filter-out gowasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 go-wasi: gowasi.o
@@ -6,6 +8,9 @@ go-wasi: gowasi.o
 
 datasegments.o: gowasi.c
 	ld -r -b binary -o datasegments.o datasegments
+	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m6_gowasiData \
+		--redefine-sym _binary_datasegments_end=m6_gowasiDataEnd \
+		--redefine-sym _binary_datasegments_size=m6_gowasiDataSize datasegments.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@
