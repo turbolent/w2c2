@@ -515,13 +515,13 @@ testDiagnostics(void) {
     CHECK(remove("m10_diagnostic.s0000000000.c") == 0);
     CHECK(remove("m10_diagnostic.s0000000001.c") == 0);
 #if HAS_PTHREAD
-    CHECK(remove("diagnostic-static.c") == 0);
+    CHECK(fopen("diagnostic-static.c", "r") == NULL && errno == ENOENT);
     CHECK(remove("diagnostic-static.h") == 0);
-    CHECK(remove("diagnostic-dynamic.c") == 0);
+    CHECK(fopen("diagnostic-dynamic.c", "r") == NULL && errno == ENOENT);
     CHECK(remove("diagnostic-dynamic.h") == 0);
-    CHECK(remove("m10_diagnostic.d0000000000.c") == 0);
+    CHECK(fopen("m10_diagnostic.d0000000000.c", "r") == NULL && errno == ENOENT);
     /* The first worker failure may stop translation before the second file is created. */
-    CHECK(remove("m10_diagnostic.d0000000001.c") == 0 || errno == ENOENT);
+    CHECK(fopen("m10_diagnostic.d0000000001.c", "r") == NULL && errno == ENOENT);
 #endif
     fprintf(stderr, "PASS testDiagnostics\n");
 }
