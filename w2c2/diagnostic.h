@@ -129,7 +129,7 @@ typedef struct WasmDiagnosticUnsupportedFunctionResultsInfo {
 } WasmDiagnosticUnsupportedFunctionResultsInfo;
 
 typedef struct WasmDiagnosticUnsupportedExportInfo {
-    const char* name;
+    WasmName name;
     WasmExportKind kind;
 } WasmDiagnosticUnsupportedExportInfo;
 
@@ -148,7 +148,7 @@ typedef struct WasmDiagnosticThreadFailedInfo {
 } WasmDiagnosticThreadFailedInfo;
 
 typedef struct WasmDiagnosticDuplicateFunctionNameInfo {
-    const char* name;
+    WasmName name;
     U32 previousIndex;
     U32 currentIndex;
 } WasmDiagnosticDuplicateFunctionNameInfo;
@@ -159,7 +159,7 @@ typedef struct WasmDiagnosticSkippedNameSubsectionInfo {
 } WasmDiagnosticSkippedNameSubsectionInfo;
 
 typedef struct WasmDiagnosticSkippedCustomSectionInfo {
-    const char* name;
+    WasmName name;
     U32 size;
 } WasmDiagnosticSkippedCustomSectionInfo;
 

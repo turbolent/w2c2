@@ -4,4 +4,7 @@
 void
 testReadLimits(void);
 
+void
+testReadNames(void);
+
 #endif /* W2C2_READER_TEST_H */

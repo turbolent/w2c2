@@ -25,7 +25,7 @@ dwarfAccessGetSectionInfo(
     WasmDebugSection section = sections->debugSections[sectionIndex];
 
     accessSection->addr = 0;
-    accessSection->name = section.name;
+    accessSection->name = section.name.data;
     accessSection->size = section.buffer.length;
     accessSection->info = 0;
     accessSection->link = 0;
@@ -507,7 +507,7 @@ dwarfAccessGetSectionInfo(
     UNUSED_PARAMETER(error);
 
     accessSection->as_addr = 0;
-    accessSection->as_name = section.name;
+    accessSection->as_name = section.name.data;
     accessSection->as_size = section.buffer.length;
     accessSection->as_info = 0;
     accessSection->as_link = 0;

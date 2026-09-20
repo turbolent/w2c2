@@ -44,29 +44,35 @@ static
 void
 wasmCWriteStringContents(
     WasmOutput* file,
-    const char* string
+    const char* string,
+    const size_t length
 ) {
     const U8* cursor = (const U8*)string;
     const U8* start = cursor;
-    for (; *cursor != 0; cursor++) {
+    const U8* end;
+    if (length == 0) {
+        return;
+    }
+    end = cursor + length;
+    for (; cursor < end; cursor++) {
         const U8 c = *cursor;
         if (c == '"' || c == '\\' || c == '?' || c < 0x20 || c >= 0x7F) {
             U8 escape[4];
-            size_t length;
+            size_t escapeLength;
             wasmOutputWrite(file, start, (size_t)(cursor - start));
             escape[0] = '\\';
             if (c == '"' || c == '\\' || c == '?') {
                 /* Escape question marks to prevent C89 trigraph conversion. */
                 escape[1] = c;
-                length = 2;
+                escapeLength = 2;
             } else {
                 /* Three octal digits keep following digits out of the escape. */
                 escape[1] = (U8)('0' + (c >> 6));
                 escape[2] = (U8)('0' + ((c >> 3) & 7));
                 escape[3] = (U8)('0' + (c & 7));
-                length = 4;
+                escapeLength = 4;
             }
-            wasmOutputWrite(file, escape, length);
+            wasmOutputWrite(file, escape, escapeLength);
             start = cursor + 1;
         }
     }
@@ -90,18 +96,18 @@ W2C2_INLINE
 void
 wasmCWriteEscaped(
     WasmOutput* file,
-    const char* name
+    const WasmName name
 ) {
     static const char escapeChar = 'X';
-    const char* p = name;
-    for (; *p != '\0'; p++) {
-        const char c = *p;
+    size_t index;
+    for (index = 0; index < name.length; index++) {
+        const char c = name.data[index];
         if (c == '_') {
             /*
              * Double underscore is reserved for concatenating module name and import name,
              * so produce triple underscore instead.
              */
-            const bool wasUnderscore = p != name && *(p-1) == '_';
+            const bool wasUnderscore = index > 0 && name.data[index - 1] == '_';
             if (wasUnderscore) {
                 wasmOutputString(file, "__");
             } else {
@@ -134,8 +140,8 @@ W2C2_INLINE
 void
 wasmCWriteImportName(
     WasmOutput* file,
-    const char* module,
-    const char* name
+    const WasmName module,
+    const WasmName name
 ) {
     wasmCWriteEscaped(file, module);
     wasmOutputString(file, wasmImportNameSeparator);
@@ -2473,7 +2479,7 @@ wasmCWriteDebugLine(
     wasmOutputString(output, "#line ");
     wasmOutputU64(output, debugLine->number);
     wasmOutputString(output, " \"");
-    wasmCWriteStringContents(output, debugLine->path);
+    wasmCWriteStringContents(output, debugLine->path, strlen(debugLine->path));
     wasmOutputString(output, "\"\n");
     return !output->failed;
 }
@@ -4499,13 +4505,15 @@ wasmCWriteFunctionDeclarations(
             diagnostics
         ))
 
-        if (debug && function.exportName == NULL && moduleFunctionIndex < module->functionNames.length) {
-            char* functionName = module->functionNames.names[moduleFunctionIndex];
-            if (functionName != NULL) {
+        if (debug && function.exportName.data == NULL && moduleFunctionIndex < module->functionNames.length) {
+            const WasmName functionName = module->functionNames.names[moduleFunctionIndex];
+            /* Assembly labels cannot contain NUL bytes. */
+            if (functionName.data != NULL
+                && memchr(functionName.data, 0, functionName.length) == NULL) {
                 wasmOutputString(file, " __asm__(\"");
-                wasmCWriteStringContents(file, moduleName);
+                wasmCWriteStringContents(file, moduleName, strlen(moduleName));
                 wasmOutputString(file, "_");
-                wasmCWriteStringContents(file, functionName);
+                wasmCWriteStringContents(file, functionName.data, functionName.length);
                 wasmOutputString(file, "\")");
             }
         }
@@ -4557,7 +4565,7 @@ wasmCWriteFunctionImplementations(
                 wasmOutputString(file, "#line ");
                 wasmOutputU32(file, (U32)debugLine->number);
                 wasmOutputString(file, " \"");
-                wasmCWriteStringContents(file, debugLine->path);
+                wasmCWriteStringContents(file, debugLine->path, strlen(debugLine->path));
                 wasmOutputString(file, "\"\n");
             }
         }
@@ -4761,8 +4769,8 @@ W2C2_INLINE
 void
 wasmCWriteInitImportAssignment(
     WasmOutput* file,
-    const char* module,
-    const char* name,
+    const WasmName module,
+    const WasmName name,
     const bool pretty
 ) {
     if (pretty) {
@@ -4786,14 +4794,18 @@ W2C2_INLINE
 void
 wasmCWriteInitImportValue(
     WasmOutput* file,
-    const char* module,
-    const char* name
+    const WasmName module,
+    const WasmName name
 ) {
-    wasmOutputString(file, "resolve(\"");
-    wasmCWriteStringContents(file, module);
-    wasmOutputString(file, "\", \"");
-    wasmCWriteStringContents(file, name);
-    wasmOutputString(file, "\");\n");
+    wasmOutputString(file, "resolve(wasmNameFromBytes(\"");
+    wasmCWriteStringContents(file, module.data, module.length);
+    wasmOutputString(file, "\", ");
+    wasmOutputU64(file, module.length);
+    wasmOutputString(file, "), wasmNameFromBytes(\"");
+    wasmCWriteStringContents(file, name.data, name.length);
+    wasmOutputString(file, "\", ");
+    wasmOutputU64(file, name.length);
+    wasmOutputString(file, "));\n");
 }
 
 static
@@ -4923,7 +4935,7 @@ wasmCWriteInitImports(
     wasmOutputString(file, moduleName);
     wasmOutputString(file, "InitImports(");
     wasmOutputString(file, moduleName);
-    wasmOutputString(file, "Instance* i, void* resolve(const char* module, const char* name)) {\n");
+    wasmOutputString(file, "Instance* i, wasmImportResolver resolve) {\n");
     if (pretty) {
         wasmOutputString(file, indentation);
     }
@@ -4944,7 +4956,7 @@ void
 wasmCWriteExportName(
     WasmOutput* file,
     const char* moduleName,
-    const char* name
+    const WasmName name
 ) {
     wasmOutputString(file, moduleName);
     wasmOutputString(file, "_");
@@ -5936,7 +5948,7 @@ wasmCWriteInstantiateFunction(
     wasmOutputString(file, moduleName);
     wasmOutputString(file, "Instantiate(");
     wasmOutputString(file, moduleName);
-    wasmOutputString(file, "Instance* i, void* resolveImports(const char* module, const char* name)) {\n");
+    wasmOutputString(file, "Instance* i, wasmImportResolver resolveImports) {\n");
 
     if (pretty) {
         wasmOutputString(file, indentation);
@@ -6074,7 +6086,7 @@ wasmCWriteModuleHeader(
     wasmOutputString(file, moduleName);
     wasmOutputString(file, "Instantiate(");
     wasmOutputString(file, moduleName);
-    wasmOutputString(file, "Instance* instance, void* resolve(const char* module, const char* name));\n\n");
+    wasmOutputString(file, "Instance* instance, wasmImportResolver resolve);\n\n");
     wasmOutputString(file, "void ");
     wasmOutputString(file, moduleName);
     wasmOutputString(file, "FreeInstance(");
@@ -6145,13 +6157,15 @@ wasmCWriteModuleFunctionExportsArray(
                 false,
                 multipleModules
             );
-            wasmOutputString(file, ",\"");
-            wasmCWriteStringContents(file, export.name);
-            wasmOutputString(file, "\"},\n");
+            wasmOutputString(file, ",{\"");
+            wasmCWriteStringContents(file, export.name.data, export.name.length);
+            wasmOutputString(file, "\",");
+            wasmOutputU64(file, export.name.length);
+            wasmOutputString(file, "}},\n");
         }
     }
 
-    wasmOutputString(file, "{NULL,NULL}\n};\n\n");
+    wasmOutputString(file, "{NULL,{NULL,0}}\n};\n\n");
 
     return true;
 }

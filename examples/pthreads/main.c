@@ -25,8 +25,12 @@ extern char** environ;
 
 wasmMemory* mem = NULL;
 
-void* resolveImport(const char* moduleName, const char* importName) {
-    if (strcmp(moduleName, "env") == 0 && strcmp(importName, "memory") == 0) {
+void* resolveImport(
+    WasmName moduleName,
+    WasmName importName
+) {
+    if (moduleName.length == sizeof("env") - 1 && memcmp(moduleName.data, "env", moduleName.length) == 0
+        && importName.length == sizeof("memory") - 1 && memcmp(importName.data, "memory", importName.length) == 0) {
         return mem;
     }
     return NULL;

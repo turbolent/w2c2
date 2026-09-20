@@ -16,6 +16,7 @@ main(void) {
     testSHA1();
     testModuleLifecycle();
     testReadLimits();
+    testReadNames();
     testDiagnostics();
     testOutputs();
     return 0;

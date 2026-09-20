@@ -34,6 +34,15 @@ testStringDuplicate(
 }
 
 static
+WasmName
+testNameDuplicate(const char* string) {
+    WasmName result;
+    result.data = testStringDuplicate(string);
+    result.length = strlen(string);
+    return result;
+}
+
+static
 bool
 testBufferContains(
     const Buffer buffer,
@@ -75,29 +84,29 @@ testModuleFree(void) {
     module->functionImports.capacity = 1;
     module->functionImports.imports =
         testAllocate(1, sizeof(WasmFunctionImport));
-    module->functionImports.imports[0].module = testStringDuplicate("env");
-    module->functionImports.imports[0].name = testStringDuplicate("function");
+    module->functionImports.imports[0].module = testNameDuplicate("env");
+    module->functionImports.imports[0].name = testNameDuplicate("function");
 
     module->globalImports.length = 1;
     module->globalImports.capacity = 1;
     module->globalImports.imports =
         testAllocate(1, sizeof(WasmGlobalImport));
-    module->globalImports.imports[0].module = testStringDuplicate("env");
-    module->globalImports.imports[0].name = testStringDuplicate("global");
+    module->globalImports.imports[0].module = testNameDuplicate("env");
+    module->globalImports.imports[0].name = testNameDuplicate("global");
 
     module->memoryImports.length = 1;
     module->memoryImports.capacity = 1;
     module->memoryImports.imports =
         testAllocate(1, sizeof(WasmMemoryImport));
-    module->memoryImports.imports[0].module = testStringDuplicate("env");
-    module->memoryImports.imports[0].name = testStringDuplicate("memory");
+    module->memoryImports.imports[0].module = testNameDuplicate("env");
+    module->memoryImports.imports[0].name = testNameDuplicate("memory");
 
     module->tableImports.length = 1;
     module->tableImports.capacity = 1;
     module->tableImports.imports =
         testAllocate(1, sizeof(WasmTableImport));
-    module->tableImports.imports[0].module = testStringDuplicate("env");
-    module->tableImports.imports[0].name = testStringDuplicate("table");
+    module->tableImports.imports[0].module = testNameDuplicate("env");
+    module->tableImports.imports[0].name = testNameDuplicate("table");
 
     module->functions.count = 1;
     module->functions.functions = testAllocate(1, sizeof(WasmFunction));
@@ -109,7 +118,7 @@ testModuleFree(void) {
 
     module->exports.count = 1;
     module->exports.exports = testAllocate(1, sizeof(WasmExport));
-    module->exports.exports[0].name = testStringDuplicate("export");
+    module->exports.exports[0].name = testNameDuplicate("export");
     module->functions.functions[0].exportName =
         module->exports.exports[0].name;
 
@@ -147,7 +156,7 @@ testModuleFree(void) {
     module->debugSections.debugSections =
         testAllocate(1, sizeof(WasmDebugSection));
     module->debugSections.debugSections[0].name =
-        testStringDuplicate(".debug_info");
+        testNameDuplicate(".debug_info");
     module->debugSections.debugSections[0].buffer.data = borrowedBytes;
     module->debugSections.debugSections[0].buffer.length =
         sizeof borrowedBytes;
@@ -159,8 +168,8 @@ testModuleFree(void) {
 
     module->functionNames.length = 1;
     module->functionNames.capacity = 1;
-    module->functionNames.names = testAllocate(1, sizeof(char*));
-    module->functionNames.names[0] = testStringDuplicate("function");
+    module->functionNames.names = testAllocate(1, sizeof(WasmName));
+    module->functionNames.names[0] = testNameDuplicate("function");
 
     wasmModuleFree(module);
     wasmModuleFree(NULL);
@@ -280,9 +289,9 @@ testModuleReadCleanup(void) {
     if (error != NULL
         || reader.module == NULL
         || reader.module->functionNames.length != 3
-        || reader.module->functionNames.names[0] != NULL
-        || reader.module->functionNames.names[1] != NULL
-        || reader.module->functionNames.names[2] != NULL) {
+        || reader.module->functionNames.names[0].data != NULL
+        || reader.module->functionNames.names[1].data != NULL
+        || reader.module->functionNames.names[2].data != NULL) {
 
         fprintf(stderr, "FAIL testModuleLifecycle: duplicate names survived\n");
         exit(1);
