@@ -712,7 +712,7 @@ testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
     generated = findOutput(&capture, "output-test.c");
     CHECK(generated != NULL);
     CHECK(strstr((const char*)generated->bytes, "i->g1=17U;") != NULL);
-    CHECK(strstr((const char*)generated->bytes, "i->g2=(*i->env__base);") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "i->g2=(*i->g0);") != NULL);
     CHECK(strstr((const char*)generated->bytes, "23U") != NULL);
     CHECK(strstr((const char*)generated->bytes, "offset=31U;") != NULL);
     CHECK(capture.diagnosticCount == 0);
@@ -813,6 +813,9 @@ testCStringEscaping(void) {
     static const char* escaped[] = {
         "", "ordinary/path.c", "\\\"\\\\\\012\\015\\011\\0017AF\\177\\303\\251\\?\\?/end\\\\", "a\\000b"
     };
+    static const char* identifiers[] = {
+        "0_", "15_ordinaryX2FpathX2Ec", "19_X22X5CX0AX0DX09X017AFX7FXC3XA9X3FX3FX2FendX5C", "3_aX00b"
+    };
     size_t index;
     for (index = 0; index < sizeof(strings) / sizeof(strings[0]); index++) {
         WasmModule* module = readOutputModule();
@@ -862,7 +865,7 @@ testCStringEscaping(void) {
         sprintf(resolve, "resolve(wasmNameFromBytes(\"%s\", %lu), wasmNameFromBytes(\"%s\", %lu));",
             escaped[index], (unsigned long)(size - 1), escaped[index], (unsigned long)(size - 1));
         sprintf(exportName, ",{\"%s\",%lu}},", escaped[index], (unsigned long)(size - 1));
-        sprintf(assemblyName, " __asm__(\"outputTest_%s\")", escaped[index]);
+        sprintf(assemblyName, " __asm__(\"m10_outputTestDebug1Name%s\")", identifiers[index]);
         sprintf(debugLine, "#line 17 \"%s\"\n", hasNul ? "a" : escaped[index]);
         for (mode = 0; mode < 4; mode++) {
             OutputCapture capture;
@@ -885,9 +888,6 @@ testCStringEscaping(void) {
             for (fileIndex = 0; fileIndex < capture.count; fileIndex++) {
                 const char* source = (const char*)capture.files[fileIndex].bytes;
                 const char* cursor = source;
-                if (hasNul) {
-                    CHECK(strstr(source, "__asm__(") == NULL);
-                }
                 if (strstr(source, assemblyName) != NULL) {
                     foundAssemblyName = true;
                 }
@@ -897,7 +897,7 @@ testCStringEscaping(void) {
                     cursor += strlen(debugLine);
                 }
             }
-            CHECK(foundAssemblyName != hasNul);
+            CHECK(foundAssemblyName);
             /* Both functions have a signature directive and an end-instruction directive. */
             CHECK(lineCount == 4);
             checkClosed(&capture);

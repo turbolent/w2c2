@@ -5,7 +5,7 @@
 #include "test_float_exprs.14.h"
 
 void test() {
-    floatexprs14Instance instance;
-    floatexprs14Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E14Instance instance;
+    m14_floatX5FexprsX2E14Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.14.wasm");
 }

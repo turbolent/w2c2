@@ -5,11 +5,11 @@
 #include "test_const.290.h"
 
 void test() {
-    const290Instance instance;
-    const290Instantiate(&instance, resolveTestImports);
+    m9_constX2E290Instance instance;
+    m9_constX2E290Instantiate(&instance, resolveTestImports);
     printStart("const.290.wasm");
     assertEqualF32(
-        const290_f(&instance),
+        m9_constX2E290Export1_f(&instance),
         1.401298464324817e-45,
         "f()"
     );

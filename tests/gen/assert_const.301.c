@@ -5,11 +5,11 @@
 #include "test_const.301.h"
 
 void test() {
-    const301Instance instance;
-    const301Instantiate(&instance, resolveTestImports);
+    m9_constX2E301Instance instance;
+    m9_constX2E301Instantiate(&instance, resolveTestImports);
     printStart("const.301.wasm");
     assertEqualF32(
-        const301_f(&instance),
+        m9_constX2E301Export1_f(&instance),
         -2.802596928649634e-45,
         "f()"
     );

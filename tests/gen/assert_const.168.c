@@ -5,7 +5,7 @@
 #include "test_const.168.h"
 
 void test() {
-    const168Instance instance;
-    const168Instantiate(&instance, resolveTestImports);
+    m9_constX2E168Instance instance;
+    m9_constX2E168Instantiate(&instance, resolveTestImports);
     printStart("const.168.wasm");
 }

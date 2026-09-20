@@ -6,6 +6,7 @@
 #include "reader_test.h"
 #include "diagnostic_test.h"
 #include "output_test.h"
+#include "c_name_test.h"
 
 int
 main(void) {
@@ -19,5 +20,6 @@ main(void) {
     testReadNames();
     testDiagnostics();
     testOutputs();
+    testCNames();
     return 0;
 }

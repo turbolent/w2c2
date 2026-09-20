@@ -24,13 +24,13 @@ trap(Trap trap) {
 }
 
 U32
-envX00a__functionX00a(void* instance) {
+i5_envX00a10_functionX00a(void* instance) {
     (void)instance;
     return 44;
 }
 
 U32
-envX00a__functionX00b(void* instance) {
+i5_envX00a10_functionX00b(void* instance) {
     (void)instance;
     return 55;
 }
@@ -74,24 +74,24 @@ main(void) {
         {"value", 5, 11}, {"value\0", 6, 22}, {"value\0a", 7, 33},
         {"value\0b", 7, 44}, {"\0", 1, 55}
     };
-    binarynamesInstance instance;
+    m12_binaryX5FnamesInstance instance;
     wasmModuleInstance* child;
     size_t index;
     memory = wasmMemoryAllocate(1, 1, false);
     wasmTableAllocate(&table, 1, 1);
-    binarynamesInstantiate(&instance, resolve);
+    m12_binaryX5FnamesInstantiate(&instance, resolve);
     child = instance.common.newChild(&instance.common);
     for (index = 0; index < sizeof(expected) / sizeof(expected[0]); index++) {
         const wasmFuncExport export = instance.common.funcExports[index];
         expect(imports[index] == 2, "root and child import resolution");
         expect(export.name.length == expected[index].length, "export length");
         expect(memcmp(export.name.data, expected[index].name, export.name.length) == 0, "export bytes");
-        expect(((U32 (*)(binarynamesInstance*))export.func)(&instance) == expected[index].value,
+        expect(((U32 (*)(m12_binaryX5FnamesInstance*))export.func)(&instance) == expected[index].value,
             "export target");
     }
     expect(instance.common.funcExports[index].name.data == NULL, "export terminator");
     child->freeChild(child);
-    binarynamesFreeInstance(&instance);
+    m12_binaryX5FnamesFreeInstance(&instance);
     wasmTableFree(&table);
     wasmMemoryFree(memory);
     fprintf(stderr, "PASS binary names\n");

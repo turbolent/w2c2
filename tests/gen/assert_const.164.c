@@ -5,7 +5,7 @@
 #include "test_const.164.h"
 
 void test() {
-    const164Instance instance;
-    const164Instantiate(&instance, resolveTestImports);
+    m9_constX2E164Instance instance;
+    m9_constX2E164Instantiate(&instance, resolveTestImports);
     printStart("const.164.wasm");
 }

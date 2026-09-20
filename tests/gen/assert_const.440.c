@@ -5,11 +5,11 @@
 #include "test_const.440.h"
 
 void test() {
-    const440Instance instance;
-    const440Instantiate(&instance, resolveTestImports);
+    m9_constX2E440Instance instance;
+    m9_constX2E440Instantiate(&instance, resolveTestImports);
     printStart("const.440.wasm");
     assertEqualF64(
-        const440_f(&instance),
+        m9_constX2E440Export1_f(&instance),
         1.1529215046068472e+18,
         "f()"
     );

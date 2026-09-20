@@ -5,11 +5,11 @@
 #include "test_const.354.h"
 
 void test() {
-    const354Instance instance;
-    const354Instantiate(&instance, resolveTestImports);
+    m9_constX2E354Instance instance;
+    m9_constX2E354Instantiate(&instance, resolveTestImports);
     printStart("const.354.wasm");
     assertEqualF64(
-        const354_f(&instance),
+        m9_constX2E354Export1_f(&instance),
         2.4099198651028847e-181,
         "f()"
     );

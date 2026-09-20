@@ -5,11 +5,11 @@
 #include "test_float_exprs.56.h"
 
 void test() {
-    floatexprs56Instance instance;
-    floatexprs56Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E56Instance instance;
+    m14_floatX5FexprsX2E56Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.56.wasm");
     assertEqualF32(
-        floatexprs56_inverse(&instance, 96.0),
+        m14_floatX5FexprsX2E56Export7_inverse(&instance, 96.0),
         0.010416666977107525,
         "inverse(96.0)"
     );

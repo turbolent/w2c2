@@ -15,7 +15,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return swiftwasi_memory((swiftwasiInstance*)instance);
+    return m10_swiftX2DwasiExport6_memory((m10_swiftX2DwasiInstance*)instance);
 }
 
 extern char** environ;
@@ -35,10 +35,10 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        swiftwasiInstance instance;
-        swiftwasiInstantiate(&instance, NULL);
-        swiftwasi__start(&instance);
-        swiftwasiFreeInstance(&instance);
+        m10_swiftX2DwasiInstance instance;
+        m10_swiftX2DwasiInstantiate(&instance, NULL);
+        m10_swiftX2DwasiExport6_X5Fstart(&instance);
+        m10_swiftX2DwasiFreeInstance(&instance);
     }
 
     return 0;

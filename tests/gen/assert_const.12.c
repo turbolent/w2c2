@@ -5,7 +5,7 @@
 #include "test_const.12.h"
 
 void test() {
-    const12Instance instance;
-    const12Instantiate(&instance, resolveTestImports);
+    m8_constX2E12Instance instance;
+    m8_constX2E12Instantiate(&instance, resolveTestImports);
     printStart("const.12.wasm");
 }

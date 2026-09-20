@@ -5,11 +5,11 @@
 #include "test_const.468.h"
 
 void test() {
-    const468Instance instance;
-    const468Instantiate(&instance, resolveTestImports);
+    m9_constX2E468Instance instance;
+    m9_constX2E468Instantiate(&instance, resolveTestImports);
     printStart("const.468.wasm");
     assertEqualF64(
-        const468_f(&instance),
+        m9_constX2E468Export1_f(&instance),
         1e-323,
         "f()"
     );

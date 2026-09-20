@@ -5,496 +5,496 @@
 #include "test_float_literals.0.h"
 
 void test() {
-    floatliterals0Instance instance;
-    floatliterals0Instantiate(&instance, resolveTestImports);
+    m16_floatX5FliteralsX2E0Instance instance;
+    m16_floatX5FliteralsX2E0Instantiate(&instance, resolveTestImports);
     printStart("float_literals.0.wasm");
     assertEqualU32(
-        floatliterals0_f32X2Enan(&instance),
+        m16_floatX5FliteralsX2E0Export7_f32X2Enan(&instance),
         2143289344u,
         "f32.nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Epositive_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X2EpositiveX5Fnan(&instance),
         2143289344u,
         "f32.positive_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Enegative_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X2EnegativeX5Fnan(&instance),
         4290772992u,
         "f32.negative_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Eplain_nan(&instance),
+        m16_floatX5FliteralsX2E0Export13_f32X2EplainX5Fnan(&instance),
         2143289344u,
         "f32.plain_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Einformally_known_as_plain_snan(&instance),
+        m16_floatX5FliteralsX2E0Export34_f32X2EinformallyX5FknownX5FasX5FplainX5Fsnan(&instance),
         2141192192u,
         "f32.informally_known_as_plain_snan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Eall_ones_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X2EallX5FonesX5Fnan(&instance),
         4294967295u,
         "f32.all_ones_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emisc_nan(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2EmiscX5Fnan(&instance),
         2139169605u,
         "f32.misc_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emisc_positive_nan(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X2EmiscX5FpositiveX5Fnan(&instance),
         2142257232u,
         "f32.misc_positive_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emisc_negative_nan(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X2EmiscX5FnegativeX5Fnan(&instance),
         4289379550u,
         "f32.misc_negative_nan()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Einfinity(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2Einfinity(&instance),
         2139095040u,
         "f32.infinity()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Epositive_infinity(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X2EpositiveX5Finfinity(&instance),
         2139095040u,
         "f32.positive_infinity()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Enegative_infinity(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X2EnegativeX5Finfinity(&instance),
         4286578688u,
         "f32.negative_infinity()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Ezero(&instance),
+        m16_floatX5FliteralsX2E0Export8_f32X2Ezero(&instance),
         0u,
         "f32.zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Epositive_zero(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X2EpositiveX5Fzero(&instance),
         0u,
         "f32.positive_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Enegative_zero(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X2EnegativeX5Fzero(&instance),
         2147483648u,
         "f32.negative_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emisc(&instance),
+        m16_floatX5FliteralsX2E0Export8_f32X2Emisc(&instance),
         1086918619u,
         "f32.misc()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emin_positive(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X2EminX5Fpositive(&instance),
         1u,
         "f32.min_positive()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emin_normal(&instance),
+        m16_floatX5FliteralsX2E0Export14_f32X2EminX5Fnormal(&instance),
         8388608u,
         "f32.min_normal()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emax_subnormal(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X2EmaxX5Fsubnormal(&instance),
         8388607u,
         "f32.max_subnormal()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emax_finite(&instance),
+        m16_floatX5FliteralsX2E0Export14_f32X2EmaxX5Ffinite(&instance),
         2139095039u,
         "f32.max_finite()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Etrailing_dot(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X2EtrailingX5Fdot(&instance),
         1149239296u,
         "f32.trailing_dot()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emisc_int(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2EmiscX5Fint(&instance),
         1200726656u,
         "f32.misc_int()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Elarge_int(&instance),
+        m16_floatX5FliteralsX2E0Export13_f32X2ElargeX5Fint(&instance),
         1736441856u,
         "f32.large_int()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emin_int32(&instance),
+        m16_floatX5FliteralsX2E0Export13_f32X2EminX5Fint32(&instance),
         3472883712u,
         "f32.min_int32()"
     );
     assertEqualU32(
-        floatliterals0_f32X2Emin_int64(&instance),
+        m16_floatX5FliteralsX2E0Export13_f32X2EminX5Fint64(&instance),
         3741319168u,
         "f32.min_int64()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Ezero(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X5FdecX2Ezero(&instance),
         0u,
         "f32_dec.zero()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Epositive_zero(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X5FdecX2EpositiveX5Fzero(&instance),
         0u,
         "f32_dec.positive_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Enegative_zero(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X5FdecX2EnegativeX5Fzero(&instance),
         2147483648u,
         "f32_dec.negative_zero()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emisc(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X5FdecX2Emisc(&instance),
         1086918619u,
         "f32_dec.misc()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emin_positive(&instance),
+        m16_floatX5FliteralsX2E0Export20_f32X5FdecX2EminX5Fpositive(&instance),
         1u,
         "f32_dec.min_positive()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emin_normal(&instance),
+        m16_floatX5FliteralsX2E0Export18_f32X5FdecX2EminX5Fnormal(&instance),
         8388608u,
         "f32_dec.min_normal()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emax_subnormal(&instance),
+        m16_floatX5FliteralsX2E0Export21_f32X5FdecX2EmaxX5Fsubnormal(&instance),
         8388607u,
         "f32_dec.max_subnormal()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emax_finite(&instance),
+        m16_floatX5FliteralsX2E0Export18_f32X5FdecX2EmaxX5Ffinite(&instance),
         2139095039u,
         "f32_dec.max_finite()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Etrailing_dot(&instance),
+        m16_floatX5FliteralsX2E0Export20_f32X5FdecX2EtrailingX5Fdot(&instance),
         1343554297u,
         "f32_dec.trailing_dot()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Eroot_beer_float(&instance),
+        m16_floatX5FliteralsX2E0Export23_f32X5FdecX2ErootX5FbeerX5Ffloat(&instance),
         1065353217u,
         "f32_dec.root_beer_float()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emisc_int(&instance),
+        m16_floatX5FliteralsX2E0Export16_f32X5FdecX2EmiscX5Fint(&instance),
         1178657792u,
         "f32_dec.misc_int()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Elarge_int(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X5FdecX2ElargeX5Fint(&instance),
         1621981420u,
         "f32_dec.large_int()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emin_int32(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X5FdecX2EminX5Fint32(&instance),
         3472883712u,
         "f32_dec.min_int32()"
     );
     assertEqualU32(
-        floatliterals0_f32_decX2Emin_int64(&instance),
+        m16_floatX5FliteralsX2E0Export17_f32X5FdecX2EminX5Fint64(&instance),
         3741319168u,
         "f32_dec.min_int64()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Enan(&instance),
+        m16_floatX5FliteralsX2E0Export7_f64X2Enan(&instance),
         9221120237041090560ull,
         "f64.nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Epositive_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X2EpositiveX5Fnan(&instance),
         9221120237041090560ull,
         "f64.positive_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Enegative_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X2EnegativeX5Fnan(&instance),
         18444492273895866368ull,
         "f64.negative_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Eplain_nan(&instance),
+        m16_floatX5FliteralsX2E0Export13_f64X2EplainX5Fnan(&instance),
         9221120237041090560ull,
         "f64.plain_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Einformally_known_as_plain_snan(&instance),
+        m16_floatX5FliteralsX2E0Export34_f64X2EinformallyX5FknownX5FasX5FplainX5Fsnan(&instance),
         9219994337134247936ull,
         "f64.informally_known_as_plain_snan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Eall_ones_nan(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X2EallX5FonesX5Fnan(&instance),
         18446744073709551615ull,
         "f64.all_ones_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emisc_nan(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2EmiscX5Fnan(&instance),
         9218888453225749180ull,
         "f64.misc_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emisc_positive_nan(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X2EmiscX5FpositiveX5Fnan(&instance),
         9219717281780008969ull,
         "f64.misc_positive_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emisc_negative_nan(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X2EmiscX5FnegativeX5Fnan(&instance),
         18442992325002076997ull,
         "f64.misc_negative_nan()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Einfinity(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2Einfinity(&instance),
         9218868437227405312ull,
         "f64.infinity()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Epositive_infinity(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X2EpositiveX5Finfinity(&instance),
         9218868437227405312ull,
         "f64.positive_infinity()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Enegative_infinity(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X2EnegativeX5Finfinity(&instance),
         18442240474082181120ull,
         "f64.negative_infinity()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Ezero(&instance),
+        m16_floatX5FliteralsX2E0Export8_f64X2Ezero(&instance),
         0ull,
         "f64.zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Epositive_zero(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X2EpositiveX5Fzero(&instance),
         0ull,
         "f64.positive_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Enegative_zero(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X2EnegativeX5Fzero(&instance),
         9223372036854775808ull,
         "f64.negative_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emisc(&instance),
+        m16_floatX5FliteralsX2E0Export8_f64X2Emisc(&instance),
         4618760256179416344ull,
         "f64.misc()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emin_positive(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X2EminX5Fpositive(&instance),
         1ull,
         "f64.min_positive()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emin_normal(&instance),
+        m16_floatX5FliteralsX2E0Export14_f64X2EminX5Fnormal(&instance),
         4503599627370496ull,
         "f64.min_normal()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emax_subnormal(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X2EmaxX5Fsubnormal(&instance),
         4503599627370495ull,
         "f64.max_subnormal()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emax_finite(&instance),
+        m16_floatX5FliteralsX2E0Export14_f64X2EmaxX5Ffinite(&instance),
         9218868437227405311ull,
         "f64.max_finite()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Etrailing_dot(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X2EtrailingX5Fdot(&instance),
         5057542381537067008ull,
         "f64.trailing_dot()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emisc_int(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2EmiscX5Fint(&instance),
         4679860480993394688ull,
         "f64.misc_int()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Elarge_int(&instance),
+        m16_floatX5FliteralsX2E0Export13_f64X2ElargeX5Fint(&instance),
         4967470388989657088ull,
         "f64.large_int()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emin_int32(&instance),
+        m16_floatX5FliteralsX2E0Export13_f64X2EminX5Fint32(&instance),
         13970166044103278592ull,
         "f64.min_int32()"
     );
     assertEqualU64(
-        floatliterals0_f64X2Emin_int64(&instance),
+        m16_floatX5FliteralsX2E0Export13_f64X2EminX5Fint64(&instance),
         14114281232179134464ull,
         "f64.min_int64()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Ezero(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X5FdecX2Ezero(&instance),
         0ull,
         "f64_dec.zero()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Epositive_zero(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X5FdecX2EpositiveX5Fzero(&instance),
         0ull,
         "f64_dec.positive_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Enegative_zero(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X5FdecX2EnegativeX5Fzero(&instance),
         9223372036854775808ull,
         "f64_dec.negative_zero()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emisc(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X5FdecX2Emisc(&instance),
         4618760256179416344ull,
         "f64_dec.misc()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emin_positive(&instance),
+        m16_floatX5FliteralsX2E0Export20_f64X5FdecX2EminX5Fpositive(&instance),
         1ull,
         "f64_dec.min_positive()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emin_normal(&instance),
+        m16_floatX5FliteralsX2E0Export18_f64X5FdecX2EminX5Fnormal(&instance),
         4503599627370496ull,
         "f64_dec.min_normal()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emax_subnormal(&instance),
+        m16_floatX5FliteralsX2E0Export21_f64X5FdecX2EmaxX5Fsubnormal(&instance),
         4503599627370495ull,
         "f64_dec.max_subnormal()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emax_finite(&instance),
+        m16_floatX5FliteralsX2E0Export18_f64X5FdecX2EmaxX5Ffinite(&instance),
         9218868437227405311ull,
         "f64_dec.max_finite()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Etrailing_dot(&instance),
+        m16_floatX5FliteralsX2E0Export20_f64X5FdecX2EtrailingX5Fdot(&instance),
         6103021453049119613ull,
         "f64_dec.trailing_dot()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Eroot_beer_float(&instance),
+        m16_floatX5FliteralsX2E0Export23_f64X5FdecX2ErootX5FbeerX5Ffloat(&instance),
         4607182419335945764ull,
         "f64_dec.root_beer_float()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emisc_int(&instance),
+        m16_floatX5FliteralsX2E0Export16_f64X5FdecX2EmiscX5Fint(&instance),
         4668012349850910720ull,
         "f64_dec.misc_int()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Elarge_int(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X5FdecX2ElargeX5Fint(&instance),
         4906019910204099648ull,
         "f64_dec.large_int()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emin_int32(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X5FdecX2EminX5Fint32(&instance),
         13970166044103278592ull,
         "f64_dec.min_int32()"
     );
     assertEqualU64(
-        floatliterals0_f64_decX2Emin_int64(&instance),
+        m16_floatX5FliteralsX2E0Export17_f64X5FdecX2EminX5Fint64(&instance),
         14114281232179134464ull,
         "f64_dec.min_int64()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DdecX2Dsep1(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep1(&instance),
         1000000.0,
         "f32-dec-sep1()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DdecX2Dsep2(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep2(&instance),
         1000.0,
         "f32-dec-sep2()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DdecX2Dsep3(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep3(&instance),
         1003.1416015625,
         "f32-dec-sep3()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DdecX2Dsep4(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep4(&instance),
         990000028057600.0,
         "f32-dec-sep4()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DdecX2Dsep5(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DdecX2Dsep5(&instance),
         1.2200011857269034e+28,
         "f32-dec-sep5()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DhexX2Dsep1(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep1(&instance),
         168755360.0,
         "f32-hex-sep1()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DhexX2Dsep2(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep2(&instance),
         109071.0,
         "f32-hex-sep2()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DhexX2Dsep3(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep3(&instance),
         41215.94140625,
         "f32-hex-sep3()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DhexX2Dsep4(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep4(&instance),
         1966080.0,
         "f32-hex-sep4()"
     );
     assertEqualF32(
-        floatliterals0_f32X2DhexX2Dsep5(&instance),
+        m16_floatX5FliteralsX2E0Export12_f32X2DhexX2Dsep5(&instance),
         23605224144896.0,
         "f32-hex-sep5()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DdecX2Dsep1(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep1(&instance),
         1000000.0,
         "f64-dec-sep1()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DdecX2Dsep2(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep2(&instance),
         1000.0,
         "f64-dec-sep2()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DdecX2Dsep3(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep3(&instance),
         1003.141592,
         "f64-dec-sep3()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DdecX2Dsep4(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep4(&instance),
         9.9e-122,
         "f64-dec-sep4()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DdecX2Dsep5(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DdecX2Dsep5(&instance),
         1.2200011354e+28,
         "f64-dec-sep5()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DhexX2Dsep1(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep1(&instance),
         3078696982321561.0,
         "f64-hex-sep1()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DhexX2Dsep2(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep2(&instance),
         109071.0,
         "f64-hex-sep2()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DhexX2Dsep3(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep3(&instance),
         41215.94240794191,
         "f64-hex-sep3()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DhexX2Dsep4(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep4(&instance),
         1966080.0,
         "f64-hex-sep4()"
     );
     assertEqualF64(
-        floatliterals0_f64X2DhexX2Dsep5(&instance),
+        m16_floatX5FliteralsX2E0Export12_f64X2DhexX2Dsep5(&instance),
         23605225168752.0,
         "f64-hex-sep5()"
     );

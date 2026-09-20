@@ -18,7 +18,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return pthreads_memory((pthreadsInstance*)instance);
+    return m8_pthreadsExport6_memory((m8_pthreadsInstance*)instance);
 }
 
 extern char** environ;
@@ -37,11 +37,11 @@ void* resolveImport(
 }
 
 int main(int argc, char** argv) {
-    pthreadsInstance instance;
+    m8_pthreadsInstance instance;
 
     mem = WASM_MEMORY_ALLOCATE_SHARED(10, 20);
 
-    pthreadsInstantiate(&instance, resolveImport);
+    m8_pthreadsInstantiate(&instance, resolveImport);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
@@ -54,9 +54,9 @@ int main(int argc, char** argv) {
     }
 
 
-    pthreads__start(&instance);
+    m8_pthreadsExport6_X5Fstart(&instance);
 
-    pthreadsFreeInstance(&instance);
+    m8_pthreadsFreeInstance(&instance);
 
     return 0;
 }

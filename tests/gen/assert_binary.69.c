@@ -5,7 +5,7 @@
 #include "test_binary.69.h"
 
 void test() {
-    binary69Instance instance;
-    binary69Instantiate(&instance, resolveTestImports);
+    m9_binaryX2E69Instance instance;
+    m9_binaryX2E69Instantiate(&instance, resolveTestImports);
     printStart("binary.69.wasm");
 }

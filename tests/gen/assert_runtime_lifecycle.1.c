@@ -5,7 +5,7 @@
 #include "test_runtime_lifecycle.1.h"
 
 void test() {
-    runtimelifecycle1Instance instance;
-    runtimelifecycle1Instantiate(&instance, resolveTestImports);
+    m19_runtimeX5FlifecycleX2E1Instance instance;
+    m19_runtimeX5FlifecycleX2E1Instantiate(&instance, resolveTestImports);
     printStart("runtime_lifecycle.1.wasm");
 }

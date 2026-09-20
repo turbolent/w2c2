@@ -5,16 +5,16 @@
 #include "test_float_exprs.93.h"
 
 void test() {
-    floatexprs93Instance instance;
-    floatexprs93Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E93Instance instance;
+    m14_floatX5FexprsX2E93Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.93.wasm");
     assertEqualF32(
-        floatexprs93_f32X2Egolden_ratio(&instance, 0.5, 1.0, 5.0),
+        m14_floatX5FexprsX2E93Export16_f32X2EgoldenX5Fratio(&instance, 0.5, 1.0, 5.0),
         1.6180340051651,
         "f32.golden_ratio(0.5, 1.0, 5.0)"
     );
     assertEqualF64(
-        floatexprs93_f64X2Egolden_ratio(&instance, 0.5, 1.0, 5.0),
+        m14_floatX5FexprsX2E93Export16_f64X2EgoldenX5Fratio(&instance, 0.5, 1.0, 5.0),
         1.618033988749895,
         "f64.golden_ratio(0.5, 1.0, 5.0)"
     );

@@ -5,7 +5,7 @@
 #include "test_exports.40.h"
 
 void test() {
-    exports40Instance instance;
-    exports40Instantiate(&instance, resolveTestImports);
+    m10_exportsX2E40Instance instance;
+    m10_exportsX2E40Instantiate(&instance, resolveTestImports);
     printStart("exports.40.wasm");
 }

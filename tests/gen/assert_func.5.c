@@ -5,11 +5,11 @@
 #include "test_func.5.h"
 
 void test() {
-    func5Instance instance;
-    func5Instantiate(&instance, resolveTestImports);
+    m6_funcX2E5Instance instance;
+    m6_funcX2E5Instantiate(&instance, resolveTestImports);
     printStart("func.5.wasm");
-    func5_signatureX2DexplicitX2Dreused(&instance);
-    func5_signatureX2DimplicitX2Dreused(&instance);
-    func5_signatureX2DexplicitX2Dduplicate(&instance);
-    func5_signatureX2DimplicitX2Dduplicate(&instance);
+    m6_funcX2E5Export25_signatureX2DexplicitX2Dreused(&instance);
+    m6_funcX2E5Export25_signatureX2DimplicitX2Dreused(&instance);
+    m6_funcX2E5Export28_signatureX2DexplicitX2Dduplicate(&instance);
+    m6_funcX2E5Export28_signatureX2DimplicitX2Dduplicate(&instance);
 }

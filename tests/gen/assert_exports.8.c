@@ -5,7 +5,7 @@
 #include "test_exports.8.h"
 
 void test() {
-    exports8Instance instance;
-    exports8Instantiate(&instance, resolveTestImports);
+    m9_exportsX2E8Instance instance;
+    m9_exportsX2E8Instantiate(&instance, resolveTestImports);
     printStart("exports.8.wasm");
 }

@@ -5,11 +5,11 @@
 #include "test_const.255.h"
 
 void test() {
-    const255Instance instance;
-    const255Instantiate(&instance, resolveTestImports);
+    m9_constX2E255Instance instance;
+    m9_constX2E255Instantiate(&instance, resolveTestImports);
     printStart("const.255.wasm");
     assertEqualF32(
-        const255_f(&instance),
+        m9_constX2E255Export1_f(&instance),
         -1125900175278080.0,
         "f()"
     );

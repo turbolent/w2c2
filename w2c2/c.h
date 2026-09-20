@@ -11,6 +11,16 @@ extern "C" {
 
 #define W2C2_IMPL_FILENAME_LENGTH 13
 
+/*
+ * Name components contain the original byte length,
+ * an underscore,
+ * and bytes escaped as XHH unless they are ASCII letters or digits other than X.
+ * Module symbols start with m<module component> and a category suffix:
+ * Instance, Instantiate, FreeInstance, Export<name component>, and so on.
+ * Function imports use i<import module component><import name component>,
+ * or the module prefix followed by Import and both components in multiple-module mode.
+ * Imported globals, memories, and tables use g, m, and t followed by their Wasm index.
+ */
 WasmBool
 WARN_UNUSED_RESULT
 wasmCWriteModule(

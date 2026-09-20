@@ -1,7 +1,6 @@
 import json
 import glob
 import re
-from os.path import splitext
 
 import math
 import struct
@@ -26,20 +25,23 @@ def compare_versions(a, b):
     return 0
 
 
-def export_name(name):
-    escape_char = 'X'
-    res = ""
-    for i, c in enumerate(name):
-        if c == '_':
-            if i > 0 and name[i-1] == '_':
-                res += "__"
-            else:
-                res += c
-        elif c != escape_char and c.isalnum():
-            res += c
-        else:
-            res += escape_char + "{:02X}".format(ord(c))
-    return res
+def name_component(name):
+    data = name.encode('utf-8')
+    escaped = ''.join(
+        chr(c) if (ord('a') <= c <= ord('z')
+                   or (ord('A') <= c <= ord('Z') and c != ord('X'))
+                   or ord('0') <= c <= ord('9')) else 'X{:02X}'.format(c)
+        for c in data
+    )
+    return '{}_{}'.format(len(data), escaped)
+
+
+def module_identifier(name):
+    return 'm' + name_component(name)
+
+
+def export_name(module, name):
+    return module_identifier(module) + 'Export' + name_component(name)
 
 
 def convert_type(t):
@@ -78,8 +80,6 @@ def convert_value(value, t):
     raise Exception("unsupported type {}".format(t))
 
 
-invalid_char_regex = re.compile('[^a-zA-Z0-9]')
-
 def generate_test_files(json_path):
 
     test_file = None
@@ -103,7 +103,7 @@ def generate_test_files(json_path):
 void test() {{
     {module_name}Instance instance;
     {module_name}Instantiate(&instance, resolveTestImports);
-""".format(header=header, module_name=module_name)
+""".format(header=header, module_name=module_identifier(module_name))
         test_file = open(test_path, 'w')
         test_file.write(test_preamble)
 
@@ -126,7 +126,7 @@ void test() {{
             action = command.get('action')
             if t == "module":
                 filename = command['filename']
-                module_name = invalid_char_regex.sub('', splitext(filename)[0])
+                module_name = Path(filename).stem
                 close_test_file()
                 create_test_file(filename, module_name)
                 test_file.write("    printStart(\"{}\");\n".format(filename))
@@ -150,9 +150,8 @@ void test() {{
 
                 field = action['field']
 
-                call = "{}_{}({})".format(
-                    module_name,
-                    export_name(field),
+                call = "{}({})".format(
+                    export_name(module_name, field),
                     ', '.join(['&instance', *args])
                 )
 

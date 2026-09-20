@@ -5,7 +5,7 @@
 #include "test_traps.1.h"
 
 void test() {
-    traps1Instance instance;
-    traps1Instantiate(&instance, resolveTestImports);
+    m7_trapsX2E1Instance instance;
+    m7_trapsX2E1Instantiate(&instance, resolveTestImports);
     printStart("traps.1.wasm");
 }

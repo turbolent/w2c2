@@ -5,7 +5,7 @@
 #include "test_exports.6.h"
 
 void test() {
-    exports6Instance instance;
-    exports6Instantiate(&instance, resolveTestImports);
+    m9_exportsX2E6Instance instance;
+    m9_exportsX2E6Instantiate(&instance, resolveTestImports);
     printStart("exports.6.wasm");
 }

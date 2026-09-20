@@ -5,7 +5,7 @@
 #include "test_start.5.h"
 
 void test() {
-    start5Instance instance;
-    start5Instantiate(&instance, resolveTestImports);
+    m7_startX2E5Instance instance;
+    m7_startX2E5Instantiate(&instance, resolveTestImports);
     printStart("start.5.wasm");
 }
