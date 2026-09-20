@@ -318,13 +318,7 @@ static
 WasmFunctionIDs
 outputFunctionIDs(WasmModule* module) {
     WasmFunctionIDs ids = emptyWasmFunctionIDs;
-    U32 index;
-    for (index = 0; index < module->functions.count; index++) {
-        WasmFunctionID id = emptyWasmFunctionID;
-        id.functionIndex = index;
-        memcpy(id.hash, module->functions.functions[index].hash, SHA1_DIGEST_LENGTH);
-        CHECK(wasmFunctionIDsAppend(&ids, id));
-    }
+    CHECK(wasmFunctionIDsInitialize(module->functions, false, &ids));
     return ids;
 }
 
@@ -1184,6 +1178,69 @@ testMemoryEdges(void) {
 
 static
 void
+testFunctionOrder(void) {
+    static const U8 bytes[] = {
+        0, 97, 115, 109, 1, 0, 0, 0,
+        1, 5, 1, 96, 0, 1, 0x7F,
+        3, 4, 3, 0, 0, 0,
+        10, 16, 3,
+        4, 0, 0x41, 0, 0x0B,
+        4, 0, 0x41, 1, 0x0B,
+        4, 0, 0x41, 2, 0x0B
+    };
+    static const U32 fileSizes[] = {0, 1, 2, 3, UINT32_MAX};
+    size_t layout;
+    unsigned int pretty;
+
+    for (layout = 0; layout < sizeof(fileSizes) / sizeof(fileSizes[0]); layout++) {
+        const U32 perFile = fileSizes[layout];
+        const bool split = perFile != 0 && perFile < 3;
+        for (pretty = 0; pretty < 2; pretty++) {
+            OutputCapture capture;
+            WasmCWriteModuleOptions options;
+            const CapturedOutput* previousOutput = NULL;
+            const char* previousPosition = NULL;
+            U32 index;
+            captureInitialize(&capture);
+            options = captureOptions(&capture);
+            options.functionsPerFile = perFile;
+            options.pretty = pretty != 0;
+            options.debug = pretty != 0;
+            CHECK(wasmTranslate(bytes, sizeof(bytes), "order", &options));
+            CHECK(capture.diagnosticCount == 0);
+            CHECK(capture.count == (split ? 2 + (3 + perFile - 1) / perFile : 2));
+
+            for (index = 0; index < 3; index++) {
+                char filename[64];
+                char signature[32];
+                const CapturedOutput* output;
+                const char* position;
+                /* These bodies sort by hash in reverse function order. */
+                const U32 functionIndex = split ? 2 - index : index;
+                if (split) {
+                    sprintf(filename, "m5_order.s%010lu.c", (unsigned long)(index / perFile));
+                } else {
+                    strcpy(filename, "output-test.c");
+                }
+                output = findOutput(&capture, filename);
+                CHECK(output != NULL);
+                sprintf(signature, "U32 f%lu(", (unsigned long)functionIndex);
+                position = strstr((const char*)output->bytes, signature);
+                CHECK(position != NULL);
+                if (previousOutput == output) {
+                    CHECK(position > previousPosition);
+                }
+                previousOutput = output;
+                previousPosition = position;
+            }
+            checkClosed(&capture);
+            captureFree(&capture);
+        }
+    }
+}
+
+static
+void
 testFunctionBufferReuse(const bool nested) {
     static const size_t instructionCounts[] = {1024, 1, 0, 2048, 0, 2};
     static const size_t nestingDepths[] = {64, 1, 0, 128, 0, 2};
@@ -1708,6 +1765,7 @@ testOutputs(void) {
     testFloatConstantLocales();
     testMemorySize();
     testMemoryEdges();
+    testFunctionOrder();
     testFunctionBufferReuse(false);
     testFunctionBufferReuse(true);
     testOutputBuffer();

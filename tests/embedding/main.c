@@ -169,12 +169,13 @@ testSuccess(void) {
         reader.debug = options.debug;
         wasmModuleRead(&reader, &error);
         CHECK(error == NULL);
-        CHECK(wasmSortedFunctionIDs(reader.module->functions, &ids));
         options.output = wasmMemoryOutputProvider(&lowLevel.memory);
         options.diagnostics.context = &lowLevel;
         if (options.functionsPerFile == 0) {
             options.functionsPerFile = reader.module->functions.count;
         }
+        CHECK(wasmFunctionIDsInitialize(reader.module->functions,
+            options.functionsPerFile < reader.module->functions.count, &ids));
         CHECK(wasmCWriteModule(reader.module, "example", options, ids, emptyWasmFunctionIDs));
         CHECK(lowLevel.errors == 0);
         wasmFunctionIDsFree(&ids);

@@ -41,6 +41,8 @@ static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions = {
  * moduleName must be a nonempty C identifier.
  * options must specify outputName and an output provider.
  * Zero functionsPerFile selects a single implementation file.
+ * Single-file output preserves Wasm function order.
+ * Split output orders functions by their original encoded body hashes.
  * Failures return zero and report through options->diagnostics when available.
  * NULL options returns zero without reporting a diagnostic.
  * Earlier completed outputs remain delivered on failure.

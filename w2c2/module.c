@@ -15,8 +15,9 @@ wasmFunctionIDsCompareHashes(
 
 WasmBool
 WARN_UNUSED_RESULT
-wasmSortedFunctionIDs(
+wasmFunctionIDsInitialize(
     const WasmFunctions functions,
+    const WasmBool sortByHash,
     WasmFunctionIDs* result
 ) {
     WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
@@ -28,11 +29,16 @@ wasmSortedFunctionIDs(
     functionIDs.length = functions.count;
     for (; functionIndex < functions.count; functionIndex++) {
         WasmFunctionID* functionID = &functionIDs.functionIDs[functionIndex];
-        memcpy(functionID->hash, functions.functions[functionIndex].hash, SHA1_DIGEST_LENGTH);
+        *functionID = emptyWasmFunctionID;
         functionID->functionIndex = functionIndex;
+        if (sortByHash) {
+            const Buffer body = functions.functions[functionIndex].body;
+            /* Hash of the locals (as declared in the binary) and the code */
+            SHA1(body.data, body.length, functionID->hash);
+        }
     }
 
-    if (functionIDs.length > 1) {
+    if (sortByHash && functionIDs.length > 1) {
         qsort(
             functionIDs.functionIDs,
             functionIDs.length,

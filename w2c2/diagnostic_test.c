@@ -140,13 +140,7 @@ static
 WasmFunctionIDs
 diagnosticFunctionIDs(const WasmModule* module) {
     WasmFunctionIDs ids = emptyWasmFunctionIDs;
-    U32 index;
-    for (index = 0; index < module->functions.count; index++) {
-        WasmFunctionID id = emptyWasmFunctionID;
-        id.functionIndex = index;
-        memcpy(id.hash, module->functions.functions[index].hash, SHA1_DIGEST_LENGTH);
-        CHECK(wasmFunctionIDsAppend(&ids, id));
-    }
+    CHECK(wasmFunctionIDsInitialize(module->functions, false, &ids));
     return ids;
 }
 
