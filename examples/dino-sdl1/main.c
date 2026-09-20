@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
             U32 x = 0;
             for (; x < width; x++) {
                 U32 pixelOffset = y * (width * 4) + (x * 4);
-                U32 memoryOffset = mem->size - framebufferOffset - pixelOffset;
+                size_t memoryOffset = (size_t)(mem->size - framebufferOffset - pixelOffset);
                 pixels[pixelOffset] = mem->data[memoryOffset];
                 pixels[pixelOffset + 1] = mem->data[memoryOffset - 1];
                 pixels[pixelOffset + 2] = mem->data[memoryOffset - 2];

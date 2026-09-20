@@ -154,7 +154,7 @@ expectPollU64(
 
 void
 resetPollMemory(void) {
-    memset(testMemory.data, 0, testMemory.size);
+    memset(testMemory.data, 0, TEST_MEMORY_SIZE);
 }
 
 U32

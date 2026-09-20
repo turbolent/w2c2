@@ -719,7 +719,7 @@ wasmThreadCreate(
 
 typedef struct wasmMemory {
     U8* data;
-    U32 size;
+    U64 size;
     U32 pages;
     U32 maxPages;
     bool shared;
@@ -731,6 +731,7 @@ typedef struct wasmMemory {
 } wasmMemory;
 
 #define WASM_PAGE_SIZE 65536
+#define WASM_MAX_PAGES 65536
 
 static
 W2C2_INLINE
@@ -740,13 +741,21 @@ wasmMemoryAllocate(
     const U32 maxPages,
     const bool shared
 ) {
-    const U32 size = (shared ? maxPages : initialPages) * WASM_PAGE_SIZE;
-    wasmMemory* memory = (wasmMemory*)calloc(1, sizeof(wasmMemory));
+    const U64 allocationSize = (U64)(shared ? maxPages : initialPages) * WASM_PAGE_SIZE;
+    wasmMemory* memory;
+    if (allocationSize > (size_t)-1) {
+        abort();
+    }
+    memory = (wasmMemory*)calloc(1, sizeof(wasmMemory));
     if (!memory) {
         abort();
     }
-    memory->data = (U8*)calloc(size, 1);
-    memory->size = size;
+    memory->data = (U8*)calloc((size_t)allocationSize, 1);
+    if (allocationSize != 0 && memory->data == NULL) {
+        free(memory);
+        abort();
+    }
+    memory->size = (U64)initialPages * WASM_PAGE_SIZE;
     memory->pages = initialPages;
     memory->maxPages = maxPages;
     memory->shared = shared;
@@ -809,21 +818,19 @@ wasmMemoryGrow(
     wasmMemory* memory,
     const U32 delta
 ) {
-    bool doRealloc = true;
-
     const U32 oldPages = memory->pages;
-    const U32 newPages = memory->pages + delta;
+    const U64 newPages = (U64)oldPages + delta;
+    const U64 newSize = newPages * WASM_PAGE_SIZE;
 
-    if (newPages == 0) {
-        return 0;
+    if (delta == 0) {
+        return oldPages;
     }
 
-    if (newPages < oldPages || newPages > memory->maxPages) {
+    if (newPages > memory->maxPages || newSize > (size_t)-1) {
         return (U32) -1;
     }
 
     if (memory->shared) {
-        doRealloc = false;
 #ifdef WASM_MUTEX_TYPE
         WASM_MUTEX_LOCK(&memory->mutex);
 #else
@@ -831,23 +838,19 @@ wasmMemoryGrow(
 #endif
     }
 
-    {
-        const U32 newSize = newPages * WASM_PAGE_SIZE;
-        if (doRealloc) {
-            const U32 oldSize = oldPages * WASM_PAGE_SIZE;
-            const U32 deltaSize = delta * WASM_PAGE_SIZE;
-            U8* newData = (U8*)realloc(memory->data, newSize);
-            if (newData == NULL) {
-                return (U32) -1;
-            }
-
-            memset(newData + oldSize, 0, deltaSize);
-            memory->data = newData;
+    if (!memory->shared) {
+        const size_t oldSize = (size_t)((U64)oldPages * WASM_PAGE_SIZE);
+        U8* newData = (U8*)realloc(memory->data, (size_t)newSize);
+        if (newData == NULL) {
+            return (U32) -1;
         }
 
-        memory->pages = newPages;
-        memory->size = newSize;
+        memset(newData + oldSize, 0, (size_t)newSize - oldSize);
+        memory->data = newData;
     }
+
+    memory->pages = (U32)newPages;
+    memory->size = newSize;
 
     if (memory->shared) {
 #ifdef WASM_MUTEX_TYPE

@@ -15,7 +15,7 @@
 
 typedef struct LimitsTest {
     const char* name;
-    U8 bytes[5];
+    U8 bytes[7];
     size_t length;
     U32 min;
     U32 memoryMax;
@@ -107,9 +107,13 @@ void
 testReadLimits(void) {
     static const LimitsTest tests[] = {
         {"absent maximum", {0, 0}, 2,
-            0, UINT32_MAX / WASM_PAGE_SIZE, UINT32_MAX, false, true},
+            0, 65536, UINT32_MAX, false, true},
         {"absent maximum with nonzero minimum", {0, 1}, 2,
-            1, UINT32_MAX / WASM_PAGE_SIZE, UINT32_MAX, false, true},
+            1, 65536, UINT32_MAX, false, true},
+        {"full memory without maximum", {0, 0x80, 0x80, 0x04}, 4,
+            65536, 65536, UINT32_MAX, false, true},
+        {"full memory with maximum", {1, 0x80, 0x80, 0x04, 0x80, 0x80, 0x04}, 7,
+            65536, 65536, 65536, false, true},
         {"zero maximum", {1, 0, 0}, 3, 0, 0, 0, false, true},
         {"positive maximum", {1, 0, 1}, 3, 0, 1, 1, false, true},
         {"equal bounds", {1, 1, 1}, 3, 1, 1, 1, false, true},
