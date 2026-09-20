@@ -421,8 +421,6 @@ tracePrintf(const char* fmt, ...) {
 #define WASI_TRACE(args)
 #endif
 
-extern wasmMemory* wasiMemory(void* instance);
-
 static WASI wasi;
 
 #ifndef O_DSYNC
@@ -719,7 +717,7 @@ resolvePath(
 }
 
 WASI_IMPORT(void, 9_procX5Fexit, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 code
 ), {
     UNUSED_PARAMETER(instance);
@@ -838,7 +836,7 @@ writevWrapper(
 }
 
 WASI_IMPORT(U32, 8_fdX5Fwrite, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 ciovecsPointer,
     U32 ciovecsCount,
@@ -905,7 +903,7 @@ pwritevFallback(
 }
 
 WASI_IMPORT(U32, 9_fdX5Fpwrite, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -1019,7 +1017,7 @@ readvWrapper(
 }
 
 WASI_IMPORT(U32, 7_fdX5Fread, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -1051,7 +1049,7 @@ preadvFallback(
 }
 
 WASI_IMPORT(U32, 8_fdX5Fpread, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
@@ -1071,7 +1069,7 @@ WASI_IMPORT(U32, 8_fdX5Fpread, (
 })
 
 WASI_IMPORT(U32, 17_environX5FsizesX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 envcPointer,
     U32 envpBufSizePointer
 ), {
@@ -1108,7 +1106,7 @@ static
 W2C2_INLINE
 U32
 wasiEnvironGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 envpPointer,
     U32 envpBufPointer
 ) {
@@ -1148,7 +1146,7 @@ wasiEnvironGet(
 }
 
 WASI_IMPORT(U32, 11_environX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 envpPointer,
     U32 envpBufPointer
 ), {
@@ -1160,7 +1158,7 @@ WASI_IMPORT(U32, 11_environX5Fget, (
 })
 
 WASI_IMPORT(U32, 14_argsX5FsizesX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 argcPointer,
     U32 argvBufSizePointer
 ), {
@@ -1196,7 +1194,7 @@ static
 W2C2_INLINE
 U32
 wasiArgsGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 argvPointer,
     U32 argvBufPointer
 ) {
@@ -1236,7 +1234,7 @@ wasiArgsGet(
 }
 
 WASI_IMPORT(U32, 8_argsX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 argvPointer,
     U32 argvBufPointer
 ), {
@@ -1300,7 +1298,7 @@ convertPreview1Whence(
 }
 
 WASI_PREVIEW1_IMPORT(U32, 7_fdX5Fseek, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U64 offset,
     U32 whence,
@@ -1358,7 +1356,7 @@ convertUnstableWhence(
 }
 
 WASI_UNSTABLE_IMPORT(U32, 7_fdX5Fseek, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U64 offset,
     U32 whence,
@@ -1397,7 +1395,7 @@ WASI_UNSTABLE_IMPORT(U32, 7_fdX5Fseek, (
 })
 
 WASI_IMPORT(U32, 7_fdX5Ftell, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ), {
@@ -1456,7 +1454,7 @@ static
 W2C2_INLINE
 U32
 wasiFDReaddir(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 bufferPointer,
     U32 bufferLength,
@@ -1680,7 +1678,7 @@ wasiFDReaddir(
 }
 
 WASI_IMPORT(U32, 10_fdX5Freaddir, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 bufferPointer,
     U32 bufferLength,
@@ -1698,7 +1696,7 @@ WASI_IMPORT(U32, 10_fdX5Freaddir, (
 })
 
 WASI_IMPORT(U32, 8_fdX5Fclose, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
     UNUSED_PARAMETER(instance);
@@ -2014,7 +2012,7 @@ static
 W2C2_INLINE
 U32
 wasiClockTimeGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 clockID,
     U64 precision,
     U32 resultPointer
@@ -2056,7 +2054,7 @@ wasiClockTimeGet(
 }
 
 WASI_IMPORT(U32, 14_clockX5FtimeX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 clockID,
     U64 precision,
     U32 resultPointer
@@ -2073,7 +2071,7 @@ static
 W2C2_INLINE
 U32
 wasiClockResGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 clockID,
     U32 resultPointer
 ) {
@@ -2183,7 +2181,7 @@ wasiClockResGet(
 }
 
 WASI_IMPORT(U32, 13_clockX5FresX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 clockID,
     U32 resultPointer
 ), {
@@ -2200,7 +2198,7 @@ static
 W2C2_INLINE
 U32
 wasiFdFdstatGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ) {
@@ -2341,7 +2339,7 @@ wasiFdFdstatGet(
 }
 
 WASI_IMPORT(U32, 13_fdX5FfdstatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 resultPointer
 ), {
@@ -2356,7 +2354,7 @@ static
 W2C2_INLINE
 U32
 wasiFDDatasync(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ) {
 #if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)) || \
@@ -2394,7 +2392,7 @@ wasiFDDatasync(
 }
 
 WASI_IMPORT(U32, 11_fdX5Fdatasync, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
     return wasiFDDatasync(
@@ -2407,7 +2405,7 @@ static
 W2C2_INLINE
 U32
 wasiFDSync(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ) {
 #if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
@@ -2445,7 +2443,7 @@ wasiFDSync(
 }
 
 WASI_IMPORT(U32, 7_fdX5Fsync, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD
 ), {
     return wasiFDSync(
@@ -2455,7 +2453,7 @@ WASI_IMPORT(U32, 7_fdX5Fsync, (
 })
 
 WASI_IMPORT(U32, 14_fdX5FprestatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 prestatPointer
 ), {
@@ -2497,7 +2495,7 @@ static
 W2C2_INLINE
 U32
 wasiFdPrestatDirName(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 pathPointer,
     U32 pathLength
@@ -2546,7 +2544,7 @@ wasiFdPrestatDirName(
 }
 
 WASI_IMPORT(U32, 19_fdX5FprestatX5FdirX5Fname, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 pathPointer,
     U32 pathLength
@@ -2563,7 +2561,7 @@ static
 W2C2_INLINE
 U32
 wasiPathOpen(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 dirFlags,
     U32 pathPointer,
@@ -2778,7 +2776,7 @@ wasiPathOpen(
 }
 
 WASI_IMPORT(U32, 9_pathX5Fopen, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiDirFD,
     U32 dirFlags,
     U32 pathPointer,
@@ -2948,7 +2946,7 @@ wasiFDFilestatGet(
 }
 
 WASI_PREVIEW1_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 statPointer
 ), {
@@ -3041,7 +3039,7 @@ storeUnstableFilestat(
 }
 
 WASI_UNSTABLE_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U32 statPointer
 ), {
@@ -3184,7 +3182,7 @@ wasiFdFilestatSetSize(
 }
 
 WASI_IMPORT(U32, 20_fdX5FfilestatX5FsetX5Fsize, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 wasiFD,
     U64 size
 ), {
@@ -3193,7 +3191,7 @@ WASI_IMPORT(U32, 20_fdX5FfilestatX5FsetX5Fsize, (
 })
 
 WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
-    void* instance,
+    wasmModuleInstance* instance,
     U64 atime,
     U64 mtime,
     U32 fstFlags
@@ -3209,7 +3207,7 @@ WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
 })
 
 WASI_PREVIEW1_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
@@ -3247,7 +3245,7 @@ WASI_PREVIEW1_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
 })
 
 WASI_UNSTABLE_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 lookupFlags,
     U32 pathPointer,
@@ -3285,7 +3283,7 @@ WASI_UNSTABLE_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
 })
 
 WASI_IMPORT(U32, 23_pathX5FfilestatX5FsetX5Ftimes, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 flags,
     U32 path,
@@ -3312,7 +3310,7 @@ static
 W2C2_INLINE
 U32
 wasiPathRename(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
@@ -3429,7 +3427,7 @@ wasiPathRename(
 }
 
 WASI_IMPORT(U32, 11_pathX5Frename, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldDirFD,
     U32 oldPathPointer,
     U32 oldPathLength,
@@ -3452,7 +3450,7 @@ static
 W2C2_INLINE
 U32
 wasiPathUnlinkFile(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3528,7 +3526,7 @@ wasiPathUnlinkFile(
 }
 
 WASI_IMPORT(U32, 16_pathX5FunlinkX5Ffile, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3545,7 +3543,7 @@ static
 W2C2_INLINE
 U32
 wasiPathRemoveDirectory(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3621,7 +3619,7 @@ wasiPathRemoveDirectory(
 }
 
 WASI_IMPORT(U32, 21_pathX5FremoveX5Fdirectory, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3638,7 +3636,7 @@ static
 W2C2_INLINE
 U32
 wasiPathCreateDirectory(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3713,7 +3711,7 @@ wasiPathCreateDirectory(
 }
 
 WASI_IMPORT(U32, 21_pathX5FcreateX5Fdirectory, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength
@@ -3730,7 +3728,7 @@ static
 W2C2_INLINE
 U32
 wasiPathSymlink(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
@@ -3860,7 +3858,7 @@ wasiPathSymlink(
 }
 
 WASI_IMPORT(U32, 12_pathX5Fsymlink, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldPathPointer,
     U32 oldPathLength,
     U32 dirFD,
@@ -3878,7 +3876,7 @@ WASI_IMPORT(U32, 12_pathX5Fsymlink, (
 })
 
 WASI_IMPORT(U32, 9_pathX5Flink, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 oldFD,
     U32 lookupFlags,
     U32 oldPathPointer,
@@ -3905,7 +3903,7 @@ static
 W2C2_INLINE
 U32
 wasiPathReadlink(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
@@ -4025,7 +4023,7 @@ wasiPathReadlink(
 }
 
 WASI_IMPORT(U32, 13_pathX5Freadlink, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 dirFD,
     U32 pathPointer,
     U32 pathLength,
@@ -4045,7 +4043,7 @@ WASI_IMPORT(U32, 13_pathX5Freadlink, (
 })
 
 WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 flags
 ), {
@@ -4228,7 +4226,7 @@ static
 W2C2_INLINE
 U32
 wasiPollOneoff(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 inPointer,
     U32 outPointer,
     U32 subscriptionCount,
@@ -4496,7 +4494,7 @@ done:
 }
 
 WASI_IMPORT(U32, 11_pollX5Foneoff, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 inPointer,
     U32 outPointer,
     U32 subscriptionCount,
@@ -4515,7 +4513,7 @@ static
 W2C2_INLINE
 U32
 wasiRandomGet(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 bufferPointer,
     U32 bufferLength
 ) {
@@ -4631,7 +4629,7 @@ wasiRandomGet(
 }
 
 WASI_IMPORT(U32, 10_randomX5Fget, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 bufferPointer,
     U32 bufferLength
 ), {
@@ -4643,7 +4641,7 @@ WASI_IMPORT(U32, 10_randomX5Fget, (
 })
 
 WASI_IMPORT(U32, 11_schedX5Fyield, (
-    void* instance
+    wasmModuleInstance* instance
 ), {
     UNUSED_PARAMETER(instance);
 
@@ -4653,7 +4651,7 @@ WASI_IMPORT(U32, 11_schedX5Fyield, (
 })
 
 WASI_IMPORT(U32, 11_fdX5Fallocate, (
-    void* instance,
+    wasmModuleInstance* instance,
     U64 offset,
     U64 len
 ), {
@@ -4667,7 +4665,7 @@ WASI_IMPORT(U32, 11_fdX5Fallocate, (
 })
 
 WASI_IMPORT(U32, 9_fdX5Fadvise, (
-    void* instance,
+    wasmModuleInstance* instance,
     U64 offset,
     U64 len,
     U32 advise
@@ -4683,7 +4681,7 @@ WASI_IMPORT(U32, 9_fdX5Fadvise, (
 })
 
 WASI_IMPORT(U32, 11_sockX5Faccept, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 flags,
     U32 resultPointer
@@ -4699,7 +4697,7 @@ WASI_IMPORT(U32, 11_sockX5Faccept, (
 })
 
 WASI_IMPORT(U32, 9_sockX5Frecv, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 ciovecsPointer,
     U32 ciovecsCount,
@@ -4721,7 +4719,7 @@ WASI_IMPORT(U32, 9_sockX5Frecv, (
 })
 
 WASI_IMPORT(U32, 9_sockX5Fsend, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 ciovecsPointer,
     U32 ciovecsCount,
@@ -4741,7 +4739,7 @@ WASI_IMPORT(U32, 9_sockX5Fsend, (
 })
 
 WASI_IMPORT(U32, 13_sockX5Fshutdown, (
-    void* instance,
+    wasmModuleInstance* instance,
     U32 fd,
     U32 how
 ), {
@@ -4754,7 +4752,7 @@ WASI_IMPORT(U32, 13_sockX5Fshutdown, (
     return WASI_ERRNO_NOSYS;
 })
 
-typedef void (*wasiThreadStartFunc)(void* instance, U32 threadID, U32 startArg);
+typedef void (*wasiThreadStartFunc)(wasmModuleInstance* instance, U32 threadID, U32 startArg);
 
 typedef struct ThreadStartArg {
     wasmModuleInstance* instance;

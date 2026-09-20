@@ -62,7 +62,7 @@ main(void) {
         expect(imports[index] == 1, "import resolution count");
         expect(export.name.length == strlen(names[index]), "export name length");
         expect(memcmp(export.name.data, names[index], export.name.length) == 0, "export name bytes");
-        expect(((U32 (*)(m9_cX5FstringsInstance*))export.func)(&instance) == 42, "export call");
+        expect(((U32 (*)(wasmModuleInstance*))export.func)(&instance.common) == 42, "export call");
     }
     expect(instance.common.funcExports[3].name.data == NULL, "export terminator");
     m9_cX5FstringsFreeInstance(&instance);

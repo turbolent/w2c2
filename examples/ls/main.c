@@ -16,7 +16,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m2_lsExport6_memory((m2_lsInstance*)instance);
 }

@@ -13,7 +13,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m6_gowasiExport6_memory((m6_gowasiInstance*)instance);
 }

@@ -13,7 +13,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m4_llvmExport6_memory((m4_llvmInstance*)instance);
 }

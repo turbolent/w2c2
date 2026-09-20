@@ -43,7 +43,7 @@ endif
 
 .SILENT:
 
-.PHONY: run-tests runtime-lifecycle-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: run-tests runtime-lifecycle-test table-instances-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances clean clean-wasm-json clean-assertions clean-compiled
 
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
@@ -64,6 +64,17 @@ test_runtime_lifecycle_shared.c: gen/runtime_lifecycle.1.wasm
 	$(W2C2) -m $< $@
 
 test_runtime_lifecycle_imports.c: gen/runtime_lifecycle.2.wasm
+	$(W2C2) -m $< $@
+
+table-instances-test: run-test-table_instances
+
+test_table_instances$(EXE): table_instances_test.c test_table_owner.c test_table_caller.c
+	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_table_owner.c: gen/table_owner.wasm
+	$(W2C2) -m $< $@
+
+test_table_caller.c: gen/table_caller.wasm
 	$(W2C2) -m $< $@
 
 atomic-offsets-test: run-test-atomic_offsets
@@ -92,7 +103,7 @@ test_binary_names$(EXE): binary_names_test.c test_binary_names.c
 test_binary_names.c: gen/binary_names.wasm
 	$(W2C2) $< $@
 
-run-tests: atomic-offsets-test c-strings-test binary-names-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+run-tests: atomic-offsets-test c-strings-test binary-names-test table-instances-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -113,7 +124,7 @@ test_%.c: gen/%.wasm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-gen: gen-atomic-offsets gen-c-strings gen-binary-names
+gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances
 	$(PYTHON3) gen.py
 
 gen-atomic-offsets:
@@ -125,6 +136,10 @@ gen-c-strings:
 gen-binary-names:
 	wat2wasm binary_names.wat -o gen/binary_names.wasm
 
+gen-table-instances:
+	wat2wasm table_owner.wat -o gen/table_owner.wasm
+	wat2wasm table_caller.wat -o gen/table_caller.wasm
+
 gen-%:
 	$(PYTHON3) gen.py $*
 
@@ -135,3 +150,4 @@ clean:
 	-rm -f test_binary_names$(EXE) test_binary_names.c
 	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
+	-rm -f test_table_instances$(EXE) test_table_owner.c test_table_caller.c

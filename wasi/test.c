@@ -9,7 +9,7 @@ extern char** environ;
 extern
 U32
 i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 inPointer,
     U32 outPointer,
     U32 subscriptionCount,
@@ -104,7 +104,7 @@ testPosixToMacPath(
 }
 
 /* Unused but expected by the WASI implementation */
-wasmMemory* wasiMemory(void* instance) {
+wasmMemory* wasiMemory(wasmModuleInstance* instance) {
     UNUSED_PARAMETER(instance);
     return &testMemory;
 }
@@ -612,7 +612,7 @@ static U32 testThreadStartArg = 0;
 static
 void
 testThreadStart(
-    void* instance,
+    wasmModuleInstance* instance,
     U32 threadID,
     U32 startArg
 ) {
@@ -627,7 +627,7 @@ testThreadStart(
 
 static
 void
-testUnexpectedThreadStart(void* instance, U32 threadID, U32 startArg) {
+testUnexpectedThreadStart(wasmModuleInstance* instance, U32 threadID, U32 startArg) {
     UNUSED_PARAMETER(instance);
     UNUSED_PARAMETER(threadID);
     UNUSED_PARAMETER(startArg);
@@ -675,6 +675,7 @@ void
 testThreadSpawnCleanup(void) {
     TestThreadInstance root;
     U32 threadID;
+    U32 (*spawn)(wasmModuleInstance*, U32) = i4_wasi12_threadX2Dspawn;
 
     memset(&root, 0, sizeof(root));
     root.common.funcExports = testThreadFuncExports;
@@ -690,7 +691,7 @@ testThreadSpawnCleanup(void) {
         exit(1);
     }
 
-    threadID = i4_wasi12_threadX2Dspawn(&root.common, 42);
+    threadID = spawn(&root.common, 42);
     if (threadID == (U32)-1) {
         fprintf(stderr, "FAIL thread-spawn: thread creation failed\n");
         exit(1);

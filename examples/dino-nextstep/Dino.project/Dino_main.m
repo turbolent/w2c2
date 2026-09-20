@@ -9,7 +9,8 @@
 /* Imports */
 
 F32
-i4_Math6_random() {
+i4_Math6_random(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     return (F32)rand()/(F32)(RAND_MAX);
 }
 

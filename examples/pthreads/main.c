@@ -16,7 +16,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m8_pthreadsExport6_memory((m8_pthreadsInstance*)instance);
 }

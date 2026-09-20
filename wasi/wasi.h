@@ -50,6 +50,8 @@ typedef struct WASI {
     WasiFileDescriptors fds;
 } WASI;
 
+extern wasmMemory* wasiMemory(wasmModuleInstance* instance);
+
 bool
 WARN_UNUSED_RESULT
 wasiInit(

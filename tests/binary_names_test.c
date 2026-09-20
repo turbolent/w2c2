@@ -24,13 +24,13 @@ trap(Trap trap) {
 }
 
 U32
-i5_envX00a10_functionX00a(void* instance) {
+i5_envX00a10_functionX00a(wasmModuleInstance* instance) {
     (void)instance;
     return 44;
 }
 
 U32
-i5_envX00a10_functionX00b(void* instance) {
+i5_envX00a10_functionX00b(wasmModuleInstance* instance) {
     (void)instance;
     return 55;
 }
@@ -86,7 +86,7 @@ main(void) {
         expect(imports[index] == 2, "root and child import resolution");
         expect(export.name.length == expected[index].length, "export length");
         expect(memcmp(export.name.data, expected[index].name, export.name.length) == 0, "export bytes");
-        expect(((U32 (*)(m12_binaryX5FnamesInstance*))export.func)(&instance) == expected[index].value,
+        expect(((U32 (*)(wasmModuleInstance*))export.func)(&instance.common) == expected[index].value,
             "export target");
     }
     expect(instance.common.funcExports[index].name.data == NULL, "export terminator");
