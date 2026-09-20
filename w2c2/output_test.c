@@ -1133,6 +1133,36 @@ testFloatConstantLocales(void) {
 
 static
 void
+testMemorySize(void) {
+    static U8 code[] = {0x3F, 0x00, 0x1A, 0x0B};
+    WasmModule* module = readOutputModule();
+    WasmFunctionIDs ids = outputFunctionIDs(module);
+    unsigned int shared;
+    module->functions.functions[0].code.data = code;
+    module->functions.functions[0].code.length = sizeof(code);
+    for (shared = 0; shared < 2; shared++) {
+        OutputCapture capture;
+        WasmCWriteModuleOptions options;
+        const CapturedOutput* implementation;
+        module->memories.memories[0].shared = shared != 0;
+        module->memories.memories[0].max = 1;
+        captureInitialize(&capture);
+        options = captureOptions(&capture);
+        options.functionsPerFile = 2;
+        CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+        CHECK(capture.diagnosticCount == 0);
+        implementation = findOutput(&capture, "output-test.c");
+        CHECK(implementation != NULL);
+        CHECK(strstr((const char*)implementation->bytes, "wasmMemorySize(i->m0)") != NULL);
+        checkClosed(&capture);
+        captureFree(&capture);
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(module);
+}
+
+static
+void
 testMemoryEdges(void) {
     OutputCapture capture;
     WasmOutputProvider provider;
@@ -1567,6 +1597,7 @@ testOutputs(void) {
     testProviderFailures(module, ids, UINT32_MAX);
     testConstantExpressions(module, ids);
     testFloatConstantLocales();
+    testMemorySize();
     testMemoryEdges();
     testOutputBuffer();
     testOutputFormatting();
