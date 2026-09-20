@@ -13,7 +13,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m10_swiftX2DwasiExport6_memory((m10_swiftX2DwasiInstance*)instance);
 }

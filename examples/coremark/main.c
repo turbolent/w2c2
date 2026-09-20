@@ -24,7 +24,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m8_coremarkExport6_memory((m8_coremarkInstance*)instance);
 }

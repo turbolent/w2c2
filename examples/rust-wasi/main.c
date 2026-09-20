@@ -23,7 +23,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m9_rustX2DwasiExport6_memory((m9_rustX2DwasiInstance*)instance);
 }

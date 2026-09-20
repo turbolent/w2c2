@@ -37,7 +37,7 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
     return m6_pythonExport6_memory((m6_pythonInstance*)instance);
 }

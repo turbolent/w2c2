@@ -5,11 +5,13 @@ static U32 spectest_global_i32 = 666;
 
 static U64 spectest_global_i64 = 666;
 
-void i8_spectest5_print() {
+void i8_spectest5_print(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     printf("spectest.print()\n");
 }
 
-void i8_spectest9_printX5Fi32(U32 l0) {
+void i8_spectest9_printX5Fi32(wasmModuleInstance* instance, U32 l0) {
+    UNUSED_PARAMETER(instance);
     printf("spectest.print_i32(%u)\n", l0);
 }
 

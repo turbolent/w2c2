@@ -1183,10 +1183,20 @@ DEFINE_SWAP(64, Q, unsigned long long)
 DEFINE_SWAP(32, f, float)
 DEFINE_SWAP(64, d, double)
 
+typedef struct wasmModuleInstance wasmModuleInstance;
+
+/* Cast back to the function's signature with a wasmModuleInstance* instance parameter. */
 typedef void (*wasmFunc)(void);
 
+typedef struct wasmTableEntry {
+    wasmFunc func;
+    /* Borrows the instance;
+     * copying an entry preserves its owner. */
+    wasmModuleInstance* instance;
+} wasmTableEntry;
+
 typedef struct wasmTable {
-    wasmFunc* data;
+    wasmTableEntry* data;
     U32 size, maxSize;
 } wasmTable;
 
@@ -1200,7 +1210,20 @@ wasmTableAllocate(
 ) {
     table->size = size;
     table->maxSize = maxSize;
-    table->data = (wasmFunc*)calloc(size, sizeof(wasmFunc));
+    table->data = (wasmTableEntry*)calloc(size, sizeof(wasmTableEntry));
+}
+
+static
+W2C2_INLINE
+void
+wasmTableSet(
+    wasmTable* table,
+    const U32 index,
+    const wasmFunc func,
+    wasmModuleInstance* instance
+) {
+    table->data[index].func = func;
+    table->data[index].instance = instance;
 }
 
 static
@@ -1219,8 +1242,6 @@ wasmTableFree(
     table->size = 0;
     table->maxSize = 0;
 }
-
-#define TF(table, index, t) ((t)((table).data[index]))
 
 /*
  * UTF-8 bytes with an explicit length.
@@ -1268,12 +1289,12 @@ typedef struct wasmFuncExport {
 /* Resolver names borrow generated storage and must not be modified. */
 typedef void* (*wasmImportResolver)(WasmName module, WasmName name);
 
-typedef struct wasmModuleInstance {
+struct wasmModuleInstance {
     wasmFuncExport* funcExports;
     wasmImportResolver resolveImports;
     struct wasmModuleInstance* (*newChild)(struct wasmModuleInstance* self);
     void (*freeChild)(struct wasmModuleInstance* child);
-} wasmModuleInstance;
+};
 
 
 #ifndef __has_feature

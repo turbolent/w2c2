@@ -472,7 +472,7 @@ wasmCWriteCallExpr(
                 writer->multipleModules
             ))
 
-            MUST (wasmCWrite(writer, "(i"))
+            MUST (wasmCWrite(writer, "(instance"))
             {
                 U32 parameterIndex = 0;
                 for (; parameterIndex < parameterCount; parameterIndex++) {
@@ -501,6 +501,7 @@ wasmCWriteCallExpr(
     return true;
 }
 
+/* A NULL module name selects wasmModuleInstance*. */
 static
 bool
 wasmCWriteParameters(
@@ -508,23 +509,17 @@ wasmCWriteParameters(
     const char* moduleName,
     const WasmFunctionType functionType,
     const bool writeParameterNames,
-    const bool voidPointerInstanceType,
     const bool pretty
 ) {
     wasmOutputChar(file, '(');
-    if (voidPointerInstanceType) {
-        wasmOutputString(file, "void*");
-    } else {
+    if (moduleName != NULL) {
         wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance*");
-    }
-
-    if (writeParameterNames) {
-        if (pretty) {
-            wasmOutputString(file, " i");
-        } else {
-            wasmOutputChar(file, 'i');
+        if (writeParameterNames) {
+            wasmOutputString(file, pretty ? " i" : "i");
         }
+    } else {
+        wasmOutputString(file, writeParameterNames ? "wasmModuleInstance* instance" : "wasmModuleInstance*");
     }
     {
         U32 parameterIndex = 0;
@@ -551,7 +546,7 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteCallIndirectExpr(
-    const WasmCFunctionWriter* writer
+    WasmCFunctionWriter* writer
 ) {
     WasmCallIndirectInstruction instruction;
     if (!wasmCallIndirectInstructionRead(writer->code, &instruction)) {
@@ -573,6 +568,19 @@ wasmCWriteCallIndirectExpr(
         MUST (wasmCGetReturnType(functionType, instruction.functionTypeIndex, &returnType, writer->diagnostics))
 
         MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "{\n"))
+        writer->indent++;
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "wasmTableEntry entry"))
+        MUST (wasmCWriteAssign(writer))
+        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, false))
+        MUST (wasmCWrite(writer, ".data["))
+        {
+            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+            MUST (wasmCWriteStackName(writer->output, stackIndex0, wasmValueTypeI32))
+        }
+        MUST (wasmCWrite(writer, "];\n"))
+        MUST (wasmCWriteIndent(writer))
 
         if (resultCount > 0) {
             /* TODO: add support for multiple result values */
@@ -588,28 +596,15 @@ wasmCWriteCallIndirectExpr(
             MUST (wasmCWriteAssign(writer))
         }
 
-        MUST (wasmCWrite(writer, "TF("))
-        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, false))
-        MUST (wasmCWriteComma(writer))
-
-        {
-            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmCWriteStackName(
-                writer->output,
-                stackIndex0,
-                writer->typeStack->valueTypes[stackIndex0]
-            ))
-        }
-
-        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, "(("))
         MUST (wasmCWrite(writer, returnType))
         MUST (wasmCWrite(writer, " (*)"))
 
         MUST (wasmCWriteParameters(
-            writer->output, writer->moduleName, functionType, false, false, writer->pretty
+            writer->output, NULL, functionType, false, writer->pretty
         ))
 
-        MUST (wasmCWrite(writer, ")(i"))
+        MUST (wasmCWrite(writer, ")entry.func)(entry.instance"))
 
         {
             U32 parameterIndex = 0;
@@ -624,6 +619,9 @@ wasmCWriteCallIndirectExpr(
             }
         }
         MUST (wasmCWrite(writer, ");\n"))
+        writer->indent--;
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "}\n"))
 
         wasmTypeStackDrop(writer->typeStack, parameterCount + 1);
         {
@@ -4301,6 +4299,13 @@ wasmCWriteFunctionBody(
     }
 
     wasmOutputString(file, "{\n");
+    if (pretty) {
+        wasmOutputString(file, indentation);
+    }
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Instance* i = (");
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "Instance*)instance;\n");
     wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
     wasmOutputWrite(file, buffer.data, buffer.length);
@@ -4339,10 +4344,9 @@ wasmCWriteFunctionSignature(
     wasmCWriteFunctionUse(file, module, moduleName, functionIndex, false, prefix);
     wasmCWriteParameters(
         file,
-        moduleName,
+        NULL,
         functionType,
         writeParameterNames,
-        false,
         pretty
     );
     return true;
@@ -4689,7 +4693,6 @@ wasmCWriteFunctionImport(
     const WasmModule* module,
     const char* moduleName,
     const WasmFunctionImport import,
-    const bool declaration,
     const bool pretty,
     const bool prefix,
     WasmDiagnosticContext* diagnostics
@@ -4699,17 +4702,8 @@ wasmCWriteFunctionImport(
     MUST (wasmCGetReturnType(functionType, import.functionTypeIndex, &returnType, diagnostics))
     wasmOutputString(file, returnType);
     wasmOutputChar(file, ' ');
-    if (declaration) {
-        wasmCWriteFunctionImportName(file, prefix ? moduleName : NULL, import.module, import.name);
-    }
-    wasmCWriteParameters(
-        file,
-        moduleName,
-        functionType,
-        false,
-        declaration,
-        pretty
-    );
+    wasmCWriteFunctionImportName(file, prefix ? moduleName : NULL, import.module, import.name);
+    wasmCWriteParameters(file, NULL, functionType, false, pretty);
     return true;
 }
 
@@ -4845,7 +4839,6 @@ wasmCWriteFunctionExport(
         moduleName,
         functionType,
         true,
-        false,
         pretty
     );
     if (writeBody) {
@@ -4860,7 +4853,7 @@ wasmCWriteFunctionExport(
             wasmOutputString(file, "return ");
         }
         wasmCWriteFunctionUse(file, module, moduleName, export.index, false, multipleModules);
-        wasmOutputString(file, "(i");
+        wasmOutputString(file, "(&i->common");
         {
             U32 parameterIndex = 0;
             for (; parameterIndex < parameterCount; parameterIndex++) {
@@ -5498,18 +5491,13 @@ wasmCWriteInitTables(
                         if (pretty) {
                             wasmOutputString(file, indentation);
                         }
-                        wasmCWriteTableUse(file, module, elementSegment.tableIndex, false);
-                        if (pretty) {
-                            wasmOutputString(file, ".data[offset + ");
-                            wasmOutputU32(file, functionIndexIndex);
-                            wasmOutputString(file, "] = (wasmFunc)");
-                        } else {
-                            wasmOutputString(file, ".data[offset+");
-                            wasmOutputU32(file, functionIndexIndex);
-                            wasmOutputString(file, "]=(wasmFunc)");
-                        }
+                        wasmOutputString(file, "wasmTableSet(");
+                        wasmCWriteTableUse(file, module, elementSegment.tableIndex, true);
+                        wasmOutputString(file, pretty ? ", offset + " : ",offset+");
+                        wasmOutputU32(file, functionIndexIndex);
+                        wasmOutputString(file, pretty ? ", (wasmFunc)" : ",(wasmFunc)");
                         wasmCWriteFunctionUse(file, module, moduleName, functionIndex, true, multipleModules);
-                        wasmOutputString(file, ";\n");
+                        wasmOutputString(file, pretty ? ", &i->common);\n" : ",&i->common);\n");
                     }
                 }
             }
@@ -5559,7 +5547,7 @@ wasmCWriteFunctionImports(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        MUST (wasmCWriteFunctionImport(file, module, moduleName, import, true, pretty, multipleModules, diagnostics))
+        MUST (wasmCWriteFunctionImport(file, module, moduleName, import, pretty, multipleModules, diagnostics))
         wasmOutputString(file, ";\n\n");
     }
     return true;
@@ -5764,7 +5752,7 @@ wasmCWriteNewChildFunction(
             wasmOutputString(file, indentation);
         }
         wasmCWriteFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
-        wasmOutputString(file, "(child);\n");
+        wasmOutputString(file, "(&child->common);\n");
     }
 
     if (pretty) {
@@ -5862,7 +5850,7 @@ wasmCWriteInstantiateFunction(
             wasmOutputString(file, indentation);
         }
         wasmCWriteFunctionUse(file, module, moduleName, module->startFunctionIndex, false, multipleModules);
-        wasmOutputString(file, "(i);\n");
+        wasmOutputString(file, "(&i->common);\n");
     }
 
     wasmOutputString(file, "}\n\n");
