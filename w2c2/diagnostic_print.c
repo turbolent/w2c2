@@ -2,6 +2,20 @@
 #include "reader.h"
 
 static
+void
+wasmDiagnosticPrintName(FILE* file, WasmName name) {
+    size_t index;
+    for (index = 0; index < name.length; index++) {
+        const unsigned char c = (unsigned char)name.data[index];
+        if (c < 0x20 || c == 0x7F || c == '\\') {
+            fprintf(file, "\\x%02X", (unsigned int)c);
+        } else {
+            fputc(c, file);
+        }
+    }
+}
+
+static
 const char*
 wasmDiagnosticOpcodeDescription(
     const WasmDiagnosticOpcodeFamily family,
@@ -182,12 +196,9 @@ wasmDiagnosticPrint(
         }
         case wasmDiagnosticUnsupportedExport: {
             const WasmDiagnosticUnsupportedExportInfo info = diagnostic->info.unsupportedExport;
-            fprintf(
-                file,
-                "w2c2: unsupported export: %s (%s)\n",
-                info.name,
-                wasmExportKindDescription(info.kind)
-            );
+            fprintf(file, "w2c2: unsupported export: ");
+            wasmDiagnosticPrintName(file, info.name);
+            fprintf(file, " (%s)\n", wasmExportKindDescription(info.kind));
             break;
         }
         case wasmDiagnosticInvalidDataSegmentMode: {
@@ -234,10 +245,11 @@ wasmDiagnosticPrint(
         }
         case wasmDiagnosticDuplicateFunctionName: {
             const WasmDiagnosticDuplicateFunctionNameInfo info = diagnostic->info.duplicateFunctionName;
+            fprintf(file, "w2c2: ignoring duplicate function name ");
+            wasmDiagnosticPrintName(file, info.name);
             fprintf(
                 file,
-                "w2c2: ignoring duplicate function name %s used by functions %u and %u\n",
-                info.name,
+                " used by functions %u and %u\n",
                 info.previousIndex,
                 info.currentIndex
             );
@@ -255,7 +267,9 @@ wasmDiagnosticPrint(
         }
         case wasmDiagnosticSkippedCustomSection: {
             const WasmDiagnosticSkippedCustomSectionInfo info = diagnostic->info.skippedCustomSection;
-            fprintf(file, "w2c2: skipping custom section '%s' (size %u)\n", info.name, info.size);
+            fprintf(file, "w2c2: skipping custom section '");
+            wasmDiagnosticPrintName(file, info.name);
+            fprintf(file, "' (size %u)\n", info.size);
             break;
         }
         case wasmDiagnosticSkippedSection: {

@@ -71,8 +71,8 @@ wasmModuleFunctionImportsFree(
 
     for (; index < functionImports->length; index++) {
         WasmFunctionImport* import = &functionImports->imports[index];
-        free(import->module);
-        free(import->name);
+        free(import->module.data);
+        free(import->name.data);
     }
     wasmFunctionImportsFree(functionImports);
 }
@@ -86,8 +86,8 @@ wasmModuleGlobalImportsFree(
 
     for (; index < globalImports->length; index++) {
         WasmGlobalImport* import = &globalImports->imports[index];
-        free(import->module);
-        free(import->name);
+        free(import->module.data);
+        free(import->name.data);
     }
     wasmGlobalImportsFree(globalImports);
 }
@@ -101,8 +101,8 @@ wasmModuleMemoryImportsFree(
 
     for (; index < memoryImports->length; index++) {
         WasmMemoryImport* import = &memoryImports->imports[index];
-        free(import->module);
-        free(import->name);
+        free(import->module.data);
+        free(import->name.data);
     }
     wasmMemoryImportsFree(memoryImports);
 }
@@ -116,8 +116,8 @@ wasmModuleTableImportsFree(
 
     for (; index < tableImports->length; index++) {
         WasmTableImport* import = &tableImports->imports[index];
-        free(import->module);
-        free(import->name);
+        free(import->module.data);
+        free(import->name.data);
     }
     wasmTableImportsFree(tableImports);
 }
@@ -145,7 +145,7 @@ wasmModuleExportsFree(
     U32 index = 0;
 
     for (; index < exports->count; index++) {
-        free(exports->exports[index].name);
+        free(exports->exports[index].name.data);
     }
     free(exports->exports);
     exports->exports = NULL;
@@ -220,7 +220,7 @@ wasmModuleDebugSectionsFree(
     size_t index = 0;
 
     for (; index < debugSections->length; index++) {
-        free(debugSections->debugSections[index].name);
+        free(debugSections->debugSections[index].name.data);
     }
     wasmDebugSectionsFree(debugSections);
 }
@@ -246,7 +246,7 @@ wasmModuleFunctionNamesFree(
     size_t index = 0;
 
     for (; index < functionNames->length; index++) {
-        free(functionNames->names[index]);
+        free(functionNames->names[index].data);
     }
     wasmNamesFree(functionNames);
 }

@@ -306,28 +306,28 @@ bool
 WARN_UNUSED_RESULT
 wasmReadName(
     Buffer* buffer,
-    char** result
+    WasmName* result
 ) {
     char* name = NULL;
+    size_t allocationLength = 0;
 
     U32 length = 0;
     MUST (leb128ReadU32(buffer, &length) > 0)
     MUST (length <= buffer->length)
+    allocationLength = length;
+    MUST (allocationLength < (size_t)-1)
 
-    name = calloc((size_t) length + 1, 1);
+    name = malloc(allocationLength + 1);
     MUST (name != NULL)
 
-    strncpy(
-        name,
-        (char*) buffer->data,
-        length
-    );
+    memcpy(name, buffer->data, length);
 
     name[length] = '\0';
 
     bufferSkipUnchecked(buffer, length);
 
-    *result = name;
+    result->data = name;
+    result->length = length;
 
     return true;
 }
@@ -338,11 +338,11 @@ typedef void (* WasmSectionReader)(
     WasmModuleReaderError** error
 );
 
-static const char* wasmDebugSectionNamePrefix = ".debug_";
-static const char* wasmNameSectionName = "name";
+static const char wasmDebugSectionNamePrefix[] = ".debug_";
+static const char wasmNameSectionName[] = "name";
 
 typedef struct WasmFunctionNameEntry {
-    char* name;
+    WasmName name;
     U32 functionIndex;
 } WasmFunctionNameEntry;
 
@@ -354,7 +354,7 @@ wasmFunctionNameEntryCompareNames(
 ) {
     const WasmFunctionNameEntry* entryA = a;
     const WasmFunctionNameEntry* entryB = b;
-    return strcmp(entryA->name, entryB->name);
+    return wasmNameCompare(entryA->name, entryB->name);
 }
 
 static
@@ -371,7 +371,7 @@ wasmFunctionNamesRemoveDuplicates(
     WasmFunctionNameEntry* entries = NULL;
 
     for (; functionNameIndex < functionNameCount; functionNameIndex++) {
-        if (functionNames->names[functionNameIndex] != NULL) {
+        if (functionNames->names[functionNameIndex].data != NULL) {
             entryCount++;
         }
     }
@@ -394,7 +394,7 @@ wasmFunctionNamesRemoveDuplicates(
          functionNameIndex < functionNameCount;
          functionNameIndex++) {
 
-        if (functionNames->names[functionNameIndex] != NULL) {
+        if (functionNames->names[functionNameIndex].data != NULL) {
             WasmFunctionNameEntry* entry = &entries[entryIndex++];
             entry->functionIndex = assertSizeU32(functionNameIndex);
             entry->name = functionNames->names[functionNameIndex];
@@ -412,7 +412,7 @@ wasmFunctionNamesRemoveDuplicates(
     while (entryIndex < entryCount) {
         size_t duplicateEnd = entryIndex + 1;
         while (duplicateEnd < entryCount
-               && strcmp(entries[entryIndex].name, entries[duplicateEnd].name) == 0) {
+               && wasmNameCompare(entries[entryIndex].name, entries[duplicateEnd].name) == 0) {
 
             duplicateEnd++;
         }
@@ -436,8 +436,8 @@ wasmFunctionNamesRemoveDuplicates(
 
                 const U32 duplicateFunctionIndex =
                     entries[duplicateIndex].functionIndex;
-                free(functionNames->names[duplicateFunctionIndex]);
-                functionNames->names[duplicateFunctionIndex] = NULL;
+                free(functionNames->names[duplicateFunctionIndex].data);
+                functionNames->names[duplicateFunctionIndex] = emptyWasmName;
             }
         }
 
@@ -539,14 +539,14 @@ wasmReadNameSection(
                 for (; initializedFunctionNameCount < functionCount;
                      initializedFunctionNameCount++) {
 
-                    reader->module->functionNames.names[initializedFunctionNameCount] = NULL;
+                    reader->module->functionNames.names[initializedFunctionNameCount] = emptyWasmName;
                 }
                 reader->module->functionNames.length = functionCount;
 
                 /* Read function names */
                 for (; functionNameIndex < functionNameCount; functionNameIndex++) {
                     U32 functionIndex = 0;
-                    char* functionName = NULL;
+                    WasmName functionName = emptyWasmName;
 
                     /* Read function index */
                     if (leb128ReadU32(&reader->buffer, &functionIndex) == 0) {
@@ -574,7 +574,7 @@ wasmReadNameSection(
                         return;
                     }
 
-                    free(reader->module->functionNames.names[functionIndex]);
+                    free(reader->module->functionNames.names[functionIndex].data);
                     reader->module->functionNames.names[functionIndex] = functionName;
                 }
 
@@ -614,7 +614,7 @@ wasmReadCustomSection(
     WasmModuleReaderError** error
 ) {
     WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
-    char* name = NULL;
+    WasmName name = emptyWasmName;
     const U8* start = reader->buffer.data;
     const U8* end = NULL;
 
@@ -633,7 +633,9 @@ wasmReadCustomSection(
 
     sectionSize -= (U32) (end - start);
 
-    if (strncmp(name, wasmDebugSectionNamePrefix, strlen(wasmDebugSectionNamePrefix)) == 0) {
+    if (name.length >= sizeof(wasmDebugSectionNamePrefix) - 1
+        && memcmp(name.data, wasmDebugSectionNamePrefix, sizeof(wasmDebugSectionNamePrefix) - 1) == 0
+        && memchr(name.data, 0, name.length) == NULL) {
         WasmDebugSection section;
         section.name = name;
         section.buffer.data = reader->buffer.data;
@@ -649,23 +651,25 @@ wasmReadCustomSection(
 
         bufferSkip(&reader->buffer, sectionSize);
 
-    } else if (reader->debug && strcmp(name, wasmNameSectionName) == 0) {
+    } else if (reader->debug
+        && name.length == sizeof(wasmNameSectionName) - 1
+        && memcmp(name.data, wasmNameSectionName, name.length) == 0) {
         wasmReadNameSection(reader, sectionSize, error, &diagnostics);
         if (*error != NULL) {
             goto fail;
         }
-        free(name);
+        free(name.data);
     } else {
         wasmDiagnosticReportSkippedCustomSection(&diagnostics, name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
-        free(name);
+        free(name.data);
     }
 
     *error = NULL;
     return;
 
 fail:
-    free(name);
+    free(name.data);
 }
 
 static
@@ -768,8 +772,8 @@ static
 void
 wasmReadFunctionImport(
     WasmModuleReader* reader,
-    char* module,
-    char* name,
+    WasmName module,
+    WasmName name,
     WasmModuleReaderError** error
 ) {
     WasmFunctionImport import = wasmEmptyFunctionImport;
@@ -803,8 +807,8 @@ static
 void
 wasmReadGlobalImport(
     WasmModuleReader* reader,
-    char* module,
-    char* name,
+    WasmName module,
+    WasmName name,
     WasmModuleReaderError** error
 ) {
     WasmGlobalImport import = wasmEmptyGlobalImport;
@@ -926,8 +930,8 @@ static
 void
 wasmReadMemoryImport(
     WasmModuleReader* reader,
-    char* module,
-    char* name,
+    WasmName module,
+    WasmName name,
     WasmModuleReaderError** error
 ) {
     WasmMemoryImport import = wasmEmptyMemoryImport;
@@ -981,8 +985,8 @@ static
 void
 wasmReadTableImport(
     WasmModuleReader* reader,
-    char* module,
-    char* name,
+    WasmName module,
+    WasmName name,
     WasmModuleReaderError** error
 ) {
     WasmTableImport import = wasmEmptyTableImport;
@@ -1012,8 +1016,8 @@ wasmReadImport(
     WasmModuleReader* reader,
     WasmModuleReaderError** error
 ) {
-    char* module = NULL;
-    char* name = NULL;
+    WasmName module = emptyWasmName;
+    WasmName name = emptyWasmName;
     U8 kindIndicator = 0;
 
     /* Read module */
@@ -1087,8 +1091,8 @@ wasmReadImport(
     return;
 
 fail:
-    free(module);
-    free(name);
+    free(module.data);
+    free(name.data);
 }
 
 static
@@ -1406,7 +1410,7 @@ wasmReadExport(
     WasmExport* result,
     WasmModuleReaderError** error
 ) {
-    char* name = NULL;
+    WasmName name = emptyWasmName;
     U8 kindIndicator = 0;
     U32 index = 0;
 
@@ -1448,7 +1452,7 @@ wasmReadExport(
     return;
 
 fail:
-    free(name);
+    free(name.data);
 }
 
 static

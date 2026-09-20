@@ -180,7 +180,7 @@ wasmDiagnosticReportUnsupportedFunctionResults(
 void
 wasmDiagnosticReportUnsupportedExport(
     WasmDiagnosticContext* context,
-    const char* name,
+    WasmName name,
     WasmExportKind kind
 ) {
     WasmDiagnostic diagnostic = wasmDiagnosticInitialize(
@@ -255,7 +255,7 @@ wasmDiagnosticReportThreadFailed(
 void
 wasmDiagnosticReportDuplicateFunctionName(
     WasmDiagnosticContext* context,
-    const char* name,
+    WasmName name,
     U32 previousIndex,
     U32 currentIndex
 ) {
@@ -285,7 +285,7 @@ wasmDiagnosticReportSkippedNameSubsection(
 void
 wasmDiagnosticReportSkippedCustomSection(
     WasmDiagnosticContext* context,
-    const char* name,
+    WasmName name,
     U32 size
 ) {
     WasmDiagnostic diagnostic = wasmDiagnosticInitialize(

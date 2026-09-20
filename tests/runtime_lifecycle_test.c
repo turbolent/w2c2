@@ -32,15 +32,18 @@ expect(
 static
 void*
 resolveRuntimeImports(
-    const char* module,
-    const char* name
+    WasmName module,
+    WasmName name
 ) {
-    expect(strcmp(module, "spectest") == 0, "unexpected import module");
+    expect(module.length == sizeof("spectest") - 1
+        && memcmp(module.data, "spectest", module.length) == 0, "unexpected import module");
 
-    if (strcmp(name, "shared_memory") == 0) {
+    if (name.length == sizeof("shared_memory") - 1
+        && memcmp(name.data, "shared_memory", name.length) == 0) {
         return importedMemory;
     }
-    if (strcmp(name, "table") == 0) {
+    if (name.length == sizeof("table") - 1
+        && memcmp(name.data, "table", name.length) == 0) {
         return importedTable;
     }
 

@@ -1193,14 +1193,55 @@ wasmTableFree(
 
 #define TF(table, index, t) ((t)((table).data[index]))
 
+/*
+ * UTF-8 bytes with an explicit length.
+ * Parsed names own their storage and have an additional trailing NUL byte;
+ * embedded NUL bytes are part of the name.
+ */
+typedef struct WasmName {
+    char* data;
+    /* Counts name bytes,
+     * including embedded NUL bytes but excluding the trailing terminator. */
+    size_t length;
+} WasmName;
+
+static const WasmName emptyWasmName = {NULL, 0};
+
+/* Borrows the byte storage. */
+static
+W2C2_INLINE
+WasmName
+wasmNameFromBytes(char* data, size_t length) {
+    WasmName name;
+    name.data = data;
+    name.length = length;
+    return name;
+}
+
+static
+W2C2_INLINE
+int
+wasmNameCompare(const WasmName a, const WasmName b) {
+    const size_t length = a.length < b.length ? a.length : b.length;
+    const int result = length == 0 ? 0 : memcmp(a.data, b.data, length);
+    if (result != 0) {
+        return result;
+    }
+    return a.length < b.length ? -1 : a.length > b.length ? 1 : 0;
+}
+
 typedef struct wasmFuncExport {
     wasmFunc func;
-    char* name;
+    WasmName name;
 } wasmFuncExport;
+
+/* Name lengths include embedded NUL bytes and exclude the trailing terminator. */
+/* Resolver names borrow generated storage and must not be modified. */
+typedef void* (*wasmImportResolver)(WasmName module, WasmName name);
 
 typedef struct wasmModuleInstance {
     wasmFuncExport* funcExports;
-    void* (*resolveImports)(const char* module, const char* name);
+    wasmImportResolver resolveImports;
     struct wasmModuleInstance* (*newChild)(struct wasmModuleInstance* self);
     void (*freeChild)(struct wasmModuleInstance* child);
 } wasmModuleInstance;

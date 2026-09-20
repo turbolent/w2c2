@@ -17,6 +17,7 @@
 
 #include "c.h"
 #include "reader.h"
+#include "diagnostic_print.h"
 #include "diagnostic_internal.h"
 #include "diagnostic_test.h"
 
@@ -62,6 +63,7 @@ void
 captureDiagnostic(void* context, const WasmDiagnostic* diagnostic) {
     DiagnosticCapture* capture = (DiagnosticCapture*)context;
     const char* name = NULL;
+    size_t nameLength = 0;
 #if HAS_PTHREAD
     CHECK(pthread_mutex_lock(&capture->mutex) == 0);
 #endif
@@ -76,19 +78,25 @@ captureDiagnostic(void* context, const WasmDiagnostic* diagnostic) {
         case wasmDiagnosticOutputWriteFailed:
         case wasmDiagnosticOutputCloseFailed:
             name = diagnostic->info.outputFailed.name;
+            nameLength = strlen(name);
             break;
         case wasmDiagnosticDuplicateFunctionName:
-            name = diagnostic->info.duplicateFunctionName.name;
+            name = diagnostic->info.duplicateFunctionName.name.data;
+            nameLength = diagnostic->info.duplicateFunctionName.name.length;
+            capture->last.info.duplicateFunctionName.name.data = capture->name;
             break;
         case wasmDiagnosticSkippedCustomSection:
-            name = diagnostic->info.skippedCustomSection.name;
+            name = diagnostic->info.skippedCustomSection.name.data;
+            nameLength = diagnostic->info.skippedCustomSection.name.length;
+            capture->last.info.skippedCustomSection.name.data = capture->name;
             break;
         default:
             break;
     }
     if (name != NULL) {
-        CHECK(strlen(name) < sizeof(capture->name));
-        strcpy(capture->name, name);
+        CHECK(nameLength < sizeof(capture->name));
+        memcpy(capture->name, name, nameLength);
+        capture->name[nameLength] = 0;
     }
 #if HAS_PTHREAD
     CHECK(pthread_mutex_unlock(&capture->mutex) == 0);
@@ -159,11 +167,11 @@ void
 testReaderDiagnostics(void) {
     static U8 customModule[] = {
         0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
-        0x00, 0x02, 0x01, 'x'
+        0x00, 0x04, 0x03, 'x', 0x00, 'y'
     };
     static U8 names[] = {
-        0x00, 0x0E, 0x04, 'n', 'a', 'm', 'e',
-        0x01, 0x07, 0x02, 0x00, 0x01, 'f', 0x01, 0x01, 'f'
+        0x00, 0x12, 0x04, 'n', 'a', 'm', 'e',
+        0x01, 0x0B, 0x02, 0x00, 0x03, 'f', 0x00, 'g', 0x01, 0x03, 'f', 0x00, 'g'
     };
     U8 namedModule[sizeof(diagnosticModuleBytes) + sizeof(names)];
     DiagnosticCapture capture;
@@ -184,7 +192,8 @@ testReaderDiagnostics(void) {
     CHECK(capture.count == 2);
     CHECK(capture.last.code == wasmDiagnosticSkippedCustomSection);
     CHECK(capture.last.severity == wasmDiagnosticInfo);
-    CHECK(strcmp(capture.name, "x") == 0);
+    CHECK(capture.last.info.skippedCustomSection.name.length == 3);
+    CHECK(memcmp(capture.name, "x\0y", 3) == 0);
     memcpy(namedModule, diagnosticModuleBytes, sizeof(diagnosticModuleBytes));
     memcpy(namedModule + sizeof(diagnosticModuleBytes), names, sizeof(names));
     reader.buffer.data = namedModule;
@@ -196,7 +205,18 @@ testReaderDiagnostics(void) {
     CHECK(capture.last.code == wasmDiagnosticDuplicateFunctionName);
     CHECK(capture.last.info.duplicateFunctionName.previousIndex == 0);
     CHECK(capture.last.info.duplicateFunctionName.currentIndex == 1);
-    CHECK(strcmp(capture.name, "f") == 0);
+    CHECK(capture.last.info.duplicateFunctionName.name.length == 3);
+    CHECK(memcmp(capture.name, "f\0g", 3) == 0);
+    {
+        FILE* file = tmpfile();
+        char line[128];
+        CHECK(file != NULL);
+        wasmDiagnosticPrint(file, &capture.last, NULL);
+        CHECK(fseek(file, 0, SEEK_SET) == 0);
+        CHECK(fgets(line, sizeof(line), file) != NULL);
+        CHECK(strcmp(line, "w2c2: ignoring duplicate function name f\\x00g used by functions 0 and 1\n") == 0);
+        CHECK(fclose(file) == 0);
+    }
     wasmModuleFree(reader.module);
     captureDestroy(&capture);
 }
@@ -366,11 +386,14 @@ testDwarfDiagnostics(void) {
         static U8 abbreviations[] = {0x00};
         WasmDebugSection sections[3];
         memset(sections, 0, sizeof(sections));
-        sections[0].name = "";
-        sections[1].name = ".debug_info";
+        sections[0].name.data = "";
+        sections[0].name.length = sizeof("") - 1;
+        sections[1].name.data = ".debug_info";
+        sections[1].name.length = sizeof(".debug_info") - 1;
         sections[1].buffer.data = invalidUnit;
         sections[1].buffer.length = sizeof(invalidUnit);
-        sections[2].name = ".debug_abbrev";
+        sections[2].name.data = ".debug_abbrev";
+        sections[2].name.length = sizeof(".debug_abbrev") - 1;
         sections[2].buffer.data = abbreviations;
         sections[2].buffer.length = sizeof(abbreviations);
         input.length = 3;

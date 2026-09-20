@@ -625,9 +625,20 @@ testThreadStart(
     WASM_MUTEX_UNLOCK(&testThreadMutex);
 }
 
+static
+void
+testUnexpectedThreadStart(void* instance, U32 threadID, U32 startArg) {
+    UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(threadID);
+    UNUSED_PARAMETER(startArg);
+    fprintf(stderr, "FAIL thread-spawn: matched an export with an embedded NUL\n");
+    abort();
+}
+
 static wasmFuncExport testThreadFuncExports[] = {
-    {(wasmFunc)testThreadStart, "wasi_thread_start"},
-    {NULL, NULL}
+    {(wasmFunc)testUnexpectedThreadStart, {"wasi_thread_start\0suffix", sizeof("wasi_thread_start\0suffix") - 1}},
+    {(wasmFunc)testThreadStart, {"wasi_thread_start", sizeof("wasi_thread_start") - 1}},
+    {NULL, {NULL, 0}}
 };
 
 static

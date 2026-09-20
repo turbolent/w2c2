@@ -6,6 +6,7 @@
 #include "locals.h"
 #include "array.h"
 #include "sha1.h"
+#include "name.h"
 
 typedef struct WasmFunction {
     U32 functionTypeIndex;
@@ -15,11 +16,11 @@ typedef struct WasmFunction {
     size_t start;
     /* Hash of the locals (as declared in the binary) and the code */
     unsigned char hash[SHA1_DIGEST_LENGTH];
-    char *exportName;
+    WasmName exportName;
 } WasmFunction;
 
 static const WasmFunction wasmEmptyFunction =
-    {0, {NULL, 0}, {NULL, 0}, 0, SHA1_DIGEST_EMPTY, NULL};
+    {0, {NULL, 0}, {NULL, 0}, 0, SHA1_DIGEST_EMPTY, {NULL, 0}};
 
 typedef struct WasmFunctionID {
     /* Hash of the locals (as declared in the binary) and the code */

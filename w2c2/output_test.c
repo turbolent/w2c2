@@ -808,43 +808,49 @@ static
 void
 testCStringEscaping(void) {
     static const char* strings[] = {
-        "", "ordinary/path.c", "\"\\\n\r\t\0017AF\177\303\251\?" "\?/end\\"
+        "", "ordinary/path.c", ("\"\\\n\r\t\0017AF\177\303\251\?" "\?/end\\"), "a\0b"
     };
     static const char* escaped[] = {
-        "", "ordinary/path.c", "\\\"\\\\\\012\\015\\011\\0017AF\\177\\303\\251\\?\\?/end\\\\"
+        "", "ordinary/path.c", "\\\"\\\\\\012\\015\\011\\0017AF\\177\\303\\251\\?\\?/end\\\\", "a\\000b"
     };
     size_t index;
     for (index = 0; index < sizeof(strings) / sizeof(strings[0]); index++) {
         WasmModule* module = readOutputModule();
         WasmFunctionIDs ids = outputFunctionIDs(module);
         WasmGlobalImport* import = &module->globalImports.imports[0];
-        const size_t size = strlen(strings[index]) + 1;
+        const size_t size = index == 3 ? sizeof("a\0b") : strlen(strings[index]) + 1;
+        const bool hasNul = memchr(strings[index], 0, size - 1) != NULL;
         unsigned int mode;
         char resolve[512];
         char exportName[256];
         char assemblyName[256];
         char debugLine[256];
-        free(import->module);
-        free(import->name);
-        import->module = (char*)malloc(size);
-        import->name = (char*)malloc(size);
-        CHECK(import->module != NULL && import->name != NULL);
-        memcpy(import->module, strings[index], size);
-        memcpy(import->name, strings[index], size);
+        free(import->module.data);
+        free(import->name.data);
+        import->module.data = (char*)malloc(size);
+        import->module.length = size - 1;
+        import->name.data = (char*)malloc(size);
+        import->name.length = size - 1;
+        CHECK(import->module.data != NULL && import->name.data != NULL);
+        memcpy(import->module.data, strings[index], size);
+        memcpy(import->name.data, strings[index], size);
         module->exports.exports = (WasmExport*)malloc(sizeof(WasmExport));
         CHECK(module->exports.exports != NULL);
         module->exports.count = 1;
         module->exports.exports[0] = wasmEmptyExport;
-        module->exports.exports[0].name = (char*)malloc(size);
-        CHECK(module->exports.exports[0].name != NULL);
-        memcpy(module->exports.exports[0].name, strings[index], size);
+        module->exports.exports[0].name.data = (char*)malloc(size);
+        module->exports.exports[0].name.length = size - 1;
+        CHECK(module->exports.exports[0].name.data != NULL);
+        memcpy(module->exports.exports[0].name.data, strings[index], size);
         module->functions.functions[0].exportName = module->exports.exports[0].name;
-        CHECK(wasmNamesAppend(&module->functionNames, NULL));
+        CHECK(wasmNamesAppend(&module->functionNames, emptyWasmName));
         {
-            char* name = (char*)malloc(size);
+            WasmName name;
             WasmDebugLine line;
-            CHECK(name != NULL);
-            memcpy(name, strings[index], size);
+            name.data = (char*)malloc(size);
+            name.length = size - 1;
+            CHECK(name.data != NULL);
+            memcpy(name.data, strings[index], size);
             CHECK(wasmNamesAppend(&module->functionNames, name));
             line.address = module->functions.functions[0].start;
             line.number = 17;
@@ -853,10 +859,11 @@ testCStringEscaping(void) {
             memcpy(line.path, strings[index], size);
             CHECK(wasmDebugLinesAppend(&module->debugLines, line));
         }
-        sprintf(resolve, "resolve(\"%s\", \"%s\");", escaped[index], escaped[index]);
-        sprintf(exportName, ",\"%s\"},", escaped[index]);
+        sprintf(resolve, "resolve(wasmNameFromBytes(\"%s\", %lu), wasmNameFromBytes(\"%s\", %lu));",
+            escaped[index], (unsigned long)(size - 1), escaped[index], (unsigned long)(size - 1));
+        sprintf(exportName, ",{\"%s\",%lu}},", escaped[index], (unsigned long)(size - 1));
         sprintf(assemblyName, " __asm__(\"outputTest_%s\")", escaped[index]);
-        sprintf(debugLine, "#line 17 \"%s\"\n", escaped[index]);
+        sprintf(debugLine, "#line 17 \"%s\"\n", hasNul ? "a" : escaped[index]);
         for (mode = 0; mode < 4; mode++) {
             OutputCapture capture;
             WasmCWriteModuleOptions options;
@@ -878,6 +885,9 @@ testCStringEscaping(void) {
             for (fileIndex = 0; fileIndex < capture.count; fileIndex++) {
                 const char* source = (const char*)capture.files[fileIndex].bytes;
                 const char* cursor = source;
+                if (hasNul) {
+                    CHECK(strstr(source, "__asm__(") == NULL);
+                }
                 if (strstr(source, assemblyName) != NULL) {
                     foundAssemblyName = true;
                 }
@@ -887,7 +897,7 @@ testCStringEscaping(void) {
                     cursor += strlen(debugLine);
                 }
             }
-            CHECK(foundAssemblyName);
+            CHECK(foundAssemblyName != hasNul);
             /* Both functions have a signature directive and an end-instruction directive. */
             CHECK(lineCount == 4);
             checkClosed(&capture);

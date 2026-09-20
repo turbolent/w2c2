@@ -5,13 +5,14 @@
 #include "buffer.h"
 #include "array.h"
 #include "diagnostic.h"
+#include "name.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct WasmDebugSection {
-    char* name;
+    WasmName name;
     Buffer buffer;
 } WasmDebugSection;
 

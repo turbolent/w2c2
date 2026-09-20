@@ -27,17 +27,21 @@ trap(Trap trap) {
 
 static
 void*
-resolve(const char* module, const char* name) {
-    expect(strcmp(module, "module" SUFFIX) == 0, "import module bytes");
-    if (strcmp(name, "memory" SUFFIX) == 0) {
+resolve(WasmName module, WasmName name) {
+    expect(module.length == sizeof("module" SUFFIX) - 1
+        && memcmp(module.data, "module" SUFFIX, module.length) == 0, "import module bytes");
+    if (name.length == sizeof("memory" SUFFIX) - 1
+        && memcmp(name.data, "memory" SUFFIX, name.length) == 0) {
         imports[0]++;
         return importedMemory;
     }
-    if (strcmp(name, "table" SUFFIX) == 0) {
+    if (name.length == sizeof("table" SUFFIX) - 1
+        && memcmp(name.data, "table" SUFFIX, name.length) == 0) {
         imports[1]++;
         return &importedTable;
     }
-    if (strcmp(name, "global" SUFFIX) == 0) {
+    if (name.length == sizeof("global" SUFFIX) - 1
+        && memcmp(name.data, "global" SUFFIX, name.length) == 0) {
         imports[2]++;
         return &importedGlobal;
     }
@@ -56,10 +60,11 @@ main(void) {
     for (index = 0; index < 3; index++) {
         const wasmFuncExport export = instance.common.funcExports[index];
         expect(imports[index] == 1, "import resolution count");
-        expect(strcmp(export.name, names[index]) == 0, "export name bytes");
+        expect(export.name.length == strlen(names[index]), "export name length");
+        expect(memcmp(export.name.data, names[index], export.name.length) == 0, "export name bytes");
         expect(((U32 (*)(cstringsInstance*))export.func)(&instance) == 42, "export call");
     }
-    expect(instance.common.funcExports[3].name == NULL, "export terminator");
+    expect(instance.common.funcExports[3].name.data == NULL, "export terminator");
     cstringsFreeInstance(&instance);
     wasmTableFree(&importedTable);
     wasmMemoryFree(importedMemory);

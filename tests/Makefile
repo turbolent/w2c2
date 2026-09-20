@@ -43,7 +43,7 @@ endif
 
 .SILENT:
 
-.PHONY: run-tests runtime-lifecycle-test atomic-offsets-test c-strings-test gen gen-atomic-offsets gen-c-strings clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: run-tests runtime-lifecycle-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names clean clean-wasm-json clean-assertions clean-compiled
 
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
@@ -83,7 +83,16 @@ test_c_strings$(EXE): c_strings_test.c test_c_strings.c
 test_c_strings.c: gen/c_strings.wasm
 	$(W2C2) -g $< $@
 
-run-tests: atomic-offsets-test c-strings-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+binary-names-test: run-test-binary_names
+
+test_binary_names$(EXE): CFLAGS += -std=c89
+test_binary_names$(EXE): binary_names_test.c test_binary_names.c
+	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_binary_names.c: gen/binary_names.wasm
+	$(W2C2) $< $@
+
+run-tests: atomic-offsets-test c-strings-test binary-names-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -104,7 +113,7 @@ test_%.c: gen/%.wasm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-gen: gen-atomic-offsets gen-c-strings
+gen: gen-atomic-offsets gen-c-strings gen-binary-names
 	$(PYTHON3) gen.py
 
 gen-atomic-offsets:
@@ -113,6 +122,9 @@ gen-atomic-offsets:
 gen-c-strings:
 	wat2wasm --debug-names c_strings.wat -o gen/c_strings.wasm
 
+gen-binary-names:
+	wat2wasm binary_names.wat -o gen/binary_names.wasm
+
 gen-%:
 	$(PYTHON3) gen.py $*
 
@@ -120,5 +132,6 @@ clean:
 	-rm -f main.o test_*.o test_*.h
 	-rm -f test_atomic_offsets$(EXE) test_atomic_offsets.c
 	-rm -f test_c_strings$(EXE) test_c_strings.c
+	-rm -f test_binary_names$(EXE) test_binary_names.c
 	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)

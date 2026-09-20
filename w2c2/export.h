@@ -2,6 +2,7 @@
 #define W2C2_EXPORT_H
 
 #include "w2c2_base.h"
+#include "name.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,12 +22,12 @@ wasmExportKindDescription(
 );
 
 typedef struct WasmExport {
-    char* name;
+    WasmName name;
     WasmExportKind kind;
     U32 index;
 } WasmExport;
 
-static const WasmExport wasmEmptyExport = {NULL, wasmExportKindFunction, 0};
+static const WasmExport wasmEmptyExport = {{NULL, 0}, wasmExportKindFunction, 0};
 
 #ifdef __cplusplus
 }

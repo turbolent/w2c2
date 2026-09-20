@@ -4798,7 +4798,8 @@ wasi__threadX2Dspawn(
 
     /* Find the thread start function that must be exported by the module */
     for (; funcExport->func != NULL; funcExport++) {
-        if (strcmp(funcExport->name, "wasi_thread_start") == 0) {
+        if (funcExport->name.length == sizeof("wasi_thread_start") - 1
+            && memcmp(funcExport->name.data, "wasi_thread_start", funcExport->name.length) == 0) {
             startFunc = funcExport->func;
             break;
         }
