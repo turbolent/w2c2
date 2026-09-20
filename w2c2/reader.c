@@ -924,7 +924,7 @@ wasmReadMemoryType(
     WasmBool* shared,
     WasmModuleReaderError** error
 ) {
-    wasmReadLimits(reader, UINT32_MAX / WASM_PAGE_SIZE, min, max, shared, error);
+    wasmReadLimits(reader, WASM_MAX_PAGES, min, max, shared, error);
 }
 
 static
