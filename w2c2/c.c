@@ -300,8 +300,7 @@ wasmCWriteLocalsDeclarations(
         const WasmLocalsDeclaration localsDeclaration =
             function.localsDeclarations.declarations[localsDeclarationIndex];
 
-        const U32 endIndex = localIndex + localsDeclaration.count;
-        for (; localIndex < endIndex; localIndex++) {
+        for (; localIndex < localsDeclaration.endIndex; localIndex++) {
             if (pretty) {
                 wasmOutputString(file, indentation);
             }
