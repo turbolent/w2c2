@@ -497,7 +497,7 @@ wasmReadNameSection(
 
             if (subsectionID == wasmNameSubsectionIDFunctionNames) {
                 const size_t functionImportCount = reader->module->functionImports.length;
-                const U32 functionCount = assertSizeU32(functionImportCount) + reader->module->functions.count;
+                size_t functionCount;
                 const size_t previousFunctionNameCount =
                     reader->module->functionNames.length;
                 size_t initializedFunctionNameCount = previousFunctionNameCount;
@@ -522,7 +522,8 @@ wasmReadNameSection(
                 }
 
                 /* Allocate name entries for *all* functions */
-                if (!wasmNamesEnsureCapacity(
+                if (!arrayLengthAdd(functionImportCount, reader->module->functions.count, &functionCount)
+                    || !wasmNamesEnsureCapacity(
                     &reader->module->functionNames,
                     /* NOTE: allocate name entries for *all* functions,
                      * not just for functions with names (functionNameCount)
