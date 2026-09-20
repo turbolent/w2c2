@@ -1,3 +1,5 @@
+OBJCOPY ?= objcopy
+
 OBJLIST=$(filter-out rustwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 rust-wasi: rustwasi.o
@@ -6,6 +8,9 @@ rust-wasi: rustwasi.o
 
 datasegments.o: rustwasi.c
 	ld -r -b binary -o datasegments.o datasegments
+	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m9_rustX2DwasiData \
+		--redefine-sym _binary_datasegments_end=m9_rustX2DwasiDataEnd \
+		--redefine-sym _binary_datasegments_size=m9_rustX2DwasiDataSize datasegments.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

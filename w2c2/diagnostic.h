@@ -71,7 +71,8 @@ typedef enum WasmDiagnosticCode {
     wasmDiagnosticDwarfVersionUnsupported,
     wasmDiagnosticDwarfUnexpectedTag,
     wasmDiagnosticTranslationFailed,
-    wasmDiagnosticInvalidTranslationArgument
+    wasmDiagnosticInvalidTranslationArgument,
+    wasmDiagnosticDataSectionNameTooLong
 } WasmDiagnosticCode;
 
 typedef struct WasmDiagnosticReaderFailedInfo {

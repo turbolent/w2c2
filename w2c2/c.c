@@ -17,7 +17,6 @@
 static const char localNamePrefix = 'l';
 static const char globalNamePrefix = 'g';
 static const char memoryNamePrefix = 'm';
-static const char dataSegmentNamePrefix = 'd';
 static const char tableNamePrefix = 't';
 static const char stackNamePrefix = 's';
 static const char labelNamePrefix = 'L';
@@ -202,19 +201,6 @@ wasmCWriteTableUse(
         wasmOutputString(file, "i->");
         wasmCWriteTableName(file, tableIndex);
     }
-    return !file->failed;
-}
-
-/* TODO: add support for multiple modules */
-static
-W2C2_INLINE
-bool
-wasmCWriteDataSegmentName(
-    WasmOutput* file,
-    const U32 dataSegmentIndex
-) {
-    wasmOutputChar(file, dataSegmentNamePrefix);
-    wasmOutputU32(file, dataSegmentIndex);
     return !file->failed;
 }
 
@@ -1378,8 +1364,7 @@ wasmCWriteMemoryInitExpr(
             writer->typeStack->valueTypes[stackIndex2]
         ))
         MUST (wasmCWriteComma(writer))
-        /* TODO: add support for multiple modules */
-        MUST (wasmCWriteDataSegmentName(writer->output, instruction.dataSegmentIndex))
+        wasmCWriteDataSegmentName(writer->output, writer->moduleName, instruction.dataSegmentIndex);
         MUST (wasmCWriteChar(writer, '+'))
         MUST (wasmCWriteStackName(
             writer->output,
@@ -5005,13 +4990,13 @@ wasmCWriteExports(
 
 #define DATA_SEGMENT_CHUNK_LENGTH 18
 
-/* TODO: add support for multiple modules */
 static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteDataSegments(
     WasmOutput* file,
     const WasmModule* module,
+    const char* moduleName,
     const WasmDataSegmentMode mode,
     const bool pretty,
     WasmDiagnosticContext* diagnostics
@@ -5026,8 +5011,7 @@ wasmCWriteDataSegments(
                 const size_t byteCount = dataSegment.bytes.length;
 
                 wasmOutputString(file, "const U8 ");
-                /* TODO: add support for multiple modules */
-                wasmCWriteDataSegmentName(file, dataSegmentIndex);
+                wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
                 if (pretty) {
                     wasmOutputString(file, "[] = {");
                 } else {
@@ -5074,24 +5058,10 @@ wasmCWriteDataSegments(
         case wasmDataSegmentModeGNULD:
         case wasmDataSegmentModeSectcreate1:
         case wasmDataSegmentModeSectcreate2: {
-            U32 writtenCount = 0;
             U32 dataSegmentIndex = 0;
             for (; dataSegmentIndex < dataSegmentCount; dataSegmentIndex++) {
-                const WasmDataSegment dataSegment = module->dataSegments.dataSegments[dataSegmentIndex];
-                if (!dataSegment.passive) {
-                    continue;
-                }
-                if (writtenCount == 0) {
-                    wasmOutputString(file, "U8 ");
-                } else {
-                    wasmOutputChar(file, ',');
-                }
-                wasmOutputChar(file, '*');
-                /* TODO: add support for multiple modules */
-                wasmCWriteDataSegmentName(file, dataSegmentIndex);
-                writtenCount += 1;
-            }
-            if (writtenCount > 0) {
+                wasmOutputString(file, "const U8* ");
+                wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
                 wasmOutputString(file, ";\n");
             }
             break;
@@ -5110,6 +5080,7 @@ WARN_UNUSED_RESULT
 wasmCWriteDataSegmentsFromSection(
     WasmOutput* file,
     const WasmModule* module,
+    const char* moduleName,
     const WasmDataSegmentMode mode,
     WasmDiagnosticContext* diagnostics
 ) {
@@ -5123,13 +5094,17 @@ wasmCWriteDataSegmentsFromSection(
 
     switch (mode) {
         case wasmDataSegmentModeGNULD: {
-            wasmOutputString(file, "extern U8 _binary_datasegments_start[];\n\n");
-            wasmOutputString(file, "static U8* ds = _binary_datasegments_start;\n");
+            wasmOutputString(file, "extern const U8 ");
+            wasmCWriteDataName(file, moduleName);
+            wasmOutputString(file, "[];\n\n");
             break;
         }
         case wasmDataSegmentModeSectcreate1: {
-            wasmOutputString(file, "extern U8 data_segments_data __asm(\"section$start$__DATA$__datasegments\");\n\n");
-            wasmOutputString(file, "static U8* ds = &data_segments_data;\n");
+            wasmOutputString(file, "extern const U8 ");
+            wasmCWriteDataName(file, moduleName);
+            wasmOutputString(file, "[] __asm(\"section$start$__DATA$");
+            wasmCWriteModuleName(file, moduleName);
+            wasmOutputString(file, "\");\n\n");
             break;
         }
         case wasmDataSegmentModeSectcreate2: {
@@ -5145,8 +5120,6 @@ wasmCWriteDataSegmentsFromSection(
                 "#include <libc.h>\n"
                 "#define SECT_DATA_SIZE_TYPE int\n"
                 "#endif\n");
-            wasmOutputString(file, "SECT_DATA_SIZE_TYPE len = 0;\n"
-                "static char* ds = getsectdata(\"__DATA\", \"__datasegments\", &len);\n");
             break;
         }
         default: {
@@ -5331,6 +5304,21 @@ wasmCWriteInitDataSegments(
         wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "Instance* i) {\n");
 
+        if (dataSegmentMode == wasmDataSegmentModeSectcreate2) {
+            if (pretty) {
+                wasmOutputString(file, indentation);
+            }
+            wasmOutputString(file, "SECT_DATA_SIZE_TYPE len = 0;\n");
+            if (pretty) {
+                wasmOutputString(file, indentation);
+            }
+            wasmOutputString(file, "const U8* ");
+            wasmCWriteDataName(file, moduleName);
+            wasmOutputString(file, " = (const U8*)getsectdata(\"__DATA\", \"");
+            wasmCWriteModuleName(file, moduleName);
+            wasmOutputString(file, "\", &len);\n");
+        }
+
         {
             U32 dataSegmentIndex = 0;
             U64 byteOffset = 0;
@@ -5339,29 +5327,27 @@ wasmCWriteInitDataSegments(
                 const size_t dataSegmentLength = dataSegment.bytes.length;
                 const Buffer code = dataSegment.offset;
 
-                if (dataSegment.passive) {
-                    switch (dataSegmentMode) {
-                        case wasmDataSegmentModeGNULD:
-                        case wasmDataSegmentModeSectcreate1:
-                        case wasmDataSegmentModeSectcreate2: {
-                            /* Initialize the data segment variable */
-                            /* TODO: add support for multiple modules */
-                            wasmCWriteDataSegmentName(file, dataSegmentIndex);
-                            if (pretty) {
-                                wasmOutputString(file, " = ds + ");
-                                wasmOutputU64(file, byteOffset);
-                            } else {
-                                wasmOutputString(file, "=ds+");
-                                wasmOutputU64(file, byteOffset);
-                            }
-                            wasmOutputString(file, ";\n");
-                            break;
+                switch (dataSegmentMode) {
+                    case wasmDataSegmentModeGNULD:
+                    case wasmDataSegmentModeSectcreate1:
+                    case wasmDataSegmentModeSectcreate2: {
+                        /* Initialize the data segment variable */
+                        if (pretty) {
+                            wasmOutputString(file, indentation);
                         }
-                        case wasmDataSegmentModeArrays:
-                            /* The data segment variable is already initialized */
-                            break;
+                        wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
+                        wasmOutputString(file, pretty ? " = " : "=");
+                        wasmCWriteDataName(file, moduleName);
+                        wasmOutputString(file, pretty ? " + " : "+");
+                        wasmOutputU64(file, byteOffset);
+                        wasmOutputString(file, ";\n");
+                        break;
                     }
-                } else {
+                    case wasmDataSegmentModeArrays:
+                        /* The data segment variable is already initialized */
+                        break;
+                }
+                if (!dataSegment.passive) {
                     /* Load active segments */
                     if (code.data != NULL) {
                         if (pretty) {
@@ -5376,19 +5362,8 @@ wasmCWriteInitDataSegments(
                         );
                         wasmOutputString(file, ", ");
                         MUST (wasmCWriteConstantExpr(file, module, code, diagnostics))
-                        /* TODO: add support for multiple modules */
-                        switch (dataSegmentMode) {
-                            case wasmDataSegmentModeGNULD:
-                            case wasmDataSegmentModeSectcreate1:
-                            case wasmDataSegmentModeSectcreate2:
-                                wasmOutputString(file, ", ds+");
-                                wasmOutputU64(file, byteOffset);
-                                break;
-                            case wasmDataSegmentModeArrays:
-                                wasmOutputString(file, ", ");
-                                wasmCWriteDataSegmentName(file, dataSegmentIndex);
-                                break;
-                        }
+                        wasmOutputString(file, ", ");
+                        wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
                         wasmOutputString(file, ", ");
                         wasmOutputU64(file, (unsigned long) dataSegmentLength);
                         wasmOutputString(file, ");\n");
@@ -5950,6 +5925,7 @@ wasmCWriteModuleHeader(
     const WasmModule* module,
     const char* moduleName,
     const char* filename,
+    const WasmDataSegmentMode dataSegmentMode,
     const bool pretty,
     const bool debug,
     const bool multipleModules,
@@ -5977,6 +5953,18 @@ wasmCWriteModuleHeader(
     wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);
+    {
+        U32 dataSegmentIndex = 0;
+        for (; dataSegmentIndex < module->dataSegments.count; dataSegmentIndex++) {
+            wasmOutputString(file, "extern const U8");
+            wasmOutputString(file, dataSegmentMode == wasmDataSegmentModeArrays ? " " : "* ");
+            wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
+            wasmOutputString(file, dataSegmentMode == wasmDataSegmentModeArrays ? "[];\n" : ";\n");
+        }
+        if (module->dataSegments.count > 0) {
+            wasmOutputChar(file, '\n');
+        }
+    }
     MUST_OR_GOTO (cleanup, wasmCWriteModuleDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
     wasmOutputString(file, "void ");
     wasmCWriteModuleName(file, moduleName);
@@ -6512,6 +6500,7 @@ wasmCWriteModuleImplementation(
             MUST_OR_GOTO (cleanup, wasmCWriteDataSegmentsFromSection(
                 file,
                 module,
+                moduleName,
                 options.dataSegmentMode,
                 diagnostics
             ))
@@ -6530,7 +6519,7 @@ wasmCWriteModuleImplementation(
     diagnostics->location.outputName = filename;
 
     MUST_OR_GOTO (cleanup, wasmCWriteDataSegments(
-        file, module,
+        file, module, moduleName,
         options.dataSegmentMode,
         options.pretty,
         diagnostics
@@ -6645,6 +6634,30 @@ wasmCWriteModuleInternal(
             return false;
     }
 
+    if (options.dataSegmentMode == wasmDataSegmentModeSectcreate1
+        || options.dataSegmentMode == wasmDataSegmentModeSectcreate2) {
+        OutputBuffer sectionName = emptyOutputBuffer;
+        WasmOutput output;
+        bool written;
+        bool tooLong;
+        if (!outputBufferInitialize(&sectionName)) {
+            wasmDiagnosticReportAllocationFailed(diagnostics);
+            return false;
+        }
+        output = wasmOutputForBuffer(&sectionName, diagnostics);
+        wasmCWriteModuleName(&output, moduleName);
+        written = wasmOutputClose(&output);
+        tooLong = sectionName.length > 16;
+        outputBufferFree(&sectionName);
+        if (!written) {
+            return false;
+        }
+        if (tooLong) {
+            wasmDiagnosticReportDataSectionNameTooLong(diagnostics);
+            return false;
+        }
+    }
+
     nameLength = strlen(outputName);
     if (nameLength > (size_t)-1 - 3) {
         wasmDiagnosticReportInvalidWriterArgument(diagnostics);
@@ -6669,6 +6682,7 @@ wasmCWriteModuleInternal(
         module,
         moduleName,
         headerName,
+        options.dataSegmentMode,
         options.pretty,
         options.debug,
         options.multipleModules,

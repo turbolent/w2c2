@@ -30,6 +30,8 @@ expectName(
 
 typedef enum NameKind {
     moduleName,
+    dataName,
+    dataSegmentName,
     functionName,
     exportName,
     debugName
@@ -95,6 +97,12 @@ testCNames(void) {
         {moduleName, "fac", {NULL, 0}, 0, "m3_fac"},
         {moduleName, "9-\303\251_X", {NULL, 0}, 0, "m6_9X2DXC3XA9X5FX58"},
         {moduleName, "9_\303\251-X", {NULL, 0}, 0, "m6_9X5FXC3XA9X2DX58"},
+        {dataName, "fac", {NULL, 0}, 0, "m3_facData"},
+        {dataSegmentName, "fac", {NULL, 0}, 0, "m3_facData0"},
+        {dataSegmentName, "fac", {NULL, 0}, UINT32_MAX, "m3_facData4294967295"},
+        {dataSegmentName, "facData", {NULL, 0}, 0, "m7_facDataData0"},
+        {dataSegmentName, "9-\303\251_X", {NULL, 0}, 12, "m6_9X2DXC3XA9X5FX58Data12"},
+        {exportName, "fac", {"Data0", 5}, 0, "m3_facExport5_Data0"},
         {functionName, NULL, {NULL, 0}, 9, "f9"},
         {functionName, "fac", {NULL, 0}, 9, "m3_facFunction9"},
         {functionName, "fac", {NULL, 0}, UINT32_MAX, "m3_facFunction4294967295"},
@@ -133,6 +141,12 @@ testCNames(void) {
                 break;
             case functionName:
                 wasmCWriteFunctionName(&output, symbols[index].module, symbols[index].functionIndex);
+                break;
+            case dataName:
+                wasmCWriteDataName(&output, symbols[index].module);
+                break;
+            case dataSegmentName:
+                wasmCWriteDataSegmentName(&output, symbols[index].module, symbols[index].functionIndex);
                 break;
             case exportName:
                 wasmCWriteExportName(&output, symbols[index].module, symbols[index].name);

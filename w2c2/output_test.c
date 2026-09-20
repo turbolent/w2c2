@@ -403,6 +403,166 @@ testOutputEquivalence(WasmModule* module, WasmFunctionIDs ids) {
 
 static
 void
+testDataSymbols(void) {
+    /*
+     * One active segment containing A and one passive segment containing BC.
+     * The functions copy the passive segment and perform a zero-length copy
+     * from the active segment.
+     */
+    static U8 bytes[] = {
+        0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01, 0x60,
+        0x00, 0x00, 0x03, 0x03, 0x02, 0x00, 0x00, 0x05, 0x03, 0x01, 0x00, 0x01,
+        0x07, 0x18, 0x03, 0x06, 0x6D, 0x65, 0x6D, 0x6F, 0x72, 0x79, 0x02, 0x00,
+        0x03, 0x72, 0x75, 0x6E, 0x00, 0x00, 0x05, 0x65, 0x6D, 0x70, 0x74, 0x79,
+        0x00, 0x01, 0x0C, 0x01, 0x02, 0x0A, 0x1B, 0x02, 0x0C, 0x00, 0x41, 0x08,
+        0x41, 0x00, 0x41, 0x02, 0xFC, 0x08, 0x01, 0x00, 0x0B, 0x0C, 0x00, 0x41,
+        0x00, 0x41, 0x00, 0x41, 0x00, 0xFC, 0x08, 0x00, 0x00, 0x0B, 0x0B, 0x0B,
+        0x02, 0x00, 0x41, 0x00, 0x0B, 0x01, 0x41, 0x01, 0x02, 0x42, 0x43
+    };
+    static const char* const moduleNames[] = {"a-b", "a_b"};
+    static const char* const prefixes[] = {"m3_aX2Db", "m3_aX5Fb"};
+    WasmModuleReader reader = emptyWasmModuleReader;
+    WasmModuleReaderError* error = NULL;
+    WasmFunctionIDs ids;
+    size_t nameIndex;
+    reader.buffer.data = bytes;
+    reader.buffer.length = sizeof(bytes);
+    wasmModuleRead(&reader, &error);
+    CHECK(error == NULL);
+    ids = outputFunctionIDs(reader.module);
+    for (nameIndex = 0; nameIndex < 2; nameIndex++) {
+        unsigned int variant;
+        for (variant = 0; variant < 16; variant++) {
+            OutputCapture capture;
+            WasmCWriteModuleOptions options;
+            const CapturedOutput* header;
+            const CapturedOutput* implementation;
+            const char* source;
+            const char* prefix = prefixes[nameIndex];
+            char expected[128];
+            U32 segmentIndex;
+            captureInitialize(&capture);
+            options = captureOptions(&capture);
+            options.dataSegmentMode = (WasmDataSegmentMode)(variant % 4);
+            options.functionsPerFile = variant & 4 ? 1 : 2;
+            options.pretty = (variant & 8) != 0;
+            options.multipleModules = options.pretty;
+            CHECK(wasmCWriteModule(reader.module, moduleNames[nameIndex],
+                options, ids, emptyWasmFunctionIDs));
+            CHECK(capture.diagnosticCount == 0);
+            header = findOutput(&capture, "output-test.h");
+            implementation = findOutput(&capture, "output-test.c");
+            CHECK(header != NULL && implementation != NULL);
+            source = (const char*)implementation->bytes;
+            for (segmentIndex = 0; segmentIndex < 2; segmentIndex++) {
+                const CapturedOutput* function = implementation;
+                if (options.functionsPerFile == 1) {
+                    function = findOutput(&capture,
+                        segmentIndex == 0 ? "s0000000001.c" : "s0000000000.c");
+                    CHECK(function != NULL);
+                }
+                sprintf(expected, "%sData%lu+", prefix, (unsigned long)segmentIndex);
+                CHECK(strstr((const char*)function->bytes, expected) != NULL);
+                if (options.dataSegmentMode == wasmDataSegmentModeArrays) {
+                    sprintf(expected, "extern const U8 %sData%lu[];",
+                        prefix, (unsigned long)segmentIndex);
+                    CHECK(strstr((const char*)header->bytes, expected) != NULL);
+                    sprintf(expected, "const U8 %sData%lu[]%s{",
+                        prefix, (unsigned long)segmentIndex, options.pretty ? " = " : "=");
+                    CHECK(strstr(source, expected) != NULL);
+                } else {
+                    sprintf(expected, "extern const U8* %sData%lu;",
+                        prefix, (unsigned long)segmentIndex);
+                    CHECK(strstr((const char*)header->bytes, expected) != NULL);
+                    sprintf(expected, "const U8* %sData%lu;",
+                        prefix, (unsigned long)segmentIndex);
+                    CHECK(strstr(source, expected) != NULL);
+                    sprintf(expected, "%sData%lu%s%sData%s%lu;",
+                        prefix, (unsigned long)segmentIndex, options.pretty ? " = " : "=",
+                        prefix, options.pretty ? " + " : "+", (unsigned long)segmentIndex);
+                    CHECK(strstr(source, expected) != NULL);
+                }
+            }
+            sprintf(expected, ", %sData0, 1);", prefix);
+            CHECK(strstr(source, expected) != NULL);
+            switch (options.dataSegmentMode) {
+                case wasmDataSegmentModeArrays:
+                    CHECK(findOutput(&capture, "datasegments") == NULL);
+                    break;
+                case wasmDataSegmentModeGNULD:
+                    sprintf(expected, "extern const U8 %sData[];", prefix);
+                    CHECK(strstr(source, expected) != NULL);
+                    break;
+                case wasmDataSegmentModeSectcreate1:
+                    sprintf(expected, "%sData[] __asm(\"section$start$__DATA$%s\");",
+                        prefix, prefix);
+                    CHECK(strstr(source, expected) != NULL);
+                    break;
+                case wasmDataSegmentModeSectcreate2: {
+                    const char* init;
+                    const char* lookup;
+                    sprintf(expected, "InitDataSegments(%sInstance* i) {", prefix);
+                    init = strstr(source, expected);
+                    sprintf(expected, "getsectdata(\"__DATA\", \"%s\", &len);", prefix);
+                    lookup = strstr(source, expected);
+                    CHECK(init != NULL && lookup != NULL && lookup > init);
+                    break;
+                }
+            }
+            if (options.dataSegmentMode != wasmDataSegmentModeArrays) {
+                const CapturedOutput* data = findOutput(&capture, "datasegments");
+                CHECK(data != NULL && data->length == 3);
+                CHECK(memcmp(data->bytes, "ABC", 3) == 0);
+            }
+            checkClosed(&capture);
+            captureFree(&capture);
+        }
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(reader.module);
+}
+
+static
+void
+testDataSectionNameLimits(WasmModule* module, WasmFunctionIDs ids) {
+    static const struct {
+        const char* name;
+        bool fits;
+    } cases[] = {
+        {"abcdefghijkl", true},
+        {"abcdefghijklm", false},
+        {"swift-wasi", true},
+        {"swift_wasi1", false},
+        {"\360\237\230\200a", true},
+        {"\360\237\230\200ab", false}
+    };
+    size_t index;
+    for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+        unsigned int mode;
+        for (mode = 0; mode < 4; mode++) {
+            OutputCapture capture;
+            WasmCWriteModuleOptions options;
+            const bool accepted = cases[index].fits || mode < 2;
+            captureInitialize(&capture);
+            options = captureOptions(&capture);
+            options.dataSegmentMode = (WasmDataSegmentMode)mode;
+            CHECK(wasmCWriteModule(module, cases[index].name,
+                options, ids, emptyWasmFunctionIDs) == accepted);
+            if (accepted) {
+                CHECK(capture.diagnosticCount == 0);
+            } else {
+                CHECK(capture.diagnosticCount == 1);
+                CHECK(capture.diagnosticCode == wasmDiagnosticDataSectionNameTooLong);
+                CHECK(capture.opened == 0 && capture.count == 0);
+            }
+            checkClosed(&capture);
+            captureFree(&capture);
+        }
+    }
+}
+
+static
+void
 appendOutputDebugLine(WasmModule* module, U64 address, U64 number) {
     WasmDebugLine line;
     line.address = address;
@@ -1178,6 +1338,8 @@ testOutputs(void) {
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
+    testDataSymbols();
+    testDataSectionNameLimits(module, ids);
     testDebugLineLookup();
     testCStringEscaping();
     testWorkerCounts(module, ids, false);

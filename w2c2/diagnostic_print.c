@@ -210,6 +210,10 @@ wasmDiagnosticPrint(
             fprintf(file, "w2c2: invalid module writer argument\n");
             break;
         }
+        case wasmDiagnosticDataSectionNameTooLong: {
+            fprintf(file, "w2c2: encoded module name exceeds the 16-byte Mach-O section name limit\n");
+            break;
+        }
         case wasmDiagnosticOutputOpenFailed:
         case wasmDiagnosticOutputWriteFailed:
         case wasmDiagnosticOutputCloseFailed: {

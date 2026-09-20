@@ -107,6 +107,11 @@ wasmDiagnosticReportInvalidWriterArgument(
 );
 
 void
+wasmDiagnosticReportDataSectionNameTooLong(
+    WasmDiagnosticContext* context
+);
+
+void
 wasmDiagnosticReportOutputFailed(
     WasmDiagnosticContext* context,
     WasmDiagnosticCode code,
