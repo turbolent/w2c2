@@ -462,7 +462,6 @@ testModuleWriteCleanup(void) {
     WasmModuleReaderError* error = NULL;
     WasmCWriteModuleOptions options = emptyWasmCWriteModuleOptions;
     WasmFunctionIDs functionIDs = emptyWasmFunctionIDs;
-    U32 functionIndex = 0;
 
     reader.buffer.data = moduleBytes;
     reader.buffer.length = sizeof moduleBytes;
@@ -472,21 +471,9 @@ testModuleWriteCleanup(void) {
         exit(1);
     }
 
-    for (; functionIndex < reader.module->functions.count; functionIndex++) {
-        WasmFunctionID functionID = emptyWasmFunctionID;
-        memcpy(
-            functionID.hash,
-            reader.module->functions.functions[functionIndex].hash,
-            SHA1_DIGEST_LENGTH
-        );
-        functionID.functionIndex = functionIndex;
-        if (!wasmFunctionIDsAppend(&functionIDs, functionID)) {
-            fprintf(
-                stderr,
-                "FAIL testModuleLifecycle: function ID allocation failed\n"
-            );
-            exit(1);
-        }
+    if (!wasmFunctionIDsInitialize(reader.module->functions, false, &functionIDs)) {
+        fprintf(stderr, "FAIL testModuleLifecycle: function ID allocation failed\n");
+        exit(1);
     }
 
     options.outputName = outputPath;

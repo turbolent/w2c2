@@ -11,16 +11,16 @@
 typedef struct WasmFunction {
     U32 functionTypeIndex;
     WasmLocalsDeclarations localsDeclarations;
+    /* Borrowed encoding of local declarations and instructions. */
+    Buffer body;
     Buffer code;
     /* Offset relative to the code section start (function count) */
     size_t start;
-    /* Hash of the locals (as declared in the binary) and the code */
-    unsigned char hash[SHA1_DIGEST_LENGTH];
     WasmName exportName;
 } WasmFunction;
 
 static const WasmFunction wasmEmptyFunction =
-    {0, {NULL, 0}, {NULL, 0}, 0, SHA1_DIGEST_EMPTY, {NULL, 0}};
+    {0, {NULL, 0}, {NULL, 0}, {NULL, 0}, 0, {NULL, 0}};
 
 typedef struct WasmFunctionID {
     /* Hash of the locals (as declared in the binary) and the code */

@@ -36,13 +36,17 @@ wasmTranslate(
     if (error != NULL) {
         goto cleanup;
     }
-    if (!wasmSortedFunctionIDs(reader.module->functions, &functionIDs)) {
-        wasmDiagnosticReportAllocationFailed(&diagnostics);
-        goto cleanup;
-    }
     writeOptions = *options;
     if (writeOptions.functionsPerFile == 0) {
         writeOptions.functionsPerFile = reader.module->functions.count;
+    }
+    if (!wasmFunctionIDsInitialize(
+        reader.module->functions,
+        writeOptions.functionsPerFile < reader.module->functions.count,
+        &functionIDs
+    )) {
+        wasmDiagnosticReportAllocationFailed(&diagnostics);
+        goto cleanup;
     }
     result = wasmCWriteModule(
         reader.module, moduleName, writeOptions,

@@ -81,13 +81,16 @@ typedef struct WasmModule {
 } WasmModule;
 
 /*
+ * Builds IDs in source order with zero hashes when sortByHash is false.
+ * Otherwise, hashes the original encoded function bodies and sorts by hash.
  * On success, result owns a new array released with wasmFunctionIDsFree.
  * On failure, result is unchanged.
  */
 WasmBool
 WARN_UNUSED_RESULT
-wasmSortedFunctionIDs(
+wasmFunctionIDsInitialize(
     WasmFunctions functions,
+    WasmBool sortByHash,
     WasmFunctionIDs* result
 );
 

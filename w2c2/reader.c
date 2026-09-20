@@ -12,7 +12,6 @@
 #include "elementsegment.h"
 #include "debug.h"
 #include "name.h"
-#include "sha1.h"
 
 static const U8 wasmMagic[] = {
     0x00, 0x61, 0x73, 0x6D,
@@ -1640,11 +1639,9 @@ wasmReadCodeSection(
         /* Read local declarations */
         {
             const Buffer remainingBuffer = reader->buffer;
-            const U8* localsDeclarationsOffset = reader->buffer.data;
-
-            SHA1(localsDeclarationsOffset, codeSize, function->hash);
 
             reader->buffer.length = codeSize;
+            function->body = reader->buffer;
             if (!wasmReadCodeLocalsDeclarations(reader, &function->localsDeclarations)) {
                 static WasmModuleReaderError wasmModuleReaderError = {
                     wasmModuleReaderInvalidCodeSectionLocalsDeclarations

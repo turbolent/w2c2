@@ -470,7 +470,15 @@ main(
             goto cleanup;
         }
 
-        if (!wasmSortedFunctionIDs(reader.module->functions, &functionIDs)) {
+        if (functionsPerFile == 0) {
+            functionsPerFile = reader.module->functions.count;
+        }
+
+        if (!wasmFunctionIDsInitialize(
+            reader.module->functions,
+            functionsPerFile < reader.module->functions.count || referenceModulePath != NULL,
+            &functionIDs
+        )) {
             fprintf(stderr, "w2c2: failed to allocate function IDs\n");
             goto cleanup;
         }
@@ -487,8 +495,9 @@ main(
                 goto cleanup;
             }
 
-            if (!wasmSortedFunctionIDs(
+            if (!wasmFunctionIDsInitialize(
                 referenceReader.module->functions,
+                true,
                 &referenceFunctionIDs
             )) {
                 fprintf(stderr, "w2c2: failed to allocate reference function IDs\n");
@@ -521,10 +530,6 @@ main(
         } else {
             staticFunctionIDs = functionIDs;
             dynamicFunctionIDs = emptyWasmFunctionIDs;
-        }
-
-        if (functionsPerFile == 0) {
-            functionsPerFile = reader.module->functions.count;
         }
 
         outputNameStorage = (char*)malloc(outputPathLength + 1);
