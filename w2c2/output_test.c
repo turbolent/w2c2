@@ -16,6 +16,7 @@
 #endif
 
 #include "c.h"
+#include "c_file.h"
 #include "reader.h"
 #include "output_internal.h"
 #include "output_test.h"
@@ -385,7 +386,7 @@ testOutputEquivalence(WasmModule* module, WasmFunctionIDs ids) {
         CHECK(findOutput(&capture, "output-test.h") != NULL);
         CHECK(findOutput(&capture, "output-test.c") != NULL);
         if (options.dataSegmentMode != wasmDataSegmentModeArrays) {
-            const CapturedOutput* data = findOutput(&capture, "datasegments");
+            const CapturedOutput* data = findOutput(&capture, "m10_outputx54est.data");
             static const U8 expected[] = {0x00, 0xFF, 0x0A, 0x00};
             CHECK(data != NULL && data->kind == wasmOutputData);
             CHECK(data->length == sizeof(expected));
@@ -421,6 +422,7 @@ testDataSymbols(void) {
     };
     static const char* const moduleNames[] = {"a-b", "a_b"};
     static const char* const prefixes[] = {"m3_aX2Db", "m3_aX5Fb"};
+    static const char* const filePrefixes[] = {"m3_ax2db", "m3_ax5fb"};
     WasmModuleReader reader = emptyWasmModuleReader;
     WasmModuleReaderError* error = NULL;
     WasmFunctionIDs ids;
@@ -440,7 +442,9 @@ testDataSymbols(void) {
             const char* source;
             const char* prefix = prefixes[nameIndex];
             char expected[128];
+            char dataName[64];
             U32 segmentIndex;
+            sprintf(dataName, "%s.data", filePrefixes[nameIndex]);
             captureInitialize(&capture);
             options = captureOptions(&capture);
             options.dataSegmentMode = (WasmDataSegmentMode)(variant % 4);
@@ -457,8 +461,9 @@ testDataSymbols(void) {
             for (segmentIndex = 0; segmentIndex < 2; segmentIndex++) {
                 const CapturedOutput* function = implementation;
                 if (options.functionsPerFile == 1) {
-                    function = findOutput(&capture,
-                        segmentIndex == 0 ? "s0000000001.c" : "s0000000000.c");
+                    sprintf(expected, "%s.s%010lu.c", filePrefixes[nameIndex],
+                        (unsigned long)(1 - segmentIndex));
+                    function = findOutput(&capture, expected);
                     CHECK(function != NULL);
                 }
                 sprintf(expected, "%sData%lu+", prefix, (unsigned long)segmentIndex);
@@ -487,7 +492,7 @@ testDataSymbols(void) {
             CHECK(strstr(source, expected) != NULL);
             switch (options.dataSegmentMode) {
                 case wasmDataSegmentModeArrays:
-                    CHECK(findOutput(&capture, "datasegments") == NULL);
+                    CHECK(findOutput(&capture, dataName) == NULL);
                     break;
                 case wasmDataSegmentModeGNULD:
                     sprintf(expected, "extern const U8 %sData[];", prefix);
@@ -510,7 +515,7 @@ testDataSymbols(void) {
                 }
             }
             if (options.dataSegmentMode != wasmDataSegmentModeArrays) {
-                const CapturedOutput* data = findOutput(&capture, "datasegments");
+                const CapturedOutput* data = findOutput(&capture, dataName);
                 CHECK(data != NULL && data->length == 3);
                 CHECK(memcmp(data->bytes, "ABC", 3) == 0);
             }
@@ -621,7 +626,7 @@ testDebugLineLookup(void) {
     static const U32 offsets[] = {0, 1, 1, 3, 4, 5, 6};
     static const U32 fileSizes[] = {4, 2, 1, 0};
     static const char* fileNames[] = {
-        "s0000000000.c", "s0000000001.c", "s0000000002.c", "s0000000003.c"
+        "m10_outputx54est.s0000000000.c", "m10_outputx54est.s0000000001.c", "m10_outputx54est.s0000000002.c", "m10_outputx54est.s0000000003.c"
     };
     /*
      * Expected directives at the function signature,
@@ -812,7 +817,7 @@ static
 void
 testProviderFailures(WasmModule* module, WasmFunctionIDs ids, U32 threadCount) {
     static const char* names[] = {
-        "output-test.h", "output-test.c", "s0000000000.c", "datasegments", "s0000000001.c"
+        "output-test.h", "output-test.c", "m10_outputx54est.s0000000000.c", "m10_outputx54est.data", "m10_outputx54est.s0000000001.c"
     };
     size_t index;
     OutputFailure failure;
@@ -836,8 +841,8 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids, U32 threadCount) {
                 ? wasmDiagnosticOutputOpenFailed : failure == outputWriteFailure
                 ? wasmDiagnosticOutputWriteFailed : wasmDiagnosticOutputCloseFailed));
             CHECK(findOutput(&capture, names[index]) == NULL);
-            if (strcmp(names[index], "s0000000001.c") == 0) {
-                CHECK(findOutput(&capture, "s0000000000.c") != NULL);
+            if (strcmp(names[index], "m10_outputx54est.s0000000001.c") == 0) {
+                CHECK(findOutput(&capture, "m10_outputx54est.s0000000000.c") != NULL);
                 CHECK(findOutput(&capture, "output-test.c") == NULL);
             }
             if (index == 1 && failure <= outputWriteFailure) {
@@ -853,6 +858,89 @@ testProviderFailures(WasmModule* module, WasmFunctionIDs ids, U32 threadCount) {
             checkClosed(&capture);
             captureFree(&capture);
         }
+    }
+}
+
+static
+void
+testOutputNames(WasmModule* module, WasmFunctionIDs ids) {
+    static const struct {
+        const char* name;
+        U32 functionsPerFile;
+        size_t dynamicCount;
+        WasmDataSegmentMode dataMode;
+        WasmDiagnosticCode error;
+    } cases[] = {
+        {"output-test.h", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"output-test.H", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"w2c2_base.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"W2C2_BASE.C", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.s0000000000.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.s0000000001.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"M10_OUTPUTX54EST.S0000000000.C", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.s0000000000.c", 0, 0, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.d0000000000.c", 1, 1, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.d0000000001.c", 1, 2, wasmDataSegmentModeArrays, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.data", 1, 0, wasmDataSegmentModeGNULD, wasmDiagnosticOutputNameConflict},
+        {"M10_OUTPUTX54EST.DATA", 1, 0, wasmDataSegmentModeSectcreate1, wasmDiagnosticOutputNameConflict},
+        {"m10_outputx54est.data", 1, 0, wasmDataSegmentModeSectcreate2, wasmDiagnosticOutputNameConflict},
+        {"", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {".", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"..", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"dir/file.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"dir\\file.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"quote\".c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"line\n.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"line\r.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"tab\t.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"delete\177.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"tri?" "?/.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"tri?" "?=.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"tri?" "?-.c", 1, 0, wasmDataSegmentModeArrays, wasmDiagnosticInvalidOutputName},
+        {"name with spaces.c", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"name", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"question?.c", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"question?" "?.c", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.s0000000002.c", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.s0000000000.c", 2, 0, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.s0000000001.c", 1, 1, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.d0000000001.c", 1, 1, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.d0000000000.c", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"m10_outputx54est.data", 1, 0, wasmDataSegmentModeArrays, 0},
+        {"m3_fac.s0000000000.c", 1, 0, wasmDataSegmentModeArrays, 0}
+    };
+    size_t index;
+    for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+        OutputCapture capture;
+        WasmCWriteModuleOptions options;
+        WasmFunctionIDs staticIDs = ids;
+        WasmFunctionIDs dynamicIDs = ids;
+        captureInitialize(&capture);
+        options = captureOptions(&capture);
+        options.outputName = cases[index].name;
+        options.functionsPerFile = cases[index].functionsPerFile;
+        options.dataSegmentMode = cases[index].dataMode;
+        staticIDs.length -= cases[index].dynamicCount;
+        dynamicIDs.functionIDs += staticIDs.length;
+        dynamicIDs.length = cases[index].dynamicCount;
+        CHECK(wasmCWriteModule(module, "outputTest", options, staticIDs, dynamicIDs)
+            == (cases[index].error == 0));
+        if (cases[index].error != 0) {
+            CHECK(capture.diagnosticCount == 1 && capture.diagnosticCode == cases[index].error);
+            CHECK(capture.opened == 0 && capture.count == 0);
+        } else {
+            size_t fileIndex;
+            CHECK(capture.diagnosticCount == 0);
+            CHECK(findOutput(&capture, cases[index].name) != NULL);
+            for (fileIndex = 0; fileIndex < capture.count; fileIndex++) {
+                size_t previous;
+                for (previous = 0; previous < fileIndex; previous++) {
+                    CHECK(!wasmCFileNamesEqual(capture.files[fileIndex].name, capture.files[previous].name));
+                }
+            }
+        }
+        checkClosed(&capture);
+        captureFree(&capture);
     }
 }
 
@@ -1166,11 +1254,11 @@ testAbortedTranslation(WasmModule* module, WasmFunctionIDs ids, U32 threadCount)
     module->functions.functions[0].code.length = sizeof(invalidCall);
     /* A prior diagnostic suppresses secondary output errors. */
     capture.failure = outputCloseFailure;
-    capture.failureName = "s0000000000.c";
+    capture.failureName = "m10_outputx54est.s0000000000.c";
     CHECK(!wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
     CHECK(capture.diagnosticCount == 1);
     CHECK(capture.diagnosticCode == wasmDiagnosticInvalidInstruction);
-    CHECK(findOutput(&capture, "s0000000000.c") == NULL);
+    CHECK(findOutput(&capture, "m10_outputx54est.s0000000000.c") == NULL);
     CHECK(findOutput(&capture, "output-test.c") == NULL);
     checkClosed(&capture);
     module->functions.functions[0].code = previous;
@@ -1192,7 +1280,7 @@ handoffOpen(
     WasmOutputSink* output, int* systemError
 ) {
     HandoffOutput* handoff = (HandoffOutput*)context;
-    if (kind == wasmOutputC && (name[0] == 's' || name[0] == 'd')) {
+    if (kind == wasmOutputC && strcmp(name, "output-test.c") != 0) {
         struct timespec deadline;
         deadline.tv_sec = time(NULL) + 10;
         deadline.tv_nsec = 0;
@@ -1338,6 +1426,7 @@ testOutputs(void) {
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
     testOutputEquivalence(module, ids);
+    testOutputNames(module, ids);
     testDataSymbols();
     testDataSectionNameLimits(module, ids);
     testDebugLineLookup();

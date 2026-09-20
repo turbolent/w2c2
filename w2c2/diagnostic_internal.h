@@ -112,6 +112,13 @@ wasmDiagnosticReportDataSectionNameTooLong(
 );
 
 void
+wasmDiagnosticReportOutputName(
+    WasmDiagnosticContext* context,
+    WasmDiagnosticCode code,
+    const char* name
+);
+
+void
 wasmDiagnosticReportOutputFailed(
     WasmDiagnosticContext* context,
     WasmDiagnosticCode code,

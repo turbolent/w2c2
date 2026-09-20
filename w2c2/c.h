@@ -9,8 +9,6 @@
 extern "C" {
 #endif
 
-#define W2C2_IMPL_FILENAME_LENGTH 13
-
 /*
  * Name components contain the original byte length,
  * an underscore,

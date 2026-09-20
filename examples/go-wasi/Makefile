@@ -5,10 +5,10 @@ W2C2 ?= ../../w2c2/w2c2
 MODE ?= gnu-ld
 
 ifneq (,$(findstring sectcreate,$(MODE)))
-	LDFLAGS += -sectcreate __DATA m6_gowasi datasegments
+	LDFLAGS += -sectcreate __DATA m6_gowasi m6_gowasi.data
 endif
 ifeq ($(MODE),gnu-ld)
-    OBJS += datasegments.o
+    OBJS += m6_gowasi.data.o
 endif
 
 go-wasi: gowasi.o
@@ -22,4 +22,4 @@ gowasi.wasm: src/main.go
 
 .PHONY: clean
 clean:
-	rm -f go-wasi gowasi.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f go-wasi gowasi.h m6_gowasi.data $(filter-out main.c,$(wildcard *.c)) *.o

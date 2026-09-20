@@ -20,6 +20,7 @@
 #include "file.h"
 #include "reader.h"
 #include "c.h"
+#include "c_file.h"
 #include "compat.h"
 #include "diagnostic_print.h"
 #include "output_buffer.h"
@@ -166,15 +167,15 @@ wasmSplitStaticAndDynamicFunctions(
 
 static
 void
-cleanImplementationFiles(const char* directory) {
+cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     const char* name;
     char* path;
     char* pattern;
-    size_t index;
-    size_t nameLength;
-    bool allDigits;
+    char kind;
+    U32 fileIndex;
 #if HAS_GLOB
     glob_t globbuf = {0};
+    size_t index;
     size_t pathIndex = 0;
     int globResult;
     OutputBuffer escapedDirectory = emptyOutputBuffer;
@@ -232,20 +233,9 @@ cleanImplementationFiles(const char* directory) {
 #else
 #error "Unable to find files"
 #endif
-        allDigits = true;
-        nameLength = strlen(name);
-        if (nameLength != W2C2_IMPL_FILENAME_LENGTH
-            || (name[0] != 'd' && name[0] != 's')
-            || strcmp(name + nameLength - 2, ".c") != 0) {
-            continue;
-        }
-        for (index = 1; index < nameLength - 2; index++) {
-            if (name[index] < '0' || name[index] > '9') {
-                allDigits = false;
-                break;
-            }
-        }
-        if (!allDigits) {
+        if (!wasmCImplementationFileIndex(name, names->prefix, &kind, &fileIndex)
+            || wasmCFileNamesEqual(name, names->implementation)
+            || wasmCFileNamesEqual(name, names->header)) {
             continue;
         }
         path = wasmPathJoin(directory, name);
@@ -379,6 +369,7 @@ main(
                     "  -g         Generate debug information (function names using asm(); #line directives based on DWARF, if available)\n"
                     "  -p         Generate pretty code\n"
                     "  -m         Support multiple modules (prefixes function names)\n"
+                    "  -c         Clean existing split sources for this module\n"
                     "  -r         Reference module\n",
                     stderr
                 );
@@ -532,10 +523,6 @@ main(
         outputName = wasmBasename(outputNameStorage);
         outputDirectory = dirname(outputDirectoryStorage);
 
-        if (clean) {
-            cleanImplementationFiles(outputDirectory);
-        }
-
         writeOptions.diagnostics.report = reportDiagnostic;
         writeOptions.outputName = outputName;
         writeOptions.output = wasmFileOutputProvider(outputDirectory);
@@ -545,6 +532,18 @@ main(
         writeOptions.debug = debug != false;
         writeOptions.multipleModules = multipleModules != false;
         writeOptions.dataSegmentMode = dataSegmentMode;
+
+        if (clean) {
+            WasmCOutputNames names = emptyWasmCOutputNames;
+            WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+            diagnostics.diagnostics = writeOptions.diagnostics;
+            if (!wasmCOutputNamesInitialize(&names, reader.module, moduleName, writeOptions,
+                staticFunctionIDs, dynamicFunctionIDs, &diagnostics)) {
+                goto cleanup;
+            }
+            cleanImplementationFiles(outputDirectory, &names);
+            wasmCOutputNamesFree(&names);
+        }
 
         if (!wasmCWriteModule(
             reader.module,

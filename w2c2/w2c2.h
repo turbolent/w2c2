@@ -9,6 +9,10 @@ typedef struct WasmCWriteModuleOptions {
     /*
      * Logical C filename;
      * the provider chooses its destination.
+     * Must be a basename usable in a quoted C include,
+     * with no quotes, backslashes, control characters, or trigraph sequences.
+     * Generated filenames must not conflict with this name or the runtime header;
+     * comparisons ignore ASCII case.
      */
     const char* outputName;
     WasmOutputProvider output;

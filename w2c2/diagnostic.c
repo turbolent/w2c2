@@ -224,6 +224,17 @@ wasmDiagnosticReportDataSectionNameTooLong(
 }
 
 void
+wasmDiagnosticReportOutputName(
+    WasmDiagnosticContext* context,
+    WasmDiagnosticCode code,
+    const char* name
+) {
+    WasmDiagnostic diagnostic = wasmDiagnosticInitialize(code, wasmDiagnosticError);
+    diagnostic.info.outputName.name = name;
+    wasmDiagnosticReport(context, &diagnostic);
+}
+
+void
 wasmDiagnosticReportOutputFailed(
     WasmDiagnosticContext* context,
     WasmDiagnosticCode code,

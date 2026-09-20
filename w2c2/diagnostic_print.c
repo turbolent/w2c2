@@ -214,6 +214,16 @@ wasmDiagnosticPrint(
             fprintf(file, "w2c2: encoded module name exceeds the 16-byte Mach-O section name limit\n");
             break;
         }
+        case wasmDiagnosticInvalidOutputName:
+        case wasmDiagnosticOutputNameConflict: {
+            const char* name = diagnostic->info.outputName.name;
+            fprintf(file, diagnostic->code == wasmDiagnosticInvalidOutputName
+                ? "w2c2: output name cannot be used in a generated include: "
+                : "w2c2: output name conflicts with another generated file or the runtime header: ");
+            wasmDiagnosticPrintName(file, wasmNameFromBytes((char*)name, strlen(name)));
+            fprintf(file, "\n");
+            break;
+        }
         case wasmDiagnosticOutputOpenFailed:
         case wasmDiagnosticOutputWriteFailed:
         case wasmDiagnosticOutputCloseFailed: {

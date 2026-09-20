@@ -226,8 +226,8 @@ void
 testOutputFailures(void) {
 #if HAS_UNISTD
     static const char* names[] = {
-        "diagnostic-test.h", "diagnostic-test.c", "s0000000000.c",
-        "s0000000001.c", "datasegments"
+        "diagnostic-test.h", "diagnostic-test.c", "m10_diagnostic.s0000000000.c",
+        "m10_diagnostic.s0000000001.c", "m10_diagnostic.data"
     };
     WasmModule* module = readDiagnosticModule();
     WasmFunctionIDs ids = diagnosticFunctionIDs(module);
@@ -512,16 +512,16 @@ testDiagnostics(void) {
     testSilentDiagnostics();
     CHECK(remove("diagnostic-test.c") == 0);
     CHECK(remove("diagnostic-test.h") == 0);
-    CHECK(remove("s0000000000.c") == 0);
-    CHECK(remove("s0000000001.c") == 0);
+    CHECK(remove("m10_diagnostic.s0000000000.c") == 0);
+    CHECK(remove("m10_diagnostic.s0000000001.c") == 0);
 #if HAS_PTHREAD
     CHECK(remove("diagnostic-static.c") == 0);
     CHECK(remove("diagnostic-static.h") == 0);
     CHECK(remove("diagnostic-dynamic.c") == 0);
     CHECK(remove("diagnostic-dynamic.h") == 0);
-    CHECK(remove("d0000000000.c") == 0);
+    CHECK(remove("m10_diagnostic.d0000000000.c") == 0);
     /* The first worker failure may stop translation before the second file is created. */
-    CHECK(remove("d0000000001.c") == 0 || errno == ENOENT);
+    CHECK(remove("m10_diagnostic.d0000000001.c") == 0 || errno == ENOENT);
 #endif
     fprintf(stderr, "PASS testDiagnostics\n");
 }

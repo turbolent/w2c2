@@ -10,6 +10,7 @@
 #include "w2c2_base.h"
 #include "c.h"
 #include "c_name.h"
+#include "c_file.h"
 #include "instruction.h"
 #include "typestack.h"
 #include "labelstack.h"
@@ -5081,10 +5082,10 @@ wasmCWriteDataSegmentsFromSection(
     WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
+    const char* filename,
     const WasmDataSegmentMode mode,
     WasmDiagnosticContext* diagnostics
 ) {
-    static const char* const filename = "datasegments";
     const U32 dataSegmentCount = module->dataSegments.count;
 
     U32 dataSegmentIndex = 0;
@@ -6090,7 +6091,7 @@ WARN_UNUSED_RESULT
 wasmCWriteImplementationFile(
     const WasmModule* module,
     const char* moduleName,
-    const char* headerName,
+    const WasmCOutputNames* names,
     const char filePrefix,
     const U32 fileIndex,
     const U32 functionsPerFile,
@@ -6104,7 +6105,7 @@ wasmCWriteImplementationFile(
 ) {
     WasmOutput output;
     WasmOutput* file = &output;
-    char filename[W2C2_IMPL_FILENAME_LENGTH+1];
+    char* filename;
     const U32 functionCount = (U32)functionIDs.length;
     bool result = false;
 
@@ -6118,14 +6119,18 @@ wasmCWriteImplementationFile(
         return true;
     }
 
-    sprintf(filename, "%c%010u.c", filePrefix, fileIndex);
+    filename = wasmCImplementationFileName(names->prefix, filePrefix, fileIndex);
+    if (filename == NULL) {
+        wasmDiagnosticReportAllocationFailed(diagnostics);
+        return false;
+    }
     diagnostics->location.outputName = filename;
     diagnostics->location.hasFunctionIndex = false;
     if (!wasmOutputOpen(file, provider, filename, wasmOutputC, diagnostics)) {
-        return false;
+        goto finish;
     }
 
-    wasmCWriteIncludes(file, headerName);
+    wasmCWriteIncludes(file, names->header);
 
     MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
         file,
@@ -6147,9 +6152,13 @@ cleanup:
     diagnostics->location.outputName = filename;
     if (!result) {
         wasmOutputAbort(file);
-        return false;
+    } else {
+        result = wasmOutputClose(file);
     }
-    return wasmOutputClose(file);
+finish:
+    diagnostics->location.outputName = NULL;
+    free(filename);
+    return result;
 }
 
 #if HAS_PTHREAD
@@ -6160,7 +6169,7 @@ typedef struct WasmCImplementationWriterTask {
     U32 functionsPerFile;
     const WasmModule* module;
     const char* moduleName;
-    const char* headerName;
+    const WasmCOutputNames* names;
     U32 startFunctionIDIndex;
     WasmFunctionIDs functionIDs;
     bool pretty;
@@ -6254,7 +6263,7 @@ wasmCImplementationWriterThread(
 
             const WasmModule* module = task->module;
             const char* moduleName = task->moduleName;
-            const char* headerName = task->headerName;
+            const WasmCOutputNames* names = task->names;
             const char filePrefix = task->filePrefix;
             const U32 fileIndex = task->fileIndex;
             const U32 functionsPerFile = task->functionsPerFile;
@@ -6273,7 +6282,7 @@ wasmCImplementationWriterThread(
                 const bool result = wasmCWriteImplementationFile(
                     module,
                     moduleName,
-                    headerName,
+                    names,
                     filePrefix,
                     fileIndex,
                     functionsPerFile,
@@ -6313,23 +6322,18 @@ WARN_UNUSED_RESULT
 wasmCWriteModuleImplementationFiles(
     const WasmModule* module,
     const char* moduleName,
-    const char* headerName,
+    const WasmCOutputNames* names,
     WasmFunctionIDs functionIDs,
     char filePrefix,
     WasmCWriteModuleOptions options,
     WasmDiagnosticContext* diagnostics
 ) {
     U32 fileIndex = 0;
-    const size_t functionCount = functionIDs.length;
-    U32 functionsPerFile = options.functionsPerFile;
-    size_t fileCount = 0;
-    if (functionCount == 0) {
+    const size_t fileCount = filePrefix == 's' ? names->staticCount : names->dynamicCount;
+    const U32 functionsPerFile = options.functionsPerFile == 0 ? UINT32_MAX : options.functionsPerFile;
+    if (fileCount == 0) {
         return true;
     }
-    if (functionsPerFile == 0) {
-        functionsPerFile = UINT32_MAX;
-    }
-    fileCount = 1 + (functionCount - 1) / functionsPerFile;
 
 #if HAS_PTHREAD
     if (options.threadCount > 1 && fileCount > 1) {
@@ -6360,7 +6364,7 @@ wasmCWriteModuleImplementationFiles(
         task.functionsPerFile = functionsPerFile;
         task.module = module;
         task.moduleName = moduleName;
-        task.headerName = headerName;
+        task.names = names;
         task.pretty = options.pretty;
         task.debug = options.debug;
         task.multipleModules = options.multipleModules;
@@ -6448,7 +6452,7 @@ finish:
         if (!wasmCWriteImplementationFile(
             module,
             moduleName,
-            headerName,
+            names,
             filePrefix,
             fileIndex,
             functionsPerFile,
@@ -6473,8 +6477,7 @@ WARN_UNUSED_RESULT
 wasmCWriteModuleImplementation(
     const WasmModule* module,
     const char* moduleName,
-    const char* filename,
-    const char* headerName,
+    const WasmCOutputNames* names,
     const WasmFunctionIDs staticFunctionIDs,
     const WasmFunctionIDs dynamicFunctionIDs,
     const WasmCWriteModuleOptions options,
@@ -6483,6 +6486,7 @@ wasmCWriteModuleImplementation(
     /* Create file */
     WasmOutput output;
     WasmOutput* file = &output;
+    const char* filename = names->implementation;
     bool result = false;
 
     diagnostics->location.outputName = filename;
@@ -6491,7 +6495,7 @@ wasmCWriteModuleImplementation(
         return false;
     }
 
-    wasmCWriteIncludes(file, headerName);
+    wasmCWriteIncludes(file, names->header);
 
     switch (options.dataSegmentMode) {
         case wasmDataSegmentModeGNULD:
@@ -6501,6 +6505,7 @@ wasmCWriteModuleImplementation(
                 file,
                 module,
                 moduleName,
+                names->data,
                 options.dataSegmentMode,
                 diagnostics
             ))
@@ -6531,9 +6536,7 @@ wasmCWriteModuleImplementation(
         goto cleanup;
     }
 
-    if (options.functionsPerFile >= module->functions.count
-        && dynamicFunctionIDs.length == 0)
-    {
+    if (!names->split) {
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionImplementations(
             file,
             module,
@@ -6551,7 +6554,7 @@ wasmCWriteModuleImplementation(
         MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
             module,
             moduleName,
-            headerName,
+            names,
             staticFunctionIDs,
             's',
             options,
@@ -6561,7 +6564,7 @@ wasmCWriteModuleImplementation(
         MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementationFiles(
             module,
             moduleName,
-            headerName,
+            names,
             dynamicFunctionIDs,
             'd',
             options,
@@ -6612,13 +6615,11 @@ wasmCWriteModuleInternal(
     WasmDiagnosticContext* diagnostics
 ) {
     const char* outputName = options.outputName;
-    char* headerName;
-    size_t nameLength;
+    WasmCOutputNames names = emptyWasmCOutputNames;
     bool result = false;
 
     if (module == NULL || moduleName == NULL || outputName == NULL
-        || outputName[0] == '\0' || options.output.open == NULL
-        || strchr(outputName, '/') != NULL || strchr(outputName, '\\') != NULL) {
+        || options.output.open == NULL) {
         wasmDiagnosticReportInvalidWriterArgument(diagnostics);
         return false;
     }
@@ -6634,54 +6635,15 @@ wasmCWriteModuleInternal(
             return false;
     }
 
-    if (options.dataSegmentMode == wasmDataSegmentModeSectcreate1
-        || options.dataSegmentMode == wasmDataSegmentModeSectcreate2) {
-        OutputBuffer sectionName = emptyOutputBuffer;
-        WasmOutput output;
-        bool written;
-        bool tooLong;
-        if (!outputBufferInitialize(&sectionName)) {
-            wasmDiagnosticReportAllocationFailed(diagnostics);
-            return false;
-        }
-        output = wasmOutputForBuffer(&sectionName, diagnostics);
-        wasmCWriteModuleName(&output, moduleName);
-        written = wasmOutputClose(&output);
-        tooLong = sectionName.length > 16;
-        outputBufferFree(&sectionName);
-        if (!written) {
-            return false;
-        }
-        if (tooLong) {
-            wasmDiagnosticReportDataSectionNameTooLong(diagnostics);
-            return false;
-        }
-    }
-
-    nameLength = strlen(outputName);
-    if (nameLength > (size_t)-1 - 3) {
-        wasmDiagnosticReportInvalidWriterArgument(diagnostics);
-        return false;
-    }
-    headerName = (char*)malloc(nameLength + 3);
-    if (headerName == NULL) {
-        wasmDiagnosticReportAllocationFailed(diagnostics);
-        return false;
-    }
-    strcpy(headerName, outputName);
-
-    {
-        char* headerExt = strrchr(headerName, '.');
-        if (headerExt == NULL) {
-            headerExt = headerName + strlen(headerName);
-        }
-        strcpy(headerExt, ".h");
-    }
+    MUST_OR_GOTO (cleanup, wasmCOutputNamesInitialize(
+        &names, module, moduleName, options,
+        staticFunctionIDs, dynamicFunctionIDs, diagnostics
+    ))
 
     MUST_OR_GOTO (cleanup, wasmCWriteModuleHeader(
         module,
         moduleName,
-        headerName,
+        names.header,
         options.dataSegmentMode,
         options.pretty,
         options.debug,
@@ -6693,8 +6655,7 @@ wasmCWriteModuleInternal(
     MUST_OR_GOTO (cleanup, wasmCWriteModuleImplementation(
         module,
         moduleName,
-        outputName,
-        headerName,
+        &names,
         staticFunctionIDs,
         dynamicFunctionIDs,
         options,
@@ -6704,7 +6665,7 @@ wasmCWriteModuleInternal(
     result = true;
 
 cleanup:
-    free(headerName);
+    wasmCOutputNamesFree(&names);
     diagnostics->location.outputName = NULL;
     return result;
 }

@@ -7,6 +7,7 @@
 #include "diagnostic_test.h"
 #include "output_test.h"
 #include "c_name_test.h"
+#include "c_file_test.h"
 
 int
 main(void) {
@@ -21,5 +22,6 @@ main(void) {
     testDiagnostics();
     testOutputs();
     testCNames();
+    testCFileNames();
     return 0;
 }

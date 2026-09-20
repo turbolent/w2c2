@@ -5,25 +5,58 @@
 
 static
 W2C2_INLINE
+bool
+wasmCNameByteIsLiteral(const U8 c, const bool filename) {
+    return c != (filename ? 'x' : 'X')
+        && ((c >= 'a' && c <= 'z')
+            || (!filename && c >= 'A' && c <= 'Z')
+            || (c >= '0' && c <= '9'));
+}
+
+static
+W2C2_INLINE
 void
 wasmCWriteNameComponent(
     WasmOutput* file,
-    const WasmName name
+    const WasmName name,
+    const bool filename
 ) {
+    const char* hex = filename ? "0123456789abcdef" : "0123456789ABCDEF";
     size_t index;
     wasmOutputU64(file, name.length);
     wasmOutputChar(file, '_');
     for (index = 0; index < name.length; index++) {
         const U8 c = (U8)name.data[index];
-        if ((c >= 'a' && c <= 'z')
-            || (c >= 'A' && c <= 'Z' && c != 'X')
-            || (c >= '0' && c <= '9')) {
+        if (wasmCNameByteIsLiteral(c, filename)) {
             wasmOutputChar(file, (char)c);
         } else {
-            wasmOutputChar(file, 'X');
-            wasmOutputHex(file, c, wasmOutputHexUpperPadded);
+            U8 escaped[3];
+            escaped[0] = filename ? 'x' : 'X';
+            escaped[1] = (U8)hex[c >> 4];
+            escaped[2] = (U8)hex[c & 15];
+            wasmOutputWrite(file, escaped, sizeof(escaped));
         }
     }
+}
+
+static
+W2C2_INLINE
+bool
+wasmCModuleNameFits(const char* moduleName, const size_t limit) {
+    size_t digits = strlen(moduleName);
+    size_t length = 2; /* m and _ */
+    do {
+        length++;
+        digits /= 10;
+    } while (digits != 0);
+    for (; *moduleName != '\0'; moduleName++) {
+        const size_t width = wasmCNameByteIsLiteral((U8)*moduleName, false) ? 1 : 3;
+        if (length > limit || width > limit - length) {
+            return false;
+        }
+        length += width;
+    }
+    return length <= limit;
 }
 
 static
@@ -34,7 +67,7 @@ wasmCWriteModuleName(
     const char* moduleName
 ) {
     wasmOutputString(file, "m");
-    wasmCWriteNameComponent(file, wasmNameFromBytes((char*)moduleName, strlen(moduleName)));
+    wasmCWriteNameComponent(file, wasmNameFromBytes((char*)moduleName, strlen(moduleName)), false);
 }
 
 static
@@ -75,8 +108,8 @@ wasmCWriteFunctionImportName(
     } else {
         wasmOutputString(file, "i");
     }
-    wasmCWriteNameComponent(file, module);
-    wasmCWriteNameComponent(file, name);
+    wasmCWriteNameComponent(file, module, false);
+    wasmCWriteNameComponent(file, name, false);
 }
 
 static
@@ -89,7 +122,7 @@ wasmCWriteExportName(
 ) {
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Export");
-    wasmCWriteNameComponent(file, name);
+    wasmCWriteNameComponent(file, name, false);
 }
 
 static
@@ -122,7 +155,7 @@ wasmCWriteDebugName(
     wasmOutputString(file, "Debug");
     wasmOutputU32(file, functionIndex);
     wasmOutputString(file, "Name");
-    wasmCWriteNameComponent(file, name);
+    wasmCWriteNameComponent(file, name, false);
 }
 
 #endif /* W2C2_C_NAME_H */
