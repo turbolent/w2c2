@@ -6,11 +6,11 @@ swift-wasi: swiftwasi.o
 	$(MAKE) -f Submake $(OBJLIST)
 	$(CC) $(CFLAGS) $(OBJLIST) swiftwasi.o -o swift-wasi $(LDFLAGS)
 
-datasegments.o: swiftwasi.c
-	ld -r -b binary -o datasegments.o datasegments
-	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m10_swiftX2DwasiData \
-		--redefine-sym _binary_datasegments_end=m10_swiftX2DwasiDataEnd \
-		--redefine-sym _binary_datasegments_size=m10_swiftX2DwasiDataSize datasegments.o
+m10_swiftx2dwasi.data.o: swiftwasi.c
+	ld -r -b binary -o m10_swiftx2dwasi.data.o m10_swiftx2dwasi.data
+	$(OBJCOPY) --redefine-sym _binary_m10_swiftx2dwasi_data_start=m10_swiftX2DwasiData \
+		--redefine-sym _binary_m10_swiftx2dwasi_data_end=m10_swiftX2DwasiDataEnd \
+		--redefine-sym _binary_m10_swiftx2dwasi_data_size=m10_swiftX2DwasiDataSize m10_swiftx2dwasi.data.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

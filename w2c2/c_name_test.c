@@ -124,7 +124,7 @@ testCNames(void) {
     CHECK(outputBufferInitialize(&buffer));
     for (index = 0; index < sizeof(components) / sizeof(components[0]); index++) {
         WasmOutput output = wasmOutputForBuffer(&buffer, &diagnostics);
-        wasmCWriteNameComponent(&output, components[index].name);
+        wasmCWriteNameComponent(&output, components[index].name, false);
         expectName(&output, &buffer, components[index].expected);
     }
     for (index = 0; index < sizeof(imports) / sizeof(imports[0]); index++) {

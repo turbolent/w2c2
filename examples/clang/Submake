@@ -6,11 +6,11 @@ sys/bin/llvm: llvm.o
 	$(MAKE) -f Submake $(OBJLIST)
 	$(CC) $(CFLAGS) $(OBJLIST) llvm.o -o $@ $(LDFLAGS)
 
-datasegments.o: llvm.c
-	ld -r -b binary -o datasegments.o datasegments
-	$(OBJCOPY) --redefine-sym _binary_datasegments_start=m4_llvmData \
-		--redefine-sym _binary_datasegments_end=m4_llvmDataEnd \
-		--redefine-sym _binary_datasegments_size=m4_llvmDataSize datasegments.o
+m4_llvm.data.o: llvm.c
+	ld -r -b binary -o m4_llvm.data.o m4_llvm.data
+	$(OBJCOPY) --redefine-sym _binary_m4_llvm_data_start=m4_llvmData \
+		--redefine-sym _binary_m4_llvm_data_end=m4_llvmDataEnd \
+		--redefine-sym _binary_m4_llvm_data_size=m4_llvmDataSize m4_llvm.data.o
 
 %.o: %.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

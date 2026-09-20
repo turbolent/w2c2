@@ -456,8 +456,8 @@ testModuleWriteCleanup(void) {
     static const char* headerPath = "w2c2_library_test.h";
     static const char* debugOutputPath = "w2c2_library_debug_test.c";
     static const char* debugHeaderPath = "w2c2_library_debug_test.h";
-    static const char* implementationPath = "s0000000000.c";
-    static const char* secondImplementationPath = "s0000000001.c";
+    static const char* implementationPath = "m11_librarytest.s0000000000.c";
+    static const char* secondImplementationPath = "m16_librarydebugtest.s0000000001.c";
     WasmModuleReader reader = emptyWasmModuleReader;
     WasmModuleReaderError* error = NULL;
     WasmCWriteModuleOptions options = emptyWasmCWriteModuleOptions;
@@ -531,6 +531,7 @@ testModuleWriteCleanup(void) {
         testStringDuplicate("module-2.c");
     reader.module->debugLines.debugLines[2].number = 30;
 
+    implementationPath = "m16_librarydebugtest.s0000000000.c";
     options.outputName = debugOutputPath;
     options.functionsPerFile = 1;
     options.threadCount = 2;

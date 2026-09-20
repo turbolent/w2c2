@@ -72,7 +72,9 @@ typedef enum WasmDiagnosticCode {
     wasmDiagnosticDwarfUnexpectedTag,
     wasmDiagnosticTranslationFailed,
     wasmDiagnosticInvalidTranslationArgument,
-    wasmDiagnosticDataSectionNameTooLong
+    wasmDiagnosticDataSectionNameTooLong,
+    wasmDiagnosticInvalidOutputName,
+    wasmDiagnosticOutputNameConflict
 } WasmDiagnosticCode;
 
 typedef struct WasmDiagnosticReaderFailedInfo {
@@ -143,6 +145,10 @@ typedef struct WasmDiagnosticOutputFailedInfo {
     int systemError;
 } WasmDiagnosticOutputFailedInfo;
 
+typedef struct WasmDiagnosticOutputNameInfo {
+    const char* name;
+} WasmDiagnosticOutputNameInfo;
+
 typedef struct WasmDiagnosticThreadFailedInfo {
     WasmDiagnosticThreadOperation operation;
     int systemError;
@@ -204,6 +210,7 @@ typedef struct WasmDiagnostic {
         WasmDiagnosticUnsupportedExportInfo unsupportedExport;
         WasmDiagnosticInvalidDataSegmentModeInfo invalidDataSegmentMode;
         WasmDiagnosticOutputFailedInfo outputFailed;
+        WasmDiagnosticOutputNameInfo outputName;
         WasmDiagnosticThreadFailedInfo threadFailed;
         WasmDiagnosticDuplicateFunctionNameInfo duplicateFunctionName;
         WasmDiagnosticSkippedNameSubsectionInfo skippedNameSubsection;
