@@ -1,11 +1,11 @@
 name: tests
 
 on:
-  create:
-    tags:
   push:
     branches:
       - main
+    tags:
+      - '**'
   pull_request:
 
 concurrency:
