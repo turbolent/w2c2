@@ -71,6 +71,9 @@ wasmMemoryAtomicWait(
     Map* futexMap = NULL;
 
     WASM_MUTEX_TYPE* mutex = &mem->mutex;
+    if (!mem->shared) {
+        trap(trapUnsharedMemoryWait);
+    }
     WASM_MUTEX_LOCK(mutex);
 
     /* Check expected */
