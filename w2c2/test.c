@@ -10,6 +10,7 @@
 #include "sha1_test.h"
 #include "module_test.h"
 #include "function_test.h"
+#include "locals_test.h"
 #include "reader_test.h"
 #include "diagnostic_test.h"
 #include "output_test.h"
@@ -32,6 +33,7 @@ main(void) {
     testSHA1();
     testModuleLifecycle();
     testFunctionIDs();
+    testLocals();
     testReadLimits();
     testReadNames();
     testDiagnostics();

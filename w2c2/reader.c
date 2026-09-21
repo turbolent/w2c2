@@ -1556,10 +1556,12 @@ wasmReadCodeLocalsDeclarations(
 
         {
             U32 declarationIndex = 0;
+            U32 endIndex = 0;
             for (; declarationIndex < declarationCount; declarationIndex++) {
                 WasmLocalsDeclaration declaration = {0, 0};
+                U32 count = 0;
 
-                if (leb128ReadU32(&reader->buffer, &declaration.count) <= 0) {
+                if (leb128ReadU32(&reader->buffer, &count) <= 0) {
                     goto fail;
                 }
 
@@ -1567,6 +1569,8 @@ wasmReadCodeLocalsDeclarations(
                     goto fail;
                 }
 
+                endIndex += count;
+                declaration.endIndex = endIndex;
                 declarations[declarationIndex] = declaration;
             }
         }

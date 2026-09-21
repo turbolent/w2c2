@@ -1241,6 +1241,59 @@ testFunctionOrder(void) {
 
 static
 void
+testLocalTypes(void) {
+    static const U8 bytes[] = {
+        0, 97, 115, 109, 1, 0, 0, 0,
+        1, 8, 1, 96, 4, 0x7F, 0x7E, 0x7D, 0x7C, 0,
+        3, 2, 1, 0,
+        10, 68, 1, 66,
+        /* Mixed local types with leading, intervening, and trailing empty groups. */
+        8, 0, 0x7C, 2, 0x7F, 0, 0x7D, 3, 0x7E,
+        1, 0x7D, 0, 0x7F, 2, 0x7C, 0, 0x7E,
+        /* Copy parameters through locals of each type and back. */
+        0x20, 0, 0x22, 4, 0x21, 5, 0x20, 4, 0x22, 5, 0x21, 0,
+        0x20, 1, 0x22, 6, 0x21, 8, 0x20, 6, 0x22, 8, 0x21, 1,
+        0x20, 2, 0x22, 9, 0x21, 9, 0x20, 9, 0x22, 9, 0x21, 2,
+        0x20, 3, 0x22, 10, 0x21, 11, 0x20, 10, 0x22, 11, 0x21, 3,
+        0x0B
+    };
+    static const char* const declarations[] = {
+        "U32 l4=0;\n", "U32 l5=0;\n",
+        "U64 l6=0;\n", "U64 l7=0;\n", "U64 l8=0;\n",
+        "F32 l9=0;\n", "F64 l10=0;\n", "F64 l11=0;\n"
+    };
+    static const char* const assignments[] = {
+        "si0=l0;\nl4=si0;\nl5=si0;\nsi0=l4;\nl5=si0;\nl0=si0;\n",
+        "sj0=l1;\nl6=sj0;\nl8=sj0;\nsj0=l6;\nl8=sj0;\nl1=sj0;\n",
+        "sf0=l2;\nl9=sf0;\nl9=sf0;\nsf0=l9;\nl9=sf0;\nl2=sf0;\n",
+        "sd0=l3;\nl10=sd0;\nl11=sd0;\nsd0=l10;\nl11=sd0;\nl3=sd0;\n"
+    };
+    OutputCapture capture;
+    WasmCWriteModuleOptions options;
+    const CapturedOutput* output;
+    const char* source;
+    size_t index;
+
+    captureInitialize(&capture);
+    options = captureOptions(&capture);
+    CHECK(wasmTranslate(bytes, sizeof(bytes), "locals", &options));
+    CHECK(capture.diagnosticCount == 0);
+    output = findOutput(&capture, "output-test.c");
+    CHECK(output != NULL);
+    source = (const char*)output->bytes;
+    for (index = 0; index < sizeof(declarations) / sizeof(declarations[0]); index++) {
+        CHECK(strstr(source, declarations[index]) != NULL);
+    }
+    CHECK(strstr(source, "l12") == NULL);
+    for (index = 0; index < sizeof(assignments) / sizeof(assignments[0]); index++) {
+        CHECK(strstr(source, assignments[index]) != NULL);
+    }
+    checkClosed(&capture);
+    captureFree(&capture);
+}
+
+static
+void
 testFunctionBufferReuse(const bool nested) {
     static const size_t instructionCounts[] = {1024, 1, 0, 2048, 0, 2};
     static const size_t nestingDepths[] = {64, 1, 0, 128, 0, 2};
@@ -1766,6 +1819,7 @@ testOutputs(void) {
     testMemorySize();
     testMemoryEdges();
     testFunctionOrder();
+    testLocalTypes();
     testFunctionBufferReuse(false);
     testFunctionBufferReuse(true);
     testOutputBuffer();
