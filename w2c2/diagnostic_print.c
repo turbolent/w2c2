@@ -220,7 +220,7 @@ wasmDiagnosticPrint(
             fprintf(file, diagnostic->code == wasmDiagnosticInvalidOutputName
                 ? "w2c2: output name cannot be used in a generated include: "
                 : "w2c2: output name conflicts with another generated file or the runtime header: ");
-            wasmDiagnosticPrintName(file, wasmNameFromBytes((char*)name, strlen(name)));
+            wasmDiagnosticPrintName(file, wasmNameFromBytes(name, strlen(name)));
             fprintf(file, "\n");
             break;
         }
