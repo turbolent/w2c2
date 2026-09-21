@@ -3954,9 +3954,12 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)(I64)"))
                         break;
                     }
-                    case wasmOpcodeF32ConvertI32U:
-                    case wasmOpcodeF32DemoteF64: {
+                    case wasmOpcodeF32ConvertI32U: {
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "(F32)"))
+                        break;
+                    }
+                    case wasmOpcodeF32DemoteF64: {
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF32, "f32_demote_f64"))
                         break;
                     }
                     case wasmOpcodeF32ConvertI64U: {
@@ -3972,9 +3975,12 @@ wasmCWriteFunctionCode(
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)(I64)"))
                         break;
                     }
-                    case wasmOpcodeF64ConvertI32U:
-                    case wasmOpcodeF64PromoteF32: {
+                    case wasmOpcodeF64ConvertI32U: {
                         MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "(F64)"))
+                        break;
+                    }
+                    case wasmOpcodeF64PromoteF32: {
+                        MUST (wasmCWriteUnaryExpr(writer, wasmValueTypeF64, "f64_promote_f32"))
                         break;
                     }
                     case wasmOpcodeF64ConvertI64U: {

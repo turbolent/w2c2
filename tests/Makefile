@@ -1,7 +1,8 @@
 W2C2 ?= ../w2c2/w2c2
 PYTHON3 ?= python3
 
-CFLAGS += -I../w2c2 -O0 -g
+OPT ?= -O0
+CFLAGS += -I../w2c2 $(OPT) -g
 
 EXE =
 
