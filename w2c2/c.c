@@ -2352,8 +2352,13 @@ WARN_UNUSED_RESULT
 wasmCWriteDebugLine(
     WasmOutput* output,
     const WasmDebugLine* debugLine
-
 ) {
+    /* C89 supports #line numbers from 1 through 32767.
+     * Skip source locations outside that range.
+     */
+    if (debugLine->number == 0 || debugLine->number > 32767) {
+        return !output->failed;
+    }
     wasmOutputString(output, "#line ");
     wasmOutputU64(output, debugLine->number);
     wasmOutputString(output, " \"");
@@ -4435,11 +4440,7 @@ wasmCWriteFunctionImplementations(
         if (debug) {
             const WasmDebugLine* debugLine = wasmCGetDebugLine(&debugLines, function.start);
             if (debugLine != NULL) {
-                wasmOutputString(file, "#line ");
-                wasmOutputU32(file, (U32)debugLine->number);
-                wasmOutputString(file, " \"");
-                wasmCWriteStringContents(file, debugLine->path, strlen(debugLine->path));
-                wasmOutputString(file, "\"\n");
+                MUST_OR_GOTO (cleanup, wasmCWriteDebugLine(file, debugLine))
             }
         }
 

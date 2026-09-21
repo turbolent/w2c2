@@ -40,6 +40,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
   - Function names, if function names are provided in the [`names` custom section](https://webassembly.github.io/spec/core/appendix/custom.html#function-names)
   - Source line mapping, if DWARF line information is provided in the [`.debug_line` custom section](https://yurydelendik.github.io/webassembly-dwarf/).
     Requires [libdwarf](https://github.com/davea42/libdwarf-code) to be installed. See instructions below.
+    Line numbers outside C89's portable range of 1 through 32767 are omitted from the generated `#line` directives.
 - WASI implementation
   - Able to run clang and Python
   - Support for many operating systems and architectures, support for big-endian systems
