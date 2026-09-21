@@ -1469,6 +1469,107 @@ testFunctionBufferReuse(const bool nested) {
 
 static
 void
+testDeepControlFlow(void) {
+    unsigned int pretty;
+    for (pretty = 0; pretty < 2; pretty++) {
+        const size_t depth = pretty ? 127 : 16384;
+        U8* code = (U8*)malloc(9 * depth + 8);
+        size_t length = 0;
+        size_t index;
+        WasmModule module;
+        WasmFunctionType type = wasmEmptyFunctionType;
+        WasmValueType resultType = wasmValueTypeI64;
+        WasmFunction functions[4];
+        static U8 smallCode[] = {0x42, 42, 0x0B};
+        WasmFunctionIDs ids;
+        OutputCapture captures[2];
+        U32 threads;
+
+        CHECK(code != NULL);
+        /* Translate the same nesting in reachable and unreachable code. */
+        code[length++] = 0x00;
+        for (index = 0; index < depth; index++) {
+            if (index % 3 == 2) {
+                code[length++] = 0x41;
+                code[length++] = 1;
+            }
+            code[length++] = (U8)(0x02 + index % 3);
+            code[length++] = 0x7E;
+        }
+        /* Branch with a result above an extra operand,
+         * forcing a copy to the label's result slot.
+         */
+        code[length++] = 0x41;
+        code[length++] = 0;
+        code[length++] = 0x42;
+        code[length++] = 42;
+        code[length++] = 0x0C;
+        code[length++] = 0;
+        for (index = depth; index > 0; index--) {
+            if ((index - 1) % 3 == 2) {
+                code[length++] = 0x05;
+                code[length++] = 0x42;
+                code[length++] = 43;
+                code[length++] = 0x0C;
+                code[length++] = 0;
+            }
+            code[length++] = 0x0B;
+        }
+        code[length++] = 0x0B;
+        memset(&module, 0, sizeof(module));
+        type.resultCount = 1;
+        type.resultTypes = &resultType;
+        module.functionTypes.functionTypes = &type;
+        module.functionTypes.count = 1;
+        module.functions.functions = functions;
+        module.functions.count = 4;
+        for (index = 0; index < 4; index++) {
+            functions[index] = wasmEmptyFunction;
+            functions[index].code.data = index % 2 ? smallCode : code + (index == 0);
+            functions[index].code.length = index % 2 ? sizeof(smallCode) : length - (index == 0);
+        }
+        ids = outputFunctionIDs(&module);
+        for (threads = 1; threads <= 2; threads++) {
+            OutputCapture* capture = &captures[threads - 1];
+            WasmCWriteModuleOptions options;
+            const CapturedOutput* output;
+            const char* source;
+            captureInitialize(capture);
+            options = captureOptions(capture);
+            options.pretty = pretty != 0;
+            options.threadCount = threads;
+            options.functionsPerFile = 2;
+            CHECK(wasmCWriteModule(&module, "outputTest", options, ids, emptyWasmFunctionIDs));
+            CHECK(capture->diagnosticCount == 0);
+            checkClosed(capture);
+            output = findOutput(capture, "m10_outputx54est.s0000000000.c");
+            CHECK(output != NULL);
+            source = (const char*)output->bytes;
+            CHECK(strstr(source, pretty ? "sj0 = sj1; goto" : "sj0=sj1;goto") != NULL);
+            CHECK(strstr(source, "W2C2_LOOP_START") != NULL);
+            CHECK(strstr(source, pretty ? " else {" : "else{") != NULL);
+            output = findOutput(capture, "m10_outputx54est.s0000000001.c");
+            CHECK(output != NULL);
+            source = (const char*)output->bytes;
+            CHECK(strstr(source, "W2C2_LOOP_START") == NULL);
+            CHECK(strstr(source, "else{") == NULL && strstr(source, " else {") == NULL);
+        }
+        CHECK(captures[0].count == captures[1].count);
+        for (index = 0; index < captures[0].count; index++) {
+            const CapturedOutput* expected = &captures[0].files[index];
+            const CapturedOutput* actual = findOutput(&captures[1], expected->name);
+            CHECK(actual != NULL && expected->length == actual->length);
+            CHECK(memcmp(expected->bytes, actual->bytes, expected->length) == 0);
+        }
+        captureFree(&captures[0]);
+        captureFree(&captures[1]);
+        wasmFunctionIDsFree(&ids);
+        free(code);
+    }
+}
+
+static
+void
 testOutputBuffer(void) {
     static const U8 bytes[] = {0, 1, 0xFF, 0};
     OutputBuffer buffer = emptyOutputBuffer;
@@ -1887,6 +1988,7 @@ testOutputs(void) {
     testLocalTypes();
     testFunctionBufferReuse(false);
     testFunctionBufferReuse(true);
+    testDeepControlFlow();
     testOutputBuffer();
     testOutputFormatting();
     testBorrowedBuffer();
