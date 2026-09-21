@@ -278,8 +278,10 @@ testBinaryFunctionNames(void) {
     CHECK_NAME(error == NULL && reader.module != NULL);
     CHECK_NAME(reader.module->debugSections.length == 0);
     CHECK_NAME(reader.module->functionNames.length == 4);
-    CHECK_NAME(reader.module->functionNames.names[0].data == NULL);
-    CHECK_NAME(reader.module->functionNames.names[2].data == NULL);
+    CHECK_NAME(reader.module->functionNames.names[0].length == 3);
+    CHECK_NAME(memcmp(reader.module->functionNames.names[0].data, "f\0a", 3) == 0);
+    CHECK_NAME(reader.module->functionNames.names[2].length == 3);
+    CHECK_NAME(memcmp(reader.module->functionNames.names[2].data, "f\0a", 3) == 0);
     CHECK_NAME(reader.module->functionNames.names[1].length == 3);
     CHECK_NAME(memcmp(reader.module->functionNames.names[1].data, "f\0b", 3) == 0);
     CHECK_NAME(reader.module->functionNames.names[3].length == 1);

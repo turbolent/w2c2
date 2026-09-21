@@ -61,8 +61,8 @@ void
 SHA1Transform(U32 state[5], const U8* buffer)
 {
     U32 a, b, c, d, e;
-    U8 workspace[SHA1_BLOCK_LENGTH];
-    CHAR64LONG16 *block = (CHAR64LONG16 *)workspace;
+    CHAR64LONG16 workspace;
+    CHAR64LONG16 *block = &workspace;
 
     (void)memcpy(block, buffer, SHA1_BLOCK_LENGTH);
 

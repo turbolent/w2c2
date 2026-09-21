@@ -289,11 +289,13 @@ testModuleReadCleanup(void) {
     if (error != NULL
         || reader.module == NULL
         || reader.module->functionNames.length != 3
-        || reader.module->functionNames.names[0].data != NULL
-        || reader.module->functionNames.names[1].data != NULL
+        || reader.module->functionNames.names[0].length != 3
+        || memcmp(reader.module->functionNames.names[0].data, "foo", 3) != 0
+        || reader.module->functionNames.names[1].length != 3
+        || memcmp(reader.module->functionNames.names[1].data, "foo", 3) != 0
         || reader.module->functionNames.names[2].data != NULL) {
 
-        fprintf(stderr, "FAIL testModuleLifecycle: duplicate names survived\n");
+        fprintf(stderr, "FAIL testModuleLifecycle: function names were not preserved\n");
         exit(1);
     }
     wasmModuleFree(reader.module);

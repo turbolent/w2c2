@@ -10,7 +10,12 @@ wasmFunctionIDsCompareHashes(
 ) {
     const WasmFunctionID* functionIDA = a;
     const WasmFunctionID* functionIDB = b;
-    return memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
+    const int order = memcmp(functionIDA->hash, functionIDB->hash, SHA1_DIGEST_LENGTH);
+    if (order != 0) {
+        return order;
+    }
+    return (functionIDA->functionIndex > functionIDB->functionIndex)
+        - (functionIDA->functionIndex < functionIDB->functionIndex);
 }
 
 WasmBool

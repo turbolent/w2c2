@@ -274,22 +274,6 @@ wasmDiagnosticReportThreadFailed(
 }
 
 void
-wasmDiagnosticReportDuplicateFunctionName(
-    WasmDiagnosticContext* context,
-    WasmName name,
-    U32 previousIndex,
-    U32 currentIndex
-) {
-    WasmDiagnostic diagnostic = wasmDiagnosticInitialize(
-        wasmDiagnosticDuplicateFunctionName, wasmDiagnosticWarning
-    );
-    diagnostic.info.duplicateFunctionName.name = name;
-    diagnostic.info.duplicateFunctionName.previousIndex = previousIndex;
-    diagnostic.info.duplicateFunctionName.currentIndex = currentIndex;
-    wasmDiagnosticReport(context, &diagnostic);
-}
-
-void
 wasmDiagnosticReportSkippedNameSubsection(
     WasmDiagnosticContext* context,
     U32 id,
