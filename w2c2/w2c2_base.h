@@ -342,7 +342,7 @@ extern void trap(Trap) NORETURN;
 #define I64_REM_S(x, y) REM_S(U64, INT64_MIN, (I64)(x), (I64)(y))
 
 #define DIVREM_U(op, x, y)               \
-   (((y) == 0)    ? TRAP(trapIntOverflow) \
+   (((y) == 0)    ? TRAP(trapDivByZero)   \
   : ((x) op (y)))
 
 #define DIV_U(x, y) DIVREM_U(/, x, y)
