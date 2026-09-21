@@ -23,7 +23,9 @@ int main(int argc, char** argv) {
     }
 
     while (1) {
-        struct dirent* dirent = readdir(dir);
+        struct dirent* dirent;
+        errno = 0;
+        dirent = readdir(dir);
         if (dirent) {
             char fullpath[baselen + 1 + strlen(dirent->d_name) + 1];
             strcpy(fullpath, basepath);
