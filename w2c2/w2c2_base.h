@@ -588,6 +588,32 @@ DEFINE_REINTERPRET(i32_reinterpret_f32, F32, U32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, U64, F64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, F64, U64)
 
+static
+W2C2_INLINE
+F32
+f32_demote_f64(F64 value) {
+    const U64 magnitude = i64_reinterpret_f64(value) & W2C2_LL(0x7fffffffffffffffU);
+    /* Conversions must quiet NaNs,
+     * even when the compiler folds a promotion followed by a demotion. */
+    if (magnitude > W2C2_LL(0x7ff0000000000000U)) {
+        return f32_reinterpret_i32(0x7fc00000U);
+    }
+    return (F32)value;
+}
+
+static
+W2C2_INLINE
+F64
+f64_promote_f32(F32 value) {
+    const U32 magnitude = i32_reinterpret_f32(value) & 0x7fffffffU;
+    /* Conversions must quiet NaNs,
+     * even when the compiler folds a promotion followed by a demotion. */
+    if (magnitude > 0x7f800000U) {
+        return f64_reinterpret_i64(W2C2_LL(0x7ff8000000000000U));
+    }
+    return (F64)value;
+}
+
 #ifdef PLAN9
 /* APE lacks the C99 math operations used by generated code. */
 #ifndef NAN

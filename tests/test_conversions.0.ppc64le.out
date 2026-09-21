@@ -416,9 +416,9 @@ OK: f64.promote_f32(6.6382536710104395e+37)
 OK: f64.promote_f32(INFINITY)
 OK: f64.promote_f32(-INFINITY)
 OK: f64.promote_f32(f32_reinterpret_i32(0x7fc00000u))
-FAIL: f64.promote_f32(f32_reinterpret_i32(0x7fa00000u)): 9218868437227405312 != 9221120237041090560
+OK: f64.promote_f32(f32_reinterpret_i32(0x7fa00000u))
 OK: f64.promote_f32(f32_reinterpret_i32(0xffc00000u))
-FAIL: f64.promote_f32(f32_reinterpret_i32(0xffa00000u)): 9218868437227405312 != 9221120237041090560
+OK: f64.promote_f32(f32_reinterpret_i32(0xffa00000u))
 OK: f32.demote_f64(0.0)
 OK: f32.demote_f64(-0.0)
 OK: f32.demote_f64(5e-324)
