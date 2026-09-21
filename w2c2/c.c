@@ -5087,6 +5087,11 @@ wasmCWriteDataSegmentsFromSection(
                 "#else\n"
                 "#include <libc.h>\n"
                 "#define SECT_DATA_SIZE_TYPE int\n"
+                "#endif\n"
+                "#if defined(__DYNAMIC__) && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)\n"
+                "#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050\n"
+                "#include <mach-o/dyld.h>\n"
+                "#endif\n"
                 "#endif\n");
             break;
         }
@@ -5285,6 +5290,22 @@ wasmCWriteInitDataSegments(
             wasmOutputString(file, " = (const U8*)getsectdata(\"__DATA\", \"");
             wasmCWriteModuleName(file, moduleName);
             wasmOutputString(file, "\", &len);\n");
+            /* getsectdata returns the executable's unslid address.
+             * Only modern dynamic macOS targets need the dyld correction;
+             * legacy targets retain their existing lookup.
+             */
+            wasmOutputString(file,
+                "#if defined(__DYNAMIC__) && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)\n"
+                "#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050\n");
+            if (pretty) {
+                wasmOutputString(file, indentation);
+            }
+            wasmCWriteDataName(file, moduleName);
+            wasmOutputString(file, " = (const U8*)((unsigned long)");
+            wasmCWriteDataName(file, moduleName);
+            wasmOutputString(file, " + (unsigned long)_dyld_get_image_vmaddr_slide(0));\n"
+                "#endif\n"
+                "#endif\n");
         }
 
         {
