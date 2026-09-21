@@ -9,10 +9,13 @@
 typedef struct WasmLabel {
     U32 index;
     size_t typeStackLength;
-    WasmValueType* type;
+    /* Store the type by value so control stack growth cannot invalidate it.
+     * wasmValueType_count denotes a label without a result.
+     */
+    WasmValueType type;
 } WasmLabel;
 
-static const WasmLabel wasmEmptyLabel = {0, 0, NULL};
+static const WasmLabel wasmEmptyLabel = {0, 0, wasmValueType_count};
 
 ARRAY_TYPE(
     WasmLabels,
@@ -46,7 +49,7 @@ WARN_UNUSED_RESULT
 wasmLabelStackPush(
     WasmLabelStack* labelStack,
     const size_t typeStackLength,
-    WasmValueType* type,
+    const WasmValueType type,
     WasmLabel* result
 ) {
     result->index = labelStack->nextLabelIndex;

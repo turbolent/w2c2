@@ -312,12 +312,22 @@ wasmCWriteLocalsDeclarations(
     }
 }
 
+typedef struct WasmCControlFrame {
+    WasmOpcode opcode;
+    /* Whether the construct began in unreachable code. */
+    bool ignore;
+    WasmValueType resultType;
+} WasmCControlFrame;
+
+ARRAY_TYPE(WasmCControlStack, WasmCControlFrame, wasmCControlStack, frames, frame)
+
 typedef struct WasmCFunctionWriter {
     WasmOutput* output;
     WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
     WasmStackDeclarations* stackDeclarations;
     WasmLabelStack* labelStack;
+    WasmCControlStack* controlStack;
     const WasmModule* module;
     const char* moduleName;
     WasmFunction function;
@@ -415,14 +425,6 @@ wasmCWritePlus(
         return wasmCWriteChar(writer, '+');
     }
 }
-
-static
-bool
-WARN_UNUSED_RESULT
-wasmCWriteFunctionCode(
-    WasmCFunctionWriter* writer,
-    WasmOpcode* opcode
-);
 
 static
 bool
@@ -1863,230 +1865,104 @@ wasmCWriteLabel(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteIfExpr(
+wasmCWriteControlStart(
     WasmCFunctionWriter* writer,
-    WasmOpcode* opcode
+    const WasmOpcode opcode
 ) {
-    const bool ignore = writer->ignore;
+    WasmCControlFrame frame;
+    WasmLabel label;
+    WasmValueType* blockType = &frame.resultType;
+    frame.opcode = opcode;
+    frame.ignore = writer->ignore;
+    frame.resultType = wasmValueType_count;
 
-    size_t typeStackLengthBeforeBranches = 0;
-    WasmLabel label = wasmEmptyLabel;
-
-    WasmValueType blockValueType = 0;
-    WasmValueType* blockType = &blockValueType;
     if (!wasmReadBlockType(writer->code, &blockType)) {
-        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
+        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)opcode);
         return false;
     }
+    if (!wasmCControlStackAppend(writer->controlStack, frame)) {
+        wasmDiagnosticReportAllocationFailed(writer->diagnostics);
+        return false;
+    }
+    if (frame.ignore) {
+        return true;
+    }
 
-    if (!ignore) {
+    if (opcode == wasmOpcodeIf) {
+        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
         MUST (wasmCWriteIndent(writer))
-        if (writer->pretty) {
-            MUST (wasmCWrite(writer, "if ("))
-        } else {
-            MUST (wasmCWrite(writer, "if("))
-        }
-        {
-            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-            MUST (wasmCWriteStackName(
-                writer->output,
-                stackIndex0,
-                writer->typeStack->valueTypes[stackIndex0]
-            ))
-        }
-        if (writer->pretty) {
-            MUST (wasmCWrite(writer, ") {\n"))
-        } else {
-            MUST (wasmCWrite(writer, "){\n"))
-        }
-
+        MUST (wasmCWrite(writer, writer->pretty ? "if (" : "if("))
+        MUST (wasmCWriteStackName(
+            writer->output,
+            stackIndex0,
+            writer->typeStack->valueTypes[stackIndex0]
+        ))
+        MUST (wasmCWrite(writer, writer->pretty ? ") {\n" : "){\n"))
         wasmTypeStackDrop(writer->typeStack, 1);
-
-        typeStackLengthBeforeBranches = writer->typeStack->length;
-
-        MUST (wasmLabelStackPush(
-            writer->labelStack,
-            typeStackLengthBeforeBranches,
-            blockType,
-            &label
-        ))
-
-        writer->indent++;
     }
 
-    MUST (wasmCWriteFunctionCode(writer, opcode))
+    MUST (wasmLabelStackPush(
+        writer->labelStack,
+        writer->typeStack->length,
+        /* NOTE: ignoring block type (result type) */
+        opcode == wasmOpcodeLoop ? wasmValueType_count : frame.resultType,
+        &label
+    ))
 
-    if (!ignore) {
-        writer->ignore = false;
-
-        writer->indent--;
-
-        MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWriteChar(writer, '}'))
-    }
-
-    if (*opcode == wasmOpcodeElse) {
-        if (!ignore) {
-            writer->typeStack->length = typeStackLengthBeforeBranches;
-
-            if (writer->pretty) {
-                MUST (wasmCWrite(writer, " else {\n"))
-            } else {
-                MUST (wasmCWrite(writer, "else{\n"))
-            }
-
-            writer->indent++;
-        }
-
-        MUST (wasmCWriteFunctionCode(writer, opcode))
-
-        if (!ignore) {
-            writer->ignore = false;
-
-            writer->indent--;
-
-            MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteChar(writer, '}'))
-        }
-    }
-
-    if (!ignore) {
-        MUST (wasmCWrite(writer, "\n"))
-
+    if (opcode == wasmOpcodeLoop) {
         MUST (wasmCWriteLabel(writer, label.index))
-
-        writer->typeStack->length = typeStackLengthBeforeBranches;
-
-        wasmLabelStackPop(writer->labelStack);
-
-        if (blockType != NULL) {
-            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
-        }
+        MUST (wasmCWrite(writer, "W2C2_LOOP_START\n"))
     }
-
-    return true;
-}
-
-static
-bool
-WARN_UNUSED_RESULT
-wasmCWriteBlockExpr(
-    WasmCFunctionWriter* writer,
-    WasmOpcode* opcode
-) {
-    const bool ignore = writer->ignore;
-
-    size_t typeStackLengthBeforeBranches = 0;
-    WasmLabel label = wasmEmptyLabel;
-
-    WasmValueType blockValueType = 0;
-    WasmValueType* blockType = &blockValueType;
-    if (!wasmReadBlockType(writer->code, &blockType)) {
-        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
-        return false;
-    }
-
-    if (!ignore) {
-        typeStackLengthBeforeBranches = writer->typeStack->length;
-
-        MUST (wasmLabelStackPush(
-            writer->labelStack,
-            typeStackLengthBeforeBranches,
-            blockType,
-            &label
-        ))
-
-        if (writer->pretty) {
+    if (opcode != wasmOpcodeBlock || writer->pretty) {
+        if (opcode != wasmOpcodeIf) {
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWrite(writer, "{\n"))
-            writer->indent++;
         }
+        writer->indent++;
     }
-
-    MUST (wasmCWriteFunctionCode(writer, opcode))
-
-    if (!ignore) {
-        writer->ignore = false;
-
-        if (writer->pretty) {
-            writer->indent--;
-
-            MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWrite(writer, "}\n"))
-        }
-
-        MUST (wasmCWriteLabel(writer, label.index))
-
-        writer->typeStack->length = typeStackLengthBeforeBranches;
-
-        wasmLabelStackPop(writer->labelStack);
-
-        if (blockType != NULL) {
-            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
-        }
-    }
-
     return true;
 }
 
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteLoopExpr(
+wasmCWriteControlEnd(
     WasmCFunctionWriter* writer,
-    WasmOpcode* opcode
+    const WasmOpcode opcode
 ) {
-    const bool ignore = writer->ignore;
+    const WasmCControlFrame frame =
+        writer->controlStack->frames[writer->controlStack->length - 1];
+    WasmLabel label;
 
-    size_t typeStackLengthBeforeBranches = 0;
-    WasmLabel label = wasmEmptyLabel;
-
-    WasmValueType blockValueType = 0;
-    WasmValueType* blockType = &blockValueType;
-    if (!wasmReadBlockType(writer->code, &blockType)) {
-        wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)*opcode);
-        return false;
+    if (opcode == wasmOpcodeEnd) {
+        writer->controlStack->length--;
+    }
+    if (frame.ignore) {
+        return true;
     }
 
-    if (!ignore) {
-        typeStackLengthBeforeBranches = writer->typeStack->length;
+    label = writer->labelStack->labels.labels[writer->labelStack->labels.length - 1];
+    writer->ignore = false;
+    writer->typeStack->length = label.typeStackLength;
 
-        MUST (wasmLabelStackPush(
-            writer->labelStack,
-            typeStackLengthBeforeBranches,
-            /* NOTE: ignoring block type (result type) */
-            NULL,
-            &label
-        ))
-
-        MUST (wasmCWriteLabel(writer, label.index))
-        MUST(wasmCWrite(writer, "W2C2_LOOP_START\n"))
-
-        MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "{\n"))
-
-        writer->indent++;
-    }
-
-    MUST (wasmCWriteFunctionCode(writer, opcode))
-
-    if (!ignore) {
-        writer->ignore = false;
-
+    if (frame.opcode != wasmOpcodeBlock || writer->pretty) {
         writer->indent--;
-
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "}\n"))
-
-        writer->typeStack->length = typeStackLengthBeforeBranches;
-
-        wasmLabelStackPop(writer->labelStack);
-
-        if (blockType != NULL) {
-            MUST (wasmTypeStackAppend(writer->typeStack, blockValueType))
-        }
+        MUST (wasmCWrite(writer, opcode == wasmOpcodeElse ? "}" : "}\n"))
+    }
+    if (opcode == wasmOpcodeElse) {
+        MUST (wasmCWrite(writer, writer->pretty ? " else {\n" : "else{\n"))
+        writer->indent++;
+        return true;
     }
 
+    if (frame.opcode != wasmOpcodeLoop) {
+        MUST (wasmCWriteLabel(writer, label.index))
+    }
+    wasmLabelStackPop(writer->labelStack);
+    if (frame.resultType != wasmValueType_count) {
+        MUST (wasmTypeStackAppend(writer->typeStack, frame.resultType))
+    }
     return true;
 }
 
@@ -2101,8 +1977,8 @@ wasmCWriteGoto(
 
     MUST (wasmCWriteIndent(writer))
 
-    if (label.type != NULL) {
-        const WasmValueType resultType = *label.type;
+    if (label.type != wasmValueType_count) {
+        const WasmValueType resultType = label.type;
 
         const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
         const U32 destinationStackIndex = assertSizeU32(label.typeStackLength);
@@ -3276,9 +3152,9 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionCode(
-    WasmCFunctionWriter* writer,
-    WasmOpcode* opcode
+    WasmCFunctionWriter* writer
 ) {
+    WasmOpcode opcode = wasmOpcodeUnreachable;
     while (true) {
         if (writer->debug) {
             const size_t relativeAddress = writer->function.code.length - writer->code->length;
@@ -3292,37 +3168,25 @@ wasmCWriteFunctionCode(
             }
         }
 
-        if (!wasmOpcodeRead(writer->code, opcode)) {
+        if (!wasmOpcodeRead(writer->code, &opcode)) {
             break;
         }
 
-        switch (*opcode) {
+        switch (opcode) {
             case wasmOpcodeNop:
                 break;
             case wasmOpcodeElse:
             case wasmOpcodeEnd:
-                return true;
-            case wasmOpcodeIf: {
-                MUST (wasmCWriteIfExpr(writer, opcode))
-                if (*opcode == wasmOpcodeElse) {
+                if (writer->controlStack->length == 0) {
                     return true;
                 }
+                MUST (wasmCWriteControlEnd(writer, opcode))
                 break;
-            }
-            case wasmOpcodeBlock: {
-                MUST (wasmCWriteBlockExpr(writer, opcode))
-                if (*opcode == wasmOpcodeElse) {
-                    return true;
-                }
+            case wasmOpcodeIf:
+            case wasmOpcodeBlock:
+            case wasmOpcodeLoop:
+                MUST (wasmCWriteControlStart(writer, opcode))
                 break;
-            }
-            case wasmOpcodeLoop: {
-                MUST (wasmCWriteLoopExpr(writer, opcode))
-                if (*opcode == wasmOpcodeElse) {
-                    return true;
-                }
-                break;
-            }
             case wasmOpcodeCall: {
                 MUST (wasmCWriteCallExpr(writer))
                 break;
@@ -3351,7 +3215,7 @@ wasmCWriteFunctionCode(
             }
             case wasmOpcodeLocalSet:
             case wasmOpcodeLocalTee: {
-                MUST (wasmCWriteLocalAssignmentExpr(writer, *opcode))
+                MUST (wasmCWriteLocalAssignmentExpr(writer, opcode))
                 break;
             }
             case wasmOpcodeGlobalGet: {
@@ -3366,7 +3230,7 @@ wasmCWriteFunctionCode(
             case wasmOpcodeI64Const:
             case wasmOpcodeF32Const:
             case wasmOpcodeF64Const: {
-                MUST (wasmCWriteConstExpr(writer, *opcode))
+                MUST (wasmCWriteConstExpr(writer, opcode))
                 break;
             }
             case wasmOpcodeI32Load:
@@ -3383,7 +3247,7 @@ wasmCWriteFunctionCode(
             case wasmOpcodeI64Load16U:
             case wasmOpcodeI64Load32S:
             case wasmOpcodeI64Load32U: {
-                MUST (wasmCWriteLoadExpr(writer, *opcode))
+                MUST (wasmCWriteLoadExpr(writer, opcode))
                 break;
             }
             case wasmOpcodeI32Store:
@@ -3395,7 +3259,7 @@ wasmCWriteFunctionCode(
             case wasmOpcodeI64Store8:
             case wasmOpcodeI64Store16:
             case wasmOpcodeI64Store32: {
-                MUST (wasmCWriteStoreExpr(writer, *opcode))
+                MUST (wasmCWriteStoreExpr(writer, opcode))
                 break;
             }
             case wasmOpcodeMemorySize: {
@@ -3684,7 +3548,7 @@ wasmCWriteFunctionCode(
                     break;
                 }
 
-                switch (*opcode) {
+                switch (opcode) {
                     case wasmOpcodeDrop: {
                         wasmTypeStackDrop(writer->typeStack, 1);
                         break;
@@ -3720,7 +3584,7 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32LtS:
                     case wasmOpcodeI64LtS: {
-                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, *opcode, "<"))
+                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, opcode, "<"))
                         break;
                     }
                     case wasmOpcodeI32LtU:
@@ -3732,7 +3596,7 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32LeS:
                     case wasmOpcodeI64LeS: {
-                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, *opcode, "<="))
+                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, opcode, "<="))
                         break;
                     }
                     case wasmOpcodeI32LeU:
@@ -3744,7 +3608,7 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32GtS:
                     case wasmOpcodeI64GtS: {
-                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, *opcode, ">"))
+                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, opcode, ">"))
                         break;
                     }
                     case wasmOpcodeI32GtU:
@@ -3756,7 +3620,7 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32GeS:
                     case wasmOpcodeI64GeS: {
-                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, *opcode, ">="))
+                        MUST (wasmCWriteSignedInfixBinaryExpr(writer, opcode, ">="))
                         break;
                     }
                     case wasmOpcodeI32GeU:
@@ -3985,17 +3849,17 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeI32Shl:
                     case wasmOpcodeI64Shl: {
-                        MUST (wasmCWriteShiftLeftExpr(writer, *opcode))
+                        MUST (wasmCWriteShiftLeftExpr(writer, opcode))
                         break;
                     }
                     case wasmOpcodeI32ShrS:
                     case wasmOpcodeI64ShrS: {
-                        MUST (wasmCWriteSignedShiftRightExpr(writer, *opcode))
+                        MUST (wasmCWriteSignedShiftRightExpr(writer, opcode))
                         break;
                     }
                     case wasmOpcodeI32ShrU:
                     case wasmOpcodeI64ShrU: {
-                        MUST (wasmCWriteUnsignedShiftRightExpr(writer, *opcode))
+                        MUST (wasmCWriteUnsignedShiftRightExpr(writer, opcode))
                         break;
                     }
                     case wasmOpcodeI32Rotl: {
@@ -4138,7 +4002,7 @@ wasmCWriteFunctionCode(
                         wasmDiagnosticReportUnsupportedOpcode(
                             writer->diagnostics,
                             wasmDiagnosticOpcodeUnprefixed,
-                            (U32)*opcode
+                            (U32)opcode
                         );
                         return false;
                     }
@@ -4239,6 +4103,7 @@ wasmCWriteFunctionBody(
     WasmTypeStack* typeStack,
     WasmStackDeclarations* stackDeclarations,
     WasmLabelStack* labelStack,
+    WasmCControlStack* controlStack,
     const WasmModule* module,
     const char* moduleName,
     const WasmFunction function,
@@ -4249,15 +4114,14 @@ wasmCWriteFunctionBody(
     WasmDiagnosticContext* diagnostics
 ) {
     Buffer code = function.code;
-    WasmOpcode opcode = wasmOpcodeUnreachable;
     WasmLabel label = wasmEmptyLabel;
-    WasmValueType* resultType = NULL;
+    WasmValueType resultType = wasmValueType_count;
 
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
     if (functionType.resultCount) {
-        resultType = &functionType.resultTypes[0];
+        resultType = functionType.resultTypes[0];
         /* TODO: add support for multiple result values */
         if (functionType.resultCount > 1) {
             wasmDiagnosticReportUnsupportedFunctionResults(
@@ -4267,8 +4131,6 @@ wasmCWriteFunctionBody(
             );
             return false;
         }
-    } else {
-        resultType = NULL;
     }
 
     if (buffer->data == NULL && !outputBufferInitialize(buffer)) {
@@ -4286,6 +4148,7 @@ wasmCWriteFunctionBody(
         writer.typeStack = typeStack;
         writer.stackDeclarations = stackDeclarations;
         writer.labelStack = labelStack;
+        writer.controlStack = controlStack;
         writer.module = module;
         writer.moduleName = moduleName;
         writer.function = function;
@@ -4299,7 +4162,7 @@ wasmCWriteFunctionBody(
         writer.debugLines = debugLines;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
-        MUST (wasmCWriteFunctionCode(&writer, &opcode))
+        MUST (wasmCWriteFunctionCode(&writer))
         MUST (wasmCWriteLabel(&writer, label.index))
         MUST (wasmCWriteFunctionReturn(&writer, functionType))
     }
@@ -4420,6 +4283,7 @@ wasmCWriteFunctionImplementations(
     WasmTypeStack typeStack = wasmEmptyTypeStack;
     WasmStackDeclarations stackDeclarations = wasmEmptyStackDeclarations;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
+    WasmCControlStack controlStack = {0, 0, NULL};
     bool result = false;
 
     U32 functionIDIndex = startIDIndex;
@@ -4436,6 +4300,7 @@ wasmCWriteFunctionImplementations(
         wasmTypeStackClear(&typeStack);
         wasmStackDeclarationsClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
+        controlStack.length = 0;
 
         if (debug) {
             const WasmDebugLine* debugLine = wasmCGetDebugLine(&debugLines, function.start);
@@ -4462,6 +4327,7 @@ wasmCWriteFunctionImplementations(
             &typeStack,
             &stackDeclarations,
             &labelStack,
+            &controlStack,
             module,
             moduleName,
             function,
@@ -4486,6 +4352,7 @@ cleanup:
     wasmTypeStackFree(&typeStack);
     wasmStackDeclarationsFree(&stackDeclarations);
     wasmLabelsFree(&labelStack.labels);
+    wasmCControlStackFree(&controlStack);
     return result;
 }
 
