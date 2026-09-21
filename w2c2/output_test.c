@@ -724,6 +724,68 @@ testDebugLineLookup(void) {
 
 static
 void
+testDebugLineNumbers(void) {
+    static U8 bytes[] = {
+        0, 97, 115, 109, 1, 0, 0, 0,
+        1, 4, 1, 96, 0, 0,
+        3, 2, 1, 0,
+        /* Two i32.const/drop pairs followed by end. */
+        10, 10, 1, 8, 0, 0x41, 0, 0x1A, 0x41, 0, 0x1A, 0x0B
+    };
+    static const U64 numbers[] = {
+        (U64)UINT32_MAX + 2, 0, 1, 32767, 32768,
+        2147483647, 2147483648U, UINT32_MAX, (U64)UINT32_MAX + 1, UINT64_MAX
+    };
+    static const U32 supported[][6] = {
+        {1, 1, 19, 1, 1, 23},
+        {32767, 32767, 19, 32767, 32767, 23}
+    };
+    static const U32 omitted[] = {19, 23};
+    WasmModuleReader reader = emptyWasmModuleReader;
+    WasmModuleReaderError* error = NULL;
+    WasmFunctionIDs ids;
+    size_t start;
+    size_t index;
+
+    reader.buffer.data = bytes;
+    reader.buffer.length = sizeof(bytes);
+    wasmModuleRead(&reader, &error);
+    CHECK(error == NULL);
+    ids = outputFunctionIDs(reader.module);
+    start = reader.module->functions.functions[0].start;
+    appendOutputDebugLine(reader.module, start, 1);
+    appendOutputDebugLine(reader.module, start + 2, 19);
+    appendOutputDebugLine(reader.module, start + 3, 1);
+    appendOutputDebugLine(reader.module, start + 6, 23);
+
+    for (index = 0; index < sizeof(numbers) / sizeof(numbers[0]); index++) {
+        unsigned int mode;
+        const U32* expected = numbers[index] == 1 ? supported[0] : numbers[index] == 32767 ? supported[1] : omitted;
+        const size_t count = expected == omitted ? 2 : 6;
+        reader.module->debugLines.debugLines[0].number = numbers[index];
+        reader.module->debugLines.debugLines[2].number = numbers[index];
+        for (mode = 0; mode < 4; mode++) {
+            OutputCapture capture;
+            WasmCWriteModuleOptions options;
+            captureInitialize(&capture);
+            options = captureOptions(&capture);
+            options.debug = mode >= 2;
+            options.pretty = mode % 2 != 0;
+            CHECK(wasmCWriteModule(reader.module, "debugLines", options, ids, emptyWasmFunctionIDs));
+            CHECK(capture.diagnosticCount == 0);
+            checkOutputDebugLines(findOutput(&capture, "output-test.c"), expected, options.debug ? count : 0);
+            CHECK(reader.module->debugLines.debugLines[0].number == numbers[index]);
+            CHECK(reader.module->debugLines.debugLines[2].number == numbers[index]);
+            checkClosed(&capture);
+            captureFree(&capture);
+        }
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(reader.module);
+}
+
+static
+void
 testWorkerCounts(WasmModule* module, WasmFunctionIDs ids, WasmBool pretty) {
     static const struct {
         size_t staticCount;
@@ -1809,6 +1871,7 @@ testOutputs(void) {
     testDataSymbols();
     testDataSectionNameLimits(module, ids);
     testDebugLineLookup();
+    testDebugLineNumbers();
     testCStringEscaping();
     testWorkerCounts(module, ids, false);
     testWorkerCounts(module, ids, true);
