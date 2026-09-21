@@ -5,7 +5,7 @@
 
 static unsigned failures = 0;
 static wasmMemory* expectedMemory = NULL;
-static WasmPtr expectedAddress = 0;
+static WasmMemoryAddress expectedAddress = 0;
 static bool expectedWait64 = false;
 
 static
@@ -33,7 +33,7 @@ trap(
 U32
 wasmMemoryAtomicNotify(
     wasmMemory* memory,
-    WasmPtr address,
+    WasmMemoryAddress address,
     U32 count
 ) {
     expect(memory == expectedMemory, "notify memory");
@@ -45,7 +45,7 @@ wasmMemoryAtomicNotify(
 U32
 wasmMemoryAtomicWait(
     wasmMemory* memory,
-    WasmPtr address,
+    WasmMemoryAddress address,
     U64 value,
     I64 timeout,
     bool wait64
@@ -92,6 +92,17 @@ main(void) {
     expect(m14_atomicX5FoffsetsExport13_wait64X5Foffset(&instance, 0, value64, timeout) == 2, "wait64 offset result");
     expectedAddress = 264;
     expect(m14_atomicX5FoffsetsExport13_wait64X5Foffset(&instance, 8, value64, timeout) == 2, "wait64 base plus offset result");
+
+#if W2C2_RUNTIME_CHECKS
+    expectedAddress = (U64)UINT32_MAX + 16;
+    expect(m14_atomicX5FoffsetsExport13_notifyX5Foffset(&instance, UINT32_MAX, 3) == 1, "wide notify address");
+    expectedWait64 = false;
+    expectedAddress = (U64)UINT32_MAX + 12;
+    expect(m14_atomicX5FoffsetsExport13_wait32X5Foffset(&instance, UINT32_MAX, value32, timeout) == 2, "wide wait32 address");
+    expectedWait64 = true;
+    expectedAddress = (U64)UINT32_MAX + 256;
+    expect(m14_atomicX5FoffsetsExport13_wait64X5Foffset(&instance, UINT32_MAX, value64, timeout) == 2, "wide wait64 address");
+#endif
 
     m14_atomicX5FoffsetsFreeInstance(&instance);
     if (failures != 0) {

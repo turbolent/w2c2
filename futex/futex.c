@@ -61,7 +61,7 @@ futexMapFree(
 U32
 wasmMemoryAtomicWait(
     wasmMemory* mem,
-    WasmPtr address,
+    WasmMemoryAddress address,
     U64 expect,
     I64 timeout,
     bool wait64
@@ -71,6 +71,7 @@ wasmMemoryAtomicWait(
     Map* futexMap = NULL;
 
     WASM_MUTEX_TYPE* mutex = &mem->mutex;
+    wasmAtomicCheckAccess(mem, address, wait64 ? 8 : 4);
     if (!mem->shared) {
         trap(trapUnsharedMemoryWait);
     }
@@ -79,8 +80,8 @@ wasmMemoryAtomicWait(
     /* Check expected */
 
     if (wait64
-        ? i64_atomic_load(mem, address) != expect
-        : i32_atomic_load(mem, address) != (U32)expect
+        ? swapU64(atomic_load_U64(mem->data + address)) != expect
+        : swapU32(atomic_load_U32(mem->data + address)) != (U32)expect
     ) {
         WASM_MUTEX_UNLOCK(mutex);
         /* "not-equal", the loaded value did not match the expected value */
@@ -124,9 +125,9 @@ wasmMemoryAtomicWait(
         }
 
         /* Get or insert wait list */
-        waitList = (Wait**)mapGet(futexMap, address);
+        waitList = (Wait**)mapGet(futexMap, (WasmPtr)address);
         if (!waitList) {
-            waitList = (Wait**)mapInsert(futexMap, address);
+            waitList = (Wait**)mapInsert(futexMap, (WasmPtr)address);
             if (!waitList) {
                 WASM_MUTEX_UNLOCK(mutex);
                 waitFree(wait);
@@ -171,7 +172,7 @@ wasmMemoryAtomicWait(
 
         /* Remove wait list from futex map, if empty */
         if (*waitList == NULL) {
-            Wait* removedWaitList = (Wait*)mapRemove(futexMap, address);
+            Wait* removedWaitList = (Wait*)mapRemove(futexMap, (WasmPtr)address);
             assert(removedWaitList == NULL);
         }
 
@@ -189,7 +190,7 @@ wasmMemoryAtomicWait(
 U32
 wasmMemoryAtomicNotify(
     wasmMemory *mem,
-    WasmPtr address,
+    WasmMemoryAddress address,
     U32 count
 ) {
     void** value = NULL;
@@ -198,6 +199,8 @@ wasmMemoryAtomicNotify(
     U32 notifiedCount = 0;
 
     WASM_MUTEX_TYPE *mutex = &mem->mutex;
+
+    wasmAtomicCheckAccess(mem, address, 4);
 
     if (!mem->shared) {
         return notifiedCount;
@@ -213,7 +216,7 @@ wasmMemoryAtomicNotify(
         return 0;
     }
 
-    value = mapGet(futexMap, address);
+    value = mapGet(futexMap, (WasmPtr)address);
     if (!value) {
         WASM_MUTEX_UNLOCK(mutex);
         return notifiedCount;

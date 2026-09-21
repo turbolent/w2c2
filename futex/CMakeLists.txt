@@ -29,8 +29,13 @@ else()
 endif()
 
 add_executable(w2c2futex_test ${TEST_SOURCES} ${SOURCES})
+add_executable(w2c2futex_checked_test ${TEST_SOURCES} ${SOURCES})
+target_compile_definitions(w2c2futex_checked_test PRIVATE W2C2_RUNTIME_CHECKS=1)
+enable_testing()
+add_test(NAME futex COMMAND w2c2futex_test)
+add_test(NAME futex_checked COMMAND w2c2futex_checked_test)
 
-foreach(TARGET w2c2futex w2c2futex_test)
+foreach(TARGET w2c2futex w2c2futex_test w2c2futex_checked_test)
     target_compile_options(${TARGET} PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wunused-result -Wno-long-long -Wno-unused-function>

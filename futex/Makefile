@@ -67,9 +67,14 @@ futex_test: $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 .PHONY: test
-test: futex_test
+futex_checked_test: $(wildcard *.c) $(wildcard *.h) ../w2c2/w2c2_base.h
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $(wildcard *.c) -o $@ $(LDFLAGS)
+
+test: futex_test futex_checked_test
 	./futex_test
+	./futex_checked_test
 
 clean:
 	-rm -f *.o *.a
 	-rm -f futex_test
+	-rm -f futex_checked_test
