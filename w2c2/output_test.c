@@ -506,6 +506,10 @@ testDataSymbols(void) {
                     sprintf(expected, "getsectdata(\"__DATA\", \"%s\", &len);", prefix);
                     lookup = strstr(source, expected);
                     CHECK(init != NULL && lookup != NULL && lookup > init);
+                    CHECK(strstr(source, "#include <mach-o/dyld.h>\n") != NULL);
+                    sprintf(expected, "%sData = (const U8*)((unsigned long)%sData + (unsigned long)_dyld_get_image_vmaddr_slide(0));",
+                        prefix, prefix);
+                    CHECK(strstr(lookup, expected) != NULL);
                     break;
                 }
             }

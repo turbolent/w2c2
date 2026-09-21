@@ -5,6 +5,7 @@ enable_testing()
 if(NOT TARGET w2c2::w2c2_lib)
     find_package(w2c2 CONFIG REQUIRED)
 endif()
+
 find_package(Threads)
 
 foreach(STANDARD 90 99)
@@ -57,4 +58,21 @@ if(TARGET w2c2 AND NOT CMAKE_CROSSCOMPILING)
             add_test(NAME ${NAME}_${LANGUAGE} COMMAND ${TARGET})
         endforeach()
     endforeach()
+    if(APPLE
+        AND NOT CMAKE_SYSTEM_VERSION VERSION_LESS 9
+        AND (NOT CMAKE_OSX_DEPLOYMENT_TARGET OR NOT CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.5))
+        configure_file("../gen/memory_init.1.wasm" "data.wasm" COPYONLY)
+        set(SECTCREATE_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/sectcreate.c")
+        set(SECTCREATE_DATA "${CMAKE_CURRENT_BINARY_DIR}/m4_data.data")
+        add_custom_command(OUTPUT "${SECTCREATE_SOURCE}" "${CMAKE_CURRENT_BINARY_DIR}/sectcreate.h" "${SECTCREATE_DATA}"
+            COMMAND w2c2 -d sectcreate2 "${CMAKE_CURRENT_BINARY_DIR}/data.wasm" "${SECTCREATE_SOURCE}"
+            DEPENDS w2c2 "${CMAKE_CURRENT_BINARY_DIR}/data.wasm"
+            VERBATIM)
+        add_executable(w2c2_sectcreate sectcreate_test.c "${SECTCREATE_SOURCE}")
+        target_include_directories(w2c2_sectcreate PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+        target_link_libraries(w2c2_sectcreate w2c2::w2c2_lib)
+        set_target_properties(w2c2_sectcreate PROPERTIES C_STANDARD 90
+            LINK_FLAGS "-Wl,-pie -Wl,-sectcreate,__DATA,m4_data,\"${SECTCREATE_DATA}\"")
+        add_test(NAME sectcreate COMMAND w2c2_sectcreate)
+    endif()
 endif()
