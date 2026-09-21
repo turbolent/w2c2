@@ -67,7 +67,7 @@ wasmCWriteModuleName(
     const char* moduleName
 ) {
     wasmOutputString(file, "m");
-    wasmCWriteNameComponent(file, wasmNameFromBytes((char*)moduleName, strlen(moduleName)), false);
+    wasmCWriteNameComponent(file, wasmNameFromBytes(moduleName, strlen(moduleName)), false);
 }
 
 static

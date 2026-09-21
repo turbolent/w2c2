@@ -58,11 +58,11 @@ main(void) {
     wasmTableAllocate(&importedTable, 1, 1);
     m9_cX5FstringsInstantiate(&instance, resolve);
     for (index = 0; index < 3; index++) {
-        const wasmFuncExport export = instance.common.funcExports[index];
+        const wasmFuncExport functionExport = instance.common.funcExports[index];
         expect(imports[index] == 1, "import resolution count");
-        expect(export.name.length == strlen(names[index]), "export name length");
-        expect(memcmp(export.name.data, names[index], export.name.length) == 0, "export name bytes");
-        expect(((U32 (*)(wasmModuleInstance*))export.func)(&instance.common) == 42, "export call");
+        expect(functionExport.name.length == strlen(names[index]), "export name length");
+        expect(memcmp(functionExport.name.data, names[index], functionExport.name.length) == 0, "export name bytes");
+        expect(((U32 (*)(wasmModuleInstance*))functionExport.func)(&instance.common) == 42, "export call");
     }
     expect(instance.common.funcExports[3].name.data == NULL, "export terminator");
     m9_cX5FstringsFreeInstance(&instance);

@@ -1494,6 +1494,16 @@ testOutputBuffer(void) {
 }
 
 static
+WasmName
+copyOutputName(const char* bytes, size_t length) {
+    char* copy = (char*)malloc(length + 1);
+    CHECK(copy != NULL);
+    memcpy(copy, bytes, length);
+    copy[length] = 0;
+    return wasmNameFromBytes(copy, length);
+}
+
+static
 void
 testCStringEscaping(void) {
     static const char* strings[] = {
@@ -1517,32 +1527,20 @@ testCStringEscaping(void) {
         char exportName[256];
         char assemblyName[256];
         char debugLine[256];
-        free(import->module.data);
-        free(import->name.data);
-        import->module.data = (char*)malloc(size);
-        import->module.length = size - 1;
-        import->name.data = (char*)malloc(size);
-        import->name.length = size - 1;
-        CHECK(import->module.data != NULL && import->name.data != NULL);
-        memcpy(import->module.data, strings[index], size);
-        memcpy(import->name.data, strings[index], size);
+        wasmNameFree(import->module);
+        wasmNameFree(import->name);
+        import->module = copyOutputName(strings[index], size - 1);
+        import->name = copyOutputName(strings[index], size - 1);
         module->exports.exports = (WasmExport*)malloc(sizeof(WasmExport));
         CHECK(module->exports.exports != NULL);
         module->exports.count = 1;
         module->exports.exports[0] = wasmEmptyExport;
-        module->exports.exports[0].name.data = (char*)malloc(size);
-        module->exports.exports[0].name.length = size - 1;
-        CHECK(module->exports.exports[0].name.data != NULL);
-        memcpy(module->exports.exports[0].name.data, strings[index], size);
+        module->exports.exports[0].name = copyOutputName(strings[index], size - 1);
         module->functions.functions[0].exportName = module->exports.exports[0].name;
         CHECK(wasmNamesAppend(&module->functionNames, emptyWasmName));
         {
-            WasmName name;
+            const WasmName name = copyOutputName(strings[index], size - 1);
             WasmDebugLine line;
-            name.data = (char*)malloc(size);
-            name.length = size - 1;
-            CHECK(name.data != NULL);
-            memcpy(name.data, strings[index], size);
             CHECK(wasmNamesAppend(&module->functionNames, name));
             line.address = module->functions.functions[0].start;
             line.number = 17;

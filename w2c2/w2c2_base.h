@@ -1328,7 +1328,7 @@ wasmTableFree(
  * embedded NUL bytes are part of the name.
  */
 typedef struct WasmName {
-    char* data;
+    const char* data;
     /* Counts name bytes,
      * including embedded NUL bytes but excluding the trailing terminator. */
     size_t length;
@@ -1340,7 +1340,7 @@ static const WasmName emptyWasmName = {NULL, 0};
 static
 W2C2_INLINE
 WasmName
-wasmNameFromBytes(char* data, size_t length) {
+wasmNameFromBytes(const char* data, size_t length) {
     WasmName name;
     name.data = data;
     name.length = length;

@@ -435,7 +435,7 @@ wasmFunctionNamesRemoveDuplicates(
 
                 const U32 duplicateFunctionIndex =
                     entries[duplicateIndex].functionIndex;
-                free(functionNames->names[duplicateFunctionIndex].data);
+                wasmNameFree(functionNames->names[duplicateFunctionIndex]);
                 functionNames->names[duplicateFunctionIndex] = emptyWasmName;
             }
         }
@@ -574,7 +574,7 @@ wasmReadNameSection(
                         return;
                     }
 
-                    free(reader->module->functionNames.names[functionIndex].data);
+                    wasmNameFree(reader->module->functionNames.names[functionIndex]);
                     reader->module->functionNames.names[functionIndex] = functionName;
                 }
 
@@ -658,18 +658,18 @@ wasmReadCustomSection(
         if (*error != NULL) {
             goto fail;
         }
-        free(name.data);
+        wasmNameFree(name);
     } else {
         wasmDiagnosticReportSkippedCustomSection(&diagnostics, name, sectionSize);
         bufferSkip(&reader->buffer, sectionSize);
-        free(name.data);
+        wasmNameFree(name);
     }
 
     *error = NULL;
     return;
 
 fail:
-    free(name.data);
+    wasmNameFree(name);
 }
 
 static
@@ -1091,8 +1091,8 @@ wasmReadImport(
     return;
 
 fail:
-    free(module.data);
-    free(name.data);
+    wasmNameFree(module);
+    wasmNameFree(name);
 }
 
 static
@@ -1452,7 +1452,7 @@ wasmReadExport(
     return;
 
 fail:
-    free(name.data);
+    wasmNameFree(name);
 }
 
 static

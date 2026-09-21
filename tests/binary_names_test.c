@@ -82,11 +82,11 @@ main(void) {
     m12_binaryX5FnamesInstantiate(&instance, resolve);
     child = instance.common.newChild(&instance.common);
     for (index = 0; index < sizeof(expected) / sizeof(expected[0]); index++) {
-        const wasmFuncExport export = instance.common.funcExports[index];
+        const wasmFuncExport functionExport = instance.common.funcExports[index];
         expect(imports[index] == 2, "root and child import resolution");
-        expect(export.name.length == expected[index].length, "export length");
-        expect(memcmp(export.name.data, expected[index].name, export.name.length) == 0, "export bytes");
-        expect(((U32 (*)(wasmModuleInstance*))export.func)(&instance.common) == expected[index].value,
+        expect(functionExport.name.length == expected[index].length, "export length");
+        expect(memcmp(functionExport.name.data, expected[index].name, functionExport.name.length) == 0, "export bytes");
+        expect(((U32 (*)(wasmModuleInstance*))functionExport.func)(&instance.common) == expected[index].value,
             "export target");
     }
     expect(instance.common.funcExports[index].name.data == NULL, "export terminator");

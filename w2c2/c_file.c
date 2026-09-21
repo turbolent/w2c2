@@ -16,7 +16,7 @@ wasmCFilePrefix(const char* moduleName, WasmDiagnosticContext* diagnostics) {
     }
     output = wasmOutputForBuffer(&buffer, diagnostics);
     wasmOutputChar(&output, 'm');
-    wasmCWriteNameComponent(&output, wasmNameFromBytes((char*)moduleName, strlen(moduleName)), true);
+    wasmCWriteNameComponent(&output, wasmNameFromBytes(moduleName, strlen(moduleName)), true);
     if (!wasmOutputClose(&output)) {
         outputBufferFree(&buffer);
         return NULL;

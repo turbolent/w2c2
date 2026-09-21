@@ -1,7 +1,11 @@
 #include <cstdlib>
 #include <cstring>
+#include <type_traits>
 
 #include "w2c2.h"
+
+static_assert(std::is_same<decltype(WasmName::data), const char*>::value,
+    "name bytes must be read-only");
 
 static WasmBool
 complete(
@@ -20,8 +24,15 @@ complete(
 }
 
 int main() {
+    static const char nameBytes[] = {'a', '\0', 'b'};
+    const WasmName name = wasmNameFromBytes(nameBytes, sizeof(nameBytes));
+    const WasmName literal = {"a\0b", 3};
     const U8 bytes[] = {0, 97, 115, 109, 1, 0, 0, 0};
     unsigned count = 0;
+    if (name.data != nameBytes || name.length != sizeof(nameBytes)
+        || wasmNameCompare(name, literal) != 0) {
+        return 1;
+    }
     WasmMemoryOutput memory = {&count, complete};
     WasmCWriteModuleOptions options = emptyWasmCWriteModuleOptions;
     options.outputName = "example.c";
