@@ -139,14 +139,6 @@ wasmDiagnosticReportThreadFailed(
 );
 
 void
-wasmDiagnosticReportDuplicateFunctionName(
-    WasmDiagnosticContext* context,
-    WasmName name,
-    U32 previousIndex,
-    U32 currentIndex
-);
-
-void
 wasmDiagnosticReportSkippedNameSubsection(
     WasmDiagnosticContext* context,
     U32 id,

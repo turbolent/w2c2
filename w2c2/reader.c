@@ -340,113 +340,6 @@ typedef void (* WasmSectionReader)(
 static const char wasmDebugSectionNamePrefix[] = ".debug_";
 static const char wasmNameSectionName[] = "name";
 
-typedef struct WasmFunctionNameEntry {
-    WasmName name;
-    U32 functionIndex;
-} WasmFunctionNameEntry;
-
-static
-int
-wasmFunctionNameEntryCompareNames(
-    const void* a,
-    const void* b
-) {
-    const WasmFunctionNameEntry* entryA = a;
-    const WasmFunctionNameEntry* entryB = b;
-    return wasmNameCompare(entryA->name, entryB->name);
-}
-
-static
-void
-wasmFunctionNamesRemoveDuplicates(
-    WasmNames* functionNames,
-    WasmModuleReaderError** error,
-    WasmDiagnosticContext* diagnostics
-) {
-    const size_t functionNameCount = functionNames->length;
-    size_t functionNameIndex = 0;
-    size_t entryCount = 0;
-    size_t entryIndex = 0;
-    WasmFunctionNameEntry* entries = NULL;
-
-    for (; functionNameIndex < functionNameCount; functionNameIndex++) {
-        if (functionNames->names[functionNameIndex].data != NULL) {
-            entryCount++;
-        }
-    }
-
-    if (entryCount < 2) {
-        *error = NULL;
-        return;
-    }
-
-    entries = calloc(entryCount, sizeof(WasmFunctionNameEntry));
-    if (!entries) {
-        static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderAllocationFailed
-        };
-        *error = &wasmModuleReaderError;
-        return;
-    }
-
-    for (functionNameIndex = 0;
-         functionNameIndex < functionNameCount;
-         functionNameIndex++) {
-
-        if (functionNames->names[functionNameIndex].data != NULL) {
-            WasmFunctionNameEntry* entry = &entries[entryIndex++];
-            entry->functionIndex = assertSizeU32(functionNameIndex);
-            entry->name = functionNames->names[functionNameIndex];
-        }
-    }
-
-    qsort(
-        entries,
-        entryCount,
-        sizeof(WasmFunctionNameEntry),
-        wasmFunctionNameEntryCompareNames
-    );
-
-    entryIndex = 0;
-    while (entryIndex < entryCount) {
-        size_t duplicateEnd = entryIndex + 1;
-        while (duplicateEnd < entryCount
-               && wasmNameCompare(entries[entryIndex].name, entries[duplicateEnd].name) == 0) {
-
-            duplicateEnd++;
-        }
-
-        if (duplicateEnd - entryIndex > 1) {
-            size_t duplicateIndex = entryIndex + 1;
-            for (; duplicateIndex < duplicateEnd; duplicateIndex++) {
-                const WasmFunctionNameEntry previous = entries[duplicateIndex - 1];
-                const WasmFunctionNameEntry current = entries[duplicateIndex];
-                wasmDiagnosticReportDuplicateFunctionName(
-                    diagnostics,
-                    previous.name,
-                    previous.functionIndex,
-                    current.functionIndex
-                );
-            }
-
-            for (duplicateIndex = entryIndex;
-                 duplicateIndex < duplicateEnd;
-                 duplicateIndex++) {
-
-                const U32 duplicateFunctionIndex =
-                    entries[duplicateIndex].functionIndex;
-                wasmNameFree(functionNames->names[duplicateFunctionIndex]);
-                functionNames->names[duplicateFunctionIndex] = emptyWasmName;
-            }
-        }
-
-        entryIndex = duplicateEnd;
-    }
-
-    free(entries);
-    *error = NULL;
-}
-
 static
 void
 wasmReadNameSection(
@@ -576,12 +469,6 @@ wasmReadNameSection(
 
                     wasmNameFree(reader->module->functionNames.names[functionIndex]);
                     reader->module->functionNames.names[functionIndex] = functionName;
-                }
-
-                /* Remove duplicates */
-                wasmFunctionNamesRemoveDuplicates(&reader->module->functionNames, error, diagnostics);
-                if (*error != NULL) {
-                    return;
                 }
             } else {
                 wasmDiagnosticReportSkippedNameSubsection(

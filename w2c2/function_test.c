@@ -69,6 +69,9 @@ testFunctionIDs(void) {
                 CHECK(memcmp(id.hash, hashes[hashIndices[id.functionIndex]], SHA1_DIGEST_LENGTH) == 0);
                 if (index > 0) {
                     CHECK(memcmp(ids.functionIDs[index - 1].hash, id.hash, SHA1_DIGEST_LENGTH) <= 0);
+                    if (memcmp(ids.functionIDs[index - 1].hash, id.hash, SHA1_DIGEST_LENGTH) == 0) {
+                        CHECK(ids.functionIDs[index - 1].functionIndex < id.functionIndex);
+                    }
                 }
             } else {
                 CHECK(id.functionIndex == index);

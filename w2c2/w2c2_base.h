@@ -41,7 +41,7 @@ typedef enum bool {
     false = 0,
     true = 1
 } bool;
-#elif !defined(__bool_true_false_are_defined)
+#elif __STDC_VERSION__ < 202311L && !defined(__bool_true_false_are_defined)
 typedef enum bool {
     false = 0,
     true = 1

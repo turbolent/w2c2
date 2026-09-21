@@ -195,22 +195,7 @@ testReaderDiagnostics(void) {
     reader.debug = true;
     wasmModuleRead(&reader, &error);
     CHECK(error == NULL);
-    CHECK(capture.count == 3);
-    CHECK(capture.last.code == wasmDiagnosticDuplicateFunctionName);
-    CHECK(capture.last.info.duplicateFunctionName.previousIndex == 0);
-    CHECK(capture.last.info.duplicateFunctionName.currentIndex == 1);
-    CHECK(capture.last.info.duplicateFunctionName.name.length == 3);
-    CHECK(memcmp(capture.name, "f\0g", 3) == 0);
-    {
-        FILE* file = tmpfile();
-        char line[128];
-        CHECK(file != NULL);
-        wasmDiagnosticPrint(file, &capture.last, NULL);
-        CHECK(fseek(file, 0, SEEK_SET) == 0);
-        CHECK(fgets(line, sizeof(line), file) != NULL);
-        CHECK(strcmp(line, "w2c2: ignoring duplicate function name f\\x00g used by functions 0 and 1\n") == 0);
-        CHECK(fclose(file) == 0);
-    }
+    CHECK(capture.count == 2);
     wasmModuleFree(reader.module);
     captureDestroy(&capture);
 }
