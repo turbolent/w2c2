@@ -53,7 +53,9 @@ jobs:
 
     env:
       CC: ${{ matrix.system.cc }}
-      CFLAGS: -Werror ${{ matrix.system.cflags }} ${{ startsWith(matrix.system.cc, 'clang') && '-ffp-model=strict' || '-fno-fast-math -fno-rounding-math -fsignaling-nans -ffp-contract=off -fexcess-precision=standard' }}
+      # -fno-fp-int-builtin-inexact avoids GCC's x86 rounding expansions
+      # that preserve signaling NaNs.
+      CFLAGS: -Werror ${{ matrix.system.cflags }} ${{ startsWith(matrix.system.cc, 'clang') && '-ffp-model=strict' || '-fno-fast-math -fno-rounding-math -fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }}
 
     steps:
       - uses: actions/checkout@v3
