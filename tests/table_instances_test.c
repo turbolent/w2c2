@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <setjmp.h>
 #include <string.h>
 
 #include "test_table_owner.h"
@@ -15,6 +16,9 @@
 static wasmTable sharedTable;
 static U32* slot;
 static wasmModuleInstance* expectedHostInstance;
+static jmp_buf tableTrap;
+static bool expectTrap;
+static Trap actualTrap;
 
 typedef struct HostInstance {
     wasmModuleInstance common;
@@ -22,9 +26,24 @@ typedef struct HostInstance {
 } HostInstance;
 
 void trap(Trap trap) {
+    if (expectTrap) {
+        actualTrap = trap;
+        longjmp(tableTrap, 1);
+    }
     fprintf(stderr, "FAIL table instances: %s\n", trapDescription(trap));
     abort();
 }
+
+#define CHECK_TRAP(expression, reason) \
+    do { \
+        expectTrap = true; \
+        if (setjmp(tableTrap) == 0) { \
+            (void)(expression); \
+            CHECK(false); \
+        } \
+        expectTrap = false; \
+        CHECK(actualTrap == (reason)); \
+    } while (0)
 
 static void* resolve(WasmName module, WasmName name) {
     CHECK(module.length == 3 && memcmp(module.data, "env", 3) == 0);
@@ -47,12 +66,29 @@ static U32 hostWithContext(wasmModuleInstance* instance, U32 delta) {
     return host->value;
 }
 
+#if W2C2_RUNTIME_CHECKS
+static void testIndirectTraps(m12_tableX5FcallerInstance* caller) {
+    /* Parameter count, result count, parameter type, and result type must match. */
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(caller, 2, 0), trapIndirectCallTypeMismatch);
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(caller, 3, 0), trapIndirectCallTypeMismatch);
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(caller, 5, 0), trapIndirectCallTypeMismatch);
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(caller, 6, 0), trapIndirectCallTypeMismatch);
+    CHECK_TRAP(m12_tableX5FcallerExport4_read(caller, 11), trapUninitializedElement);
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(caller, 11, 0), trapUninitializedElement);
+    CHECK_TRAP(m12_tableX5FcallerExport5_write(caller, 11, 0), trapUninitializedElement);
+}
+
+#endif
+
 int main(void) {
     m11_tableX5FownerInstance first;
     m11_tableX5FownerInstance second;
     m12_tableX5FcallerInstance caller;
     m12_tableX5FcallerInstance* child;
     U32 offsets[] = {0, 4};
+#if W2C2_RUNTIME_CHECKS
+    static const wasmFuncType hostType = {1, "i", 1, "i"};
+#endif
     HostInstance host = {0};
     host.value = 40;
     wasmTableAllocate(&sharedTable, 12, 12);
@@ -98,10 +134,27 @@ int main(void) {
     child->common.freeChild(&child->common);
 
     /* Hosts may install a callback with its own context. */
-    wasmTableSet(&sharedTable, 9, (wasmFunc)hostWithContext, &host.common);
+    wasmTableSetTyped(&sharedTable, 9, (wasmFunc)hostWithContext, &host.common, &hostType);
     expectedHostInstance = &host.common;
     CHECK(m11_tableX5FownerExport4_call(&first, 9, 2) == 42);
     CHECK(host.value == 42);
+
+    /* Equivalent types may have different indices within and across modules. */
+    CHECK(m12_tableX5FcallerExport10_callX5Falias(&caller, 1, 0) == 50006);
+    CHECK(m12_tableX5FcallerExport10_callX5Falias(&caller, 0, 0) == 93011);
+#if W2C2_RUNTIME_CHECKS
+    testIndirectTraps(&caller);
+    CHECK_TRAP(m11_tableX5FownerExport4_read(&first, 9), trapIndirectCallTypeMismatch);
+    CHECK(host.value == 42);
+    CHECK_TRAP(m11_tableX5FownerExport4_call(&first, 11, 0), trapUninitializedElement);
+
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(&caller, 12, 0), trapTableOutOfBounds);
+    CHECK_TRAP(m12_tableX5FcallerExport4_call(&caller, UINT32_MAX, 0), trapTableOutOfBounds);
+    CHECK_TRAP(wasmTableSet(&sharedTable, 12, NULL, NULL), trapTableOutOfBounds);
+    /* Replacing a typed entry through the legacy setter must clear its type. */
+    wasmTableSet(&sharedTable, 9, (wasmFunc)hostWithContext, &host.common);
+    CHECK_TRAP(m11_tableX5FownerExport4_call(&first, 9, 0), trapIndirectCallTypeMismatch);
+#endif
 
     m12_tableX5FcallerFreeInstance(&caller);
     m11_tableX5FownerFreeInstance(&second);

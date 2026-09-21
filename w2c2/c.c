@@ -43,6 +43,60 @@ static const char* const indentation = "  ";
 
 static
 void
+wasmCWriteFunctionTypeName(
+    WasmOutput* file,
+    const char* moduleName,
+    const U32 typeIndex
+) {
+    wasmCWriteModuleName(file, moduleName);
+    wasmOutputString(file, "FuncType");
+    wasmOutputU32(file, typeIndex);
+}
+
+static
+void
+wasmCWriteFunctionTypes(
+    WasmOutput* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const bool declarations,
+    const bool pretty
+) {
+    U32 typeIndex = 0;
+    if (module->tables.count == 0 && module->tableImports.length == 0) {
+        return;
+    }
+    wasmOutputString(file, "#if W2C2_RUNTIME_CHECKS\n");
+    for (; typeIndex < module->functionTypes.count; typeIndex++) {
+        const WasmFunctionType type = module->functionTypes.functionTypes[typeIndex];
+        if (declarations) {
+            wasmOutputString(file, "extern ");
+        }
+        wasmOutputString(file, "const wasmFuncType ");
+        wasmCWriteFunctionTypeName(file, moduleName, typeIndex);
+        if (!declarations) {
+            U32 index = 0;
+            wasmOutputString(file, pretty ? " = {" : "={");
+            wasmOutputU32(file, type.parameterCount);
+            wasmOutputString(file, pretty ? ", \"" : ",\"");
+            for (; index < type.parameterCount; index++) {
+                wasmOutputChar(file, valueTypeStackNames[type.parameterTypes[index]]);
+            }
+            wasmOutputString(file, pretty ? "\", " : "\",");
+            wasmOutputU32(file, type.resultCount);
+            wasmOutputString(file, pretty ? ", \"" : ",\"");
+            for (index = 0; index < type.resultCount; index++) {
+                wasmOutputChar(file, valueTypeStackNames[type.resultTypes[index]]);
+            }
+            wasmOutputString(file, "\"}");
+        }
+        wasmOutputString(file, ";\n");
+    }
+    wasmOutputString(file, "#endif\n\n");
+}
+
+static
+void
 wasmCWriteStringContents(
     WasmOutput* file,
     const char* string,
@@ -575,13 +629,17 @@ wasmCWriteCallIndirectExpr(
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmTableEntry entry"))
         MUST (wasmCWriteAssign(writer))
-        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, false))
-        MUST (wasmCWrite(writer, ".data["))
+        MUST (wasmCWrite(writer, "wasmTableGet("))
+        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, true))
+        MUST (wasmCWriteComma(writer))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
             MUST (wasmCWriteStackName(writer->output, stackIndex0, wasmValueTypeI32))
         }
-        MUST (wasmCWrite(writer, "];\n"))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, "&"))
+        wasmCWriteFunctionTypeName(writer->output, writer->moduleName, instruction.functionTypeIndex);
+        MUST (wasmCWrite(writer, ");\n"))
         MUST (wasmCWriteIndent(writer))
 
         if (resultCount > 0) {
@@ -919,6 +977,26 @@ wasmCWriteConstExpr(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteMemoryAddress(
+    const WasmCFunctionWriter* writer,
+    const U32 stackIndex,
+    const U32 offset
+) {
+    if (offset != 0) {
+        MUST (wasmCWrite(writer, "(WasmMemoryAddress)"))
+    }
+    MUST (wasmCWriteStackName(writer->output, stackIndex, wasmValueTypeI32))
+    if (offset != 0) {
+        MUST (wasmCWritePlus(writer))
+        wasmOutputU32(writer->output, offset);
+        MUST (wasmCWriteChar(writer, 'U'))
+    }
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteLoad(
     const WasmCFunctionWriter* writer,
     const WasmMemoryArgumentInstruction instruction,
@@ -934,16 +1012,7 @@ wasmCWriteLoad(
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStackName(
-        writer->output,
-        stackIndex0,
-        writer->typeStack->valueTypes[stackIndex0]
-    ))
-    if (instruction.offset != 0) {
-        MUST (wasmCWritePlus(writer))
-        wasmOutputU32(writer->output, instruction.offset);
-        MUST (wasmCWriteChar(writer, 'U'))
-    }
+    MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset))
     MUST (wasmCWrite(writer, ");\n"))
 
     wasmTypeStackDrop(writer->typeStack, 1);
@@ -1082,16 +1151,7 @@ wasmCWriteStore(
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
     MUST (wasmCWriteComma(writer))
-    MUST (wasmCWriteStackName(
-        writer->output,
-        stackIndex1,
-        writer->typeStack->valueTypes[stackIndex1]
-    ))
-    if (instruction.offset != 0) {
-        MUST (wasmCWritePlus(writer))
-        wasmOutputU32(writer->output, instruction.offset);
-        MUST (wasmCWriteChar(writer, 'U'))
-    }
+    MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStackName(
         writer->output,
@@ -1320,12 +1380,12 @@ wasmCWriteMemoryInitExpr(
         const U32 stackIndex2 = wasmTypeStackGetTopIndex(writer->typeStack, 2);
 
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "LOAD_DATA("))
+        MUST (wasmCWrite(writer, "wasmMemoryInit("))
         MUST (wasmCWriteMemoryUse(
             writer->output,
             instruction.memoryIndex,
             NULL,
-            false
+            true
         ))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
@@ -1335,7 +1395,11 @@ wasmCWriteMemoryInitExpr(
         ))
         MUST (wasmCWriteComma(writer))
         wasmCWriteDataSegmentName(writer->output, writer->moduleName, instruction.dataSegmentIndex);
-        MUST (wasmCWriteChar(writer, '+'))
+        MUST (wasmCWrite(writer, ",WASM_DATA_SEGMENT_SIZE(i,"))
+        wasmOutputU32(writer->output, instruction.dataSegmentIndex);
+        MUST (wasmCWriteChar(writer, ','))
+        wasmOutputU64(writer->output, writer->module->dataSegments.dataSegments[instruction.dataSegmentIndex].bytes.length);
+        MUST (wasmCWrite(writer, "),"))
         MUST (wasmCWriteStackName(
             writer->output,
             stackIndex1,
@@ -2335,16 +2399,7 @@ wasmCWriteMemoryAtomicNotifyExpr(
                 true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStackName(
-                writer->output,
-                stackIndex1,
-                writer->typeStack->valueTypes[stackIndex1]
-        ))
-        if (instruction.offset != 0) {
-            MUST (wasmCWritePlus(writer))
-            wasmOutputU32(writer->output, instruction.offset);
-            MUST (wasmCWriteChar(writer, 'U'))
-        }
+        MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -2389,16 +2444,7 @@ wasmCWriteMemoryAtomicWaitExpr(
                 true
         ))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteStackName(
-                writer->output,
-                stackIndex2,
-                writer->typeStack->valueTypes[stackIndex2]
-        ))
-        if (instruction.offset != 0) {
-            MUST (wasmCWritePlus(writer))
-            wasmOutputU32(writer->output, instruction.offset);
-            MUST (wasmCWriteChar(writer, 'U'))
-        }
+        MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -2991,16 +3037,7 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStackName(
-                    writer->output,
-                stackIndex1,
-                writer->typeStack->valueTypes[stackIndex1]
-            ))
-            if (instruction.offset != 0) {
-                MUST (wasmCWritePlus(writer))
-                wasmOutputU32(writer->output, instruction.offset);
-                MUST (wasmCWriteChar(writer, 'U'))
-            }
+            MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                 writer->output,
@@ -3116,16 +3153,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteStackName(
-                    writer->output,
-                    stackIndex2,
-                    writer->typeStack->valueTypes[stackIndex2]
-            ))
-            if (instruction.offset != 0) {
-                MUST (wasmCWritePlus(writer))
-                wasmOutputU32(writer->output, instruction.offset);
-                MUST (wasmCWriteChar(writer, 'U'))
-            }
+            MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                     writer->output,
@@ -3391,7 +3419,12 @@ wasmCWriteFunctionCode(
                         U32 dataIndex = 0;
                         MUST (leb128ReadU32(writer->code, &dataIndex) > 0)
 
-                        /* TODO: implement data.drop semantics. */
+                        if (!writer->ignore) {
+                            MUST (wasmCWriteIndent(writer))
+                            MUST (wasmCWrite(writer, "WASM_DATA_DROP(i,"))
+                            wasmOutputU32(writer->output, dataIndex);
+                            MUST (wasmCWrite(writer, ");\n"))
+                        }
                         break;
                     }
                     case wasmMiscOpcodeMemoryCopy: {
@@ -5189,6 +5222,13 @@ wasmCWriteInitDataSegments(
                 const size_t dataSegmentLength = dataSegment.bytes.length;
                 const Buffer code = dataSegment.offset;
 
+                wasmOutputString(file, "#if W2C2_RUNTIME_CHECKS\n");
+                wasmOutputString(file, "i->dataSegmentSizes[");
+                wasmOutputU32(file, dataSegmentIndex);
+                wasmOutputString(file, "]=");
+                wasmOutputU64(file, dataSegment.passive ? dataSegmentLength : 0);
+                wasmOutputString(file, ";\n#endif\n");
+
                 switch (dataSegmentMode) {
                     case wasmDataSegmentModeGNULD:
                     case wasmDataSegmentModeSectcreate1:
@@ -5382,21 +5422,31 @@ wasmCWriteInitTables(
                     MUST (wasmCWriteConstantExpr(file, module, code, diagnostics))
                 }
                 wasmOutputString(file, ";\n");
+                wasmOutputString(file, "wasmTableCheckRange(");
+                wasmCWriteTableUse(file, module, elementSegment.tableIndex, true);
+                wasmOutputString(file, ",offset,");
+                wasmOutputU32(file, elementSegment.functionIndexCount);
+                wasmOutputString(file, ");\n");
 
                 {
                     U32 functionIndexIndex = 0;
                     for (; functionIndexIndex < elementSegment.functionIndexCount; functionIndexIndex++) {
                         const U32 functionIndex = elementSegment.functionIndices[functionIndexIndex];
+                        const U32 functionTypeIndex = functionIndex < module->functionImports.length
+                            ? module->functionImports.imports[functionIndex].functionTypeIndex
+                            : module->functions.functions[functionIndex - module->functionImports.length].functionTypeIndex;
                         if (pretty) {
                             wasmOutputString(file, indentation);
                         }
-                        wasmOutputString(file, "wasmTableSet(");
+                        wasmOutputString(file, "wasmTableSetTyped(");
                         wasmCWriteTableUse(file, module, elementSegment.tableIndex, true);
                         wasmOutputString(file, pretty ? ", offset + " : ",offset+");
                         wasmOutputU32(file, functionIndexIndex);
                         wasmOutputString(file, pretty ? ", (wasmFunc)" : ",(wasmFunc)");
                         wasmCWriteFunctionUse(file, module, moduleName, functionIndex, true, multipleModules);
-                        wasmOutputString(file, pretty ? ", &i->common);\n" : ",&i->common);\n");
+                        wasmOutputString(file, pretty ? ", &i->common, &" : ",&i->common,&");
+                        wasmCWriteFunctionTypeName(file, moduleName, functionTypeIndex);
+                        wasmOutputString(file, ");\n");
                     }
                 }
             }
@@ -5498,6 +5548,11 @@ wasmCWriteModuleInstanceDeclaration(
     wasmCWriteMemories(file, module, pretty);
     wasmCWriteTables(file, module, pretty);
     wasmCWriteGlobals(file, module, pretty);
+    if (module->dataSegments.count != 0) {
+        wasmOutputString(file, "#if W2C2_RUNTIME_CHECKS\nU32 dataSegmentSizes[");
+        wasmOutputU32(file, module->dataSegments.count);
+        wasmOutputString(file, "];\n#endif\n");
+    }
 
     wasmOutputString(file, "} ");
     wasmCWriteModuleName(file, moduleName);
@@ -5810,6 +5865,7 @@ wasmCWriteModuleHeader(
     wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);
+    wasmCWriteFunctionTypes(file, module, moduleName, true, pretty);
     {
         U32 dataSegmentIndex = 0;
         for (; dataSegmentIndex < module->dataSegments.count; dataSegmentIndex++) {
@@ -5923,6 +5979,7 @@ wasmCWriteInits(
     const bool multipleModules,
     WasmDiagnosticContext* diagnostics
 ) {
+    wasmCWriteFunctionTypes(file, module, moduleName, false, pretty);
     MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
 
     MUST (wasmCWriteInitMemories(file, module, moduleName, pretty))

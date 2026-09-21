@@ -319,7 +319,7 @@ jobs:
         run: |
           cmake -B build
           cmake --build build --config Release
-          ./build/Release/w2c2futex_test.exe
+          ctest --test-dir build -C Release --output-on-failure
 
       - if: steps.changes.outputs.w2c2 == 'true'
         name: Reject Windows shared library configuration

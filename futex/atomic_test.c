@@ -38,6 +38,31 @@ void trap(Trap reason) {
 #define RMW_FULL(name, op) name##_##op
 #define RMW_NARROW(name, op) name##_##op##_u
 
+#if W2C2_RUNTIME_CHECKS
+#define CHECK_ATOMIC_TRAPS(mem, bits, load, store, rmw, operation) \
+    do { \
+        volatile U32 offset; \
+        U8 before[16]; \
+        memcpy(before, (mem)->data, sizeof(before)); \
+        for (offset = 1; offset <= bits / 8; offset++) { \
+            const WasmMemoryAddress address = offset == bits / 8 ? (mem)->size : offset; \
+            const Trap reason = offset == bits / 8 ? trapMemoryOutOfBounds : trapUnalignedAtomic; \
+            CHECK_TRAP(load(mem, address), reason); \
+            CHECK_TRAP(store(mem, address, 0), reason); \
+            CHECK_TRAP(operation(rmw, add)(mem, address, 1), reason); \
+            CHECK_TRAP(operation(rmw, sub)(mem, address, 1), reason); \
+            CHECK_TRAP(operation(rmw, and)(mem, address, 0), reason); \
+            CHECK_TRAP(operation(rmw, or)(mem, address, 1), reason); \
+            CHECK_TRAP(operation(rmw, xor)(mem, address, 1), reason); \
+            CHECK_TRAP(operation(rmw, xchg)(mem, address, 0), reason); \
+            CHECK_TRAP(operation(rmw, cmpxchg)(mem, address, 0, 1), reason); \
+            CHECK(memcmp(before, (mem)->data, sizeof(before)) == 0); \
+        } \
+    } while (0)
+#else
+#define CHECK_ATOMIC_TRAPS(mem, bits, load, store, rmw, operation) ((void)0)
+#endif
+
 #define DEFINE_ATOMIC_TEST(name, t, size, load, store, rmw, operation) \
     static void name(wasmMemory* mem) { \
         const t mask = (t)(U ## size)-1; \
@@ -64,6 +89,7 @@ void trap(Trap reason) {
         CHECK(load(mem, 16) == mask); \
         CHECK(operation(rmw, cmpxchg)(mem, 16, 0, 0) == mask); \
         CHECK(load(mem, 16) == mask); \
+        CHECK_ATOMIC_TRAPS(mem, size, load, store, rmw, operation); \
     }
 
 DEFINE_ATOMIC_TEST(testI32U8, U32, 8, i32_atomic_load8_u, i32_atomic_store8, i32_atomic_rmw8, RMW_NARROW)
@@ -77,6 +103,23 @@ DEFINE_ATOMIC_TEST(testI64U64, U64, 64, i64_atomic_load, i64_atomic_store, i64_a
 static void testWaitNotify(wasmMemory* mem) {
     const U64 value = W2C2_LL(0x1234567887654321U);
     i64_atomic_store(mem, 0, value);
+#if W2C2_RUNTIME_CHECKS
+    {
+        volatile U32 offset;
+        for (offset = 1; offset < 8; offset++) {
+            CHECK_TRAP(wasmMemoryAtomicWait(mem, offset, 0, 0, true), trapUnalignedAtomic);
+            if (offset % 4 != 0) {
+                CHECK_TRAP(wasmMemoryAtomicWait(mem, offset, 0, 0, false), trapUnalignedAtomic);
+                CHECK_TRAP(wasmMemoryAtomicNotify(mem, offset, 0), trapUnalignedAtomic);
+            }
+        }
+    }
+    CHECK_TRAP(wasmMemoryAtomicWait(mem, mem->size, 0, 0, false), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryAtomicWait(mem, mem->size, 0, 0, true), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryAtomicNotify(mem, mem->size, 0), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryAtomicNotify(mem, (U64)UINT32_MAX + 1, 0), trapMemoryOutOfBounds);
+    CHECK(mem->futex == NULL);
+#endif
     if (mem->shared) {
         CHECK(wasmMemoryAtomicNotify(mem, 0, 0) == 0);
         CHECK(wasmMemoryAtomicNotify(mem, 4, 1) == 0);
@@ -112,6 +155,9 @@ static void* compareExchangeThread(void* context) {
     while (i32_atomic_load(mem, 0) == 0) { W2C2_LOOP_START }
     for (index = 0; index < ATOMIC_ITERATIONS; index++) {
         U32 old = atomic_load_U32(mem->data + 16);
+        if (index == ATOMIC_ITERATIONS / 2) {
+            CHECK(wasmMemoryGrow(mem, 1) == 1);
+        }
         for (;;) {
             U32 expected = old;
             const U32 desired = swapU32(swapU32(old) + 65536U);
@@ -142,7 +188,7 @@ static void testMixedAtomics(wasmMemory* mem) {
 void testAtomics(void) {
     unsigned shared;
     for (shared = 0; shared < 2; shared++) {
-        wasmMemory* mem = wasmMemoryAllocate(1, 1, shared != 0);
+        wasmMemory* mem = wasmMemoryAllocate(1, 2, shared != 0);
         testI32U8(mem);
         testI32U16(mem);
         testI32U32(mem);

@@ -45,6 +45,20 @@ endif
 .SILENT:
 
 .PHONY: run-tests generator-test runtime-lifecycle-test table-instances-test atomic-offsets-test c-strings-test binary-names-test gen gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances clean clean-wasm-json clean-assertions clean-compiled
+.PHONY: runtime-checks-test gen-runtime-checks
+
+RUNTIME_CHECK_SOURCES = test_runtime_checks.c test_check_segments.c test_check_empty_segments.c
+
+runtime-checks-test: run-test-runtime_checks run-test-runtime_checks_checked
+
+test_runtime_checks$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_runtime_checks_checked$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+$(RUNTIME_CHECK_SOURCES): test_%.c: gen/%.wasm
+	$(W2C2) -m $< $@
 
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
@@ -107,7 +121,7 @@ test_binary_names.c: gen/binary_names.wasm
 generator-test:
 	$(PYTHON3) -m unittest gen_test
 
-run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-checks-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -128,7 +142,7 @@ test_%.c: gen/%.wasm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances
+gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks
 	$(PYTHON3) gen.py
 
 gen-atomic-offsets:
@@ -144,6 +158,11 @@ gen-table-instances:
 	wat2wasm table_owner.wat -o gen/table_owner.wasm
 	wat2wasm table_caller.wat -o gen/table_caller.wasm
 
+gen-runtime-checks:
+	wat2wasm --enable-threads runtime_checks.wat -o gen/runtime_checks.wasm
+	wat2wasm check_segments.wat -o gen/check_segments.wasm
+	wat2wasm check_empty_segments.wat -o gen/check_empty_segments.wasm
+
 gen-%:
 	$(PYTHON3) gen.py $*
 
@@ -155,3 +174,4 @@ clean:
 	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
 	-rm -f test_table_instances$(EXE) test_table_owner.c test_table_caller.c
+	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)

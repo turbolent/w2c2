@@ -461,7 +461,7 @@ testDataSymbols(void) {
                     function = findOutput(&capture, expected);
                     CHECK(function != NULL);
                 }
-                sprintf(expected, "%sData%lu+", prefix, (unsigned long)segmentIndex);
+                sprintf(expected, "%sData%lu,WASM_DATA_SEGMENT_SIZE", prefix, (unsigned long)segmentIndex);
                 CHECK(strstr((const char*)function->bytes, expected) != NULL);
                 if (options.dataSegmentMode == wasmDataSegmentModeArrays) {
                     sprintf(expected, "extern const U8 %sData%lu[];",
