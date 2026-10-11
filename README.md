@@ -20,6 +20,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 - Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
 - Implements several extensions:
+  - [Fixed-width SIMD](https://github.com/WebAssembly/simd): all 236 SIMD 1.0 instructions, with native vector operations and a portable fallback
   - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Conditional data segment initialization](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
@@ -78,6 +79,34 @@ For example, to compile `module.wasm` to `module.c` (and `module.h`):
 ```sh
 ./w2c2 module.wasm module.c
 ```
+
+### SIMD
+
+SIMD modules use the bundled [SIMDe](https://github.com/simd-everywhere/simde)
+headers, following wasm2c's approach. Compile the generated C with optimization
+(e.g. `-O3`); SIMDe selects native instructions available for the compilation
+target, including SSE/AVX on x86 and NEON on ARM. Target flags such as
+`-march=native` can enable additional instructions when the binary will run
+on the build machine. There is no runtime dispatch or separately linked SIMD
+library. The translator itself remains independent of SIMDe.
+
+Generated SIMD code works in C89 mode with current GCC and Clang. SIMDe needs
+compiler and system-header features beyond those available on some of w2c2's
+legacy targets. Scalar-only modules do not include SIMDe. Use
+`-DSIMDE_NO_NATIVE` to exercise the portable backend, and additionally
+`-DSIMDE_NO_VECTOR` to use scalar lane operations. Compile generated modules
+and host code that exchanges `V128` values with matching SIMD configuration.
+
+Loads and stores support unaligned addresses. With `W2C2_RUNTIME_CHECKS=1`,
+SIMD memory operations check their actual access width and preserve overflow
+when adding the instruction offset. The runtime also adapts lane order and
+memory byte order on big-endian hosts. Relaxed SIMD and multi-memory are outside
+this implementation's scope.
+
+`make -C tests simd-test` checks every opcode, malformed immediates, separate
+compilation, and vector integration. `make -C tests simd-benchmark` compares a
+translated integer multiply-add reduction with an equivalent native SIMD kernel.
+See [the test instructions](tests/README.md) for the official SIMD suite runner.
 
 ### Separate Compilation
 
