@@ -1118,6 +1118,14 @@ wasmReadConstantExpr(
             MUST (wasmConstInstructionRead(buffer, opcode, &instruction))
             break;
         }
+        case wasmOpcodeSIMDPrefix: {
+            U32 subopcode;
+            WasmValue value;
+            MUST (leb128ReadU32(buffer, &subopcode))
+            MUST (subopcode == 12)
+            MUST (wasmV128ConstRead(buffer, &value))
+            break;
+        }
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
             MUST (wasmGlobalInstructionRead(buffer, &instruction))
@@ -1399,6 +1407,14 @@ wasmReadExportSection(
             exports[exportIndex] = export;
             reader->module->exports.count = exportIndex + 1;
 
+            if (export.kind == wasmExportKindGlobal
+                && (size_t)export.index >= reader->module->globalImports.length + reader->module->globals.count) {
+                static WasmModuleReaderError wasmModuleReaderError = {
+                    wasmModuleReaderInvalidExportSectionExportIndex
+                };
+                *error = &wasmModuleReaderError;
+                goto fail;
+            }
             if (export.kind == wasmExportKindFunction) {
                 if (export.index >= functionCount) {
                     static WasmModuleReaderError wasmModuleReaderError = {

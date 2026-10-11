@@ -13,6 +13,8 @@ wasmValueTypeDescription(
             return "f32";
         case wasmValueTypeF64:
             return "f64";
+        case wasmValueTypeV128:
+            return "v128";
         default:
             return "unknown";
     }

@@ -14,6 +14,7 @@ typedef enum WasmValueType {
     wasmValueTypeI64,
     wasmValueTypeF32,
     wasmValueTypeF64,
+    wasmValueTypeV128,
     wasmValueType_count
 } WasmValueType;
 
@@ -43,6 +44,9 @@ wasmDecodeValueType(
             return true;
         case -0x4: /* 0x7C */
             *result = wasmValueTypeF64;
+            return true;
+        case -0x5: /* 0x7B */
+            *result = wasmValueTypeV128;
             return true;
         default: {
             return false;
