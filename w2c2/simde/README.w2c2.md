@@ -8,6 +8,6 @@ convert/shuffle builtin branches also check that vector subscripting
 is enabled, so SIMDE_NO_VECTOR works with recent GCC/Clang. Scalar wrapping
 arithmetic, absolute value, negation, shifts, and dot sums use unsigned bits
 to avoid signed overflow. Saturating scalar conversion checks include the
-rounded floating-point upper bound before casting. Native instruction mappings
-are unchanged. COPYING contains the upstream license.
+rounded floating-point upper bound before casting. The SSE2 unsigned f32 conversion splits at 2^31 before signed conversion,
+and unsigned f64 conversion uses the double-precision NaN predicate. COPYING contains the upstream license.
 WABT-LICENSE covers the adapted wasm2c endian adapters in ../w2c2_simd.h.
