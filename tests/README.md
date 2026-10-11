@@ -59,3 +59,16 @@ instantiation. Tests use isolated temporary directories and leave no generated
 artifacts in the worktree. Compiler flags can be selected with `--cc` and
 `--cflags`; the benchmark compiles its native and translated kernels separately
 with identical flags to prevent hoisting the native call out of the timing loop.
+
+The `simd` CI job runs `simd-test` with GCC/G++ 13 and Clang on x86-64,
+using SSE2, AVX2, portable vector, and fully scalar backends. `SIMD_CFLAGS`
+applies to both the all-opcode C/C++ compilation checks and the WAST execution
+runner; it defaults to optimization and conversion warnings as errors.
+`simd/conversions.wast` checks unsigned conversions across 2^31 and 2^32,
+mixed lanes, fractions, infinities, and NaNs through translated Wasm functions.
+For example, run a local scalar configuration with:
+
+```sh
+make simd-test CC=gcc CXX=g++ \
+  SIMD_CFLAGS='-O2 -Werror=conversion -Werror=float-conversion -DSIMDE_NO_NATIVE -DSIMDE_NO_VECTOR'
+```
