@@ -176,10 +176,12 @@ clean:
 	-rm -f test_table_instances$(EXE) test_table_owner.c test_table_caller.c
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)
 
+SIMD_CFLAGS ?= -O2 -Werror=conversion -Werror=float-conversion
+
 .PHONY: simd-test simd-benchmark
 simd-test:
-	W2C2=$(W2C2) $(PYTHON3) simd_test.py
-	$(PYTHON3) simd.py --w2c2 $(W2C2) simd/integration.wast
+	W2C2=$(W2C2) SIMD_CFLAGS="$(SIMD_CFLAGS)" $(PYTHON3) simd_test.py
+	$(PYTHON3) simd.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" simd/integration.wast simd/conversions.wast
 
 simd-benchmark:
 	$(PYTHON3) simd_bench.py --w2c2 $(W2C2) --cc "$(CC)"

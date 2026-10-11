@@ -8,6 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 W2C2 = Path(os.environ.get('W2C2', ROOT / 'w2c2/w2c2')).resolve()
+SIMD_CFLAGS = shlex.split(os.environ.get('SIMD_CFLAGS', '-O2 -Werror=conversion -Werror=float-conversion'))
 TYPES = {'I32': 0x7f, 'I64': 0x7e, 'F32': 0x7d, 'F64': 0x7c, 'V128': 0x7b}
 
 
@@ -79,7 +80,7 @@ class SIMDTests(unittest.TestCase):
         output = self.translate(module(functions), flags=('-f', '17', '-t', '2'))
         for source in self.path.glob('*.c'):
             result = subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
-                '-std=c89', '-O2', '-Werror=conversion', '-I' + str(ROOT / 'w2c2'),
+                '-std=c89', *SIMD_CFLAGS, '-I' + str(ROOT / 'w2c2'),
                 '-c', str(source), '-o', str(source.with_suffix('.o'))], capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr.decode())
         self.assertTrue(output.exists())
@@ -87,7 +88,7 @@ class SIMDTests(unittest.TestCase):
     def test_vector_headers_support_cpp(self):
         output = self.translate(module([([TYPES['V128']], TYPES['V128'], b'\x20\x00')]))
         result = subprocess.run(shlex.split(os.environ.get('CXX', 'c++')) + [
-            '-x', 'c++', '-std=c++11', '-Werror=conversion', '-I' + str(ROOT / 'w2c2'),
+            '-x', 'c++', '-std=c++11', *SIMD_CFLAGS, '-I' + str(ROOT / 'w2c2'),
             '-c', str(output), '-o', str(output.with_suffix('.o'))], capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr.decode())
 
