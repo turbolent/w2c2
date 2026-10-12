@@ -20,6 +20,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 - Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
 - Implements several extensions:
+  - [Fixed-width SIMD](https://github.com/WebAssembly/simd)
   - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Conditional data segment initialization](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)

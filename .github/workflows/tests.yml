@@ -13,6 +13,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  simd:
+    runs-on: ubuntu-24.04
+    name: "SIMD, ${{ matrix.compiler.name }}, ${{ matrix.backend.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - { name: gcc13, cc: gcc-13, cxx: g++-13 }
+          - { name: clang, cc: clang, cxx: clang++ }
+        backend:
+          - { name: sse2, flags: '-march=x86-64 -msse2 -mno-avx' }
+          - { name: avx2, flags: '-march=x86-64 -mavx2' }
+          - { name: portable, flags: '-DSIMDE_NO_NATIVE' }
+          - { name: scalar, flags: '-DSIMDE_NO_NATIVE -DSIMDE_NO_VECTOR' }
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+      SIMD_CFLAGS: -O2 -Werror=conversion -Werror=float-conversion ${{ matrix.backend.flags }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compilers and WABT
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 g++-13 clang wabt
+      - name: Build w2c2
+        run: make -C w2c2 -j2
+      - name: Test SIMD compilation and execution
+        run: make -C tests simd-test
+
   linux:
     runs-on: ubuntu-latest
     name: "Linux, ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"

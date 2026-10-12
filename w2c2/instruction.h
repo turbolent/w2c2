@@ -38,6 +38,7 @@ typedef union WasmValue {
     I64 i64;
     F32 f32;
     F64 f64;
+    U8 v128[16];
 } WasmValue;
 
 typedef struct WasmConstInstruction {
@@ -51,6 +52,14 @@ wasmConstInstructionRead(
     WasmOpcode opcode,
     WasmConstInstruction* result
 );
+
+static W2C2_INLINE bool
+wasmV128ConstRead(Buffer* buffer, WasmValue* value) {
+    if (buffer->length < 16) return false;
+    memcpy(value->v128, buffer->data, 16);
+    bufferSkipUnchecked(buffer, 16);
+    return true;
+}
 
 /* WasmMemoryArgumentInstruction */
 

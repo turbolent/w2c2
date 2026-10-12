@@ -967,3 +967,13 @@ wasmThreadsOpcodeDescription(
         return "unknown";
     }
 }
+
+const char*
+wasmSIMDOpcodeDescription(const U32 opcode) {
+    switch (opcode) {
+#define SIMD(code, name, result, argc, a, b, c, bytes, immediate, lanes, function) case code: return name;
+#include "simd_opcodes.def"
+#undef SIMD
+        default: return "unknown";
+    }
+}

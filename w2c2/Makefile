@@ -134,10 +134,10 @@ else
 	$(AR) rcs $@ $^
 endif
 
-%.o: %.c $(wildcard *.h)
+%.o: %.c $(wildcard *.h *.def)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.pic.o: %.c $(wildcard *.h)
+%.pic.o: %.c $(wildcard *.h *.def)
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 .PHONY: test
@@ -153,6 +153,7 @@ install: w2c2$(SUFFIX)
 	mkdir -p "$(DESTDIR)$(LIBDIR)" "$(DESTDIR)$(INCLUDEDIR)" "$(DESTDIR)$(BINDIR)"
 	cp $(LIBRARY) "$(DESTDIR)$(LIBDIR)/"
 	cp $(PUBLIC_HEADERS) "$(DESTDIR)$(INCLUDEDIR)/"
+	cp -R simde "$(DESTDIR)$(INCLUDEDIR)/"
 	cp w2c2$(SUFFIX) "$(DESTDIR)$(BINDIR)/"
 
 .PHONY: clean

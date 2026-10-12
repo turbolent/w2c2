@@ -188,6 +188,7 @@ typedef enum WasmOpcode {
     wasmOpcodeI64Extend16S      = 0xC3,
     wasmOpcodeI64Extend32S      = 0xC4,
     wasmOpcodeThreadsPrefix     = 0xFE,
+    wasmOpcodeSIMDPrefix        = 0xFD,
     wasmOpcodeMiscPrefix        = 0xFC
 } WasmOpcode;
 
@@ -322,6 +323,9 @@ wasmOpcodeRead(
 
     return true;
 }
+
+const char*
+wasmSIMDOpcodeDescription(U32 opcode);
 
 #ifdef __cplusplus
 }
