@@ -4286,37 +4286,11 @@ wasmCWriteFunctionReturn(
     return true;
 }
 
-static
-bool
-WARN_UNUSED_RESULT
+static bool WARN_UNUSED_RESULT
 wasmCWriteFunctionSignature(
-    WasmOutput* file,
-    const WasmModule* module,
-    const char* moduleName,
-    const WasmFunction function,
-    const U32 functionIndex,
-    const bool writeParameterNames,
-    const bool pretty,
-    const bool prefix,
-    WasmDiagnosticContext* diagnostics
-) {
-    const char* returnType = NULL;
-    const WasmFunctionType functionType =
-        module->functionTypes.functionTypes[function.functionTypeIndex];
-
-    MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
-    wasmOutputString(file, returnType);
-    wasmOutputChar(file, ' ');
-    wasmCWriteFunctionUse(file, module, moduleName, functionIndex, false, prefix);
-    wasmCWriteParameters(
-        file,
-        NULL,
-        functionType,
-        writeParameterNames,
-        pretty
-    );
-    return true;
-}
+    WasmOutput*, const WasmModule*, const char*, const WasmFunction,
+    const U32, const bool, const bool, const bool, WasmDiagnosticContext*
+);
 
 static
 bool
@@ -4418,6 +4392,38 @@ wasmCWriteFunctionBody(
 }
 
 
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteFunctionSignature(
+    WasmOutput* file,
+    const WasmModule* module,
+    const char* moduleName,
+    const WasmFunction function,
+    const U32 functionIndex,
+    const bool writeParameterNames,
+    const bool pretty,
+    const bool prefix,
+    WasmDiagnosticContext* diagnostics
+) {
+    const char* returnType = NULL;
+    const WasmFunctionType functionType =
+        module->functionTypes.functionTypes[function.functionTypeIndex];
+
+    MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
+    wasmOutputString(file, returnType);
+    wasmOutputChar(file, ' ');
+    wasmCWriteFunctionUse(file, module, moduleName, functionIndex, false, prefix);
+    wasmCWriteParameters(
+        file,
+        NULL,
+        functionType,
+        writeParameterNames,
+        pretty
+    );
+    return true;
+}
 
 static
 bool

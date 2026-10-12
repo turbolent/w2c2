@@ -42,6 +42,12 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
 #endif
 }
 
+#if WASM_ENDIAN == WASM_BIG_ENDIAN
+#define W2C2_SIMD_LANE(t, lane) ((int)(16 / sizeof(t)) - 1 - (lane))
+#else
+#define W2C2_SIMD_LANE(t, lane) (lane)
+#endif
+
 /* memcpy-based unaligned access. Checks use the actual access width,
  * including loads which extend lanes or zero the upper half. */
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t) \
@@ -56,7 +62,7 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
         t value; \
         wasmMemoryCheckRange(mem, addr, sizeof(t)); \
         w2c2_simd_copy(&value, mem->data + addr, sizeof(t)); \
-        return func(&value, vec, lane); \
+        return func(&value, vec, W2C2_SIMD_LANE(t, lane)); \
     }
 #define DEFINE_SIMD_STORE(name, t) \
     static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
@@ -69,7 +75,7 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
     static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
         t value; \
         wasmMemoryCheckRange(mem, addr, sizeof(t)); \
-        func(&value, vec, lane); \
+        func(&value, vec, W2C2_SIMD_LANE(t, lane)); \
         w2c2_simd_copy(mem->data + addr, &value, sizeof(t)); \
     }
 
@@ -107,38 +113,6 @@ DEFINE_SIMD_LOAD_FUNC(w2c2_u64x2_load32x2, simde_wasm_u64x2_load32x2, U64)
 DEFINE_SIMD_LOAD_FUNC(w2c2_v128_load32_zero, w2c2_v128_impl_load32_zero, U32)
 DEFINE_SIMD_LOAD_FUNC(w2c2_v128_load64_zero, w2c2_v128_impl_load64_zero, U64)
 
-#if (WASM_ENDIAN == WASM_BIG_ENDIAN)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane0, simde_wasm_v128_load8_lane, U8, 15)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane1, simde_wasm_v128_load8_lane, U8, 14)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane2, simde_wasm_v128_load8_lane, U8, 13)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane3, simde_wasm_v128_load8_lane, U8, 12)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane4, simde_wasm_v128_load8_lane, U8, 11)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane5, simde_wasm_v128_load8_lane, U8, 10)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane6, simde_wasm_v128_load8_lane, U8, 9)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane7, simde_wasm_v128_load8_lane, U8, 8)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane8, simde_wasm_v128_load8_lane, U8, 7)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane9, simde_wasm_v128_load8_lane, U8, 6)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane10, simde_wasm_v128_load8_lane, U8, 5)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane11, simde_wasm_v128_load8_lane, U8, 4)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane12, simde_wasm_v128_load8_lane, U8, 3)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane13, simde_wasm_v128_load8_lane, U8, 2)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane14, simde_wasm_v128_load8_lane, U8, 1)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane15, simde_wasm_v128_load8_lane, U8, 0)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane0, simde_wasm_v128_load16_lane, U16, 7)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane1, simde_wasm_v128_load16_lane, U16, 6)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane2, simde_wasm_v128_load16_lane, U16, 5)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane3, simde_wasm_v128_load16_lane, U16, 4)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane4, simde_wasm_v128_load16_lane, U16, 3)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane5, simde_wasm_v128_load16_lane, U16, 2)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane6, simde_wasm_v128_load16_lane, U16, 1)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load16_lane7, simde_wasm_v128_load16_lane, U16, 0)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane0, simde_wasm_v128_load32_lane, U32, 3)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane1, simde_wasm_v128_load32_lane, U32, 2)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane2, simde_wasm_v128_load32_lane, U32, 1)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane3, simde_wasm_v128_load32_lane, U32, 0)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load64_lane0, simde_wasm_v128_load64_lane, U64, 1)
-DEFINE_SIMD_LOAD_LANE(w2c2_v128_load64_lane1, simde_wasm_v128_load64_lane, U64, 0)
-#else
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane0, simde_wasm_v128_load8_lane, U8, 0)
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane1, simde_wasm_v128_load8_lane, U8, 1)
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load8_lane2, simde_wasm_v128_load8_lane, U8, 2)
@@ -169,42 +143,9 @@ DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane2, simde_wasm_v128_load32_lane, U32, 
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load32_lane3, simde_wasm_v128_load32_lane, U32, 3)
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load64_lane0, simde_wasm_v128_load64_lane, U64, 0)
 DEFINE_SIMD_LOAD_LANE(w2c2_v128_load64_lane1, simde_wasm_v128_load64_lane, U64, 1)
-#endif
 
 DEFINE_SIMD_STORE(w2c2_v128_store, V128)
 
-#if (WASM_ENDIAN == WASM_BIG_ENDIAN)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane0, simde_wasm_v128_store8_lane, U8, 15)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane1, simde_wasm_v128_store8_lane, U8, 14)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane2, simde_wasm_v128_store8_lane, U8, 13)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane3, simde_wasm_v128_store8_lane, U8, 12)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane4, simde_wasm_v128_store8_lane, U8, 11)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane5, simde_wasm_v128_store8_lane, U8, 10)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane6, simde_wasm_v128_store8_lane, U8, 9)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane7, simde_wasm_v128_store8_lane, U8, 8)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane8, simde_wasm_v128_store8_lane, U8, 7)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane9, simde_wasm_v128_store8_lane, U8, 6)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane10, simde_wasm_v128_store8_lane, U8, 5)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane11, simde_wasm_v128_store8_lane, U8, 4)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane12, simde_wasm_v128_store8_lane, U8, 3)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane13, simde_wasm_v128_store8_lane, U8, 2)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane14, simde_wasm_v128_store8_lane, U8, 1)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane15, simde_wasm_v128_store8_lane, U8, 0)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane0, simde_wasm_v128_store16_lane, U16, 7)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane1, simde_wasm_v128_store16_lane, U16, 6)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane2, simde_wasm_v128_store16_lane, U16, 5)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane3, simde_wasm_v128_store16_lane, U16, 4)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane4, simde_wasm_v128_store16_lane, U16, 3)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane5, simde_wasm_v128_store16_lane, U16, 2)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane6, simde_wasm_v128_store16_lane, U16, 1)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store16_lane7, simde_wasm_v128_store16_lane, U16, 0)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane0, simde_wasm_v128_store32_lane, U32, 3)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane1, simde_wasm_v128_store32_lane, U32, 2)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane2, simde_wasm_v128_store32_lane, U32, 1)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane3, simde_wasm_v128_store32_lane, U32, 0)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store64_lane0, simde_wasm_v128_store64_lane, U64, 1)
-DEFINE_SIMD_STORE_LANE(w2c2_v128_store64_lane1, simde_wasm_v128_store64_lane, U64, 0)
-#else
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane0, simde_wasm_v128_store8_lane, U8, 0)
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane1, simde_wasm_v128_store8_lane, U8, 1)
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store8_lane2, simde_wasm_v128_store8_lane, U8, 2)
@@ -235,7 +176,6 @@ DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane2, simde_wasm_v128_store32_lane, U3
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store32_lane3, simde_wasm_v128_store32_lane, U32, 3)
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store64_lane0, simde_wasm_v128_store64_lane, U64, 0)
 DEFINE_SIMD_STORE_LANE(w2c2_v128_store64_lane1, simde_wasm_v128_store64_lane, U64, 1)
-#endif
 
 #if (WASM_ENDIAN == WASM_BIG_ENDIAN)
 #define w2c2_v128_const(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) simde_wasm_i8x16_const(p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a)
@@ -374,6 +314,7 @@ DEFINE_SIMD_STORE_LANE(w2c2_v128_store64_lane1, simde_wasm_v128_store64_lane, U6
 #endif
 
 
+#undef W2C2_SIMD_LANE
 #undef DEFINE_SIMD_LOAD_FUNC
 #undef DEFINE_SIMD_LOAD_LANE
 #undef DEFINE_SIMD_STORE

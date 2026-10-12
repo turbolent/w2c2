@@ -1,11 +1,5 @@
 #include "w2c2_simd.h"
 
-#if defined(__GNUC__) || defined(__clang__)
-#define NOINLINE __attribute__((noinline))
-#else
-#define NOINLINE
-#endif
-
 /* Native baseline uses the same instruction primitives, without translation. */
 V128
 native_dot(const U8* a, const U8* b, U32 count) {
