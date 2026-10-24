@@ -97,6 +97,18 @@ typedef WasmPtr WasmMemoryAddress;
 #define W2C2_LOOP_START
 #endif
 
+/* Fixed-size copies (loads, stores, reinterprets, byte swaps). Use the compiler
+ * builtin so they are always inlined, even when the embedder compiles with
+ * -fno-builtin-memcpy (ESP-IDF and other embedded SDKs do). Otherwise every
+ * memory access becomes a call to memcpy. Embedders can override it. */
+#ifndef W2C2_MEMCPY
+#if defined(__GNUC__) || defined(__clang__)
+#define W2C2_MEMCPY __builtin_memcpy
+#else
+#define W2C2_MEMCPY memcpy
+#endif
+#endif
+
 #define MUST(x) { if (!(x)) { return false; }; }
 #define MUST_OR_GOTO(LABEL, x) { if (!(x)) { goto LABEL; }; }
 
@@ -608,7 +620,7 @@ I64_CTZ(
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static W2C2_INLINE t2 name(t1 x) {      \
     t2 result;                            \
-    memcpy(&result, &x, sizeof(result));  \
+    W2C2_MEMCPY(&result, &x, sizeof(result)); \
     return result;                        \
   }
 
@@ -1170,35 +1182,35 @@ wasmMemoryInit(
 
 static W2C2_INLINE U16 readSwapU16(const void* address, WasmMemoryAddress offset) {
     U16 result;
-    memcpy(&result, (const U8*)address + offset, sizeof(U16));
+    W2C2_MEMCPY(&result, (const U8*)address + offset, sizeof(U16));
     return swapU16(result);
 }
 
 static W2C2_INLINE U32 readSwapU32(const void* address, WasmMemoryAddress offset) {
     U32 result;
-    memcpy(&result, (const U8*)address + offset, sizeof(U32));
+    W2C2_MEMCPY(&result, (const U8*)address + offset, sizeof(U32));
     return swapU32(result);
 }
 
 static W2C2_INLINE U64 readSwapU64(const void* address, WasmMemoryAddress offset) {
     U64 result;
-    memcpy(&result, (const U8*)address + offset, sizeof(U64));
+    W2C2_MEMCPY(&result, (const U8*)address + offset, sizeof(U64));
     return swapU64(result);
 }
 
 static W2C2_INLINE void writeSwapU16(void* address, WasmMemoryAddress offset, U16 v) {
     v = swapU16(v);
-    memcpy((U8*)address + offset, &v, sizeof(U16));
+    W2C2_MEMCPY((U8*)address + offset, &v, sizeof(U16));
 }
 
 static W2C2_INLINE void writeSwapU32(void* address, WasmMemoryAddress offset, U32 v) {
     v = swapU32(v);
-    memcpy((U8*)address + offset, &v, sizeof(U32));
+    W2C2_MEMCPY((U8*)address + offset, &v, sizeof(U32));
 }
 
 static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U64 v) {
     v = swapU64(v);
-    memcpy((U8*)address + offset, &v, sizeof(U64));
+    W2C2_MEMCPY((U8*)address + offset, &v, sizeof(U64));
 }
 
 #endif
@@ -1216,7 +1228,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
     static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
         t1 result;                                              \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        memcpy(&result, &mem->data[addr], sizeof(t1));          \
+        W2C2_MEMCPY(&result, &mem->data[addr], sizeof(t1));     \
         return (t3)(t2)result;                                  \
     }
 
@@ -1238,7 +1250,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         U16 v; \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         v = readSwapU16(mem->data, addr); \
-        memcpy(&result, &v, sizeof(U16));                       \
+        W2C2_MEMCPY(&result, &v, sizeof(U16));                  \
         return (t3)(t2)result;                                  \
     }
 
@@ -1258,7 +1270,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         U32 v; \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         v = readSwapU32(mem->data, addr); \
-        memcpy(&result, &v, sizeof(U32));                       \
+        W2C2_MEMCPY(&result, &v, sizeof(U32));                  \
         return (t3)(t2)result;                                  \
     }
 
@@ -1278,7 +1290,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         U64 v; \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         v = readSwapU64(mem->data, addr); \
-        memcpy(&result, &v, sizeof(U64));                       \
+        W2C2_MEMCPY(&result, &v, sizeof(U64));                  \
         return (t3)(t2)result;                                  \
     }
 
@@ -1290,7 +1302,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
     static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
         t1 wrapped = (t1)value;                                             \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        memcpy(&mem->data[addr], &wrapped, sizeof(t1));                     \
+        W2C2_MEMCPY(&mem->data[addr], &wrapped, sizeof(t1));                \
     }
 
 /* DEFINE_STORE8 */
@@ -1310,7 +1322,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         t1 wrapped = (t1)value;                                             \
         U16 v;                                                              \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        memcpy(&v, &wrapped, sizeof(U16));                                  \
+        W2C2_MEMCPY(&v, &wrapped, sizeof(U16));                             \
         writeSwapU16(mem->data, addr, v);                                   \
     }
 
@@ -1329,7 +1341,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         t1 wrapped = (t1)value;                                             \
         U32 v;                                                              \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        memcpy(&v, &wrapped, sizeof(U32));                                  \
+        W2C2_MEMCPY(&v, &wrapped, sizeof(U32));                             \
         writeSwapU32(mem->data, addr, v);                                   \
     }
 
@@ -1348,7 +1360,7 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
         t1 wrapped = (t1)value;                                             \
         U64 v;                                                              \
         wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        memcpy(&v, &wrapped, sizeof(U64));                                  \
+        W2C2_MEMCPY(&v, &wrapped, sizeof(U64));                             \
         writeSwapU64(mem->data, addr, v);                                   \
     }
 
@@ -1389,9 +1401,9 @@ DEFINE_STORE32(i64_store32, U32, U64)
 #define DEFINE_SWAP(size, suffix, type)                \
     static W2C2_INLINE void swap_ ## suffix(type* v) { \
         U ## size tmp;                                 \
-        memcpy(&tmp, v, size / 8);                     \
+        W2C2_MEMCPY(&tmp, v, size / 8);                \
         tmp = swapU ## size(tmp);                      \
-        memcpy(v, &tmp, size / 8);                     \
+        W2C2_MEMCPY(v, &tmp, size / 8);                \
     }
 
 #endif
