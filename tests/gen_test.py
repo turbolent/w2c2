@@ -77,5 +77,58 @@ class NaNTests(unittest.TestCase):
                     self.assertNotIn(' & ', output)
 
 
+class GlobalTests(unittest.TestCase):
+    def generate(self, commands):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            source = directory / 'global.json'
+            source.write_text(json.dumps({'commands': commands}))
+            with patch.object(gen, 'gen_dir', directory), contextlib.redirect_stdout(io.StringIO()):
+                gen.generate_test_files(source)
+            return {p.name: p.read_text() for p in directory.glob('assert_*.c')}
+
+    def test_get_all_scalar_types(self):
+        for value_type, value, assertion in [
+            ('i32', '4294967295', 'assertEqualU32'),
+            ('i64', '18446744073709551615', 'assertEqualU64'),
+            ('f32', '2147483648', 'assertEqualU32'),
+            ('f64', '9223372036854775808', 'assertEqualU64'),
+        ]:
+            with self.subTest(value_type=value_type):
+                files = self.generate([
+                    {'type': 'module', 'filename': 'global.0.wasm'},
+                    {'type': 'assert_return', 'action': {'type': 'get', 'field': 'value'},
+                     'expected': [{'type': value_type, 'value': value}]},
+                ])
+                output = files['assert_global.0.c']
+                self.assertIn(assertion + '(', output)
+                self.assertIn('*' + gen.export_name('global.0', 'value') + '(&instance)', output)
+                if value_type.startswith('f'):
+                    width = value_type[1:]
+                    self.assertIn('i' + width + '_reinterpret_f' + width + '(*', output)
+
+    def test_named_get_does_not_change_current_module(self):
+        files = self.generate([
+            {'type': 'module', 'filename': 'global.0.wasm', 'name': '$First'},
+            {'type': 'module', 'filename': 'global.1.wasm', 'name': '$Second'},
+            {'type': 'assert_return', 'action': {'type': 'get', 'module': '$First', 'field': 'first'},
+             'expected': [{'type': 'i32', 'value': '42'}]},
+            {'type': 'assert_return', 'action': {'type': 'get', 'field': 'second'},
+             'expected': [{'type': 'i32', 'value': '43'}]},
+        ])
+        self.assertIn(gen.export_name('global.0', 'first'), files['assert_global.0.c'])
+        self.assertNotIn('get second', files['assert_global.0.c'])
+        self.assertIn(gen.export_name('global.1', 'second'), files['assert_global.1.c'])
+        self.assertNotIn('get first', files['assert_global.1.c'])
+
+    def test_unknown_named_module_is_not_silently_ignored(self):
+        with self.assertRaises(KeyError):
+            self.generate([
+                {'type': 'module', 'filename': 'global.0.wasm'},
+                {'type': 'assert_return', 'action': {'type': 'get', 'module': '$Missing', 'field': 'value'},
+                 'expected': [{'type': 'i32', 'value': '42'}]},
+            ])
+
+
 if __name__ == '__main__':
     unittest.main()
