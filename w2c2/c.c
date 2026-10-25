@@ -4848,6 +4848,28 @@ wasmCWriteExports(
                 wasmCWriteMemoryExport(file, moduleName, export, writeBody, pretty);
                 break;
             }
+            case wasmExportKindGlobal: {
+                WasmGlobalType type;
+                MUST ((size_t)export.index < module->globalImports.length + module->globals.count)
+                type = export.index < module->globalImports.length
+                    ? module->globalImports.imports[export.index].globalType
+                    : module->globals.globals[export.index - module->globalImports.length].type;
+                if (!type.mutable) wasmOutputString(file, "const ");
+                wasmOutputString(file, valueTypeNames[type.valueType]);
+                wasmOutputString(file, "* ");
+                wasmCWriteExportName(file, moduleName, export.name);
+                wasmOutputChar(file, '(');
+                wasmCWriteModuleName(file, moduleName);
+                wasmOutputString(file, "Instance* i)");
+                if (writeBody) {
+                    wasmOutputString(file, " { return ");
+                    MUST (wasmCWriteGlobalUse(file, module, export.index, true))
+                    wasmOutputString(file, "; }\n\n");
+                } else {
+                    wasmOutputString(file, ";\n\n");
+                }
+                break;
+            }
             default: {
                 /* TODO: other export kinds */
                 wasmDiagnosticReportUnsupportedExport(diagnostics, export.name, export.kind);

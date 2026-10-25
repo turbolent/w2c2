@@ -1389,6 +1389,10 @@ wasmReadExportSection(
         WasmFunctions functions = reader->module->functions;
         const U32 functionCount = assertSizeU32(functionImportCount) + functions.count;
 
+        const size_t globalImportCount = reader->module->globalImports.length;
+        WasmGlobals globals = reader->module->globals;
+        const U32 globalCount = assertSizeU32(globalImportCount) + globals.count;
+
         U32 exportIndex = 0;
         for (; exportIndex < exportCount; exportIndex++) {
             WasmExport export = wasmEmptyExport;
@@ -1399,6 +1403,15 @@ wasmReadExportSection(
             exports[exportIndex] = export;
             reader->module->exports.count = exportIndex + 1;
 
+            if (export.kind == wasmExportKindGlobal) {
+                if (export.index >= globalCount) {
+                    static WasmModuleReaderError wasmModuleReaderError = {
+                        wasmModuleReaderInvalidExportSectionExportIndex
+                    };
+                    *error = &wasmModuleReaderError;
+                    goto fail;
+                }
+            }
             if (export.kind == wasmExportKindFunction) {
                 if (export.index >= functionCount) {
                     static WasmModuleReaderError wasmModuleReaderError = {

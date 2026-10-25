@@ -83,16 +83,15 @@
 (module (export "a" (global 0)) (global i32 (i32.const 0)))
 (module (export "a" (global $a)) (global $a i32 (i32.const 0)))
 
-;; W2C2: unsupported test setup
-;; (module $Global
-;;   (export "e" (global $g))
-;;   (global $g i32 (i32.const 42))
-;; )
-;; (assert_return (get "e") (i32.const 42))
-;; (assert_return (get $Global "e") (i32.const 42))
-;; (module)
-;; (module $Other2)
-;; (assert_return (get $Global "e") (i32.const 42))
+(module $Global
+  (export "e" (global $g))
+  (global $g i32 (i32.const 42))
+)
+(assert_return (get "e") (i32.const 42))
+(assert_return (get $Global "e") (i32.const 42))
+(module)
+(module $Other2)
+(assert_return (get $Global "e") (i32.const 42))
 
 (assert_invalid
   (module (export "a" (global 0)))
