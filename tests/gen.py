@@ -1,4 +1,5 @@
 import json
+import io
 import glob
 import re
 
@@ -89,6 +90,10 @@ def convert_value(value, t):
 def generate_test_files(json_path):
 
     test_file = None
+    # Named actions may refer to a module after another module is defined.
+    test_files = {}
+    named_modules = {}
+    current_module = None
 
     def create_test_file(filename, module_name):
         nonlocal test_file
@@ -110,7 +115,7 @@ void test() {{
     {module_name}Instance instance;
     {module_name}Instantiate(&instance, resolveTestImports);
 """.format(header=header, module_name=module_identifier(module_name))
-        test_file = open(test_path, 'w')
+        test_file = io.StringIO()
         test_file.write(test_preamble)
 
     def close_test_file():
@@ -118,7 +123,9 @@ void test() {{
         if not test_file:
             return
         test_file.write('}\n')
-        test_file.flush()
+        test_path = gen_dir / ('assert_' + module_name + '.c')
+        with test_path.open('w', newline='\n') as output:
+            output.write(test_file.getvalue())
         test_file.close()
         test_file = None
 
@@ -133,17 +140,23 @@ void test() {{
             if t == "module":
                 filename = command['filename']
                 module_name = Path(filename).stem
-                close_test_file()
                 create_test_file(filename, module_name)
+                test_files[module_name] = test_file
+                current_module = module_name
+                if 'name' in command:
+                    named_modules[command['name']] = module_name
                 test_file.write("    printStart(\"{}\");\n".format(filename))
 
-            elif action is not None and action['type'] == 'invoke':
-                if not test_file:
-                    continue
+            elif action is not None and action['type'] in ('invoke', 'get'):
+                module_name = (named_modules[action['module']]
+                               if 'module' in action else current_module)
+                if module_name is None:
+                    raise ValueError('Action before any module')
+                test_file = test_files[module_name]
 
                 args = [
                     convert_value(arg['value'], convert_type(arg['type']))
-                    for arg in action['args']
+                    for arg in action.get('args', [])
                 ]
 
                 field = action['field']
@@ -154,6 +167,9 @@ void test() {{
                 )
 
                 description = "{}({})".format(field, ', '.join(args))
+                if action['type'] == 'get':
+                    call = '*' + call
+                    description = 'get ' + field
 
                 if t == 'assert_return':
 
@@ -196,7 +212,8 @@ void test() {{
                     test_file.write("    {};\n".format(call))
                     test_file.write("    printOK(\"{}\");\n".format(description))
 
-        close_test_file()
+        for module_name, test_file in test_files.items():
+            close_test_file()
 
 
 def gen(paths):
