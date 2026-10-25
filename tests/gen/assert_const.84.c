@@ -5,7 +5,7 @@
 #include "test_const.84.h"
 
 void test() {
-    const84Instance instance;
-    const84Instantiate(&instance, resolveTestImports);
+    m8_constX2E84Instance instance;
+    m8_constX2E84Instantiate(&instance, resolveTestImports);
     printStart("const.84.wasm");
 }

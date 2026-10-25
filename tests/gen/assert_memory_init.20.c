@@ -5,7 +5,7 @@
 #include "test_memory_init.20.h"
 
 void test() {
-    memoryinit20Instance instance;
-    memoryinit20Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E20Instance instance;
+    m14_memoryX5FinitX2E20Instantiate(&instance, resolveTestImports);
     printStart("memory_init.20.wasm");
 }

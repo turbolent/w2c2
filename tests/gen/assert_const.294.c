@@ -5,12 +5,12 @@
 #include "test_const.294.h"
 
 void test() {
-    const294Instance instance;
-    const294Instantiate(&instance, resolveTestImports);
+    m9_constX2E294Instance instance;
+    m9_constX2E294Instantiate(&instance, resolveTestImports);
     printStart("const.294.wasm");
-    assertEqualF32(
-        const294_f(&instance),
-        1.401298464324817e-45,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E294Export1_f(&instance)),
+        1u,
         "f()"
     );
 }

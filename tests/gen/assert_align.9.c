@@ -5,7 +5,7 @@
 #include "test_align.9.h"
 
 void test() {
-    align9Instance instance;
-    align9Instantiate(&instance, resolveTestImports);
+    m7_alignX2E9Instance instance;
+    m7_alignX2E9Instantiate(&instance, resolveTestImports);
     printStart("align.9.wasm");
 }

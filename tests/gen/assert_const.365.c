@@ -5,12 +5,12 @@
 #include "test_const.365.h"
 
 void test() {
-    const365Instance instance;
-    const365Instantiate(&instance, resolveTestImports);
+    m9_constX2E365Instance instance;
+    m9_constX2E365Instantiate(&instance, resolveTestImports);
     printStart("const.365.wasm");
-    assertEqualF64(
-        const365_f(&instance),
-        -2.409919865102885e-181,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E365Export1_f(&instance)),
+        11128394679232495618ull,
         "f()"
     );
 }

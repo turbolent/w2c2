@@ -5,12 +5,12 @@
 #include "test_const.338.h"
 
 void test() {
-    const338Instance instance;
-    const338Instantiate(&instance, resolveTestImports);
+    m9_constX2E338Instance instance;
+    m9_constX2E338Instantiate(&instance, resolveTestImports);
     printStart("const.338.wasm");
-    assertEqualF64(
-        const338_f(&instance),
-        2.409919865102885e-181,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E338Export1_f(&instance)),
+        1905022642377719810ull,
         "f()"
     );
 }

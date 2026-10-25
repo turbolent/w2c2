@@ -5,12 +5,12 @@
 #include "test_const.208.h"
 
 void test() {
-    const208Instance instance;
-    const208Instantiate(&instance, resolveTestImports);
+    m9_constX2E208Instance instance;
+    m9_constX2E208Instantiate(&instance, resolveTestImports);
     printStart("const.208.wasm");
-    assertEqualF32(
-        const208_f(&instance),
-        8.881785255792436e-16,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E208Export1_f(&instance)),
+        645922817u,
         "f()"
     );
 }

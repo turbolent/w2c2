@@ -5,12 +5,12 @@
 #include "test_const.258.h"
 
 void test() {
-    const258Instance instance;
-    const258Instantiate(&instance, resolveTestImports);
+    m9_constX2E258Instance instance;
+    m9_constX2E258Instantiate(&instance, resolveTestImports);
     printStart("const.258.wasm");
-    assertEqualF32(
-        const258_f(&instance),
-        1125900175278080.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E258Export1_f(&instance)),
+        1484783618u,
         "f()"
     );
 }

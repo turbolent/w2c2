@@ -5,7 +5,7 @@
 #include "test_const.25.h"
 
 void test() {
-    const25Instance instance;
-    const25Instantiate(&instance, resolveTestImports);
+    m8_constX2E25Instance instance;
+    m8_constX2E25Instantiate(&instance, resolveTestImports);
     printStart("const.25.wasm");
 }

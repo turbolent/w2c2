@@ -1,0 +1,25 @@
+@PACKAGE_INIT@
+
+if(@W2C2_USE_THREADS_TARGET@)
+    find_package(Threads)
+    if(NOT TARGET Threads::Threads)
+        set(w2c2_FOUND FALSE)
+        set(w2c2_NOT_FOUND_MESSAGE "w2c2 requires Threads::Threads")
+        return()
+    endif()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/w2c2Targets.cmake")
+
+foreach(DEPENDENCY @W2C2_DWARF_DEPENDENCIES@)
+    find_library(W2C2_${DEPENDENCY}_LIBRARY NAMES ${DEPENDENCY})
+    if(NOT W2C2_${DEPENDENCY}_LIBRARY)
+        set(w2c2_FOUND FALSE)
+        set(w2c2_NOT_FOUND_MESSAGE "w2c2 requires libdwarf dependency: ${DEPENDENCY}")
+        return()
+    endif()
+    set_property(TARGET w2c2::w2c2_lib APPEND PROPERTY
+        INTERFACE_LINK_LIBRARIES "${W2C2_${DEPENDENCY}_LIBRARY}")
+endforeach()
+
+check_required_components(w2c2)

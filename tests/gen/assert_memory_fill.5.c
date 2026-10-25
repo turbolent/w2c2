@@ -5,7 +5,7 @@
 #include "test_memory_fill.5.h"
 
 void test() {
-    memoryfill5Instance instance;
-    memoryfill5Instantiate(&instance, resolveTestImports);
+    m13_memoryX5FfillX2E5Instance instance;
+    m13_memoryX5FfillX2E5Instantiate(&instance, resolveTestImports);
     printStart("memory_fill.5.wasm");
 }

@@ -5,12 +5,12 @@
 #include "test_const.390.h"
 
 void test() {
-    const390Instance instance;
-    const390Instantiate(&instance, resolveTestImports);
+    m9_constX2E390Instance instance;
+    m9_constX2E390Instantiate(&instance, resolveTestImports);
     printStart("const.390.wasm");
-    assertEqualF64(
-        const390_f(&instance),
-        4.149515568880994e+180,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E390Export1_f(&instance)),
+        7309342195222315009ull,
         "f()"
     );
 }

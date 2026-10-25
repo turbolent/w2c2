@@ -1,0 +1,14 @@
+{"source_filename": "limits.wast",
+ "commands": [
+  {"type": "module", "line": 1, "filename": "limits.0.wasm"},
+  {"type": "assert_return", "line": 9, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "assert_return", "line": 10, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "assert_return", "line": 11, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "i32", "value": "4294967295"}]},
+  {"type": "assert_return", "line": 12, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "4294967295"}]}, "expected": [{"type": "i32", "value": "4294967295"}]},
+  {"type": "assert_return", "line": 13, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "module", "line": 15, "filename": "limits.1.wasm"},
+  {"type": "assert_return", "line": 22, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "assert_return", "line": 23, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "assert_return", "line": 24, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "i32", "value": "4294967295"}]},
+  {"type": "assert_return", "line": 25, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "4294967295"}]}, "expected": [{"type": "i32", "value": "4294967295"}]},
+  {"type": "assert_return", "line": 26, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "0"}]}]}

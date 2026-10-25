@@ -21,7 +21,7 @@ wasmMemory*
 wasiMemory(
     void* instance
 ) {
-    return w2c2_memory((w2c2Instance*)instance);
+    return m4_w2c2Export6_memory((m4_w2c2Instance*)instance);
 }
 
 extern char** environ;
@@ -41,10 +41,10 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        w2c2Instance instance;
-        w2c2Instantiate(&instance, NULL);
-        w2c2__start(&instance);
-        w2c2FreeInstance(&instance);
+        m4_w2c2Instance instance;
+        m4_w2c2Instantiate(&instance, NULL);
+        m4_w2c2Export6_X5Fstart(&instance);
+        m4_w2c2FreeInstance(&instance);
     }
 
     return 0;

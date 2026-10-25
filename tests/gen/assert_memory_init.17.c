@@ -5,7 +5,7 @@
 #include "test_memory_init.17.h"
 
 void test() {
-    memoryinit17Instance instance;
-    memoryinit17Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E17Instance instance;
+    m14_memoryX5FinitX2E17Instantiate(&instance, resolveTestImports);
     printStart("memory_init.17.wasm");
 }

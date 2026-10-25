@@ -1,0 +1,16 @@
+{"source_filename": "memory_import_data.wast",
+ "commands": [
+  {"type": "module", "line": 3, "filename": "memory_import_data.0.wasm"},
+  {"type": "assert_return", "line": 19, "action": {"type": "invoke", "field": "observed", "args": []}, "expected": [{"type": "i32", "value": "1148811329"}]},
+  {"type": "assert_return", "line": 20, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "4"}]}, "expected": [{"type": "i32", "value": "0"}]},
+  {"type": "assert_return", "line": 21, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "5"}]}, "expected": [{"type": "i32", "value": "255"}]},
+  {"type": "assert_return", "line": 22, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "6"}]}, "expected": [{"type": "i32", "value": "127"}]},
+  {"type": "assert_return", "line": 23, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "7"}]}, "expected": [{"type": "i32", "value": "128"}]},
+  {"type": "assert_return", "line": 24, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "666"}]}, "expected": [{"type": "i32", "value": "65"}]},
+  {"type": "assert_return", "line": 25, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "667"}]}, "expected": [{"type": "i32", "value": "120"}]},
+  {"type": "assert_return", "line": 26, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "668"}]}, "expected": [{"type": "i32", "value": "121"}]},
+  {"type": "assert_return", "line": 27, "action": {"type": "invoke", "field": "load", "args": [{"type": "i32", "value": "669"}]}, "expected": [{"type": "i32", "value": "68"}]},
+  {"type": "module", "line": 30, "filename": "memory_import_data.1.wasm"},
+  {"type": "assert_return", "line": 40, "action": {"type": "invoke", "field": "observed", "args": []}, "expected": [{"type": "i32", "value": "1297301847"}]},
+  {"type": "module", "line": 43, "filename": "memory_import_data.2.wasm"},
+  {"type": "assert_return", "line": 53, "action": {"type": "invoke", "field": "observed", "args": []}, "expected": [{"type": "i32", "value": "1297301847"}]}]}

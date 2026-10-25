@@ -8,7 +8,7 @@ readFile(
     const char* path
 ) {
     FILE* file = NULL;
-    Buffer buffer = {NULL, 0};
+    Buffer buffer = emptyBuffer;
     U8* data = NULL;
     size_t size = 0;
     size_t read = 0;
@@ -24,7 +24,7 @@ readFile(
 
     data = malloc(size);
     if (data == NULL) {
-        return buffer;
+        goto end;
     }
     read = fread(data, 1, size, file);
     if (read == size) {
@@ -33,6 +33,8 @@ readFile(
     } else {
         free(data);
     }
+
+end:
     fclose(file);
 
     return buffer;

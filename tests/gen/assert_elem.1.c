@@ -5,7 +5,7 @@
 #include "test_elem.1.h"
 
 void test() {
-    elem1Instance instance;
-    elem1Instantiate(&instance, resolveTestImports);
+    m6_elemX2E1Instance instance;
+    m6_elemX2E1Instantiate(&instance, resolveTestImports);
     printStart("elem.1.wasm");
 }

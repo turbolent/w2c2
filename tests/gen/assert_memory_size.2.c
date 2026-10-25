@@ -5,41 +5,41 @@
 #include "test_memory_size.2.h"
 
 void test() {
-    memorysize2Instance instance;
-    memorysize2Instantiate(&instance, resolveTestImports);
+    m13_memoryX5FsizeX2E2Instance instance;
+    m13_memoryX5FsizeX2E2Instantiate(&instance, resolveTestImports);
     printStart("memory_size.2.wasm");
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         0u,
         "size()"
     );
-    memorysize2_grow(&instance, 3u);
+    m13_memoryX5FsizeX2E2Export4_grow(&instance, 3u);
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         0u,
         "size()"
     );
-    memorysize2_grow(&instance, 1u);
+    m13_memoryX5FsizeX2E2Export4_grow(&instance, 1u);
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         1u,
         "size()"
     );
-    memorysize2_grow(&instance, 0u);
+    m13_memoryX5FsizeX2E2Export4_grow(&instance, 0u);
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         1u,
         "size()"
     );
-    memorysize2_grow(&instance, 4u);
+    m13_memoryX5FsizeX2E2Export4_grow(&instance, 4u);
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         1u,
         "size()"
     );
-    memorysize2_grow(&instance, 1u);
+    m13_memoryX5FsizeX2E2Export4_grow(&instance, 1u);
     assertEqualU32(
-        memorysize2_size(&instance),
+        m13_memoryX5FsizeX2E2Export4_size(&instance),
         2u,
         "size()"
     );

@@ -5,12 +5,12 @@
 #include "test_const.461.h"
 
 void test() {
-    const461Instance instance;
-    const461Instantiate(&instance, resolveTestImports);
+    m9_constX2E461Instance instance;
+    m9_constX2E461Instantiate(&instance, resolveTestImports);
     printStart("const.461.wasm");
-    assertEqualF64(
-        const461_f(&instance),
-        -1e-323,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E461Export1_f(&instance)),
+        9223372036854775810ull,
         "f()"
     );
 }

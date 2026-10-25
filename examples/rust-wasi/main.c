@@ -23,9 +23,9 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
-    return rustwasi_memory((rustwasiInstance*)instance);
+    return m9_rustX2DwasiExport6_memory((m9_rustX2DwasiInstance*)instance);
 }
 
 #if defined(__MSL__) && defined(macintosh)
@@ -59,10 +59,10 @@ int main(int argc, char* argv[]) {
 #endif
 
     {
-        rustwasiInstance instance;
-        rustwasiInstantiate(&instance, NULL);
-        rustwasi__start(&instance);
-        rustwasiFreeInstance(&instance);
+        m9_rustX2DwasiInstance instance;
+        m9_rustX2DwasiInstantiate(&instance, NULL);
+        m9_rustX2DwasiExport6_X5Fstart(&instance);
+        m9_rustX2DwasiFreeInstance(&instance);
     }
 
     return 0;

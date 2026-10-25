@@ -5,7 +5,7 @@
 #include "test_data.14.h"
 
 void test() {
-    data14Instance instance;
-    data14Instantiate(&instance, resolveTestImports);
+    m7_dataX2E14Instance instance;
+    m7_dataX2E14Instantiate(&instance, resolveTestImports);
     printStart("data.14.wasm");
 }

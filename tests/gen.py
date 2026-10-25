@@ -1,7 +1,6 @@
 import json
 import glob
 import re
-from os.path import splitext
 
 import math
 import struct
@@ -14,7 +13,11 @@ gen_dir = Path('gen')
 
 
 def compare_versions(a, b):
-    for [a, b] in zip(*[[int(s) for s in v.split('.')] for v in [a, b]]):
+    versions = [
+        [int(s) for s in re.match(r'\d+(?:\.\d+)*', v).group(0).split('.')]
+        for v in [a, b]
+    ]
+    for [a, b] in zip(*versions):
         if a < b:
             return -1
         elif a > b:
@@ -22,20 +25,23 @@ def compare_versions(a, b):
     return 0
 
 
-def export_name(name):
-    escape_char = 'X'
-    res = ""
-    for i, c in enumerate(name):
-        if c == '_':
-            if i > 0 and name[i-1] == '_':
-                res += "__"
-            else:
-                res += c
-        elif c != escape_char and c.isalnum():
-            res += c
-        else:
-            res += escape_char + "{:02X}".format(ord(c))
-    return res
+def name_component(name):
+    data = name.encode('utf-8')
+    escaped = ''.join(
+        chr(c) if (ord('a') <= c <= ord('z')
+                   or (ord('A') <= c <= ord('Z') and c != ord('X'))
+                   or ord('0') <= c <= ord('9')) else 'X{:02X}'.format(c)
+        for c in data
+    )
+    return '{}_{}'.format(len(data), escaped)
+
+
+def module_identifier(name):
+    return 'm' + name_component(name)
+
+
+def export_name(module, name):
+    return module_identifier(module) + 'Export' + name_component(name)
 
 
 def convert_type(t):
@@ -56,7 +62,10 @@ def convert_value(value, t):
     elif t == "U64":
         return value + "ull"
     elif t == 'F32':
-        value = struct.unpack('f', struct.pack('I', int(value)))[0]
+        bits = int(value)
+        value = struct.unpack('f', struct.pack('I', bits))[0]
+        if math.isnan(value):
+            return 'f32_reinterpret_i32(0x{:08x}u)'.format(bits)
         if value == math.inf:
             return 'INFINITY'
         elif value == -math.inf:
@@ -64,7 +73,10 @@ def convert_value(value, t):
         else:
             return str(value)
     elif t == 'F64':
-        value = struct.unpack('d', struct.pack('Q', int(value)))[0]
+        bits = int(value)
+        value = struct.unpack('d', struct.pack('Q', bits))[0]
+        if math.isnan(value):
+            return 'f64_reinterpret_i64(0x{:016x}ull)'.format(bits)
         if value == math.inf:
             return 'INFINITY'
         elif value == -math.inf:
@@ -73,8 +85,6 @@ def convert_value(value, t):
             return str(value)
     raise Exception("unsupported type {}".format(t))
 
-
-invalid_char_regex = re.compile('[^a-zA-Z0-9]')
 
 def generate_test_files(json_path):
 
@@ -99,7 +109,7 @@ def generate_test_files(json_path):
 void test() {{
     {module_name}Instance instance;
     {module_name}Instantiate(&instance, resolveTestImports);
-""".format(header=header, module_name=module_name)
+""".format(header=header, module_name=module_identifier(module_name))
         test_file = open(test_path, 'w')
         test_file.write(test_preamble)
 
@@ -122,7 +132,7 @@ void test() {{
             action = command.get('action')
             if t == "module":
                 filename = command['filename']
-                module_name = invalid_char_regex.sub('', splitext(filename)[0])
+                module_name = Path(filename).stem
                 close_test_file()
                 create_test_file(filename, module_name)
                 test_file.write("    printStart(\"{}\");\n".format(filename))
@@ -131,24 +141,15 @@ void test() {{
                 if not test_file:
                     continue
 
-                # TODO:
-                if 'nan' in (arg['value'] for arg in action['args']):
-                    continue
-
                 args = [
                     convert_value(arg['value'], convert_type(arg['type']))
                     for arg in action['args']
                 ]
 
-                # TODO:
-                if 'nan' in args:
-                    continue
-
                 field = action['field']
 
-                call = "{}_{}({})".format(
-                    module_name,
-                    export_name(field),
+                call = "{}({})".format(
+                    export_name(module_name, field),
                     ', '.join(['&instance', *args])
                 )
 
@@ -168,15 +169,22 @@ void test() {{
 
                     expected_type = convert_type(expected[0]['type'])
                     expected_value = expected[0]['value']
-                    # TODO:
-                    if expected_value.startswith('nan'):
-                        continue
+
+                    # Compare exact results as bits;
+                    # NaN patterns ignore only the bits left unspecified by the assertion.
+                    if expected_type in ('F32', 'F64'):
+                        width = int(expected_type[1:])
+                        expected_type = 'U' + str(width)
+                        call = 'i{0}_reinterpret_f{0}({1})'.format(width, call)
+                        if expected_value in ('nan:canonical', 'nan:arithmetic'):
+                            # Canonical NaNs allow either sign;
+                            # arithmetic NaNs also allow arbitrary lower payload bits.
+                            canonical = 0x7fc00000 if width == 32 else 0x7ff8000000000000
+                            mask = (1 << (width - 1)) - 1 if expected_value == 'nan:canonical' else canonical
+                            call = '({} & {})'.format(call, convert_value(str(mask), expected_type))
+                            expected_value = str(canonical)
 
                     expected_value = convert_value(expected_value, expected_type)
-
-                    # TODO:
-                    if expected_value == 'nan':
-                        continue
 
                     test_file.write("    assertEqual{}(\n".format(expected_type))
                     test_file.write("        {},\n".format(call))

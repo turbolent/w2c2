@@ -16,28 +16,32 @@ trap(
 
 wasmMemory*
 wasiMemory(
-    void* instance
+    wasmModuleInstance* instance
 ) {
-    return pthreads_memory((pthreadsInstance*)instance);
+    return m8_pthreadsExport6_memory((m8_pthreadsInstance*)instance);
 }
 
 extern char** environ;
 
 wasmMemory* mem = NULL;
 
-void* resolveImport(const char* moduleName, const char* importName) {
-    if (strcmp(moduleName, "env") == 0 && strcmp(importName, "memory") == 0) {
+void* resolveImport(
+    WasmName moduleName,
+    WasmName importName
+) {
+    if (moduleName.length == sizeof("env") - 1 && memcmp(moduleName.data, "env", moduleName.length) == 0
+        && importName.length == sizeof("memory") - 1 && memcmp(importName.data, "memory", importName.length) == 0) {
         return mem;
     }
     return NULL;
 }
 
 int main(int argc, char** argv) {
-    pthreadsInstance instance;
+    m8_pthreadsInstance instance;
 
     mem = WASM_MEMORY_ALLOCATE_SHARED(10, 20);
 
-    pthreadsInstantiate(&instance, resolveImport);
+    m8_pthreadsInstantiate(&instance, resolveImport);
 
     if (!wasiInit(argc, argv, environ)) {
         fprintf(stderr, "failed to initialize WASI\n");
@@ -50,9 +54,9 @@ int main(int argc, char** argv) {
     }
 
 
-    pthreads__start(&instance);
+    m8_pthreadsExport6_X5Fstart(&instance);
 
-    pthreadsFreeInstance(&instance);
+    m8_pthreadsFreeInstance(&instance);
 
     return 0;
 }

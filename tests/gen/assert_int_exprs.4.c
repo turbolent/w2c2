@@ -5,26 +5,26 @@
 #include "test_int_exprs.4.h"
 
 void test() {
-    intexprs4Instance instance;
-    intexprs4Instantiate(&instance, resolveTestImports);
+    m11_intX5FexprsX2E4Instance instance;
+    m11_intX5FexprsX2E4Instantiate(&instance, resolveTestImports);
     printStart("int_exprs.4.wasm");
     assertEqualU32(
-        intexprs4_i32X2Eno_fold_shr_s_shl(&instance, 1u),
+        m11_intX5FexprsX2E4Export21_i32X2EnoX5FfoldX5FshrX5FsX5Fshl(&instance, 1u),
         0u,
         "i32.no_fold_shr_s_shl(1u)"
     );
     assertEqualU32(
-        intexprs4_i32X2Eno_fold_shr_u_shl(&instance, 1u),
+        m11_intX5FexprsX2E4Export21_i32X2EnoX5FfoldX5FshrX5FuX5Fshl(&instance, 1u),
         0u,
         "i32.no_fold_shr_u_shl(1u)"
     );
     assertEqualU64(
-        intexprs4_i64X2Eno_fold_shr_s_shl(&instance, 1ull),
+        m11_intX5FexprsX2E4Export21_i64X2EnoX5FfoldX5FshrX5FsX5Fshl(&instance, 1ull),
         0ull,
         "i64.no_fold_shr_s_shl(1ull)"
     );
     assertEqualU64(
-        intexprs4_i64X2Eno_fold_shr_u_shl(&instance, 1ull),
+        m11_intX5FexprsX2E4Export21_i64X2EnoX5FfoldX5FshrX5FuX5Fshl(&instance, 1ull),
         0ull,
         "i64.no_fold_shr_u_shl(1ull)"
     );

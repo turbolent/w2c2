@@ -1,11 +1,16 @@
+OBJCOPY ?= objcopy
+
 OBJLIST:=$(filter-out python.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
 
 python: python.o $(OBJS)
 	$(MAKE) -f Submake $(OBJLIST)
 	$(CC) $(CFLAGS) $(OBJLIST) python.o -o python $(LDFLAGS)
 
-datasegments.o: python.c
-	ld -r -b binary -o datasegments.o datasegments
+m6_python.data.o: python.c
+	ld -r -b binary -o m6_python.data.o m6_python.data
+	$(OBJCOPY) --redefine-sym _binary_m6_python_data_start=m6_pythonData \
+		--redefine-sym _binary_m6_python_data_end=m6_pythonDataEnd \
+		--redefine-sym _binary_m6_python_data_size=m6_pythonDataSize m6_python.data.o
 
 %.o: %.c python.c
 	$(CC) -I.. $(CFLAGS) -c $< -o $@

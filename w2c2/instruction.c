@@ -132,22 +132,33 @@ wasmBranchTableInstructionRead(
     U32 defaultLabelIndex = 0;
 
     MUST(leb128ReadU32(buffer, &labelIndexCount) > 0)
+    MUST ((size_t) labelIndexCount <= buffer->length)
 
-    labelIndices = calloc( labelIndexCount, sizeof(U32));
+    if (labelIndexCount > 0) {
+        labelIndices = calloc(labelIndexCount, sizeof(U32));
+        MUST_OR_GOTO (fail, labelIndices != NULL)
+    }
     {
         U32 labelIndex = 0;
         for (; labelIndex < labelIndexCount; labelIndex++) {
-            MUST(leb128ReadU32(buffer, &labelIndices[labelIndex]) > 0)
+            MUST_OR_GOTO (
+                fail,
+                leb128ReadU32(buffer, &labelIndices[labelIndex]) > 0
+            )
         }
     }
 
-    MUST (leb128ReadU32(buffer, &defaultLabelIndex) > 0)
+    MUST_OR_GOTO (fail, leb128ReadU32(buffer, &defaultLabelIndex) > 0)
 
     result->labelIndexCount = labelIndexCount;
     result->labelIndices = labelIndices;
     result->defaultLabelIndex = defaultLabelIndex;
 
     return true;
+
+fail:
+    free(labelIndices);
+    return false;
 }
 
 void

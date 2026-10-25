@@ -5,7 +5,7 @@
 #include "test_const.20.h"
 
 void test() {
-    const20Instance instance;
-    const20Instantiate(&instance, resolveTestImports);
+    m8_constX2E20Instance instance;
+    m8_constX2E20Instantiate(&instance, resolveTestImports);
     printStart("const.20.wasm");
 }

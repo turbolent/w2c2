@@ -1,0 +1,3 @@
+START: float_exprs.6.wasm
+FAIL: f32.no_fold_mul_one(f32_reinterpret_i32(0x7fa00000u)): 2139095040 != 2143289344
+FAIL: f64.no_fold_mul_one(f64_reinterpret_i64(0x7ff4000000000000ull)): 9218868437227405312 != 9221120237041090560

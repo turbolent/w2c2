@@ -5,12 +5,12 @@
 #include "test_const.372.h"
 
 void test() {
-    const372Instance instance;
-    const372Instantiate(&instance, resolveTestImports);
+    m9_constX2E372Instance instance;
+    m9_constX2E372Instantiate(&instance, resolveTestImports);
     printStart("const.372.wasm");
-    assertEqualF64(
-        const372_f(&instance),
-        2.4099198651028857e-181,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E372Export1_f(&instance)),
+        1905022642377719811ull,
         "f()"
     );
 }

@@ -2,14 +2,12 @@
 #include "compat.h"
 #include "path.h"
 
-#if !HAS_LIBGEN
-
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
  */
 
 char*
-basename(
+wasmBasename(
     char* s
 ) {
     size_t i;
@@ -17,12 +15,19 @@ basename(
         return ".";
     }
     i = strlen(s)-1;
-    for (; i && s[i] == PATH_SEPARATOR; i--) {
+    for (; i && wasmPathIsSeparator(s[i]); i--) {
         s[i] = 0;
     }
-    for (; i && s[i - 1] != PATH_SEPARATOR; i--) { }
+    for (; i && !wasmPathIsSeparator(s[i - 1]); i--) { }
+#if _WIN32
+    if (i == 0 && s[1] == ':') {
+        return s + 2;
+    }
+#endif
     return s+i;
 }
+
+#if !HAS_LIBGEN
 
 /*
  * Taken from musl. Copyright © 2005-2020 Rich Felker, et al.
@@ -37,21 +42,33 @@ dirname(
         return ".";
     }
     i = strlen(s)-1;
-    for (; s[i] == PATH_SEPARATOR; i--) {
+    for (; wasmPathIsSeparator(s[i]); i--) {
         if (!i) {
             return PATH_SEPARATOR_STRING;
         }
     }
-    for (; s[i] != PATH_SEPARATOR; i--) {
+    for (; !wasmPathIsSeparator(s[i]); i--) {
         if (!i) {
+#if _WIN32
+            if (s[1] == ':') {
+                s[2] = 0;
+                return s;
+            }
+#endif
             return ".";
         }
     }
-    for (; s[i] == PATH_SEPARATOR; i--) {
+    for (; wasmPathIsSeparator(s[i]); i--) {
         if (!i) {
             return PATH_SEPARATOR_STRING;
         }
     }
+#if _WIN32
+    if (i == 1 && s[1] == ':') {
+        s[3] = 0;
+        return s;
+    }
+#endif
     s[i+1] = 0;
     return s;
 }

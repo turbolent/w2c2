@@ -5,199 +5,199 @@
 #include "test_unwind.0.h"
 
 void test() {
-    unwind0Instance instance;
-    unwind0Instantiate(&instance, resolveTestImports);
+    m8_unwindX2E0Instance instance;
+    m8_unwindX2E0Instantiate(&instance, resolveTestImports);
     printStart("unwind.0.wasm");
-    unwind0_funcX2DunwindX2DbyX2Dbr(&instance);
+    m8_unwindX2E0Export17_funcX2DunwindX2DbyX2Dbr(&instance);
     assertEqualU32(
-        unwind0_funcX2DunwindX2DbyX2DbrX2Dvalue(&instance),
+        m8_unwindX2E0Export23_funcX2DunwindX2DbyX2DbrX2Dvalue(&instance),
         9u,
         "func-unwind-by-br-value()"
     );
-    unwind0_funcX2DunwindX2DbyX2Dbr_if(&instance);
+    m8_unwindX2E0Export20_funcX2DunwindX2DbyX2DbrX5Fif(&instance);
     assertEqualU32(
-        unwind0_funcX2DunwindX2DbyX2Dbr_ifX2Dvalue(&instance),
+        m8_unwindX2E0Export26_funcX2DunwindX2DbyX2DbrX5FifX2Dvalue(&instance),
         9u,
         "func-unwind-by-br_if-value()"
     );
-    unwind0_funcX2DunwindX2DbyX2Dbr_table(&instance);
+    m8_unwindX2E0Export23_funcX2DunwindX2DbyX2DbrX5Ftable(&instance);
     assertEqualU32(
-        unwind0_funcX2DunwindX2DbyX2Dbr_tableX2Dvalue(&instance),
+        m8_unwindX2E0Export29_funcX2DunwindX2DbyX2DbrX5FtableX2Dvalue(&instance),
         9u,
         "func-unwind-by-br_table-value()"
     );
     assertEqualU32(
-        unwind0_funcX2DunwindX2DbyX2Dreturn(&instance),
+        m8_unwindX2E0Export21_funcX2DunwindX2DbyX2Dreturn(&instance),
         9u,
         "func-unwind-by-return()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dbr(&instance),
+        m8_unwindX2E0Export18_blockX2DunwindX2DbyX2Dbr(&instance),
         9u,
         "block-unwind-by-br()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2DbrX2Dvalue(&instance),
+        m8_unwindX2E0Export24_blockX2DunwindX2DbyX2DbrX2Dvalue(&instance),
         9u,
         "block-unwind-by-br-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dbr_if(&instance),
+        m8_unwindX2E0Export21_blockX2DunwindX2DbyX2DbrX5Fif(&instance),
         9u,
         "block-unwind-by-br_if()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dbr_ifX2Dvalue(&instance),
+        m8_unwindX2E0Export27_blockX2DunwindX2DbyX2DbrX5FifX2Dvalue(&instance),
         9u,
         "block-unwind-by-br_if-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dbr_table(&instance),
+        m8_unwindX2E0Export24_blockX2DunwindX2DbyX2DbrX5Ftable(&instance),
         9u,
         "block-unwind-by-br_table()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dbr_tableX2Dvalue(&instance),
+        m8_unwindX2E0Export30_blockX2DunwindX2DbyX2DbrX5FtableX2Dvalue(&instance),
         9u,
         "block-unwind-by-br_table-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DunwindX2DbyX2Dreturn(&instance),
+        m8_unwindX2E0Export22_blockX2DunwindX2DbyX2Dreturn(&instance),
         9u,
         "block-unwind-by-return()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dbr(&instance),
+        m8_unwindX2E0Export25_blockX2DnestedX2DunwindX2DbyX2Dbr(&instance),
         9u,
         "block-nested-unwind-by-br()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2DbrX2Dvalue(&instance),
+        m8_unwindX2E0Export31_blockX2DnestedX2DunwindX2DbyX2DbrX2Dvalue(&instance),
         9u,
         "block-nested-unwind-by-br-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dbr_if(&instance),
+        m8_unwindX2E0Export28_blockX2DnestedX2DunwindX2DbyX2DbrX5Fif(&instance),
         9u,
         "block-nested-unwind-by-br_if()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dbr_ifX2Dvalue(&instance),
+        m8_unwindX2E0Export34_blockX2DnestedX2DunwindX2DbyX2DbrX5FifX2Dvalue(&instance),
         9u,
         "block-nested-unwind-by-br_if-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dbr_table(&instance),
+        m8_unwindX2E0Export31_blockX2DnestedX2DunwindX2DbyX2DbrX5Ftable(&instance),
         9u,
         "block-nested-unwind-by-br_table()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dbr_tableX2Dvalue(&instance),
+        m8_unwindX2E0Export37_blockX2DnestedX2DunwindX2DbyX2DbrX5FtableX2Dvalue(&instance),
         9u,
         "block-nested-unwind-by-br_table-value()"
     );
     assertEqualU32(
-        unwind0_blockX2DnestedX2DunwindX2DbyX2Dreturn(&instance),
+        m8_unwindX2E0Export29_blockX2DnestedX2DunwindX2DbyX2Dreturn(&instance),
         9u,
         "block-nested-unwind-by-return()"
     );
     assertEqualU32(
-        unwind0_unaryX2DafterX2Dbr(&instance),
+        m8_unwindX2E0Export14_unaryX2DafterX2Dbr(&instance),
         9u,
         "unary-after-br()"
     );
     assertEqualU32(
-        unwind0_unaryX2DafterX2Dbr_if(&instance),
+        m8_unwindX2E0Export17_unaryX2DafterX2DbrX5Fif(&instance),
         9u,
         "unary-after-br_if()"
     );
     assertEqualU32(
-        unwind0_unaryX2DafterX2Dbr_table(&instance),
+        m8_unwindX2E0Export20_unaryX2DafterX2DbrX5Ftable(&instance),
         9u,
         "unary-after-br_table()"
     );
     assertEqualU32(
-        unwind0_unaryX2DafterX2Dreturn(&instance),
+        m8_unwindX2E0Export18_unaryX2DafterX2Dreturn(&instance),
         9u,
         "unary-after-return()"
     );
     assertEqualU32(
-        unwind0_binaryX2DafterX2Dbr(&instance),
+        m8_unwindX2E0Export15_binaryX2DafterX2Dbr(&instance),
         9u,
         "binary-after-br()"
     );
     assertEqualU32(
-        unwind0_binaryX2DafterX2Dbr_if(&instance),
+        m8_unwindX2E0Export18_binaryX2DafterX2DbrX5Fif(&instance),
         9u,
         "binary-after-br_if()"
     );
     assertEqualU32(
-        unwind0_binaryX2DafterX2Dbr_table(&instance),
+        m8_unwindX2E0Export21_binaryX2DafterX2DbrX5Ftable(&instance),
         9u,
         "binary-after-br_table()"
     );
     assertEqualU32(
-        unwind0_binaryX2DafterX2Dreturn(&instance),
+        m8_unwindX2E0Export19_binaryX2DafterX2Dreturn(&instance),
         9u,
         "binary-after-return()"
     );
     assertEqualU32(
-        unwind0_selectX2DafterX2Dbr(&instance),
+        m8_unwindX2E0Export15_selectX2DafterX2Dbr(&instance),
         9u,
         "select-after-br()"
     );
     assertEqualU32(
-        unwind0_selectX2DafterX2Dbr_if(&instance),
+        m8_unwindX2E0Export18_selectX2DafterX2DbrX5Fif(&instance),
         9u,
         "select-after-br_if()"
     );
     assertEqualU32(
-        unwind0_selectX2DafterX2Dbr_table(&instance),
+        m8_unwindX2E0Export21_selectX2DafterX2DbrX5Ftable(&instance),
         9u,
         "select-after-br_table()"
     );
     assertEqualU32(
-        unwind0_selectX2DafterX2Dreturn(&instance),
+        m8_unwindX2E0Export19_selectX2DafterX2Dreturn(&instance),
         9u,
         "select-after-return()"
     );
     assertEqualU32(
-        unwind0_blockX2DvalueX2DafterX2Dbr(&instance),
+        m8_unwindX2E0Export20_blockX2DvalueX2DafterX2Dbr(&instance),
         9u,
         "block-value-after-br()"
     );
     assertEqualU32(
-        unwind0_blockX2DvalueX2DafterX2Dbr_if(&instance),
+        m8_unwindX2E0Export23_blockX2DvalueX2DafterX2DbrX5Fif(&instance),
         9u,
         "block-value-after-br_if()"
     );
     assertEqualU32(
-        unwind0_blockX2DvalueX2DafterX2Dbr_table(&instance),
+        m8_unwindX2E0Export26_blockX2DvalueX2DafterX2DbrX5Ftable(&instance),
         9u,
         "block-value-after-br_table()"
     );
     assertEqualU32(
-        unwind0_blockX2DvalueX2DafterX2Dreturn(&instance),
+        m8_unwindX2E0Export24_blockX2DvalueX2DafterX2Dreturn(&instance),
         9u,
         "block-value-after-return()"
     );
     assertEqualU32(
-        unwind0_loopX2DvalueX2DafterX2Dbr(&instance),
+        m8_unwindX2E0Export19_loopX2DvalueX2DafterX2Dbr(&instance),
         9u,
         "loop-value-after-br()"
     );
     assertEqualU32(
-        unwind0_loopX2DvalueX2DafterX2Dbr_if(&instance),
+        m8_unwindX2E0Export22_loopX2DvalueX2DafterX2DbrX5Fif(&instance),
         9u,
         "loop-value-after-br_if()"
     );
     assertEqualU32(
-        unwind0_loopX2DvalueX2DafterX2Dbr_table(&instance),
+        m8_unwindX2E0Export25_loopX2DvalueX2DafterX2DbrX5Ftable(&instance),
         9u,
         "loop-value-after-br_table()"
     );
     assertEqualU32(
-        unwind0_loopX2DvalueX2DafterX2Dreturn(&instance),
+        m8_unwindX2E0Export23_loopX2DvalueX2DafterX2Dreturn(&instance),
         9u,
         "loop-value-after-return()"
     );

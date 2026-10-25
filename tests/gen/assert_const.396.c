@@ -5,12 +5,12 @@
 #include "test_const.396.h"
 
 void test() {
-    const396Instance instance;
-    const396Instantiate(&instance, resolveTestImports);
+    m9_constX2E396Instance instance;
+    m9_constX2E396Instantiate(&instance, resolveTestImports);
     printStart("const.396.wasm");
-    assertEqualF64(
-        const396_f(&instance),
-        4.149515568880995e+180,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E396Export1_f(&instance)),
+        7309342195222315010ull,
         "f()"
     );
 }

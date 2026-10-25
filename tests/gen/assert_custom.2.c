@@ -5,7 +5,7 @@
 #include "test_custom.2.h"
 
 void test() {
-    custom2Instance instance;
-    custom2Instantiate(&instance, resolveTestImports);
+    m8_customX2E2Instance instance;
+    m8_customX2E2Instantiate(&instance, resolveTestImports);
     printStart("custom.2.wasm");
 }

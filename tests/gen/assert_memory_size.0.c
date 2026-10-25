@@ -5,29 +5,29 @@
 #include "test_memory_size.0.h"
 
 void test() {
-    memorysize0Instance instance;
-    memorysize0Instantiate(&instance, resolveTestImports);
+    m13_memoryX5FsizeX2E0Instance instance;
+    m13_memoryX5FsizeX2E0Instantiate(&instance, resolveTestImports);
     printStart("memory_size.0.wasm");
     assertEqualU32(
-        memorysize0_size(&instance),
+        m13_memoryX5FsizeX2E0Export4_size(&instance),
         0u,
         "size()"
     );
-    memorysize0_grow(&instance, 1u);
+    m13_memoryX5FsizeX2E0Export4_grow(&instance, 1u);
     assertEqualU32(
-        memorysize0_size(&instance),
+        m13_memoryX5FsizeX2E0Export4_size(&instance),
         1u,
         "size()"
     );
-    memorysize0_grow(&instance, 4u);
+    m13_memoryX5FsizeX2E0Export4_grow(&instance, 4u);
     assertEqualU32(
-        memorysize0_size(&instance),
+        m13_memoryX5FsizeX2E0Export4_size(&instance),
         5u,
         "size()"
     );
-    memorysize0_grow(&instance, 0u);
+    m13_memoryX5FsizeX2E0Export4_grow(&instance, 0u);
     assertEqualU32(
-        memorysize0_size(&instance),
+        m13_memoryX5FsizeX2E0Export4_size(&instance),
         5u,
         "size()"
     );

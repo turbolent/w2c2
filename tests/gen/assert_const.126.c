@@ -5,7 +5,7 @@
 #include "test_const.126.h"
 
 void test() {
-    const126Instance instance;
-    const126Instantiate(&instance, resolveTestImports);
+    m9_constX2E126Instance instance;
+    m9_constX2E126Instantiate(&instance, resolveTestImports);
     printStart("const.126.wasm");
 }

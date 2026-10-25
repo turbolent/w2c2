@@ -5,12 +5,12 @@
 #include "test_const.408.h"
 
 void test() {
-    const408Instance instance;
-    const408Instantiate(&instance, resolveTestImports);
+    m9_constX2E408Instance instance;
+    m9_constX2E408Instantiate(&instance, resolveTestImports);
     printStart("const.408.wasm");
-    assertEqualF64(
-        const408_f(&instance),
-        4.149515568880996e+180,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E408Export1_f(&instance)),
+        7309342195222315011ull,
         "f()"
     );
 }

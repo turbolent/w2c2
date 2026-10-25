@@ -1,0 +1,9 @@
+START: float_exprs.68.wasm
+OK: f32.no_fold_add_neg(0.0)
+OK: f32.no_fold_add_neg(-0.0)
+FAIL: f32.no_fold_add_neg(INFINITY): 2141192192 != 2143289344
+FAIL: f32.no_fold_add_neg(-INFINITY): 2141192192 != 2143289344
+OK: f64.no_fold_add_neg(0.0)
+OK: f64.no_fold_add_neg(-0.0)
+FAIL: f64.no_fold_add_neg(INFINITY): 9219994337134247936 != 9221120237041090560
+FAIL: f64.no_fold_add_neg(-INFINITY): 9219994337134247936 != 9221120237041090560

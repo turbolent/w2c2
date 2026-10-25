@@ -5,47 +5,47 @@
 #include "test_float_exprs.65.h"
 
 void test() {
-    floatexprs65Instance instance;
-    floatexprs65Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E65Instance instance;
+    m14_floatX5FexprsX2E65Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.65.wasm");
-    assertEqualF32(
-        floatexprs65_f32X2Eno_fold_neg_sub(&instance, -0.0, -0.0),
-        -0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E65Export19_f32X2EnoX5FfoldX5FnegX5Fsub(&instance, -0.0, -0.0)),
+        2147483648u,
         "f32.no_fold_neg_sub(-0.0, -0.0)"
     );
-    assertEqualF32(
-        floatexprs65_f32X2Eno_fold_neg_sub(&instance, 0.0, -0.0),
-        -0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E65Export19_f32X2EnoX5FfoldX5FnegX5Fsub(&instance, 0.0, -0.0)),
+        2147483648u,
         "f32.no_fold_neg_sub(0.0, -0.0)"
     );
-    assertEqualF32(
-        floatexprs65_f32X2Eno_fold_neg_sub(&instance, -0.0, 0.0),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E65Export19_f32X2EnoX5FfoldX5FnegX5Fsub(&instance, -0.0, 0.0)),
+        0u,
         "f32.no_fold_neg_sub(-0.0, 0.0)"
     );
-    assertEqualF32(
-        floatexprs65_f32X2Eno_fold_neg_sub(&instance, 0.0, 0.0),
-        -0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E65Export19_f32X2EnoX5FfoldX5FnegX5Fsub(&instance, 0.0, 0.0)),
+        2147483648u,
         "f32.no_fold_neg_sub(0.0, 0.0)"
     );
-    assertEqualF64(
-        floatexprs65_f64X2Eno_fold_neg_sub(&instance, -0.0, -0.0),
-        -0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E65Export19_f64X2EnoX5FfoldX5FnegX5Fsub(&instance, -0.0, -0.0)),
+        9223372036854775808ull,
         "f64.no_fold_neg_sub(-0.0, -0.0)"
     );
-    assertEqualF64(
-        floatexprs65_f64X2Eno_fold_neg_sub(&instance, 0.0, -0.0),
-        -0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E65Export19_f64X2EnoX5FfoldX5FnegX5Fsub(&instance, 0.0, -0.0)),
+        9223372036854775808ull,
         "f64.no_fold_neg_sub(0.0, -0.0)"
     );
-    assertEqualF64(
-        floatexprs65_f64X2Eno_fold_neg_sub(&instance, -0.0, 0.0),
-        0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E65Export19_f64X2EnoX5FfoldX5FnegX5Fsub(&instance, -0.0, 0.0)),
+        0ull,
         "f64.no_fold_neg_sub(-0.0, 0.0)"
     );
-    assertEqualF64(
-        floatexprs65_f64X2Eno_fold_neg_sub(&instance, 0.0, 0.0),
-        -0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E65Export19_f64X2EnoX5FfoldX5FnegX5Fsub(&instance, 0.0, 0.0)),
+        9223372036854775808ull,
         "f64.no_fold_neg_sub(0.0, 0.0)"
     );
 }

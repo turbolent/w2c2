@@ -5,7 +5,7 @@
 #include "test_const.64.h"
 
 void test() {
-    const64Instance instance;
-    const64Instantiate(&instance, resolveTestImports);
+    m8_constX2E64Instance instance;
+    m8_constX2E64Instantiate(&instance, resolveTestImports);
     printStart("const.64.wasm");
 }

@@ -5,7 +5,7 @@
 #include "test_binary-leb128.12.h"
 
 void test() {
-    binaryleb12812Instance instance;
-    binaryleb12812Instantiate(&instance, resolveTestImports);
+    m16_binaryX2Dleb128X2E12Instance instance;
+    m16_binaryX2Dleb128X2E12Instantiate(&instance, resolveTestImports);
     printStart("binary-leb128.12.wasm");
 }

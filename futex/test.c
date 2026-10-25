@@ -1,12 +1,8 @@
 #include "list_test.h"
 #include "map_test.h"
 #include "futex_test.h"
+#include "atomic_test.h"
 #include "../w2c2/w2c2_base.h"
-
-void
-trap(Trap trap) {
-    abort();
-}
 
 int
 main(void) {
@@ -14,6 +10,7 @@ main(void) {
     testListFree();
     testMapOperations();
     testMapFree();
+    testAtomics();
     testFutex();
     return 0;
 }

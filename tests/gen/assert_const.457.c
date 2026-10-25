@@ -5,12 +5,12 @@
 #include "test_const.457.h"
 
 void test() {
-    const457Instance instance;
-    const457Instantiate(&instance, resolveTestImports);
+    m9_constX2E457Instance instance;
+    m9_constX2E457Instantiate(&instance, resolveTestImports);
     printStart("const.457.wasm");
-    assertEqualF64(
-        const457_f(&instance),
-        -5e-324,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E457Export1_f(&instance)),
+        9223372036854775809ull,
         "f()"
     );
 }

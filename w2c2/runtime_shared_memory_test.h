@@ -1,0 +1,6 @@
+#ifndef W2C2_RUNTIME_SHARED_MEMORY_TEST_H
+#define W2C2_RUNTIME_SHARED_MEMORY_TEST_H
+
+void testRuntimeSharedMemory(void);
+
+#endif /* W2C2_RUNTIME_SHARED_MEMORY_TEST_H */

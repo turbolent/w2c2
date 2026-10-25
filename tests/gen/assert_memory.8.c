@@ -5,11 +5,11 @@
 #include "test_memory.8.h"
 
 void test() {
-    memory8Instance instance;
-    memory8Instantiate(&instance, resolveTestImports);
+    m8_memoryX2E8Instance instance;
+    m8_memoryX2E8Instantiate(&instance, resolveTestImports);
     printStart("memory.8.wasm");
     assertEqualU32(
-        memory8_memsize(&instance),
+        m8_memoryX2E8Export7_memsize(&instance),
         0u,
         "memsize()"
     );

@@ -5,9 +5,9 @@
 #include "test_memory_init.11.h"
 
 void test() {
-    memoryinit11Instance instance;
-    memoryinit11Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E11Instance instance;
+    m14_memoryX5FinitX2E11Instantiate(&instance, resolveTestImports);
     printStart("memory_init.11.wasm");
-    memoryinit11_test(&instance);
+    m14_memoryX5FinitX2E11Export4_test(&instance);
     printOK("test()");
 }

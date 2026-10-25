@@ -5,7 +5,7 @@
 #include "test_int_exprs.18.h"
 
 void test() {
-    intexprs18Instance instance;
-    intexprs18Instantiate(&instance, resolveTestImports);
+    m12_intX5FexprsX2E18Instance instance;
+    m12_intX5FexprsX2E18Instantiate(&instance, resolveTestImports);
     printStart("int_exprs.18.wasm");
 }

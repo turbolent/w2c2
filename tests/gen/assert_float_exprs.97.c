@@ -5,17 +5,17 @@
 #include "test_float_exprs.97.h"
 
 void test() {
-    floatexprs97Instance instance;
-    floatexprs97Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E97Instance instance;
+    m14_floatX5FexprsX2E97Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.97.wasm");
-    assertEqualF32(
-        floatexprs97_f32X2Eno_fold_conditional_inc(&instance, -0.0, -1.0),
-        -0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E97Export27_f32X2EnoX5FfoldX5FconditionalX5Finc(&instance, -0.0, -1.0)),
+        2147483648u,
         "f32.no_fold_conditional_inc(-0.0, -1.0)"
     );
-    assertEqualF64(
-        floatexprs97_f64X2Eno_fold_conditional_inc(&instance, -0.0, -1.0),
-        -0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E97Export27_f64X2EnoX5FfoldX5FconditionalX5Finc(&instance, -0.0, -1.0)),
+        9223372036854775808ull,
         "f64.no_fold_conditional_inc(-0.0, -1.0)"
     );
 }

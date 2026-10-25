@@ -5,159 +5,159 @@
 #include "test_load.0.h"
 
 void test() {
-    load0Instance instance;
-    load0Instantiate(&instance, resolveTestImports);
+    m6_loadX2E0Instance instance;
+    m6_loadX2E0Instantiate(&instance, resolveTestImports);
     printStart("load.0.wasm");
     assertEqualU32(
-        load0_asX2DbrX2Dvalue(&instance),
+        m6_loadX2E0Export11_asX2DbrX2Dvalue(&instance),
         0u,
         "as-br-value()"
     );
-    load0_asX2Dbr_ifX2Dcond(&instance);
+    m6_loadX2E0Export13_asX2DbrX5FifX2Dcond(&instance);
     assertEqualU32(
-        load0_asX2Dbr_ifX2Dvalue(&instance),
+        m6_loadX2E0Export14_asX2DbrX5FifX2Dvalue(&instance),
         0u,
         "as-br_if-value()"
     );
     assertEqualU32(
-        load0_asX2Dbr_ifX2DvalueX2Dcond(&instance),
+        m6_loadX2E0Export19_asX2DbrX5FifX2DvalueX2Dcond(&instance),
         7u,
         "as-br_if-value-cond()"
     );
-    load0_asX2Dbr_tableX2Dindex(&instance);
+    m6_loadX2E0Export17_asX2DbrX5FtableX2Dindex(&instance);
     assertEqualU32(
-        load0_asX2Dbr_tableX2Dvalue(&instance),
+        m6_loadX2E0Export17_asX2DbrX5FtableX2Dvalue(&instance),
         0u,
         "as-br_table-value()"
     );
     assertEqualU32(
-        load0_asX2Dbr_tableX2DvalueX2Dindex(&instance),
+        m6_loadX2E0Export23_asX2DbrX5FtableX2DvalueX2Dindex(&instance),
         6u,
         "as-br_table-value-index()"
     );
     assertEqualU32(
-        load0_asX2DreturnX2Dvalue(&instance),
+        m6_loadX2E0Export15_asX2DreturnX2Dvalue(&instance),
         0u,
         "as-return-value()"
     );
     assertEqualU32(
-        load0_asX2DifX2Dcond(&instance),
+        m6_loadX2E0Export10_asX2DifX2Dcond(&instance),
         1u,
         "as-if-cond()"
     );
     assertEqualU32(
-        load0_asX2DifX2Dthen(&instance),
+        m6_loadX2E0Export10_asX2DifX2Dthen(&instance),
         0u,
         "as-if-then()"
     );
     assertEqualU32(
-        load0_asX2DifX2Delse(&instance),
+        m6_loadX2E0Export10_asX2DifX2Delse(&instance),
         0u,
         "as-if-else()"
     );
     assertEqualU32(
-        load0_asX2DselectX2Dfirst(&instance, 0u, 1u),
+        m6_loadX2E0Export15_asX2DselectX2Dfirst(&instance, 0u, 1u),
         0u,
         "as-select-first(0u, 1u)"
     );
     assertEqualU32(
-        load0_asX2DselectX2Dsecond(&instance, 0u, 0u),
+        m6_loadX2E0Export16_asX2DselectX2Dsecond(&instance, 0u, 0u),
         0u,
         "as-select-second(0u, 0u)"
     );
     assertEqualU32(
-        load0_asX2DselectX2Dcond(&instance),
+        m6_loadX2E0Export14_asX2DselectX2Dcond(&instance),
         1u,
         "as-select-cond()"
     );
     assertEqualU32(
-        load0_asX2DcallX2Dfirst(&instance),
+        m6_loadX2E0Export13_asX2DcallX2Dfirst(&instance),
         4294967295u,
         "as-call-first()"
     );
     assertEqualU32(
-        load0_asX2DcallX2Dmid(&instance),
+        m6_loadX2E0Export11_asX2DcallX2Dmid(&instance),
         4294967295u,
         "as-call-mid()"
     );
     assertEqualU32(
-        load0_asX2DcallX2Dlast(&instance),
+        m6_loadX2E0Export12_asX2DcallX2Dlast(&instance),
         4294967295u,
         "as-call-last()"
     );
     assertEqualU32(
-        load0_asX2Dcall_indirectX2Dfirst(&instance),
+        m6_loadX2E0Export22_asX2DcallX5FindirectX2Dfirst(&instance),
         4294967295u,
         "as-call_indirect-first()"
     );
     assertEqualU32(
-        load0_asX2Dcall_indirectX2Dmid(&instance),
+        m6_loadX2E0Export20_asX2DcallX5FindirectX2Dmid(&instance),
         4294967295u,
         "as-call_indirect-mid()"
     );
     assertEqualU32(
-        load0_asX2Dcall_indirectX2Dlast(&instance),
+        m6_loadX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance),
         4294967295u,
         "as-call_indirect-last()"
     );
     assertEqualU32(
-        load0_asX2Dcall_indirectX2Dindex(&instance),
+        m6_loadX2E0Export22_asX2DcallX5FindirectX2Dindex(&instance),
         4294967295u,
         "as-call_indirect-index()"
     );
-    load0_asX2DlocalX2EsetX2Dvalue(&instance);
+    m6_loadX2E0Export18_asX2DlocalX2EsetX2Dvalue(&instance);
     assertEqualU32(
-        load0_asX2DlocalX2EteeX2Dvalue(&instance),
+        m6_loadX2E0Export18_asX2DlocalX2EteeX2Dvalue(&instance),
         0u,
         "as-local.tee-value()"
     );
-    load0_asX2DglobalX2EsetX2Dvalue(&instance);
+    m6_loadX2E0Export19_asX2DglobalX2EsetX2Dvalue(&instance);
     assertEqualU32(
-        load0_asX2DloadX2Daddress(&instance),
+        m6_loadX2E0Export15_asX2DloadX2Daddress(&instance),
         0u,
         "as-load-address()"
     );
     assertEqualU32(
-        load0_asX2DloadNX2Daddress(&instance),
+        m6_loadX2E0Export16_asX2DloadNX2Daddress(&instance),
         0u,
         "as-loadN-address()"
     );
-    load0_asX2DstoreX2Daddress(&instance);
-    load0_asX2DstoreX2Dvalue(&instance);
-    load0_asX2DstoreNX2Daddress(&instance);
-    load0_asX2DstoreNX2Dvalue(&instance);
+    m6_loadX2E0Export16_asX2DstoreX2Daddress(&instance);
+    m6_loadX2E0Export14_asX2DstoreX2Dvalue(&instance);
+    m6_loadX2E0Export17_asX2DstoreNX2Daddress(&instance);
+    m6_loadX2E0Export15_asX2DstoreNX2Dvalue(&instance);
     assertEqualU32(
-        load0_asX2DunaryX2Doperand(&instance),
+        m6_loadX2E0Export16_asX2DunaryX2Doperand(&instance),
         32u,
         "as-unary-operand()"
     );
     assertEqualU32(
-        load0_asX2DbinaryX2Dleft(&instance),
+        m6_loadX2E0Export14_asX2DbinaryX2Dleft(&instance),
         10u,
         "as-binary-left()"
     );
     assertEqualU32(
-        load0_asX2DbinaryX2Dright(&instance),
+        m6_loadX2E0Export15_asX2DbinaryX2Dright(&instance),
         10u,
         "as-binary-right()"
     );
     assertEqualU32(
-        load0_asX2DtestX2Doperand(&instance),
+        m6_loadX2E0Export15_asX2DtestX2Doperand(&instance),
         1u,
         "as-test-operand()"
     );
     assertEqualU32(
-        load0_asX2DcompareX2Dleft(&instance),
+        m6_loadX2E0Export15_asX2DcompareX2Dleft(&instance),
         1u,
         "as-compare-left()"
     );
     assertEqualU32(
-        load0_asX2DcompareX2Dright(&instance),
+        m6_loadX2E0Export16_asX2DcompareX2Dright(&instance),
         1u,
         "as-compare-right()"
     );
     assertEqualU32(
-        load0_asX2DmemoryX2EgrowX2Dsize(&instance),
+        m6_loadX2E0Export19_asX2DmemoryX2EgrowX2Dsize(&instance),
         1u,
         "as-memory.grow-size()"
     );

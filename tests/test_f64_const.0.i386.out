@@ -1,0 +1,15 @@
+START: f64_const.0.wasm
+OK: nan()
+OK: negative_nan()
+OK: high_payload()
+OK: negative_high_payload()
+FAIL: bit23_payload(): 9221120237049479168 != 9218868437235793920
+FAIL: negative_bit23_payload(): 18444492273904254976 != 18442240474090569728
+FAIL: low_payload(): 9221120237041090561 != 9218868437227405313
+FAIL: negative_low_payload(): 18444492273895866369 != 18442240474082181121
+OK: inf()
+OK: negative_inf()
+OK: global_nan()
+OK: global_negative_nan()
+OK: global_inf()
+OK: global_negative_inf()

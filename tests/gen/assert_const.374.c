@@ -5,12 +5,12 @@
 #include "test_const.374.h"
 
 void test() {
-    const374Instance instance;
-    const374Instantiate(&instance, resolveTestImports);
+    m9_constX2E374Instance instance;
+    m9_constX2E374Instantiate(&instance, resolveTestImports);
     printStart("const.374.wasm");
-    assertEqualF64(
-        const374_f(&instance),
-        5.357543035931337e+300,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E374Export1_f(&instance)),
+        9106278446543142912ull,
         "f()"
     );
 }

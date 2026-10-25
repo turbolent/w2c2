@@ -5,7 +5,7 @@
 #include "test_const.90.h"
 
 void test() {
-    const90Instance instance;
-    const90Instantiate(&instance, resolveTestImports);
+    m8_constX2E90Instance instance;
+    m8_constX2E90Instantiate(&instance, resolveTestImports);
     printStart("const.90.wasm");
 }

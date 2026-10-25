@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.12...3.5)
 project(dino)
-
 include_directories(../..)
 
 add_custom_command(

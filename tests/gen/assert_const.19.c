@@ -5,7 +5,7 @@
 #include "test_const.19.h"
 
 void test() {
-    const19Instance instance;
-    const19Instantiate(&instance, resolveTestImports);
+    m8_constX2E19Instance instance;
+    m8_constX2E19Instantiate(&instance, resolveTestImports);
     printStart("const.19.wasm");
 }

@@ -5,12 +5,12 @@
 #include "test_const.439.h"
 
 void test() {
-    const439Instance instance;
-    const439Instantiate(&instance, resolveTestImports);
+    m9_constX2E439Instance instance;
+    m9_constX2E439Instantiate(&instance, resolveTestImports);
     printStart("const.439.wasm");
-    assertEqualF64(
-        const439_f(&instance),
-        -1.152921504606847e+18,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E439Export1_f(&instance)),
+        14100770433297022976ull,
         "f()"
     );
 }

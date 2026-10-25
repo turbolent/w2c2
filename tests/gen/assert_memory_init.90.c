@@ -5,7 +5,7 @@
 #include "test_memory_init.90.h"
 
 void test() {
-    memoryinit90Instance instance;
-    memoryinit90Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E90Instance instance;
+    m14_memoryX5FinitX2E90Instantiate(&instance, resolveTestImports);
     printStart("memory_init.90.wasm");
 }

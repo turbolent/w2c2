@@ -159,11 +159,11 @@
 (assert_return (invoke "f32_dec.min_int64") (i32.const 0xdf000000))
 
 ;; W2C2:
-;; (assert_return (invoke "f64.nan") (i64.const 0x7ff8000000000000))
-;; (assert_return (invoke "f64.positive_nan") (i64.const 0x7ff8000000000000))
-;; (assert_return (invoke "f64.negative_nan") (i64.const 0xfff8000000000000))
-;; (assert_return (invoke "f64.plain_nan") (i64.const 0x7ff8000000000000))
-;; (assert_return (invoke "f64.informally_known_as_plain_snan") (i64.const 0x7ff4000000000000))
+(assert_return (invoke "f64.nan") (i64.const 0x7ff8000000000000))
+(assert_return (invoke "f64.positive_nan") (i64.const 0x7ff8000000000000))
+(assert_return (invoke "f64.negative_nan") (i64.const 0xfff8000000000000))
+(assert_return (invoke "f64.plain_nan") (i64.const 0x7ff8000000000000))
+(assert_return (invoke "f64.informally_known_as_plain_snan") (i64.const 0x7ff4000000000000))
 (assert_return (invoke "f64.all_ones_nan") (i64.const 0xffffffffffffffff))
 (assert_return (invoke "f64.misc_nan") (i64.const 0x7ff0123456789abc))
 (assert_return (invoke "f64.misc_positive_nan") (i64.const 0x7ff3040506070809))

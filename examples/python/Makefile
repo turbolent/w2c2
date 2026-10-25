@@ -5,10 +5,10 @@ W2C2 ?= ../../w2c2/w2c2
 MODE ?= gnu-ld
 
 ifneq (,$(findstring sectcreate,$(MODE)))
-	LDFLAGS += -sectcreate __DATA __datasegments datasegments
+	LDFLAGS += -sectcreate __DATA m6_python m6_python.data
 endif
 ifeq ($(MODE),gnu-ld)
-    OBJS += datasegments.o
+    OBJS += m6_python.data.o
 endif
 
 python: python.c
@@ -19,4 +19,4 @@ python.c: python.wasm
 
 .PHONY: clean
 clean:
-	rm -f python python.h datasegments $(filter-out main.c,$(wildcard *.c)) *.o
+	rm -f python python.h m6_python.data $(filter-out main.c,$(wildcard *.c)) *.o

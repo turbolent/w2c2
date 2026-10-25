@@ -12,7 +12,8 @@
 #endif
 
 F32
-Math__random() {
+i4_Math6_random(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -34,9 +35,9 @@ static const U32 framebufferOffset = 0x5000;
 /* Main */
 
 int main(int argc, char* argv[]) {
-    dinoInstance instance;
-    dinoInstantiate(&instance, NULL);
-    wasmMemory* mem = dino_mem(&instance);
+    m4_dinoInstance instance;
+    m4_dinoInstantiate(&instance, NULL);
+    wasmMemory* mem = m4_dinoExport3_mem(&instance);
 
     /* Initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0) {
@@ -52,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     SDL_WM_SetCaption("Dino", NULL);
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     bool running = false;
     U32 last = SDL_GetTicks();
@@ -107,7 +108,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (running) {
-            dino_run(&instance);
+            m4_dinoExport3_run(&instance);
         }
 
 #if WASM_ENDIAN == WASM_BIG_ENDIAN
@@ -117,7 +118,7 @@ int main(int argc, char* argv[]) {
             U32 x = 0;
             for (; x < width; x++) {
                 U32 pixelOffset = y * (width * 4) + (x * 4);
-                U32 memoryOffset = mem->size - framebufferOffset - pixelOffset;
+                size_t memoryOffset = (size_t)(mem->size - framebufferOffset - pixelOffset);
                 pixels[pixelOffset] = mem->data[memoryOffset];
                 pixels[pixelOffset + 1] = mem->data[memoryOffset - 1];
                 pixels[pixelOffset + 2] = mem->data[memoryOffset - 2];

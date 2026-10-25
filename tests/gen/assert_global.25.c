@@ -5,7 +5,7 @@
 #include "test_global.25.h"
 
 void test() {
-    global25Instance instance;
-    global25Instantiate(&instance, resolveTestImports);
+    m9_globalX2E25Instance instance;
+    m9_globalX2E25Instantiate(&instance, resolveTestImports);
     printStart("global.25.wasm");
 }

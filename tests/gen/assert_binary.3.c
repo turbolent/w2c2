@@ -5,7 +5,7 @@
 #include "test_binary.3.h"
 
 void test() {
-    binary3Instance instance;
-    binary3Instantiate(&instance, resolveTestImports);
+    m8_binaryX2E3Instance instance;
+    m8_binaryX2E3Instantiate(&instance, resolveTestImports);
     printStart("binary.3.wasm");
 }

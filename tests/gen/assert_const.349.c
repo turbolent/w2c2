@@ -5,12 +5,12 @@
 #include "test_const.349.h"
 
 void test() {
-    const349Instance instance;
-    const349Instantiate(&instance, resolveTestImports);
+    m9_constX2E349Instance instance;
+    m9_constX2E349Instantiate(&instance, resolveTestImports);
     printStart("const.349.wasm");
-    assertEqualF64(
-        const349_f(&instance),
-        -2.409919865102884e-181,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E349Export1_f(&instance)),
+        11128394679232495616ull,
         "f()"
     );
 }

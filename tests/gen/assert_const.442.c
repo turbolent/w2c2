@@ -5,12 +5,12 @@
 #include "test_const.442.h"
 
 void test() {
-    const442Instance instance;
-    const442Instantiate(&instance, resolveTestImports);
+    m9_constX2E442Instance instance;
+    m9_constX2E442Instantiate(&instance, resolveTestImports);
     printStart("const.442.wasm");
-    assertEqualF64(
-        const442_f(&instance),
-        1.1529215046068472e+18,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E442Export1_f(&instance)),
+        4877398396442247169ull,
         "f()"
     );
 }

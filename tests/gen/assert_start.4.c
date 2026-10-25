@@ -5,25 +5,25 @@
 #include "test_start.4.h"
 
 void test() {
-    start4Instance instance;
-    start4Instantiate(&instance, resolveTestImports);
+    m7_startX2E4Instance instance;
+    m7_startX2E4Instantiate(&instance, resolveTestImports);
     printStart("start.4.wasm");
     assertEqualU32(
-        start4_get(&instance),
+        m7_startX2E4Export3_get(&instance),
         68u,
         "get()"
     );
-    start4_inc(&instance);
+    m7_startX2E4Export3_inc(&instance);
     printOK("inc()");
     assertEqualU32(
-        start4_get(&instance),
+        m7_startX2E4Export3_get(&instance),
         69u,
         "get()"
     );
-    start4_inc(&instance);
+    m7_startX2E4Export3_inc(&instance);
     printOK("inc()");
     assertEqualU32(
-        start4_get(&instance),
+        m7_startX2E4Export3_get(&instance),
         70u,
         "get()"
     );

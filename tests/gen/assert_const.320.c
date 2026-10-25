@@ -5,12 +5,12 @@
 #include "test_const.320.h"
 
 void test() {
-    const320Instance instance;
-    const320Instantiate(&instance, resolveTestImports);
+    m9_constX2E320Instance instance;
+    m9_constX2E320Instantiate(&instance, resolveTestImports);
     printStart("const.320.wasm");
-    assertEqualF32(
-        const320_f(&instance),
-        3.4028234663852886e+38,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E320Export1_f(&instance)),
+        2139095039u,
         "f()"
     );
 }

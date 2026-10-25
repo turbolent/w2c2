@@ -5,7 +5,7 @@
 #include "test_func.1.h"
 
 void test() {
-    func1Instance instance;
-    func1Instantiate(&instance, resolveTestImports);
+    m6_funcX2E1Instance instance;
+    m6_funcX2E1Instantiate(&instance, resolveTestImports);
     printStart("func.1.wasm");
 }

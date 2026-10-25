@@ -5,12 +5,12 @@
 #include "test_const.418.h"
 
 void test() {
-    const418Instance instance;
-    const418Instantiate(&instance, resolveTestImports);
+    m9_constX2E418Instance instance;
+    m9_constX2E418Instantiate(&instance, resolveTestImports);
     printStart("const.418.wasm");
-    assertEqualF64(
-        const418_f(&instance),
-        1.584563250285287e+29,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E418Export1_f(&instance)),
+        5044031582654955521ull,
         "f()"
     );
 }

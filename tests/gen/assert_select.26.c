@@ -5,7 +5,7 @@
 #include "test_select.26.h"
 
 void test() {
-    select26Instance instance;
-    select26Instantiate(&instance, resolveTestImports);
+    m9_selectX2E26Instance instance;
+    m9_selectX2E26Instantiate(&instance, resolveTestImports);
     printStart("select.26.wasm");
 }

@@ -5,11 +5,11 @@
 #include "test_float_exprs.95.h"
 
 void test() {
-    floatexprs95Instance instance;
-    floatexprs95Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E95Instance instance;
+    m14_floatX5FexprsX2E95Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.95.wasm");
     assertEqualU32(
-        floatexprs95_point_four(&instance, 4.0, 10.0),
+        m14_floatX5FexprsX2E95Export10_pointX5Ffour(&instance, 4.0, 10.0),
         0u,
         "point_four(4.0, 10.0)"
     );

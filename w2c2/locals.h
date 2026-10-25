@@ -6,7 +6,8 @@
 
 typedef struct WasmLocalsDeclaration {
     WasmValueType type;
-    U32 count;
+    /* Exclusive cumulative local index, excluding parameters. */
+    U32 endIndex;
 } WasmLocalsDeclaration;
 
 typedef struct WasmLocalsDeclarations {
@@ -23,18 +24,26 @@ wasmLocalsDeclarationsGetType(
     const U32 localIndex,
     WasmValueType* result
 ) {
-    U32 localsCount = 0;
-    U32 localsDeclarationIndex = 0;
-    for (; localsDeclarationIndex < localsDeclarations.declarationCount; localsDeclarationIndex++) {
-        const WasmLocalsDeclaration localsDeclaration = localsDeclarations.declarations[localsDeclarationIndex];
-        if (localIndex < localsCount + localsDeclaration.count) {
-            *result = localsDeclaration.type;
-            return true;
+    U32 low = 0;
+    U32 high = localsDeclarations.declarationCount;
+
+    /* Find the first declaration ending after this local,
+     * skipping any zero-length groups.
+     */
+    while (low < high) {
+        const U32 middle = low + (high - low) / 2;
+        if (localIndex < localsDeclarations.declarations[middle].endIndex) {
+            high = middle;
+        } else {
+            low = middle + 1;
         }
-        localsCount += localsDeclaration.count;
     }
 
-    return false;
+    if (low == localsDeclarations.declarationCount) {
+        return false;
+    }
+    *result = localsDeclarations.declarations[low].type;
+    return true;
 }
 
 #endif /* W2C2_LOCALS_H */

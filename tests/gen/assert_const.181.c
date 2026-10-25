@@ -5,12 +5,12 @@
 #include "test_const.181.h"
 
 void test() {
-    const181Instance instance;
-    const181Instantiate(&instance, resolveTestImports);
+    m9_constX2E181Instance instance;
+    m9_constX2E181Instantiate(&instance, resolveTestImports);
     printStart("const.181.wasm");
-    assertEqualF32(
-        const181_f(&instance),
-        -8.881785255792436e-16,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E181Export1_f(&instance)),
+        2793406465u,
         "f()"
     );
 }

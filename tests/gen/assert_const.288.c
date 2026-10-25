@@ -5,12 +5,12 @@
 #include "test_const.288.h"
 
 void test() {
-    const288Instance instance;
-    const288Instantiate(&instance, resolveTestImports);
+    m9_constX2E288Instance instance;
+    m9_constX2E288Instantiate(&instance, resolveTestImports);
     printStart("const.288.wasm");
-    assertEqualF32(
-        const288_f(&instance),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E288Export1_f(&instance)),
+        0u,
         "f()"
     );
 }

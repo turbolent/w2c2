@@ -5,7 +5,7 @@
 #include "test_int_exprs.6.h"
 
 void test() {
-    intexprs6Instance instance;
-    intexprs6Instantiate(&instance, resolveTestImports);
+    m11_intX5FexprsX2E6Instance instance;
+    m11_intX5FexprsX2E6Instantiate(&instance, resolveTestImports);
     printStart("int_exprs.6.wasm");
 }

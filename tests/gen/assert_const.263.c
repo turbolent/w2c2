@@ -5,12 +5,12 @@
 #include "test_const.263.h"
 
 void test() {
-    const263Instance instance;
-    const263Instantiate(&instance, resolveTestImports);
+    m9_constX2E263Instance instance;
+    m9_constX2E263Instantiate(&instance, resolveTestImports);
     printStart("const.263.wasm");
-    assertEqualF32(
-        const263_f(&instance),
-        -1125900175278080.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E263Export1_f(&instance)),
+        3632267266u,
         "f()"
     );
 }

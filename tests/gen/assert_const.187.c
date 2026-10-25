@@ -5,12 +5,12 @@
 #include "test_const.187.h"
 
 void test() {
-    const187Instance instance;
-    const187Instantiate(&instance, resolveTestImports);
+    m9_constX2E187Instance instance;
+    m9_constX2E187Instantiate(&instance, resolveTestImports);
     printStart("const.187.wasm");
-    assertEqualF32(
-        const187_f(&instance),
-        -8.881785255792436e-16,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E187Export1_f(&instance)),
+        2793406465u,
         "f()"
     );
 }

@@ -5,12 +5,12 @@
 #include "test_const.446.h"
 
 void test() {
-    const446Instance instance;
-    const446Instantiate(&instance, resolveTestImports);
+    m9_constX2E446Instance instance;
+    m9_constX2E446Instantiate(&instance, resolveTestImports);
     printStart("const.446.wasm");
-    assertEqualF64(
-        const446_f(&instance),
-        0.0,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E446Export1_f(&instance)),
+        0ull,
         "f()"
     );
 }

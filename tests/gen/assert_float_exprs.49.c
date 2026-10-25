@@ -5,17 +5,17 @@
 #include "test_float_exprs.49.h"
 
 void test() {
-    floatexprs49Instance instance;
-    floatexprs49Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E49Instance instance;
+    m14_floatX5FexprsX2E49Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.49.wasm");
-    assertEqualF32(
-        floatexprs49_f32X2Eincorrect_correction(&instance),
-        1.1920928955078125e-07,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E49Export24_f32X2EincorrectX5Fcorrection(&instance)),
+        872415232u,
         "f32.incorrect_correction()"
     );
-    assertEqualF64(
-        floatexprs49_f64X2Eincorrect_correction(&instance),
-        -2.220446049250313e-16,
+    assertEqualU64(
+        i64_reinterpret_f64(m14_floatX5FexprsX2E49Export24_f64X2EincorrectX5Fcorrection(&instance)),
+        13596367275031527424ull,
         "f64.incorrect_correction()"
     );
 }

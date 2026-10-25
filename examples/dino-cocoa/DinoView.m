@@ -7,7 +7,8 @@
 #define MEM(o) mem->data[o]
 
 F32
-Math__random() {
+i4_Math6_random(wasmModuleInstance* instance) {
+    UNUSED_PARAMETER(instance);
     return (F32)rand()/(F32)(RAND_MAX);
 }
 
@@ -17,7 +18,7 @@ trap(
 ) {}
 
 static wasmMemory* mem = NULL;
-static dinoInstance instance;
+static m4_dinoInstance instance;
 
 /* Config */
 
@@ -44,8 +45,8 @@ static const U32 framebufferOffset = 0x5000;
         [self setSpace:NO];
         [self setDown:NO];
 
-        dinoInstantiate(&instance, NULL);
-        mem = dino_mem(&instance);
+        m4_dinoInstantiate(&instance, NULL);
+        mem = m4_dinoExport3_mem(&instance);
 
         self.image = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
                                                              pixelsWide:width
@@ -82,7 +83,7 @@ static const U32 framebufferOffset = 0x5000;
         MEM(0) &= ~2;
     }
 
-    dino_run(&instance);
+    m4_dinoExport3_run(&instance);
 
     [self setNeedsDisplay:YES];
 }

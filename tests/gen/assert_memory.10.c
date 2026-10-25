@@ -5,11 +5,11 @@
 #include "test_memory.10.h"
 
 void test() {
-    memory10Instance instance;
-    memory10Instantiate(&instance, resolveTestImports);
+    m9_memoryX2E10Instance instance;
+    m9_memoryX2E10Instantiate(&instance, resolveTestImports);
     printStart("memory.10.wasm");
     assertEqualU32(
-        memory10_memsize(&instance),
+        m9_memoryX2E10Export7_memsize(&instance),
         1u,
         "memsize()"
     );

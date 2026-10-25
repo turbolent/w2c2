@@ -5,13 +5,13 @@
 #include "test_memory_fill.3.h"
 
 void test() {
-    memoryfill3Instance instance;
-    memoryfill3Instantiate(&instance, resolveTestImports);
+    m13_memoryX5FfillX2E3Instance instance;
+    m13_memoryX5FfillX2E3Instantiate(&instance, resolveTestImports);
     printStart("memory_fill.3.wasm");
-    memoryfill3_test(&instance);
+    m13_memoryX5FfillX2E3Export4_test(&instance);
     printOK("test()");
     assertEqualU32(
-        memoryfill3_checkRange(&instance, 0u, 65536u, 0u),
+        m13_memoryX5FfillX2E3Export10_checkRange(&instance, 0u, 65536u, 0u),
         4294967295u,
         "checkRange(0u, 65536u, 0u)"
     );

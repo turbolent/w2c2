@@ -5,12 +5,12 @@
 #include "test_float_exprs.52.h"
 
 void test() {
-    floatexprs52Instance instance;
-    floatexprs52Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E52Instance instance;
+    m14_floatX5FexprsX2E52Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.52.wasm");
-    assertEqualF32(
-        floatexprs52_llvm_pr26746(&instance, -0.0),
-        0.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m14_floatX5FexprsX2E52Export12_llvmX5Fpr26746(&instance, -0.0)),
+        0u,
         "llvm_pr26746(-0.0)"
     );
 }

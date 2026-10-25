@@ -5,7 +5,7 @@
 #include "test_const.140.h"
 
 void test() {
-    const140Instance instance;
-    const140Instantiate(&instance, resolveTestImports);
+    m9_constX2E140Instance instance;
+    m9_constX2E140Instantiate(&instance, resolveTestImports);
     printStart("const.140.wasm");
 }

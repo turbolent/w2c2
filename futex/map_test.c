@@ -260,6 +260,8 @@ testMapOperations(void) {
         }
     }
 
+    mapFree(&map, free);
+
     fprintf(stderr, "PASS testMap\n");
 }
 

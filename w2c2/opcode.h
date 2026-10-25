@@ -5,6 +5,10 @@
 #include "buffer.h"
 #include "valuetype.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum WasmOpcode {
     wasmOpcodeUnreachable       = 0x00,
     wasmOpcodeNop               = 0x01,
@@ -318,5 +322,9 @@ wasmOpcodeRead(
 
     return true;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* W2C2_OPCODE_H */

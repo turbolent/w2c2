@@ -5,12 +5,12 @@
 #include "test_const.300.h"
 
 void test() {
-    const300Instance instance;
-    const300Instantiate(&instance, resolveTestImports);
+    m9_constX2E300Instance instance;
+    m9_constX2E300Instantiate(&instance, resolveTestImports);
     printStart("const.300.wasm");
-    assertEqualF32(
-        const300_f(&instance),
-        2.802596928649634e-45,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E300Export1_f(&instance)),
+        2u,
         "f()"
     );
 }

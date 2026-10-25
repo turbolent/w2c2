@@ -1,0 +1,14 @@
+START: float_memory.1.wasm
+OK: i64.load()
+FAIL: f64.load(): 9222246136947933184 != 9219994337134247936
+OK: reset()
+OK: i64.load()
+OK: f64.load()
+OK: f64.store()
+FAIL: f64.load(): 9222246136947933184 != 9219994337134247936
+OK: reset()
+OK: i64.load()
+OK: f64.load()
+OK: i64.store()
+OK: i64.load()
+FAIL: f64.load(): 9222246136947933184 != 9219994337134247936

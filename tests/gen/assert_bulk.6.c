@@ -5,7 +5,7 @@
 #include "test_bulk.6.h"
 
 void test() {
-    bulk6Instance instance;
-    bulk6Instantiate(&instance, resolveTestImports);
+    m6_bulkX2E6Instance instance;
+    m6_bulkX2E6Instantiate(&instance, resolveTestImports);
     printStart("bulk.6.wasm");
 }

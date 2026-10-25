@@ -1,10 +1,9 @@
 // -*- C++ -*-
-//===--------------------------- float.h ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -74,21 +73,23 @@ Macros:
 #include <__config>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
-#include_next <float.h>
+#if __has_include_next(<float.h>)
+#  include_next <float.h>
+#endif
 
 #ifdef __cplusplus
 
-#ifndef FLT_EVAL_METHOD
-#define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
-#endif
+#  ifndef FLT_EVAL_METHOD
+#    define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
+#  endif
 
-#ifndef DECIMAL_DIG
-#define DECIMAL_DIG __DECIMAL_DIG__
-#endif
+#  ifndef DECIMAL_DIG
+#    define DECIMAL_DIG __DECIMAL_DIG__
+#  endif
 
 #endif // __cplusplus
 
-#endif  // _LIBCPP_FLOAT_H
+#endif // _LIBCPP_FLOAT_H

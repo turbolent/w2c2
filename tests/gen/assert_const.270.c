@@ -5,12 +5,12 @@
 #include "test_const.270.h"
 
 void test() {
-    const270Instance instance;
-    const270Instantiate(&instance, resolveTestImports);
+    m9_constX2E270Instance instance;
+    m9_constX2E270Instantiate(&instance, resolveTestImports);
     printStart("const.270.wasm");
-    assertEqualF32(
-        const270_f(&instance),
-        1125900041060352.0,
+    assertEqualU32(
+        i32_reinterpret_f32(m9_constX2E270Export1_f(&instance)),
+        1484783617u,
         "f()"
     );
 }

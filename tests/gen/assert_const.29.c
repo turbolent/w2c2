@@ -5,7 +5,7 @@
 #include "test_const.29.h"
 
 void test() {
-    const29Instance instance;
-    const29Instantiate(&instance, resolveTestImports);
+    m8_constX2E29Instance instance;
+    m8_constX2E29Instantiate(&instance, resolveTestImports);
     printStart("const.29.wasm");
 }

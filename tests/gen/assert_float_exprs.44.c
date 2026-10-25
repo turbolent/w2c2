@@ -5,127 +5,167 @@
 #include "test_float_exprs.44.h"
 
 void test() {
-    floatexprs44Instance instance;
-    floatexprs44Instantiate(&instance, resolveTestImports);
+    m14_floatX5FexprsX2E44Instance instance;
+    m14_floatX5FexprsX2E44Instantiate(&instance, resolveTestImports);
     printStart("float_exprs.44.wasm");
     assertEqualU32(
-        floatexprs44_f32X2Eult(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eult(&instance, 3.0, 2.0),
         0u,
         "f32.ult(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eult(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eult(&instance, 2.0, 2.0),
         0u,
         "f32.ult(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eult(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eult(&instance, 2.0, 3.0),
         1u,
         "f32.ult(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eule(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eult(&instance, 2.0, f32_reinterpret_i32(0x7fc00000u)),
+        1u,
+        "f32.ult(2.0, f32_reinterpret_i32(0x7fc00000u))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f32X2Eule(&instance, 3.0, 2.0),
         0u,
         "f32.ule(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eule(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eule(&instance, 2.0, 2.0),
         1u,
         "f32.ule(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eule(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eule(&instance, 2.0, 3.0),
         1u,
         "f32.ule(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eugt(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eule(&instance, 2.0, f32_reinterpret_i32(0x7fc00000u)),
+        1u,
+        "f32.ule(2.0, f32_reinterpret_i32(0x7fc00000u))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f32X2Eugt(&instance, 3.0, 2.0),
         1u,
         "f32.ugt(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eugt(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eugt(&instance, 2.0, 2.0),
         0u,
         "f32.ugt(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Eugt(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eugt(&instance, 2.0, 3.0),
         0u,
         "f32.ugt(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Euge(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Eugt(&instance, 2.0, f32_reinterpret_i32(0x7fc00000u)),
+        1u,
+        "f32.ugt(2.0, f32_reinterpret_i32(0x7fc00000u))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f32X2Euge(&instance, 3.0, 2.0),
         1u,
         "f32.uge(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Euge(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Euge(&instance, 2.0, 2.0),
         1u,
         "f32.uge(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f32X2Euge(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Euge(&instance, 2.0, 3.0),
         0u,
         "f32.uge(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eult(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f32X2Euge(&instance, 2.0, f32_reinterpret_i32(0x7fc00000u)),
+        1u,
+        "f32.uge(2.0, f32_reinterpret_i32(0x7fc00000u))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f64X2Eult(&instance, 3.0, 2.0),
         0u,
         "f64.ult(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eult(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eult(&instance, 2.0, 2.0),
         0u,
         "f64.ult(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eult(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eult(&instance, 2.0, 3.0),
         1u,
         "f64.ult(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eule(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eult(&instance, 2.0, f64_reinterpret_i64(0x7ff8000000000000ull)),
+        1u,
+        "f64.ult(2.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f64X2Eule(&instance, 3.0, 2.0),
         0u,
         "f64.ule(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eule(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eule(&instance, 2.0, 2.0),
         1u,
         "f64.ule(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eule(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eule(&instance, 2.0, 3.0),
         1u,
         "f64.ule(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eugt(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eule(&instance, 2.0, f64_reinterpret_i64(0x7ff8000000000000ull)),
+        1u,
+        "f64.ule(2.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f64X2Eugt(&instance, 3.0, 2.0),
         1u,
         "f64.ugt(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eugt(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eugt(&instance, 2.0, 2.0),
         0u,
         "f64.ugt(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Eugt(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eugt(&instance, 2.0, 3.0),
         0u,
         "f64.ugt(2.0, 3.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Euge(&instance, 3.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Eugt(&instance, 2.0, f64_reinterpret_i64(0x7ff8000000000000ull)),
+        1u,
+        "f64.ugt(2.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f64X2Euge(&instance, 3.0, 2.0),
         1u,
         "f64.uge(3.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Euge(&instance, 2.0, 2.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Euge(&instance, 2.0, 2.0),
         1u,
         "f64.uge(2.0, 2.0)"
     );
     assertEqualU32(
-        floatexprs44_f64X2Euge(&instance, 2.0, 3.0),
+        m14_floatX5FexprsX2E44Export7_f64X2Euge(&instance, 2.0, 3.0),
         0u,
         "f64.uge(2.0, 3.0)"
+    );
+    assertEqualU32(
+        m14_floatX5FexprsX2E44Export7_f64X2Euge(&instance, 2.0, f64_reinterpret_i64(0x7ff8000000000000ull)),
+        1u,
+        "f64.uge(2.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
 }

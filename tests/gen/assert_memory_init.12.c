@@ -5,7 +5,7 @@
 #include "test_memory_init.12.h"
 
 void test() {
-    memoryinit12Instance instance;
-    memoryinit12Instantiate(&instance, resolveTestImports);
+    m14_memoryX5FinitX2E12Instance instance;
+    m14_memoryX5FinitX2E12Instantiate(&instance, resolveTestImports);
     printStart("memory_init.12.wasm");
 }

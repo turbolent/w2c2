@@ -1,16 +1,47 @@
 #include "leb128_test.h"
-#include "stringbuilder_test.h"
+#include "allocation_test.h"
+#include "runtime_division_test.h"
+#include "runtime_memory_test.h"
+#include "runtime_plan9_test.h"
+#include "runtime_shared_memory_test.h"
 #include "typestack_test.h"
+#include "stackdeclarations_test.h"
+#include "labelstack_test.h"
 #include "opcode_test.h"
 #include "sha1_test.h"
+#include "module_test.h"
+#include "function_test.h"
+#include "locals_test.h"
+#include "reader_test.h"
+#include "diagnostic_test.h"
+#include "output_test.h"
+#include "output_file_test.h"
+#include "c_name_test.h"
+#include "c_file_test.h"
 
 int
 main(void) {
     testReadU32LEB128();
     testReadI32LEB128();
-    testStringBuilder();
+    testAllocations();
+    testRuntimeDivision();
+    testRuntimeMemory();
+    testRuntimePlan9();
+    testRuntimeSharedMemory();
     testTypeStack();
+    testStackDeclarations();
+    testLabelStack();
     testOpcodes();
     testSHA1();
+    testModuleLifecycle();
+    testFunctionIDs();
+    testLocals();
+    testReadLimits();
+    testReadNames();
+    testDiagnostics();
+    testOutputs();
+    testFileOutputs();
+    testCNames();
+    testCFileNames();
     return 0;
 }

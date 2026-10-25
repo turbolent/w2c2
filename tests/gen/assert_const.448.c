@@ -5,12 +5,12 @@
 #include "test_const.448.h"
 
 void test() {
-    const448Instance instance;
-    const448Instantiate(&instance, resolveTestImports);
+    m9_constX2E448Instance instance;
+    m9_constX2E448Instantiate(&instance, resolveTestImports);
     printStart("const.448.wasm");
-    assertEqualF64(
-        const448_f(&instance),
-        5e-324,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E448Export1_f(&instance)),
+        1ull,
         "f()"
     );
 }

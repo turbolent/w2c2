@@ -5,7 +5,7 @@
 #include "test_global.22.h"
 
 void test() {
-    global22Instance instance;
-    global22Instantiate(&instance, resolveTestImports);
+    m9_globalX2E22Instance instance;
+    m9_globalX2E22Instantiate(&instance, resolveTestImports);
     printStart("global.22.wasm");
 }

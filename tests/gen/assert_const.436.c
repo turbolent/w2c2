@@ -5,12 +5,12 @@
 #include "test_const.436.h"
 
 void test() {
-    const436Instance instance;
-    const436Instantiate(&instance, resolveTestImports);
+    m9_constX2E436Instance instance;
+    m9_constX2E436Instantiate(&instance, resolveTestImports);
     printStart("const.436.wasm");
-    assertEqualF64(
-        const436_f(&instance),
-        1.5845632502852878e+29,
+    assertEqualU64(
+        i64_reinterpret_f64(m9_constX2E436Export1_f(&instance)),
+        5044031582654955523ull,
         "f()"
     );
 }

@@ -3,6 +3,7 @@ import subprocess
 import os
 import difflib
 import sys
+import shlex
 
 def main():
     parser = argparse.ArgumentParser()
@@ -14,7 +15,7 @@ def main():
     command = []
 
     if args.execute:
-        command.append(args.execute)
+        command.extend(shlex.split(args.execute))
     command.append(os.path.abspath(args.test))
 
     output = subprocess.run(command, check=True, stderr=subprocess.PIPE).stderr.decode('utf-8').strip()
