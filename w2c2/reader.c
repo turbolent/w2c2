@@ -1118,6 +1118,14 @@ wasmReadConstantExpr(
             MUST (wasmConstInstructionRead(buffer, opcode, &instruction))
             break;
         }
+        case wasmOpcodeSIMDPrefix: {
+            U32 subopcode;
+            WasmValue value;
+            MUST (leb128ReadU32(buffer, &subopcode))
+            MUST (subopcode == 12)
+            MUST (wasmV128ConstRead(buffer, &value))
+            break;
+        }
         case wasmOpcodeGlobalGet: {
             WasmGlobalInstruction instruction;
             MUST (wasmGlobalInstructionRead(buffer, &instruction))

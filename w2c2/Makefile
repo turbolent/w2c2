@@ -134,10 +134,10 @@ else
 	$(AR) rcs $@ $^
 endif
 
-%.o: %.c $(wildcard *.h)
+%.o: %.c $(wildcard *.h *.def)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.pic.o: %.c $(wildcard *.h)
+%.pic.o: %.c $(wildcard *.h *.def)
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 .PHONY: test

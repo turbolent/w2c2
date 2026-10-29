@@ -76,6 +76,21 @@ class NaNTests(unittest.TestCase):
                     self.assertIn('\n        {}{},'.format(bits, 'u' if width == 32 else 'ull'), output)
                     self.assertNotIn(' & ', output)
 
+    def test_legacy_float_argument_descriptions(self):
+        for value_type, value, description in [
+            ('f32', 0, '0.0'),
+            ('f32', 0x80000000, '-0.0'),
+            ('f32', 0x3f800000, '1.0'),
+            ('f32', 0x7f800000, 'INFINITY'),
+            ('f64', 0xfff0000000000000, '-INFINITY'),
+            ('f64', 0x3ff4000000000000, '1.25'),
+        ]:
+            argument = {'type': value_type, 'value': str(value)}
+            with self.subTest(argument=argument):
+                output = self.generate('i32', '1', [argument])
+                self.assertIn('"result(' + description + ')"', output)
+                self.assertIn(gen.argument(argument), output)
+
 
 class GlobalTests(unittest.TestCase):
     def generate(self, commands):
@@ -128,6 +143,41 @@ class GlobalTests(unittest.TestCase):
                 {'type': 'assert_return', 'action': {'type': 'get', 'module': '$Missing', 'field': 'value'},
                  'expected': [{'type': 'i32', 'value': '42'}]},
             ])
+
+
+class ScriptTests(unittest.TestCase):
+    def test_combined_actions_keep_script_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            source = directory / 'script.json'
+            source.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'script.0.wasm', 'name': '$first'},
+                {'type': 'module', 'filename': 'script.1.wasm', 'name': '$second'},
+                {'type': 'action', 'action': {'type': 'invoke', 'field': 'change', 'args': []}},
+                {'type': 'assert_return', 'action': {'type': 'get', 'module': '$first', 'field': 'value'},
+                 'expected': [{'type': 'i32', 'value': '42'}]},
+                {'type': 'assert_trap', 'action': {'type': 'invoke', 'field': 'trap', 'args': []}},
+            ]}))
+            test, = gen.generate_test_files(source, combined=True, output_dir=directory)
+            output = test['path'].read_text()
+            change = gen.export_name('script.1', 'change') + '(&instance_1)'
+            get = '*' + gen.export_name('script.0', 'value') + '(&instance_0)'
+            trap = gen.export_name('script.1', 'trap') + '(&instance_1)'
+            self.assertLess(output.index(change), output.index(get))
+            self.assertLess(output.index(get), output.index(trap))
+            self.assertIn('assertTrap(' + trap, output)
+            self.assertIn('static ' + gen.module_identifier('script.0') + 'Instance instance_0;', output)
+            self.assertEqual(test['count'], 3)
+
+    def test_unknown_registered_module_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / 'script.json'
+            source.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'script.0.wasm'},
+                {'type': 'register', 'name': '$missing', 'as': 'alias'},
+            ]}))
+            with self.assertRaises(KeyError):
+                gen.generate_test_files(source, combined=True, output_dir=directory)
 
 
 if __name__ == '__main__':

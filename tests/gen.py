@@ -1,5 +1,4 @@
 import json
-import io
 import glob
 import re
 
@@ -46,174 +45,211 @@ def export_name(module, name):
 
 
 def convert_type(t):
-    if t == "i32":
-        return "U32"
-    elif t == "i64":
-        return "U64"
-    elif t == "f32":
-        return "F32"
-    elif t == "f64":
-        return "F64"
-    raise Exception("unsupported type {}".format(t))
+    return {'i32': 'U32', 'i64': 'U64', 'f32': 'F32', 'f64': 'F64', 'v128': 'V128'}[t]
+
+
+def bits(value, width):
+    if value in ('nan:canonical', 'nan:arithmetic'):
+        return 0x7fc00000 if width == 32 else 0x7ff8000000000000
+    return int(value) & ((1 << width) - 1)
+
+
+def mask_for(value, width):
+    if value == 'nan:canonical':
+        return (1 << (width - 1)) - 1
+    if value == 'nan:arithmetic':
+        return 0x7fc00000 if width == 32 else 0x7ff8000000000000
+    return (1 << width) - 1
+
+
+def vector_bytes(value, mask=False):
+    width = int(value['lane_type'][1:])
+    convert = mask_for if mask else bits
+    return b''.join(convert(v, width).to_bytes(width // 8, 'little') for v in value['value'])
 
 
 def convert_value(value, t):
-    if t == "U32":
-        return value + "u"
-    elif t == "U64":
-        return value + "ull"
-    elif t == 'F32':
-        bits = int(value)
-        value = struct.unpack('f', struct.pack('I', bits))[0]
-        if math.isnan(value):
-            return 'f32_reinterpret_i32(0x{:08x}u)'.format(bits)
-        if value == math.inf:
-            return 'INFINITY'
-        elif value == -math.inf:
-            return '-INFINITY'
-        else:
-            return str(value)
-    elif t == 'F64':
-        bits = int(value)
-        value = struct.unpack('d', struct.pack('Q', bits))[0]
-        if math.isnan(value):
-            return 'f64_reinterpret_i64(0x{:016x}ull)'.format(bits)
-        if value == math.inf:
-            return 'INFINITY'
-        elif value == -math.inf:
-            return '-INFINITY'
-        else:
-            return str(value)
-    raise Exception("unsupported type {}".format(t))
+    if t in ('U32', 'U64'):
+        return str(bits(value, int(t[1:]))) + ('u' if t == 'U32' else 'ull')
+    if t in ('F32', 'F64'):
+        width = int(t[1:])
+        return 'f{0}_reinterpret_i{0}(0x{1:0{2}x}{3})'.format(
+            width, bits(value, width), width // 4, 'u' if width == 32 else 'ull')
+    raise ValueError('Unsupported scalar type: ' + t)
 
 
-def generate_test_files(json_path):
+def argument(value):
+    if value['type'] == 'v128':
+        return 'w2c2_v128_const(' + ', '.join(str(b if b < 128 else b - 256) for b in vector_bytes(value)) + ')'
+    return convert_value(value['value'], convert_type(value['type']))
 
-    test_file = None
-    # Named actions may refer to a module after another module is defined.
-    test_files = {}
-    named_modules = {}
-    current_module = None
 
-    def create_test_file(filename, module_name):
-        nonlocal test_file
+def argument_description(value):
+    # Preserve the text in existing architecture-specific expected output.
+    if value['type'] in ('f32', 'f64'):
+        width = int(value['type'][1:])
+        number, = struct.unpack('<f' if width == 32 else '<d',
+                                bits(value['value'], width).to_bytes(width // 8, 'little'))
+        if math.isinf(number):
+            return '-INFINITY' if number < 0 else 'INFINITY'
+        if not math.isnan(number):
+            return str(number)
+    return argument(value)
 
-        test_path = gen_dir / filename
-        test_path = test_path.with_name('assert_' + test_path.name).with_suffix('.c')
-        print("    " + str(test_path))
 
-        header = Path(filename)
-        header = header.with_name('test_' + header.name).with_suffix('.h')
+def c_string(value):
+    return '"' + ''.join(chr(b) if 32 <= b < 127 and b not in (34, 92)
+                         else '\\{:03o}'.format(b) for b in value.encode('utf-8')) + '"'
 
-        test_preamble = """
-#include <stdio.h>
-#include "w2c2_base.h"
-#include "test.h"
-#include "{header}"
 
-void test() {{
-    {module_name}Instance instance;
-    {module_name}Instantiate(&instance, resolveTestImports);
-""".format(header=header, module_name=module_identifier(module_name))
-        test_file = io.StringIO()
-        test_file.write(test_preamble)
+def assertion(call, expected, description):
+    if expected['type'] == 'v128':
+        return ('    {\n        static const U8 expected[16] = {'
+                + ', '.join(map(str, vector_bytes(expected))) + '};\n'
+                + '        static const U8 masks[16] = {'
+                + ', '.join(map(str, vector_bytes(expected, mask=True))) + '};\n'
+                + '        assertEqualV128(' + call + ', expected, masks, ' + c_string(description) + ');\n    }\n')
+    value_type = convert_type(expected['type'])
+    value = expected['value']
+    if value_type in ('F32', 'F64'):
+        width = int(value_type[1:])
+        value_type = 'U' + str(width)
+        call = 'i{0}_reinterpret_f{0}({1})'.format(width, call)
+        if value in ('nan:canonical', 'nan:arithmetic'):
+            call = '({} & {})'.format(call, convert_value(str(mask_for(value, width)), value_type))
+            value = str(bits(value, width))
+    return '    assertEqual{}(\n        {},\n        {},\n        {}\n    );\n'.format(
+        value_type, call, convert_value(value, value_type), c_string(description))
 
-    def close_test_file():
-        nonlocal test_file
-        if not test_file:
-            return
-        test_file.write('}\n')
-        test_path = gen_dir / ('assert_' + module_name + '.c')
-        with test_path.open('w', newline='\n') as output:
-            output.write(test_file.getvalue())
-        test_file.close()
-        test_file = None
 
-    with open(json_path, 'r') as f:
-        info = json.load(f)
+def object_exports(path):
+    data = path.read_bytes()
+    offset = 8
 
-        module_name = ""
+    def integer():
+        nonlocal offset
+        result = 0
+        shift = 0
+        while True:
+            byte = data[offset]
+            offset += 1
+            result |= (byte & 127) << shift
+            if not byte & 128:
+                return result
+            shift += 7
 
-        for command in info['commands']:
-            t = command['type']
+    while offset < len(data):
+        section = data[offset]
+        offset += 1
+        length = integer()
+        end = offset + length
+        if section == 7:
+            exports = []
+            for _ in range(integer()):
+                length = integer()
+                name = data[offset:offset + length].decode('utf-8')
+                offset += length
+                kind = data[offset]
+                offset += 1
+                integer()
+                if kind in (2, 3):
+                    exports.append(name)
+            return exports
+        offset = end
+    return []
+
+
+def generate_test_files(json_path, combined=False, output_dir=None):
+    """Generate assertions using the shared test.h/main.c harness.
+
+    The checked-in core fixtures retain their per-module layout and output. Combined output
+    preserves script order and instance state for registrations and named actions.
+    Both layouts use the same command and assertion generation.
+    """
+    json_path = Path(json_path)
+    output_dir = Path(output_dir) if output_dir is not None else gen_dir
+    commands = json.loads(json_path.read_text())['commands']
+    tests = []
+    named = {}
+    current = None
+
+    def new_test(name):
+        test = {'path': output_dir / ('assert_' + name + '.c'),
+                'modules': [], 'declarations': [], 'body': [], 'count': 0}
+        tests.append(test)
+        return test
+
+    combined_test = new_test(json_path.stem) if combined else None
+    for command in commands:
+        kind = command['type']
+        if kind == 'module':
+            filename = command['filename']
+            name = Path(filename).stem
+            test = combined_test if combined else new_test(name)
+            instance = 'instance_' + str(len(test['modules'])) if combined else 'instance'
+            current = (name, instance, test)
+            if 'name' in command:
+                named[command['name']] = current
+            test['modules'].append(filename)
+            # Static storage preserves instance state across setjmp/longjmp.
+            test['declarations'].append('    static {}Instance {};\n'.format(module_identifier(name), instance))
+            test['body'].append('    {}Instantiate(&{}, resolveTestImports);\n'.format(module_identifier(name), instance))
+            test['body'].append('    printStart({});\n'.format(c_string(filename)))
+        elif kind == 'register':
+            name, instance, test = named[command['name']] if 'name' in command else current
+            for field in object_exports(json_path.parent / (name + '.wasm')):
+                test['body'].append('    bindTestImport({}, {}, (void*){}(&{}));\n'.format(
+                    c_string(command['as']), c_string(field), export_name(name, field), instance))
+        elif kind in ('assert_return', 'assert_trap', 'action'):
+            # Legacy per-module builds do not enable runtime bounds checks.
+            # Whole-script runs enable them and exercise the trap assertions.
+            if kind == 'assert_trap' and not combined:
+                continue
             action = command.get('action')
-            if t == "module":
-                filename = command['filename']
-                module_name = Path(filename).stem
-                create_test_file(filename, module_name)
-                test_files[module_name] = test_file
-                current_module = module_name
-                if 'name' in command:
-                    named_modules[command['name']] = module_name
-                test_file.write("    printStart(\"{}\");\n".format(filename))
+            # Module-instantiation assertions are outside this harness.
+            if action is None:
+                continue
+            selected = named[action['module']] if 'module' in action else current
+            if selected is None:
+                raise ValueError('Action before any module')
+            name, instance, test = selected
+            args = [argument(arg) for arg in action.get('args', [])]
+            call = '{}({})'.format(export_name(name, action['field']), ', '.join(['&' + instance] + args))
+            descriptions = args if combined else [argument_description(arg) for arg in action.get('args', [])]
+            description = '{}({})'.format(action['field'], ', '.join(descriptions))
+            if action['type'] == 'get':
+                call = '*' + call
+                description = 'get ' + action['field']
+            elif action['type'] != 'invoke':
+                raise ValueError('Unsupported action: ' + action['type'])
+            if combined:
+                description = 'WAST line {}: {}'.format(command.get('line', 0), description)
+            if kind == 'assert_trap':
+                test['body'].append('    assertTrap({}, {});\n'.format(call, c_string(description)))
+            elif kind == 'assert_return' and command['expected']:
+                if len(command['expected']) != 1:
+                    raise ValueError('Multiple results are outside w2c2 support')
+                test['body'].append(assertion(call, command['expected'][0], description))
+            else:
+                test['body'].append('    (void)({});\n'.format(call))
+                if combined or kind == 'action':
+                    test['body'].append('    printOK({});\n'.format(c_string(description)))
+            test['count'] += 1
+        elif kind not in ('assert_invalid', 'assert_malformed', 'assert_unlinkable',
+                          'assert_uninstantiable', 'assert_exhaustion'):
+            raise ValueError('Unsupported command: ' + kind)
 
-            elif action is not None and action['type'] in ('invoke', 'get'):
-                module_name = (named_modules[action['module']]
-                               if 'module' in action else current_module)
-                if module_name is None:
-                    raise ValueError('Action before any module')
-                test_file = test_files[module_name]
-
-                args = [
-                    convert_value(arg['value'], convert_type(arg['type']))
-                    for arg in action.get('args', [])
-                ]
-
-                field = action['field']
-
-                call = "{}({})".format(
-                    export_name(module_name, field),
-                    ', '.join(['&instance', *args])
-                )
-
-                description = "{}({})".format(field, ', '.join(args))
-                if action['type'] == 'get':
-                    call = '*' + call
-                    description = 'get ' + field
-
-                if t == 'assert_return':
-
-                    expected = command['expected']
-
-                    if len(expected) == 0:
-                        test_file.write("    {};\n".format(call))
-                        continue
-
-                    # TODO: add support for multiple result values
-                    if len(expected) > 1:
-                        continue
-
-                    expected_type = convert_type(expected[0]['type'])
-                    expected_value = expected[0]['value']
-
-                    # Compare exact results as bits;
-                    # NaN patterns ignore only the bits left unspecified by the assertion.
-                    if expected_type in ('F32', 'F64'):
-                        width = int(expected_type[1:])
-                        expected_type = 'U' + str(width)
-                        call = 'i{0}_reinterpret_f{0}({1})'.format(width, call)
-                        if expected_value in ('nan:canonical', 'nan:arithmetic'):
-                            # Canonical NaNs allow either sign;
-                            # arithmetic NaNs also allow arbitrary lower payload bits.
-                            canonical = 0x7fc00000 if width == 32 else 0x7ff8000000000000
-                            mask = (1 << (width - 1)) - 1 if expected_value == 'nan:canonical' else canonical
-                            call = '({} & {})'.format(call, convert_value(str(mask), expected_type))
-                            expected_value = str(canonical)
-
-                    expected_value = convert_value(expected_value, expected_type)
-
-                    test_file.write("    assertEqual{}(\n".format(expected_type))
-                    test_file.write("        {},\n".format(call))
-                    test_file.write("        {},\n".format(expected_value))
-                    test_file.write("        \"{}\"\n".format(description))
-                    test_file.write("    );\n")
-
-                elif t == 'action':
-                    test_file.write("    {};\n".format(call))
-                    test_file.write("    printOK(\"{}\");\n".format(description))
-
-        for module_name, test_file in test_files.items():
-            close_test_file()
+    for test in tests:
+        includes = ''.join('#include "test_{}"\n'.format(Path(filename).with_suffix('.h').name)
+                           for filename in test['modules'])
+        cleanup = ''.join('    {}FreeInstance(&{});\n'.format(
+            module_identifier(Path(filename).stem), 'instance_' + str(i) if combined else 'instance')
+            for i, filename in reversed(list(enumerate(test['modules']))))
+        source = ('#include "test.h"\n' + includes + '\nvoid test(void) {\n'
+                  + ''.join(test['declarations']) + ''.join(test['body']) + cleanup + '}\n')
+        with test['path'].open('w', newline='\n') as output:
+            output.write(source)
+    return tests
 
 
 def gen(paths):

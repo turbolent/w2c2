@@ -17,3 +17,48 @@ ARCH=ppc EXECUTE=qemu-ppc-static CC=powerpc-linux-gnu-gcc make run-tests CFLAGS=
 ### Development
 
 When updating the test cases, re-run `make gen`, which requires Python 3 and wabt.
+
+### SIMD
+
+The 59 `simd_*.wast` files in this directory are unmodified copies from [WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210), commit `44f1503f98409fa3737437bf9449a37a5def4210`.
+They are licensed under Apache-2.0.
+
+Set `SIMDE_HEADER` to the full path of `simde/wasm/simd128.h` in an external [SIMDe](https://github.com/simd-everywhere/simde) checkout:
+
+```sh
+export SIMDE_HEADER=/path/to/simde/simde/wasm/simd128.h
+make simd-test
+```
+
+`make simd-test` runs the local regressions and the imported upstream execution tests.
+Use `make simd-spec-test` for the upstream tests alone:
+
+```sh
+make simd-spec-test
+make simd-spec-test SIMD_CFLAGS="-O2 -DSIMDE_NO_NATIVE"
+make simd-spec-test SIMD_CFLAGS="-O2 -DSIMDE_NO_NATIVE -DSIMDE_NO_VECTOR"
+```
+
+The SIMD CI matrix runs the suite with GCC and Clang across SSE2, AVX2, portable vector, and scalar configurations.
+Running requires Python 3, WABT's `wast2json`, a built w2c2, a C99 compiler, and an external SIMDe checkout.
+CI uses SIMDe commit `65c15e6b545361f6dd89b1e3bcc76273e1344653`, which includes the WebAssembly conversion fixes from upstream PRs 1460 and 1461.
+Once these dependencies are available, no network access is needed.
+
+`simd_memory-multi.wast` is retained for provenance but excluded from the default target because it requires the separate multi-memory extension.
+The remaining 58 files cover fixed-width SIMD.
+Relaxed SIMD files are outside this import.
+
+`gen.py` generates both scalar and SIMD assertions using the shared `test.h` and `main.c` harness.
+`run.py` can run an existing test binary or generate, compile, and run a WAST script.
+Whole-script runs preserve module order and registered memory and global imports.
+The checked-in scalar fixtures retain their per-module layout and architecture-specific expected output.
+Only generated code that uses SIMD enables C99 and the external SIMDe headers.
+The runner translates valid modules and executes their actions, return assertions, and trap assertions.
+It skips validation assertions (`assert_invalid`, `assert_malformed`, and `assert_unlinkable`) because w2c2 is not a Wasm validator.
+Module-instantiation traps and stack-exhaustion assertions remain outside this harness.
+The malformed-immediate regression tests run separately.
+A passing execution run does not establish validator conformance or verify the specific trap reason.
+
+To update the import, copy the root `simd_*.wast` files from a new testsuite revision, update the pinned commit above, and run the complete matrix.
+Keep upstream files unchanged.
+Place local regression cases alongside `simd/integration.wast`.

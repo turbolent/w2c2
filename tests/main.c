@@ -1,5 +1,30 @@
 #include <stdio.h>
-#include "w2c2_base.h"
+#include "test.h"
+
+jmp_buf testTrapTarget;
+int testTrapExpected;
+
+typedef struct TestImport {
+    const char* module;
+    const char* name;
+    void* value;
+    struct TestImport* next;
+} TestImport;
+
+static TestImport* testImports;
+
+void
+bindTestImport(const char* module, const char* name, void* value) {
+    TestImport* binding = (TestImport*)malloc(sizeof(TestImport));
+    if (binding == NULL) {
+        abort();
+    }
+    binding->module = module;
+    binding->name = name;
+    binding->value = value;
+    binding->next = testImports;
+    testImports = binding;
+}
 
 static U32 spectest_global_i32 = 666;
 
@@ -24,6 +49,15 @@ resolveTestImports(
     WasmName module,
     WasmName name
 ) {
+    TestImport* binding;
+    for (binding = testImports; binding != NULL; binding = binding->next) {
+        if (strlen(binding->module) == module.length
+            && memcmp(binding->module, module.data, module.length) == 0
+            && strlen(binding->name) == name.length
+            && memcmp(binding->name, name.data, name.length) == 0) {
+            return binding->value;
+        }
+    }
     if (module.length != sizeof("spectest") - 1
         || memcmp(module.data, "spectest", module.length) != 0) {
         fprintf(stderr, "FAIL: import of unknown module: %s\n", module.data);
@@ -64,6 +98,9 @@ void
 trap(
     Trap trap
 ) {
+    if (testTrapExpected) {
+        longjmp(testTrapTarget, 1);
+    }
     fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
     abort();
 }
@@ -100,9 +137,38 @@ void printOK(const char* description) {
     fprintf(stderr, "OK: %s\n", description);
 }
 
+void printFail(const char* description) {
+    fprintf(stderr, "FAIL: %s\n", description);
+}
+
+#ifdef W2C2_SIMDE_HEADER
+void assertEqualV128(
+    V128 actual,
+    const U8* expected,
+    const U8* masks,
+    const char* description
+) {
+    U8 bytes[16];
+    wasmMemory memory;
+    size_t index;
+    memory.data = bytes;
+    memory.size = sizeof(bytes);
+    w2c2_v128_store(&memory, 0, actual);
+    for (index = 0; index < sizeof(bytes); index++) {
+        if ((bytes[index] & masks[index]) != expected[index]) {
+            printFail(description);
+            return;
+        }
+    }
+    printOK(description);
+}
+#endif
+
 static void initTest() {
     spectest_memory = wasmMemoryAllocate(1, 2, false);
+#if defined(WASM_THREADS_PTHREADS) || defined(WASM_THREADS_WIN32)
     spectest_shared_memory = WASM_MEMORY_ALLOCATE_SHARED(1, 2);
+#endif
     wasmTableAllocate(&spectest_table, 10, 20);
 }
 
@@ -111,5 +177,10 @@ extern void test(void);
 int main() {
     initTest();
     test();
+    while (testImports != NULL) {
+        TestImport* binding = testImports;
+        testImports = binding->next;
+        free(binding);
+    }
     return 0;
 }

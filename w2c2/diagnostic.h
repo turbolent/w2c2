@@ -17,7 +17,8 @@ typedef enum WasmDiagnosticSeverity {
 typedef enum WasmDiagnosticOpcodeFamily {
     wasmDiagnosticOpcodeUnprefixed,
     wasmDiagnosticOpcodeMisc,
-    wasmDiagnosticOpcodeThreads
+    wasmDiagnosticOpcodeThreads,
+    wasmDiagnosticOpcodeSIMD
 } WasmDiagnosticOpcodeFamily;
 
 typedef enum WasmDiagnosticThreadOperation {

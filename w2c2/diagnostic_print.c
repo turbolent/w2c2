@@ -26,6 +26,8 @@ wasmDiagnosticOpcodeDescription(
             return wasmOpcodeDescription((WasmOpcode)opcode);
         case wasmDiagnosticOpcodeMisc:
             return wasmMiscOpcodeDescription((WasmMiscOpcode)opcode);
+        case wasmDiagnosticOpcodeSIMD:
+            return wasmSIMDOpcodeDescription(opcode);
         case wasmDiagnosticOpcodeThreads:
             return wasmThreadsOpcodeDescription((WasmThreadsOpcode)opcode);
     }

@@ -24,7 +24,7 @@ static const char stackNamePrefix = 's';
 static const char labelNamePrefix = 'L';
 
 static const char* const valueTypeNames[wasmValueType_count] = {
-    "U32", "U64", "F32", "F64"
+    "U32", "U64", "F32", "F64", "V128"
 };
 
 static const char* const signedTypeNames[2] = {
@@ -36,7 +36,7 @@ static const char* const shiftMaskStrings[2] = {
 };
 
 static const char valueTypeStackNames[wasmValueType_count] = {
-    'i', 'j', 'f', 'd'
+    'i', 'j', 'f', 'd', 'v'
 };
 
 static const char* const indentation = "  ";
@@ -361,7 +361,11 @@ wasmCWriteLocalsDeclarations(
             wasmOutputString(file, valueTypeNames[localsDeclaration.type]);
             wasmOutputChar(file, ' ');
             wasmCWriteLocalName(file, parameterCount + localIndex);
-            wasmOutputString(file, pretty ? " = 0;\n" : "=0;\n");
+            if (localsDeclaration.type == wasmValueTypeV128) {
+                wasmOutputString(file, pretty ? " = {0};\n" : "={0};\n");
+            } else {
+                wasmOutputString(file, pretty ? " = 0;\n" : "=0;\n");
+            }
         }
     }
 }
@@ -393,6 +397,7 @@ typedef struct WasmCFunctionWriter {
     bool debug;
     bool multipleModules;
     WasmDebugLines* debugLines;
+    bool* usesSIMD;
 } WasmCFunctionWriter;
 
 static
@@ -931,6 +936,17 @@ wasmCWriteLiteral(
             wasmOutputString(output, "U))");
             break;
         }
+        case wasmValueTypeV128: {
+            U32 lane = 0;
+            wasmOutputString(output, "w2c2_v128_const(");
+            for (; lane < 16; lane++) {
+                if (lane != 0) wasmOutputChar(output, ',');
+                wasmOutputI32(output, value.v128[lane] < 128
+                    ? (I32)value.v128[lane] : (I32)value.v128[lane] - 256);
+            }
+            wasmOutputChar(output, ')');
+            break;
+        }
         default:
             wasmDiagnosticReportUnsupportedValueType(diagnostics, valueType);
             return false;
@@ -1020,6 +1036,139 @@ wasmCWriteLoad(
     MUST (wasmTypeStackAppend(writer->typeStack, resultType))
 
     return true;
+}
+
+typedef struct WasmSIMDInstructionInfo {
+    U32 opcode;
+    WasmValueType result;
+    U32 argumentCount;
+    WasmValueType arguments[3];
+    U32 memoryBytes;
+    U32 immediateBytes;
+    U32 laneCount;
+    const char* function;
+} WasmSIMDInstructionInfo;
+
+static const WasmSIMDInstructionInfo wasmSIMDInstructions[] = {
+#define SIMD(code, name, result, argc, a, b, c, bytes, immediate, lanes, function) \
+    {code, result, argc, {a, b, c}, bytes, immediate, lanes, function},
+#include "simd_opcodes.def"
+#undef SIMD
+};
+
+static bool
+wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
+    U32 opcode = 0;
+    size_t low = 0;
+    size_t high = sizeof(wasmSIMDInstructions) / sizeof(wasmSIMDInstructions[0]);
+    const WasmSIMDInstructionInfo* info = NULL;
+    WasmMemoryArgumentInstruction memarg = {0, 0};
+    WasmValue value;
+    U8 immediate[16];
+    U32 argument = 0;
+    U32 base = 0;
+    bool replaceLane;
+    if (!leb128ReadU32(writer->code, &opcode)) return false;
+    while (low < high) {
+        const size_t index = low + (high - low) / 2;
+        if (wasmSIMDInstructions[index].opcode < opcode) {
+            low = index + 1;
+        } else if (wasmSIMDInstructions[index].opcode > opcode) {
+            high = index;
+        } else {
+            info = &wasmSIMDInstructions[index];
+            break;
+        }
+    }
+    if (info == NULL) {
+        wasmDiagnosticReportUnsupportedOpcode(writer->diagnostics, wasmDiagnosticOpcodeSIMD, opcode);
+        return false;
+    }
+    if (info->memoryBytes != 0) {
+        U32 alignment = 0;
+        U32 width = info->memoryBytes;
+        while (width > 1) { alignment++; width >>= 1; }
+        if (!wasmMemoryArgumentInstructionRead(writer->code, &memarg)
+            || memarg.align > alignment
+            || (writer->module->memories.count == 0 && writer->module->memoryImports.length == 0)) goto invalid;
+    }
+    for (; argument < info->immediateBytes; argument++) {
+        if (!bufferReadByte(writer->code, &immediate[argument])) goto invalid;
+        if (info->laneCount && immediate[argument] >= info->laneCount) goto invalid;
+        if (opcode == 13 && immediate[argument] >= 32) goto invalid;
+    }
+    *writer->usesSIMD = true;
+    /* Immediates must still be consumed and validated in unreachable code. */
+    if (writer->ignore) return true;
+    if (writer->typeStack->length < info->argumentCount) goto invalid;
+    base = assertSizeU32(writer->typeStack->length - info->argumentCount);
+    for (argument = 0; argument < info->argumentCount; argument++) {
+        if (writer->typeStack->valueTypes[base + argument] != info->arguments[argument]) goto invalid;
+    }
+    if (info->result != wasmValueType_count) {
+        MUST (wasmStackDeclarationsSet(writer->stackDeclarations, base, info->result))
+    }
+    MUST (wasmCWriteIndent(writer))
+    if (info->result != wasmValueType_count) {
+        MUST (wasmCWriteStackName(writer->output, base, info->result))
+        MUST (wasmCWriteAssign(writer))
+    }
+    if (opcode == 12) {
+        memcpy(value.v128, immediate, 16);
+        MUST (wasmCWriteLiteral(writer->output, wasmValueTypeV128, value, writer->diagnostics))
+    } else {
+        if (info->result != wasmValueTypeV128 && info->result != wasmValueType_count) {
+            MUST (wasmCWriteChar(writer, '('))
+            MUST (wasmCWrite(writer, valueTypeNames[info->result]))
+            MUST (wasmCWriteChar(writer, ')'))
+        }
+        MUST (wasmCWrite(writer, info->function))
+        if (info->memoryBytes && info->laneCount) wasmOutputU32(writer->output, immediate[0]);
+        MUST (wasmCWriteChar(writer, '('))
+        if (info->memoryBytes) {
+            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWriteMemoryAddress(writer, base, memarg.offset))
+            if (info->argumentCount == 2) {
+                MUST (wasmCWriteComma(writer))
+                MUST (wasmCWriteStackName(writer->output, base + 1, wasmValueTypeV128))
+            }
+        } else {
+            replaceLane = info->laneCount != 0 && info->argumentCount == 2;
+            for (argument = 0; argument < info->argumentCount; argument++) {
+                if (argument != 0) MUST (wasmCWriteComma(writer))
+                if (replaceLane && argument == 1) {
+                    wasmOutputU32(writer->output, immediate[0]);
+                    MUST (wasmCWriteComma(writer))
+                }
+                /* SIMD scalar operands are signed lane values. Explicit casts
+                 * preserve the Wasm bit pattern without implicit narrowing. */
+                if (info->arguments[argument] == wasmValueTypeI32
+                    && opcode >= 15 && opcode <= 34) {
+                    const char* cast = (opcode == 15 || opcode == 23) ? "(I8)"
+                        : (opcode == 16 || opcode == 26) ? "(I16)" : "(I32)";
+                    MUST (wasmCWrite(writer, cast))
+                } else if (info->arguments[argument] == wasmValueTypeI64) {
+                    MUST (wasmCWrite(writer, "(I64)"))
+                }
+                MUST (wasmCWriteStackName(writer->output, base + argument, info->arguments[argument]))
+            }
+            if (!replaceLane) {
+                for (argument = 0; argument < info->immediateBytes; argument++) {
+                    MUST (wasmCWriteComma(writer))
+                    wasmOutputU32(writer->output, immediate[argument]);
+                }
+            }
+        }
+        MUST (wasmCWriteChar(writer, ')'))
+    }
+    MUST (wasmCWrite(writer, ";\n"))
+    wasmTypeStackDrop(writer->typeStack, info->argumentCount);
+    if (info->result != wasmValueType_count) MUST (wasmTypeStackAppend(writer->typeStack, info->result))
+    return true;
+invalid:
+    wasmDiagnosticReportInvalidInstruction(writer->diagnostics, wasmDiagnosticOpcodeSIMD, opcode);
+    return false;
 }
 
 static
@@ -3201,6 +3350,9 @@ wasmCWriteFunctionCode(
         }
 
         switch (opcode) {
+            case wasmOpcodeSIMDPrefix:
+                MUST (wasmCWriteSIMDExpr(writer))
+                break;
             case wasmOpcodeNop:
                 break;
             case wasmOpcodeElse:
@@ -4127,11 +4279,18 @@ wasmCWriteFunctionReturn(
          * but some C compilers still require a return statement.
          */
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, "return 0;\n"))
+        MUST (wasmCWrite(writer, functionType.resultTypes[0] == wasmValueTypeV128
+            ? "return simde_wasm_i32x4_splat(0);\n" : "return 0;\n"))
     }
 
     return true;
 }
+
+static bool WARN_UNUSED_RESULT
+wasmCWriteFunctionSignature(
+    WasmOutput*, const WasmModule*, const char*, const WasmFunction,
+    const U32, const bool, const bool, const bool, WasmDiagnosticContext*
+);
 
 static
 bool
@@ -4146,6 +4305,7 @@ wasmCWriteFunctionBody(
     const WasmModule* module,
     const char* moduleName,
     const WasmFunction function,
+    const U32 moduleFunctionIndex,
     WasmDebugLines* debugLines,
     const bool pretty,
     const bool debug,
@@ -4153,6 +4313,8 @@ wasmCWriteFunctionBody(
     WasmDiagnosticContext* diagnostics
 ) {
     Buffer code = function.code;
+    bool usesSIMD = false;
+    U32 localDeclaration;
     WasmLabel label = wasmEmptyLabel;
     WasmValueType resultType = wasmValueType_count;
 
@@ -4199,6 +4361,7 @@ wasmCWriteFunctionBody(
         writer.debug = debug;
         writer.multipleModules = multipleModules;
         writer.debugLines = debugLines;
+        writer.usesSIMD = &usesSIMD;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
         MUST (wasmCWriteFunctionCode(&writer))
@@ -4206,7 +4369,13 @@ wasmCWriteFunctionBody(
         MUST (wasmCWriteFunctionReturn(&writer, functionType))
     }
 
-    wasmOutputString(file, "{\n");
+    for (localDeclaration = 0; localDeclaration < function.localsDeclarations.declarationCount; localDeclaration++) {
+        if (function.localsDeclarations.declarations[localDeclaration].type == wasmValueTypeV128) usesSIMD = true;
+    }
+    if (usesSIMD) wasmOutputString(file, "#include \"w2c2_simd.h\"\n");
+    MUST (wasmCWriteFunctionSignature(file, module, moduleName, function,
+        moduleFunctionIndex, true, pretty, multipleModules, diagnostics))
+    wasmOutputString(file, " {\n");
     if (pretty) {
         wasmOutputString(file, indentation);
     }
@@ -4348,18 +4517,6 @@ wasmCWriteFunctionImplementations(
             }
         }
 
-        MUST_OR_GOTO (cleanup, wasmCWriteFunctionSignature(
-            file,
-            module,
-            moduleName,
-            function,
-            assertSizeU32(functionImportCount) + functionIndex,
-            true,
-            pretty,
-            multipleModules,
-            diagnostics
-        ))
-        wasmOutputChar(file, ' ');
         MUST_OR_GOTO (cleanup, wasmCWriteFunctionBody(
             file,
             functionBuffer,
@@ -4370,6 +4527,7 @@ wasmCWriteFunctionImplementations(
             module,
             moduleName,
             function,
+            assertSizeU32(functionImportCount) + functionIndex,
             &debugLines,
             pretty,
             debug,
@@ -4480,6 +4638,15 @@ wasmCWriteConstantExpr(
                 return false;
             }
             MUST (wasmCWriteLiteral(output, resultType, instruction.value, diagnostics))
+            break;
+        }
+        case wasmOpcodeSIMDPrefix: {
+            U32 subopcode;
+            WasmValue value;
+            MUST (leb128ReadU32(&code, &subopcode))
+            MUST (subopcode == 12)
+            MUST (wasmV128ConstRead(&code, &value))
+            MUST (wasmCWriteLiteral(output, wasmValueTypeV128, value, diagnostics))
             break;
         }
         case wasmOpcodeGlobalGet: {
@@ -5524,6 +5691,24 @@ wasmCWriteFunctionImports(
     return true;
 }
 
+static bool
+wasmCModuleUsesSIMDTypes(const WasmModule* module) {
+    size_t index;
+    for (index = 0; index < module->functionTypes.count; index++) {
+        const WasmFunctionType type = module->functionTypes.functionTypes[index];
+        U32 item;
+        for (item = 0; item < type.parameterCount; item++)
+            if (type.parameterTypes[item] == wasmValueTypeV128) return true;
+        for (item = 0; item < type.resultCount; item++)
+            if (type.resultTypes[item] == wasmValueTypeV128) return true;
+    }
+    for (index = 0; index < module->globals.count; index++)
+        if (module->globals.globals[index].type.valueType == wasmValueTypeV128) return true;
+    for (index = 0; index < module->globalImports.length; index++)
+        if (module->globalImports.imports[index].globalType.valueType == wasmValueTypeV128) return true;
+    return false;
+}
+
 static
 W2C2_INLINE
 void
@@ -5884,6 +6069,9 @@ wasmCWriteModuleHeader(
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Header\n\n");
 
+    /* SIMDe includes C++ standard-library templates; include it before the
+     * generated declarations' C language linkage block. */
+    if (wasmCModuleUsesSIMDTypes(module)) wasmOutputString(file, "#include \"w2c2_simd.h\"\n\n");
     wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);

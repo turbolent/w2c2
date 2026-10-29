@@ -42,6 +42,7 @@ testOpcodes(void) {
         case wasmOpcodeF64Store:
         case wasmOpcodeThreadsPrefix:
         case wasmOpcodeMiscPrefix:
+        case wasmOpcodeSIMDPrefix:
             continue;
 
         case wasmOpcodeI32Load:
