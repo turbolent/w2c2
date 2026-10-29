@@ -143,7 +143,7 @@ test_%.c: gen/%.wasm
 	$(CC) $(CFLAGS) -c $< -o $@
 
 gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks
-	$(PYTHON3) gen.py
+	$(PYTHON3) gen.py $(filter-out simd_%.wast,$(wildcard *.wast))
 
 gen-atomic-offsets:
 	wat2wasm --enable-threads atomic_offsets.wat -o gen/atomic_offsets.wasm
@@ -177,11 +177,17 @@ clean:
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)
 
 SIMD_CFLAGS ?= -O2 -Werror=conversion -Werror=float-conversion
+SIMD_SPEC_TESTS = $(filter-out simd_memory-multi.wast,$(wildcard simd_*.wast))
 
-.PHONY: simd-test simd-benchmark
-simd-test:
+.PHONY: simd-test simd-regression-test simd-spec-test simd-benchmark
+simd-test: simd-regression-test simd-spec-test
+
+simd-regression-test:
 	W2C2=$(W2C2) SIMD_CFLAGS="$(SIMD_CFLAGS)" $(PYTHON3) simd_test.py
-	$(PYTHON3) simd.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" simd/integration.wast simd/conversions.wast
+	$(PYTHON3) run.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" simd/integration.wast simd/conversions.wast
+
+simd-spec-test:
+	$(PYTHON3) run.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" $(SIMD_SPEC_TESTS)
 
 simd-benchmark:
 	$(PYTHON3) simd_bench.py --w2c2 $(W2C2) --cc "$(CC)"

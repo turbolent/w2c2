@@ -7,6 +7,8 @@ import shlex
 import subprocess
 import tempfile
 
+from run import simde_cflags
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -23,7 +25,7 @@ def main():
         executable = directory / 'benchmark'
         subprocess.run(['wat2wasm', str(ROOT / 'tests/simd_bench.wat'), '-o', str(wasm)], check=True)
         subprocess.run([str(args.w2c2), str(wasm), str(generated)], check=True)
-        command = shlex.split(args.cc) + ['-std=c89'] + shlex.split(args.cflags)
+        command = shlex.split(args.cc) + ['-std=c99'] + shlex.split(args.cflags) + simde_cflags()
         command += ['-I' + str(ROOT / 'w2c2'), '-I' + str(directory),
                     str(ROOT / 'tests/simd_bench.c'), str(ROOT / 'tests/simd_bench_native.c'),
                     str(generated), '-lm', '-o', str(executable)]
