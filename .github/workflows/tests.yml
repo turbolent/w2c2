@@ -31,8 +31,15 @@ jobs:
       CC: ${{ matrix.compiler.cc }}
       CXX: ${{ matrix.compiler.cxx }}
       SIMD_CFLAGS: -O2 -Werror=conversion -Werror=float-conversion ${{ matrix.backend.flags }}
+      SIMDE_HEADER: ${{ github.workspace }}/build/simde/simde/wasm/simd128.h
     steps:
       - uses: actions/checkout@v4
+      - name: Check out SIMDe
+        uses: actions/checkout@v4
+        with:
+          repository: simd-everywhere/simde
+          ref: 65c15e6b545361f6dd89b1e3bcc76273e1344653
+          path: build/simde
       - name: Install compilers and WABT
         run: |
           sudo apt-get update

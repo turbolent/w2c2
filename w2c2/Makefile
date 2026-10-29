@@ -153,7 +153,6 @@ install: w2c2$(SUFFIX)
 	mkdir -p "$(DESTDIR)$(LIBDIR)" "$(DESTDIR)$(INCLUDEDIR)" "$(DESTDIR)$(BINDIR)"
 	cp $(LIBRARY) "$(DESTDIR)$(LIBDIR)/"
 	cp $(PUBLIC_HEADERS) "$(DESTDIR)$(INCLUDEDIR)/"
-	cp -R simde "$(DESTDIR)$(INCLUDEDIR)/"
 	cp w2c2$(SUFFIX) "$(DESTDIR)$(BINDIR)/"
 
 .PHONY: clean

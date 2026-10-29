@@ -40,7 +40,8 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Support for generating debug information:
   - Function names, if function names are provided in the [`names` custom section](https://webassembly.github.io/spec/core/appendix/custom.html#function-names)
   - Source line mapping, if DWARF line information is provided in the [`.debug_line` custom section](https://yurydelendik.github.io/webassembly-dwarf/).
-    Requires [libdwarf](https://github.com/davea42/libdwarf-code) to be installed. See instructions below.
+    Requires [libdwarf](https://github.com/davea42/libdwarf-code) to be installed.
+    See instructions below.
     Line numbers outside C89's portable range of 1 through 32767 are omitted from the generated `#line` directives.
 - WASI implementation
   - Able to run clang and Python
@@ -79,6 +80,19 @@ For example, to compile `module.wasm` to `module.c` (and `module.h`):
 ```sh
 ./w2c2 module.wasm module.c
 ```
+
+Generated C that uses SIMD instructions or `v128` types requires C99 and [SIMDe](https://github.com/simd-everywhere/simde).
+Provide SIMDe separately and define `W2C2_SIMDE_HEADER` as the quoted path to its `simde/wasm/simd128.h` header when compiling the generated code:
+
+```sh
+cc -std=c99 -I/path/to/w2c2/w2c2 \
+  '-DW2C2_SIMDE_HEADER="/path/to/simde/simde/wasm/simd128.h"' \
+  -c module.c
+```
+
+SIMDe is header-only, so no additional library is needed at link time.
+Building and running the translator does not require SIMDe.
+Non-SIMD output continues to support C89.
 
 ### Separate Compilation
 

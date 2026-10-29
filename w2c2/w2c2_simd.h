@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0
  * SIMD memory and endian adapters derived from WABT wasm2c
  * src/template/wasm2c_simd.declarations.c (e5cc0c4b7c46a322cd1673ffd904c69ae8625ce3).
- * Copyright the WABT authors. See simde/WABT-LICENSE.
+ * Copyright the WABT authors. Licensed under the Apache License, Version 2.0.
  */
 #ifndef W2C2_SIMD_H
 #define W2C2_SIMD_H
@@ -19,7 +19,11 @@
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wpedantic"
 #endif
-#include "simde/wasm/simd128.h"
+#ifndef W2C2_SIMDE_HEADER
+#error "SIMD output requires SIMDe. Define W2C2_SIMDE_HEADER to the path of simde/wasm/simd128.h."
+#else
+#include W2C2_SIMDE_HEADER
+#endif
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 406)
