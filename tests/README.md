@@ -1,6 +1,6 @@
 # WebAssembly specification test suite
 
-Taken from https://github.com/WebAssembly/spec/tree/wg-1.0/test/core
+Taken from https://github.com/WebAssembly/testsuite
 
 Licensed under the Apache License 2.0
 
@@ -20,8 +20,9 @@ When updating the test cases, re-run `make gen`, which requires Python 3 and wab
 
 ### SIMD
 
-The 59 `simd_*.wast` files in this directory are unmodified copies from [WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210), commit `44f1503f98409fa3737437bf9449a37a5def4210`.
+The 59 imported `simd_*.wast` files in this directory are unmodified copies from [WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210), commit `44f1503f98409fa3737437bf9449a37a5def4210`.
 They are licensed under Apache-2.0.
+Local regressions are in `simd_integration.wast`, `simd_conversions_regression.wast`, and `simd_multivalue.wast`.
 
 Set `SIMDE_HEADER` to the full path of `simde/wasm/simd128.h` in an external [SIMDe](https://github.com/simd-everywhere/simde) checkout:
 
@@ -31,7 +32,7 @@ make simd-test
 ```
 
 `make simd-test` runs the local regressions and the imported upstream execution tests.
-Use `make simd-spec-test` for the upstream tests alone:
+Use `make simd-spec-test` for the WAST execution tests alone:
 
 ```sh
 make simd-spec-test
@@ -45,7 +46,7 @@ CI uses SIMDe commit `65c15e6b545361f6dd89b1e3bcc76273e1344653`, which includes 
 Once these dependencies are available, no network access is needed.
 
 `simd_memory-multi.wast` is retained for provenance but excluded from the default target because it requires the separate multi-memory extension.
-The remaining 58 files cover fixed-width SIMD.
+The remaining 58 imported files cover fixed-width SIMD.
 Relaxed SIMD files are outside this import.
 
 `gen.py` generates both scalar and SIMD assertions using the shared `test.h` and `main.c` harness.
@@ -61,4 +62,4 @@ A passing execution run does not establish validator conformance or verify the s
 
 To update the import, copy the root `simd_*.wast` files from a new testsuite revision, update the pinned commit above, and run the complete matrix.
 Keep upstream files unchanged.
-Place local regression cases alongside `simd/integration.wast`.
+Name local regression files `simd_*.wast` so the normal test target includes them.

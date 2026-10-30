@@ -209,12 +209,12 @@ testSuccess(void) {
 
 static void
 testFailures(void) {
-    /* A valid function returning two i32 values is currently unsupported. */
+    /* Unknown miscellaneous opcode. */
     static const U8 unsupported[] = {
         0, 97, 115, 109, 1, 0, 0, 0,
-        1, 6, 1, 96, 0, 2, 127, 127,
+        1, 4, 1, 96, 0, 0,
         3, 2, 1, 0,
-        10, 8, 1, 6, 0, 65, 0, 65, 0, 11
+        10, 6, 1, 4, 0, 252, 127, 11
     };
     Capture capture;
     WasmCWriteModuleOptions options;
@@ -240,7 +240,7 @@ testFailures(void) {
     CHECK(!wasmTranslate(moduleBytes, 1, "example", &options));
     CHECK(capture.errors == 6 && capture.code == wasmDiagnosticReaderFailed);
     CHECK(!wasmTranslate(unsupported, sizeof(unsupported), "example", &options));
-    CHECK(capture.errors == 7 && capture.code == wasmDiagnosticUnsupportedFunctionResults);
+    CHECK(capture.errors == 7 && capture.code == wasmDiagnosticUnsupportedOpcode);
     release(&capture);
     initialize(&capture);
     capture.reject = 255;

@@ -109,3 +109,50 @@ testReadI32LEB128(void) {
         exit(1);
     }
 }
+
+void
+testReadI33LEB128(void) {
+    typedef struct {
+        I64 expected;
+        size_t length;
+        bool valid;
+        U8 data[int33LEB128MaxByteCount + 1];
+    } testCase;
+    const testCase testCases[] = {
+        {0, 1, true, {0x00}},
+        {1, 1, true, {0x01}},
+        {-1, 1, true, {0x7F}},
+        {63, 1, true, {0x3F}},
+        {-64, 1, true, {0x40}},
+        {64, 2, true, {0xC0, 0x00}},
+        {-65, 2, true, {0xBF, 0x7F}},
+        {INT32_MAX, 5, true, {0xFF, 0xFF, 0xFF, 0xFF, 0x07}},
+        {INT32_MIN, 5, true, {0x80, 0x80, 0x80, 0x80, 0x78}},
+        {4294967295LL, 5, true, {0xFF, 0xFF, 0xFF, 0xFF, 0x0F}},
+        {-4294967296LL, 5, true, {0x80, 0x80, 0x80, 0x80, 0x70}},
+        {0, 5, true, {0x80, 0x80, 0x80, 0x80, 0x00}},
+        {-1, 5, true, {0xFF, 0xFF, 0xFF, 0xFF, 0x7F}},
+        {0, 0, false, {0x00}},
+        {0, 1, false, {0x80}},
+        {0, 4, false, {0x80, 0x80, 0x80, 0x80}},
+        {0, 5, false, {0x80, 0x80, 0x80, 0x80, 0x10}},
+        {0, 5, false, {0xFF, 0xFF, 0xFF, 0xFF, 0x6F}},
+        {0, 6, false, {0x80, 0x80, 0x80, 0x80, 0x80, 0x00}}
+    };
+    size_t i;
+    for (i = 0; i < sizeof(testCases) / sizeof(testCases[0]); i++) {
+        testCase test = testCases[i];
+        Buffer buffer;
+        I64 actual = 0;
+        size_t count;
+        buffer.data = test.data;
+        buffer.length = test.length;
+        count = leb128ReadI33(&buffer, &actual);
+        if (count != (test.valid ? test.length : 0)
+            || (test.valid && (actual != test.expected || buffer.length != 0))) {
+            fprintf(stderr, "FAIL testReadI33LEB128: case %u\n", (unsigned)i);
+            exit(1);
+        }
+    }
+    fprintf(stderr, "PASS testReadI33LEB128\n");
+}

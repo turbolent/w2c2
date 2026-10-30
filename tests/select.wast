@@ -324,7 +324,7 @@
   (module (func $arity-0-implicit (select (nop) (nop) (i32.const 1))))
   "type mismatch"
 )
-;; W2C2: No support for select with multiple return values
+;; W2C2: No support for typed select
 ;; (assert_invalid
 ;;   (module (func $arity-0 (select (result) (nop) (nop) (i32.const 1))))
 ;;   "invalid result arity"
@@ -527,7 +527,7 @@
   (func (result i32) unreachable select (select))
   (func (result i32) unreachable select select)
   (func (result i32) unreachable select select select)
-  ;; W2C2: No support for select with multiple return values
+  ;; W2C2: No support for typed select
   ;; (func (result i32) unreachable select (result i32))
   ;; (func (result i32) unreachable select (result i32) (result))
   ;; (func (result i32) unreachable select (result i32) (result) select)

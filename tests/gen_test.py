@@ -10,6 +10,35 @@ from unittest.mock import patch
 import gen
 
 
+class MultiValueTests(unittest.TestCase):
+    def test_tuple_call_is_evaluated_once(self):
+        expected = [
+            {'type': 'i32', 'value': '1'}, {'type': 'i64', 'value': '2'},
+            {'type': 'f32', 'value': '2147483648'},
+            {'type': 'f64', 'value': 'nan:arithmetic'},
+            {'type': 'v128', 'lane_type': 'f32', 'value': ['nan:canonical'] * 4},
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            manifest = directory / 'tuple.json'
+            manifest.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'tuple.wasm'},
+                {'type': 'assert_return', 'action': {'type': 'invoke', 'field': 'next', 'args': []},
+                 'expected': expected},
+            ]}))
+            test, = gen.generate_test_files(manifest, output_dir=directory)
+            source = test['path'].read_text()
+        self.assertIn('void test(void) {', source)
+        self.assertTrue(source.endswith('    m5_tupleFreeInstance(&instance);\n}\n'))
+        self.assertEqual(source.count(gen.export_name('tuple', 'next') + '('), 1)
+        self.assertIn('struct w2c2_result_ijfdv result;', source)
+        self.assertRegex(source, r'assertEqualU32\(\s*result\.v0,\s*1u,')
+        self.assertRegex(source, r'assertEqualU64\(\s*result\.v1,\s*2ull,')
+        self.assertRegex(source, r'assertEqualU32\(\s*i32_reinterpret_f32\(result\.v2\),\s*2147483648u,')
+        self.assertRegex(source, r'assertEqualU64\(\s*\(i64_reinterpret_f64\(result\.v3\) & 9221120237041090560ull\),')
+        self.assertIn('assertEqualV128(result.v4, expected, masks, "next() result 4")', source)
+
+
 class NaNTests(unittest.TestCase):
     def generate(self, value_type, expected, args=None):
         with tempfile.TemporaryDirectory() as directory:
@@ -167,6 +196,10 @@ class ScriptTests(unittest.TestCase):
             self.assertLess(output.index(get), output.index(trap))
             self.assertIn('assertTrap(' + trap, output)
             self.assertIn('static ' + gen.module_identifier('script.0') + 'Instance instance_0;', output)
+            self.assertIn('void test(void) {', output)
+            self.assertTrue(output.endswith(
+                '    m8_scriptX2E1FreeInstance(&instance_1);\n'
+                '    m8_scriptX2E0FreeInstance(&instance_0);\n}\n'))
             self.assertEqual(test['count'], 3)
 
     def test_unknown_registered_module_is_rejected(self):

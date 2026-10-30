@@ -1,4 +1,5 @@
 #include "leb128_test.h"
+#include "valuetype_test.h"
 #include "allocation_test.h"
 #include "runtime_division_test.h"
 #include "runtime_memory_test.h"
@@ -23,6 +24,8 @@ int
 main(void) {
     testReadU32LEB128();
     testReadI32LEB128();
+    testReadI33LEB128();
+    testBlockSignatures();
     testAllocations();
     testRuntimeDivision();
     testRuntimeMemory();

@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_call_indirect.0.h"
 
-void test() {
-    m15_callX5FindirectX2E0Instance instance;
+void test(void) {
+    static m15_callX5FindirectX2E0Instance instance;
     m15_callX5FindirectX2E0Instantiate(&instance, resolveTestImports);
     printStart("call_indirect.0.wasm");
     assertEqualU32(
@@ -28,6 +25,20 @@ void test() {
         4660882566700597248ull,
         "type-f64()"
     );
+    {
+        struct w2c2_result_di result;
+        result = m15_callX5FindirectX2E0Export12_typeX2Df64X2Di32(&instance);
+        assertEqualU64(
+            i64_reinterpret_f64(result.v0),
+            4660882566700597248ull,
+            "type-f64-i32() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            32u,
+            "type-f64-i32() result 1"
+        );
+    }
     assertEqualU64(
         m15_callX5FindirectX2E0Export10_typeX2Dindex(&instance),
         100ull,
@@ -73,6 +84,48 @@ void test() {
         4634211053438658150ull,
         "type-second-f64()"
     );
+    {
+        struct w2c2_result_di result;
+        result = m15_callX5FindirectX2E0Export16_typeX2DallX2Df64X2Di32(&instance);
+        assertEqualU64(
+            i64_reinterpret_f64(result.v0),
+            4660882566700597248ull,
+            "type-all-f64-i32() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            32u,
+            "type-all-f64-i32() result 1"
+        );
+    }
+    {
+        struct w2c2_result_id result;
+        result = m15_callX5FindirectX2E0Export16_typeX2DallX2Di32X2Df64(&instance);
+        assertEqualU32(
+            result.v0,
+            1u,
+            "type-all-i32-f64() result 0"
+        );
+        assertEqualU64(
+            i64_reinterpret_f64(result.v1),
+            4611686018427387904ull,
+            "type-all-i32-f64() result 1"
+        );
+    }
+    {
+        struct w2c2_result_ji result;
+        result = m15_callX5FindirectX2E0Export16_typeX2DallX2Di32X2Di64(&instance);
+        assertEqualU64(
+            result.v0,
+            2ull,
+            "type-all-i32-i64() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            1u,
+            "type-all-i32-i64() result 1"
+        );
+    }
     assertEqualU64(
         m15_callX5FindirectX2E0Export8_dispatch(&instance, 5u, 2ull),
         2ull,
@@ -219,42 +272,42 @@ void test() {
         "fac-i32(10u)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, 0.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, f32_reinterpret_i32(0x00000000u))),
         1065353216u,
         "fac-f32(0.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, 1.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, f32_reinterpret_i32(0x3f800000u))),
         1065353216u,
         "fac-f32(1.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, 5.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, f32_reinterpret_i32(0x40a00000u))),
         1123024896u,
         "fac-f32(5.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, 10.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_facX2Df32(&instance, f32_reinterpret_i32(0x41200000u))),
         1247640576u,
         "fac-f32(10.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, 0.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, f64_reinterpret_i64(0x0000000000000000ull))),
         4607182418800017408ull,
         "fac-f64(0.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, 1.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, f64_reinterpret_i64(0x3ff0000000000000ull))),
         4607182418800017408ull,
         "fac-f64(1.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, 5.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, f64_reinterpret_i64(0x4014000000000000ull))),
         4638144666238189568ull,
         "fac-f64(5.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, 10.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_facX2Df64(&instance, f64_reinterpret_i64(0x4024000000000000ull))),
         4705047200009289728ull,
         "fac-f64(10.0)"
     );
@@ -309,52 +362,52 @@ void test() {
         "fib-i32(20u)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, 0.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, f32_reinterpret_i32(0x00000000u))),
         1065353216u,
         "fib-f32(0.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, 1.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, f32_reinterpret_i32(0x3f800000u))),
         1065353216u,
         "fib-f32(1.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, 2.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, f32_reinterpret_i32(0x40000000u))),
         1073741824u,
         "fib-f32(2.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, 5.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, f32_reinterpret_i32(0x40a00000u))),
         1090519040u,
         "fib-f32(5.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, 20.0)),
+        i32_reinterpret_f32(m15_callX5FindirectX2E0Export7_fibX2Df32(&instance, f32_reinterpret_i32(0x41a00000u))),
         1177225216u,
         "fib-f32(20.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, 0.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, f64_reinterpret_i64(0x0000000000000000ull))),
         4607182418800017408ull,
         "fib-f64(0.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, 1.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, f64_reinterpret_i64(0x3ff0000000000000ull))),
         4607182418800017408ull,
         "fib-f64(1.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, 2.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, f64_reinterpret_i64(0x4000000000000000ull))),
         4611686018427387904ull,
         "fib-f64(2.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, 5.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, f64_reinterpret_i64(0x4014000000000000ull))),
         4620693217682128896ull,
         "fib-f64(5.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, 20.0)),
+        i64_reinterpret_f64(m15_callX5FindirectX2E0Export7_fibX2Df64(&instance, f64_reinterpret_i64(0x4034000000000000ull))),
         4667243241467281408ull,
         "fib-f64(20.0)"
     );
@@ -438,8 +491,8 @@ void test() {
         2u,
         "as-br_table-last()"
     );
-    m15_callX5FindirectX2E0Export14_asX2DstoreX2Dfirst(&instance);
-    m15_callX5FindirectX2E0Export13_asX2DstoreX2Dlast(&instance);
+    (void)(m15_callX5FindirectX2E0Export14_asX2DstoreX2Dfirst(&instance));
+    (void)(m15_callX5FindirectX2E0Export13_asX2DstoreX2Dlast(&instance));
     assertEqualU32(
         m15_callX5FindirectX2E0Export20_asX2DmemoryX2EgrowX2Dvalue(&instance),
         1u,
@@ -450,7 +503,7 @@ void test() {
         1u,
         "as-return-value()"
     );
-    m15_callX5FindirectX2E0Export15_asX2DdropX2Doperand(&instance);
+    (void)(m15_callX5FindirectX2E0Export15_asX2DdropX2Doperand(&instance));
     assertEqualU32(
         i32_reinterpret_f32(m15_callX5FindirectX2E0Export11_asX2DbrX2Dvalue(&instance)),
         1065353216u,
@@ -511,4 +564,5 @@ void test() {
         1ull,
         "as-convert-operand()"
     );
+    m15_callX5FindirectX2E0FreeInstance(&instance);
 }

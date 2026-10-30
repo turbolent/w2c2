@@ -7,4 +7,7 @@ testReadU32LEB128(void);
 void
 testReadI32LEB128(void);
 
+void
+testReadI33LEB128(void);
+
 #endif /* W2C2_LEB128_TEST_H */

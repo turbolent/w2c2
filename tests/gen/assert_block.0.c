@@ -1,18 +1,20 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_block.0.h"
 
-void test() {
-    m7_blockX2E0Instance instance;
+void test(void) {
+    static m7_blockX2E0Instance instance;
     m7_blockX2E0Instantiate(&instance, resolveTestImports);
     printStart("block.0.wasm");
-    m7_blockX2E0Export5_empty(&instance);
+    (void)(m7_blockX2E0Export5_empty(&instance));
     assertEqualU32(
         m7_blockX2E0Export8_singular(&instance),
         7u,
         "singular()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export5_multi(&instance),
+        8u,
+        "multi()"
     );
     assertEqualU32(
         m7_blockX2E0Export6_nested(&instance),
@@ -54,7 +56,7 @@ void test() {
         1u,
         "as-loop-last()"
     );
-    m7_blockX2E0Export15_asX2DifX2Dcondition(&instance);
+    (void)(m7_blockX2E0Export15_asX2DifX2Dcondition(&instance));
     assertEqualU32(
         m7_blockX2E0Export10_asX2DifX2Dthen(&instance),
         1u,
@@ -100,8 +102,8 @@ void test() {
         1u,
         "as-call_indirect-last()"
     );
-    m7_blockX2E0Export14_asX2DstoreX2Dfirst(&instance);
-    m7_blockX2E0Export13_asX2DstoreX2Dlast(&instance);
+    (void)(m7_blockX2E0Export14_asX2DstoreX2Dfirst(&instance));
+    (void)(m7_blockX2E0Export13_asX2DstoreX2Dlast(&instance));
     assertEqualU32(
         m7_blockX2E0Export20_asX2DmemoryX2EgrowX2Dvalue(&instance),
         1u,
@@ -117,7 +119,7 @@ void test() {
         1u,
         "as-return-value()"
     );
-    m7_blockX2E0Export15_asX2DdropX2Doperand(&instance);
+    (void)(m7_blockX2E0Export15_asX2DdropX2Doperand(&instance));
     assertEqualU32(
         m7_blockX2E0Export11_asX2DbrX2Dvalue(&instance),
         1u,
@@ -164,6 +166,21 @@ void test() {
         "as-compare-operand()"
     );
     assertEqualU32(
+        m7_blockX2E0Export18_asX2DbinaryX2Doperands(&instance),
+        12u,
+        "as-binary-operands()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export19_asX2DcompareX2Doperands(&instance),
+        0u,
+        "as-compare-operands()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export17_asX2DmixedX2Doperands(&instance),
+        27u,
+        "as-mixed-operands()"
+    );
+    assertEqualU32(
         m7_blockX2E0Export10_breakX2Dbare(&instance),
         19u,
         "break-bare()"
@@ -173,6 +190,25 @@ void test() {
         18u,
         "break-value()"
     );
+    {
+        struct w2c2_result_iij result;
+        result = m7_blockX2E0Export17_breakX2DmultiX2Dvalue(&instance);
+        assertEqualU32(
+            result.v0,
+            18u,
+            "break-multi-value() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            4294967278u,
+            "break-multi-value() result 1"
+        );
+        assertEqualU64(
+            result.v2,
+            18ull,
+            "break-multi-value() result 2"
+        );
+    }
     assertEqualU32(
         m7_blockX2E0Export14_breakX2Drepeated(&instance),
         18u,
@@ -184,8 +220,40 @@ void test() {
         "break-inner()"
     );
     assertEqualU32(
+        m7_blockX2E0Export5_param(&instance),
+        3u,
+        "param()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export6_params(&instance),
+        3u,
+        "params()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export9_paramsX2Did(&instance),
+        3u,
+        "params-id()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export11_paramX2Dbreak(&instance),
+        3u,
+        "param-break()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export12_paramsX2Dbreak(&instance),
+        3u,
+        "params-break()"
+    );
+    assertEqualU32(
+        m7_blockX2E0Export15_paramsX2DidX2Dbreak(&instance),
+        3u,
+        "params-id-break()"
+    );
+    assertEqualU32(
         m7_blockX2E0Export7_effects(&instance),
         1u,
         "effects()"
     );
+    (void)(m7_blockX2E0Export8_typeX2Duse(&instance));
+    m7_blockX2E0FreeInstance(&instance);
 }

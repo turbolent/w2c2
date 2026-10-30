@@ -13,37 +13,45 @@
 void
 testLabelStack(void) {
     WasmLabelStack stack = wasmEmptyLabelStack;
-    WasmValueType type = wasmValueTypeF64;
+    WasmBlockSignature signature = {false, 0, wasmValueTypeF64};
     WasmLabel label;
     WasmLabel* labels;
     size_t capacity;
     U32 index;
 
     for (index = 0; index < 1024; index++) {
-        CHECK(wasmLabelStackPush(&stack, index, type, &label));
-        CHECK(label.index == index && label.typeStackLength == index && label.type == type);
+        CHECK(wasmLabelStackPush(&stack, index, signature, false, &label));
+        CHECK(label.index == index && label.typeStackLength == index);
+        CHECK(!label.signature.indexed && label.signature.type == signature.type);
+        CHECK(!label.parameters && !label.branched);
     }
-    type = wasmValueTypeI32;
-    CHECK(stack.labels.labels[0].type == wasmValueTypeF64);
-    type = wasmValueTypeF64;
+    signature.type = wasmValueTypeI32;
+    CHECK(stack.labels.labels[0].signature.type == wasmValueTypeF64);
     wasmLabelStackPop(&stack);
     CHECK(stack.labels.length == 1023);
-    CHECK(wasmLabelStackPush(&stack, 3, wasmValueType_count, &label));
-    CHECK(label.index == 1024 && label.typeStackLength == 3 && label.type == wasmValueType_count);
+    CHECK(wasmLabelStackPush(&stack, 3, wasmEmptyBlockSignature, false, &label));
+    CHECK(label.index == 1024 && label.typeStackLength == 3);
+    CHECK(!label.signature.indexed && label.signature.type == wasmValueType_count);
     CHECK(wasmLabelStackGetTopIndex(&stack, 0) == 1023);
     CHECK(wasmLabelStackGetTopIndex(&stack, 1023) == 0);
-    CHECK(stack.labels.labels[0].type == type);
 
     labels = stack.labels.labels;
     capacity = stack.labels.capacity;
+    stack.labels.labels[0].branched = true;
     wasmLabelStackClear(&stack);
     CHECK(stack.labels.length == 0 && stack.nextLabelIndex == 0);
-    CHECK(wasmLabelStackPush(&stack, 0, wasmValueType_count, &label));
+    CHECK(wasmLabelStackPush(&stack, 0, wasmEmptyBlockSignature, false, &label));
     CHECK(stack.labels.labels[0].index == 0);
-    CHECK(stack.labels.labels[0].typeStackLength == 0 && stack.labels.labels[0].type == wasmValueType_count);
-    CHECK(wasmLabelStackPush(&stack, 5, type, &label));
+    CHECK(stack.labels.labels[0].typeStackLength == 0);
+    CHECK(stack.labels.labels[0].signature.type == wasmValueType_count);
+    CHECK(!stack.labels.labels[0].branched);
+    signature.indexed = true;
+    signature.typeIndex = 7;
+    CHECK(wasmLabelStackPush(&stack, 5, signature, true, &label));
     CHECK(stack.labels.labels[1].index == 1);
-    CHECK(stack.labels.labels[1].typeStackLength == 5 && stack.labels.labels[1].type == type);
+    CHECK(stack.labels.labels[1].typeStackLength == 5);
+    CHECK(stack.labels.labels[1].signature.indexed && stack.labels.labels[1].signature.typeIndex == 7);
+    CHECK(stack.labels.labels[1].parameters);
     CHECK(stack.labels.labels == labels && stack.labels.capacity == capacity);
     wasmLabelsFree(&stack.labels);
     fprintf(stderr, "PASS testLabelStack\n");

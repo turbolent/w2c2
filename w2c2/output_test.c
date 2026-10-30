@@ -1469,18 +1469,19 @@ testFunctionBufferReuse(const bool nested) {
 
 static
 void
-testDeepControlFlow(void) {
+testDeepControlFlow(const bool multiValue) {
     unsigned int pretty;
     for (pretty = 0; pretty < 2; pretty++) {
         const size_t depth = pretty ? 127 : 16384;
-        U8* code = (U8*)malloc(9 * depth + 8);
+        U8* code = (U8*)malloc(11 * depth + 16);
         size_t length = 0;
         size_t index;
         WasmModule module;
-        WasmFunctionType type = wasmEmptyFunctionType;
-        WasmValueType resultType = wasmValueTypeI64;
+        WasmFunctionType types[2];
+        WasmValueType resultTypes[] = {wasmValueTypeI64, wasmValueTypeI32};
         WasmFunction functions[4];
         static U8 smallCode[] = {0x42, 42, 0x0B};
+        static U8 smallMultiCode[] = {0x42, 42, 0x41, 7, 0x0B};
         WasmFunctionIDs ids;
         OutputCapture captures[2];
         U32 threads;
@@ -1488,21 +1489,31 @@ testDeepControlFlow(void) {
         CHECK(code != NULL);
         /* Translate the same nesting in reachable and unreachable code. */
         code[length++] = 0x00;
+        if (multiValue) {
+            code[length++] = 0x42;
+            code[length++] = 42;
+            code[length++] = 0x41;
+            code[length++] = 7;
+        }
         for (index = 0; index < depth; index++) {
             if (index % 3 == 2) {
                 code[length++] = 0x41;
                 code[length++] = 1;
             }
             code[length++] = (U8)(0x02 + index % 3);
-            code[length++] = 0x7E;
+            code[length++] = multiValue ? 1 : 0x7E;
         }
-        /* Branch with a result above an extra operand,
-         * forcing a copy to the label's result slot.
+        /*
+         * Branch over an extra operand to exercise copies into the label's slots.
          */
         code[length++] = 0x41;
         code[length++] = 0;
         code[length++] = 0x42;
         code[length++] = 42;
+        if (multiValue) {
+            code[length++] = 0x41;
+            code[length++] = 7;
+        }
         code[length++] = 0x0C;
         code[length++] = 0;
         for (index = depth; index > 0; index--) {
@@ -1510,6 +1521,10 @@ testDeepControlFlow(void) {
                 code[length++] = 0x05;
                 code[length++] = 0x42;
                 code[length++] = 43;
+                if (multiValue) {
+                    code[length++] = 0x41;
+                    code[length++] = 7;
+                }
                 code[length++] = 0x0C;
                 code[length++] = 0;
             }
@@ -1517,16 +1532,24 @@ testDeepControlFlow(void) {
         }
         code[length++] = 0x0B;
         memset(&module, 0, sizeof(module));
-        type.resultCount = 1;
-        type.resultTypes = &resultType;
-        module.functionTypes.functionTypes = &type;
-        module.functionTypes.count = 1;
+        types[0] = wasmEmptyFunctionType;
+        types[0].resultCount = multiValue ? 2 : 1;
+        types[0].resultTypes = resultTypes;
+        types[1] = types[0];
+        types[1].parameterCount = 2;
+        types[1].parameterTypes = resultTypes;
+        module.functionTypes.functionTypes = types;
+        module.functionTypes.count = 2;
         module.functions.functions = functions;
         module.functions.count = 4;
         for (index = 0; index < 4; index++) {
             functions[index] = wasmEmptyFunction;
             functions[index].code.data = index % 2 ? smallCode : code + (index == 0);
             functions[index].code.length = index % 2 ? sizeof(smallCode) : length - (index == 0);
+            if (multiValue && index % 2) {
+                functions[index].code.data = smallMultiCode;
+                functions[index].code.length = sizeof(smallMultiCode);
+            }
         }
         ids = outputFunctionIDs(&module);
         for (threads = 1; threads <= 2; threads++) {
@@ -1545,7 +1568,11 @@ testDeepControlFlow(void) {
             output = findOutput(capture, "m10_outputx54est.s0000000000.c");
             CHECK(output != NULL);
             source = (const char*)output->bytes;
-            CHECK(strstr(source, pretty ? "sj0 = sj1; goto" : "sj0=sj1;goto") != NULL);
+            if (multiValue) {
+                CHECK(strstr(source, pretty ? "sj0 = sj3; si1 = si4; goto" : "sj0=sj3;si1=si4;goto") != NULL);
+            } else {
+                CHECK(strstr(source, pretty ? "sj0 = sj1; goto" : "sj0=sj1;goto") != NULL);
+            }
             CHECK(strstr(source, "W2C2_LOOP_START") != NULL);
             CHECK(strstr(source, pretty ? " else {" : "else{") != NULL);
             output = findOutput(capture, "m10_outputx54est.s0000000001.c");
@@ -1988,7 +2015,8 @@ testOutputs(void) {
     testLocalTypes();
     testFunctionBufferReuse(false);
     testFunctionBufferReuse(true);
-    testDeepControlFlow();
+    testDeepControlFlow(false);
+    testDeepControlFlow(true);
     testOutputBuffer();
     testOutputFormatting();
     testBorrowedBuffer();

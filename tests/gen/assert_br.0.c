@@ -1,21 +1,18 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_br.0.h"
 
-void test() {
-    m4_brX2E0Instance instance;
+void test(void) {
+    static m4_brX2E0Instance instance;
     m4_brX2E0Instantiate(&instance, resolveTestImports);
     printStart("br.0.wasm");
-    m4_brX2E0Export8_typeX2Di32(&instance);
-    m4_brX2E0Export8_typeX2Di64(&instance);
-    m4_brX2E0Export8_typeX2Df32(&instance);
-    m4_brX2E0Export8_typeX2Df64(&instance);
-    m4_brX2E0Export12_typeX2Di32X2Di32(&instance);
-    m4_brX2E0Export12_typeX2Di64X2Di64(&instance);
-    m4_brX2E0Export12_typeX2Df32X2Df32(&instance);
-    m4_brX2E0Export12_typeX2Df64X2Df64(&instance);
+    (void)(m4_brX2E0Export8_typeX2Di32(&instance));
+    (void)(m4_brX2E0Export8_typeX2Di64(&instance));
+    (void)(m4_brX2E0Export8_typeX2Df32(&instance));
+    (void)(m4_brX2E0Export8_typeX2Df64(&instance));
+    (void)(m4_brX2E0Export12_typeX2Di32X2Di32(&instance));
+    (void)(m4_brX2E0Export12_typeX2Di64X2Di64(&instance));
+    (void)(m4_brX2E0Export12_typeX2Df32X2Df32(&instance));
+    (void)(m4_brX2E0Export12_typeX2Df64X2Df64(&instance));
     assertEqualU32(
         m4_brX2E0Export14_typeX2Di32X2Dvalue(&instance),
         1u,
@@ -36,9 +33,23 @@ void test() {
         4616189618054758400ull,
         "type-f64-value()"
     );
-    m4_brX2E0Export14_asX2DblockX2Dfirst(&instance);
-    m4_brX2E0Export12_asX2DblockX2Dmid(&instance);
-    m4_brX2E0Export13_asX2DblockX2Dlast(&instance);
+    {
+        struct w2c2_result_dd result;
+        result = m4_brX2E0Export18_typeX2Df64X2Df64X2Dvalue(&instance);
+        assertEqualU64(
+            i64_reinterpret_f64(result.v0),
+            4616189618054758400ull,
+            "type-f64-f64-value() result 0"
+        );
+        assertEqualU64(
+            i64_reinterpret_f64(result.v1),
+            4617315517961601024ull,
+            "type-f64-f64-value() result 1"
+        );
+    }
+    (void)(m4_brX2E0Export14_asX2DblockX2Dfirst(&instance));
+    (void)(m4_brX2E0Export12_asX2DblockX2Dmid(&instance));
+    (void)(m4_brX2E0Export13_asX2DblockX2Dlast(&instance));
     assertEqualU32(
         m4_brX2E0Export14_asX2DblockX2Dvalue(&instance),
         2u,
@@ -64,7 +75,7 @@ void test() {
         9u,
         "as-br-value()"
     );
-    m4_brX2E0Export13_asX2DbrX5FifX2Dcond(&instance);
+    (void)(m4_brX2E0Export13_asX2DbrX5FifX2Dcond(&instance));
     assertEqualU32(
         m4_brX2E0Export14_asX2DbrX5FifX2Dvalue(&instance),
         8u,
@@ -75,7 +86,7 @@ void test() {
         9u,
         "as-br_if-value-cond()"
     );
-    m4_brX2E0Export17_asX2DbrX5FtableX2Dindex(&instance);
+    (void)(m4_brX2E0Export17_asX2DbrX5FtableX2Dindex(&instance));
     assertEqualU32(
         m4_brX2E0Export17_asX2DbrX5FtableX2Dvalue(&instance),
         10u,
@@ -91,6 +102,20 @@ void test() {
         7ull,
         "as-return-value()"
     );
+    {
+        struct w2c2_result_ij result;
+        result = m4_brX2E0Export16_asX2DreturnX2Dvalues(&instance);
+        assertEqualU32(
+            result.v0,
+            2u,
+            "as-return-values() result 0"
+        );
+        assertEqualU64(
+            result.v1,
+            7ull,
+            "as-return-values() result 1"
+        );
+    }
     assertEqualU32(
         m4_brX2E0Export10_asX2DifX2Dcond(&instance),
         2u,
@@ -326,4 +351,5 @@ void test() {
         9u,
         "nested-br_table-value-index()"
     );
+    m4_brX2E0FreeInstance(&instance);
 }

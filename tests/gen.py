@@ -6,6 +6,7 @@ import math
 import struct
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 
@@ -227,9 +228,18 @@ def generate_test_files(json_path, combined=False, output_dir=None):
             if kind == 'assert_trap':
                 test['body'].append('    assertTrap({}, {});\n'.format(call, c_string(description)))
             elif kind == 'assert_return' and command['expected']:
-                if len(command['expected']) != 1:
-                    raise ValueError('Multiple results are outside w2c2 support')
-                test['body'].append(assertion(call, command['expected'][0], description))
+                expected = command['expected']
+                if len(expected) == 1:
+                    test['body'].append(assertion(call, expected[0], description))
+                else:
+                    codes = {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'v'}
+                    result_type = 'w2c2_result_' + ''.join(codes[value['type']] for value in expected)
+                    test['body'].append('    {{\n        struct {} result;\n        result = {};\n'.format(result_type, call))
+                    for index, value in enumerate(expected):
+                        field = assertion('result.v{}'.format(index), value,
+                                          '{} result {}'.format(description, index))
+                        test['body'].append(textwrap.indent(field, '    '))
+                    test['body'].append('    }\n')
             else:
                 test['body'].append('    (void)({});\n'.format(call))
                 if combined or kind == 'action':

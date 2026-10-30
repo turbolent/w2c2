@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_fac.0.h"
 
-void test() {
-    m5_facX2E0Instance instance;
+void test(void) {
+    static m5_facX2E0Instance instance;
     m5_facX2E0Instantiate(&instance, resolveTestImports);
     printStart("fac.0.wasm");
     assertEqualU64(
@@ -33,4 +30,10 @@ void test() {
         7034535277573963776ull,
         "fac-opt(25ull)"
     );
+    assertEqualU64(
+        m5_facX2E0Export7_facX2Dssa(&instance, 25ull),
+        7034535277573963776ull,
+        "fac-ssa(25ull)"
+    );
+    m5_facX2E0FreeInstance(&instance);
 }

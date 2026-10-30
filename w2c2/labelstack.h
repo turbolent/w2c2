@@ -9,13 +9,16 @@
 typedef struct WasmLabel {
     U32 index;
     size_t typeStackLength;
-    /* Store the type by value so control stack growth cannot invalidate it.
-     * wasmValueType_count denotes a label without a result.
+    WasmBlockSignature signature;
+    /*
+     * Loop labels accept parameters.
+     * Other labels accept results.
      */
-    WasmValueType type;
+    bool parameters;
+    bool branched;
 } WasmLabel;
 
-static const WasmLabel wasmEmptyLabel = {0, 0, wasmValueType_count};
+static const WasmLabel wasmEmptyLabel = {0, 0, {false, 0, wasmValueType_count}, false, false};
 
 ARRAY_TYPE(
     WasmLabels,
@@ -49,12 +52,15 @@ WARN_UNUSED_RESULT
 wasmLabelStackPush(
     WasmLabelStack* labelStack,
     const size_t typeStackLength,
-    const WasmValueType type,
+    const WasmBlockSignature signature,
+    const bool parameters,
     WasmLabel* result
 ) {
+    *result = wasmEmptyLabel;
     result->index = labelStack->nextLabelIndex;
     result->typeStackLength = typeStackLength;
-    result->type = type;
+    result->signature = signature;
+    result->parameters = parameters;
 
     MUST (wasmLabelsAppend(&labelStack->labels, *result))
 
