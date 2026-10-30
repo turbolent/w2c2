@@ -1,11 +1,9 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_binary.60.h"
 
-void test() {
-    m9_binaryX2E60Instance instance;
+void test(void) {
+    static m9_binaryX2E60Instance instance;
     m9_binaryX2E60Instantiate(&instance, resolveTestImports);
     printStart("binary.60.wasm");
+    m9_binaryX2E60FreeInstance(&instance);
 }

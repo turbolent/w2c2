@@ -1,0 +1,10 @@
+{"source_filename": "table_size.wast",
+ "commands": [
+  {"type": "module", "line": 91, "filename": "table_size.0.wasm"}, 
+  {"type": "assert_return", "line": 97, "action": {"type": "invoke", "field": "zero", "args": []}, "expected": [{"type": "i32", "value": "0"}]}, 
+  {"type": "assert_return", "line": 98, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "1"}]}, 
+  {"type": "assert_return", "line": 99, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "1"}]}, 
+  {"type": "assert_return", "line": 100, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "2"}]}, "expected": [{"type": "i32", "value": "1"}]}, 
+  {"type": "assert_return", "line": 101, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "3"}]}, 
+  {"type": "assert_return", "line": 102, "action": {"type": "invoke", "field": "grow", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "i32", "value": "4294967295"}]}, 
+  {"type": "assert_return", "line": 103, "action": {"type": "invoke", "field": "size", "args": []}, "expected": [{"type": "i32", "value": "3"}]}]}

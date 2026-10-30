@@ -3,6 +3,7 @@
 #include "allocation_test.h"
 #include "runtime_division_test.h"
 #include "runtime_memory_test.h"
+#include "runtime_table_test.h"
 #include "runtime_plan9_test.h"
 #include "runtime_shared_memory_test.h"
 #include "typestack_test.h"
@@ -29,6 +30,7 @@ main(void) {
     testAllocations();
     testRuntimeDivision();
     testRuntimeMemory();
+    testRuntimeTable();
     testRuntimePlan9();
     testRuntimeSharedMemory();
     testTypeStack();
@@ -41,6 +43,7 @@ main(void) {
     testLocals();
     testReadLimits();
     testReadNames();
+    testReadElementSegments();
     testDiagnostics();
     testOutputs();
     testFileOutputs();

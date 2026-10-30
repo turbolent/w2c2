@@ -312,3 +312,94 @@ testReadNames(void) {
     testBinaryFunctionNames();
     fprintf(stderr, "PASS testReadNames\n");
 }
+
+void
+testReadElementSegments(void) {
+    static const U8 prefix[] = {
+        0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
+        0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
+        0x02, 0x06, 0x01, 0x00, 0x00, 0x03, 0x70, 0x00,
+        0x03, 0x02, 0x01, 0x00,
+        0x04, 0x07, 0x02, 0x70, 0x00, 0x01, 0x70, 0x00, 0x01
+    };
+    static const U8 code[] = {0x0A, 0x04, 0x01, 0x02, 0x00, 0x0B};
+    static const struct {
+        U8 bytes[10];
+        size_t length;
+        WasmElementSegmentMode mode;
+        U32 table;
+        WasmOpcode initializer;
+    } cases[] = {
+        {{0, 0x41, 0, 0x0B, 1, 0}, 6, wasmElementSegmentActive, 0, wasmOpcodeRefFunc},
+        {{1, 0, 1, 0}, 4, wasmElementSegmentPassive, 0, wasmOpcodeRefFunc},
+        {{2, 1, 0x41, 0, 0x0B, 0, 1, 0}, 8, wasmElementSegmentActive, 1, wasmOpcodeRefFunc},
+        {{3, 0, 1, 0}, 4, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc},
+        {{4, 0x41, 0, 0x0B, 1, 0xD2, 0, 0x0B}, 8, wasmElementSegmentActive, 0, wasmOpcodeRefFunc},
+        {{5, 0x70, 1, 0xD0, 0x70, 0x0B}, 6, wasmElementSegmentPassive, 0, wasmOpcodeRefNull},
+        {{6, 1, 0x41, 0, 0x0B, 0x70, 1, 0x23, 0, 0x0B}, 10, wasmElementSegmentActive, 1, wasmOpcodeGlobalGet},
+        {{7, 0x70, 1, 0xD2, 0, 0x0B}, 6, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc}
+    };
+    size_t index;
+    for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+        size_t length;
+        for (length = 0; length <= cases[index].length; length++) {
+            U8 bytes[64];
+            WasmModuleReader reader = emptyWasmModuleReader;
+            WasmModuleReaderError* error = NULL;
+            bool passed;
+            memcpy(bytes, prefix, sizeof(prefix));
+            bytes[sizeof(prefix)] = 9;
+            bytes[sizeof(prefix) + 1] = (U8)(length + 1);
+            bytes[sizeof(prefix) + 2] = 1;
+            memcpy(bytes + sizeof(prefix) + 3, cases[index].bytes, length);
+            memcpy(bytes + sizeof(prefix) + 3 + length, code, sizeof(code));
+            reader.buffer.data = bytes;
+            reader.buffer.length = sizeof(prefix) + 3 + length + sizeof(code);
+            wasmModuleRead(&reader, &error);
+            passed = error != NULL;
+            if (length == cases[index].length && error == NULL) {
+                const WasmElementSegment segment = reader.module->elementSegments.elementSegments[0];
+                passed = segment.mode == cases[index].mode && segment.tableIndex == cases[index].table
+                    && segment.elementCount == 1 && segment.elements[0].opcode == cases[index].initializer
+                    && segment.elements[0].index == 0;
+            } else if (length == cases[index].length) {
+                passed = false;
+            }
+            wasmModuleFree(reader.module);
+            if (!passed) {
+                fprintf(stderr, "FAIL testReadElementSegments: case %u, length %u\n", (unsigned)index, (unsigned)length);
+                exit(1);
+            }
+        }
+    }
+    {
+        static const struct {
+            U8 bytes[8];
+            size_t length;
+        } invalid[] = {
+            {{8}, 1},
+            {{0x80, 0x80, 0x80, 0x80, 0x10}, 5},
+            {{1, 1, 0}, 3},
+            {{5, 0x6F, 0}, 3},
+            {{5, 0x70, 1, 0xD0, 0x6F, 0x0B}, 6},
+            {{5, 0x70, 1, 0xD2, 0, 0}, 6},
+            {{5, 0x70, 1, 0x41, 0, 0x0B}, 6}
+        };
+        for (index = 0; index < sizeof(invalid) / sizeof(invalid[0]); index++) {
+            U8 bytes[32] = {0, 0x61, 0x73, 0x6D, 1, 0, 0, 0, 9, 0, 1};
+            WasmModuleReader reader = emptyWasmModuleReader;
+            WasmModuleReaderError* error = NULL;
+            bytes[9] = (U8)(invalid[index].length + 1);
+            memcpy(bytes + 11, invalid[index].bytes, invalid[index].length);
+            reader.buffer.data = bytes;
+            reader.buffer.length = 11 + invalid[index].length;
+            wasmModuleRead(&reader, &error);
+            wasmModuleFree(reader.module);
+            if (error == NULL) {
+                fprintf(stderr, "FAIL testReadElementSegments: invalid case %u\n", (unsigned)index);
+                exit(1);
+            }
+        }
+    }
+    fprintf(stderr, "PASS testReadElementSegments\n");
+}

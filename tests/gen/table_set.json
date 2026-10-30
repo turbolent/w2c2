@@ -1,0 +1,9 @@
+{"source_filename": "table_set.wast",
+ "commands": [
+  {"type": "module", "line": 124, "filename": "table_set.0.wasm"}, 
+  {"type": "assert_return", "line": 132, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 133, "action": {"type": "invoke", "field": "set", "args": [{"type": "i32", "value": "0"}]}, "expected": []}, 
+  {"type": "assert_return", "line": 134, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "funcref", "value": "0"}]}, 
+  {"type": "assert_return", "line": 135, "action": {"type": "invoke", "field": "clear", "args": [{"type": "i32", "value": "0"}, {"type": "funcref", "value": "null"}]}, "expected": []}, 
+  {"type": "assert_return", "line": 136, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_trap", "line": 137, "action": {"type": "invoke", "field": "set", "args": [{"type": "i32", "value": "2"}]}, "text": "out of bounds table access", "expected": []}]}

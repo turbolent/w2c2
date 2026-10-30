@@ -71,7 +71,10 @@ typedef enum WasmModuleReaderErrorCode {
     wasmModuleReaderInvalidNameSectionFunctionNameCount,
     wasmModuleReaderInvalidNameSectionFunctionIndex,
     wasmModuleReaderInvalidNameSectionFunctionName,
-    wasmModuleReaderInvalidSectionOrder
+    wasmModuleReaderInvalidSectionOrder,
+    wasmModuleReaderInvalidElementSectionKind,
+    wasmModuleReaderInvalidElementSectionType,
+    wasmModuleReaderInvalidElementSectionInitializer
 } WasmModuleReaderErrorCode;
 
 typedef struct WasmModuleReaderError {

@@ -15,6 +15,8 @@ wasmValueTypeDescription(
             return "f64";
         case wasmValueTypeV128:
             return "v128";
+        case wasmValueTypeFuncRef:
+            return "funcref";
         default:
             return "unknown";
     }

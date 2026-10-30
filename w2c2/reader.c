@@ -125,6 +125,12 @@ wasmModuleReaderErrorMessage(
             return "invalid name section function name";
         case wasmModuleReaderInvalidSectionOrder:
             return "invalid section order";
+        case wasmModuleReaderInvalidElementSectionKind:
+            return "invalid element section kind";
+        case wasmModuleReaderInvalidElementSectionType:
+            return "invalid element section type";
+        case wasmModuleReaderInvalidElementSectionInitializer:
+            return "invalid element section initializer";
         default:
             return "unknown";
     }
@@ -1126,9 +1132,11 @@ wasmReadConstantExpr(
             MUST (wasmV128ConstRead(buffer, &value))
             break;
         }
-        case wasmOpcodeGlobalGet: {
-            WasmGlobalInstruction instruction;
-            MUST (wasmGlobalInstructionRead(buffer, &instruction))
+        case wasmOpcodeGlobalGet:
+        case wasmOpcodeRefNull:
+        case wasmOpcodeRefFunc: {
+            U32 index;
+            MUST (wasmReferenceInstructionRead(buffer, opcode, &index))
             break;
         }
         case wasmOpcodeEnd:
@@ -1852,52 +1860,65 @@ wasmReadElementSegment(
     WasmElementSegment* result,
     WasmModuleReaderError** error
 ) {
-    U32 tableIndex;
-    Buffer offset;
-    U32 functionIndexCount;
-    U32* functionIndices = NULL;
+    /* Bit 1 selects an explicit table for active segments,
+     * or declarative mode for inactive segments.
+     */
+    static const U32 inactiveFlag = 1;
+    static const U32 explicitFlag = 2;
+    static const U32 expressionsFlag = 4;
+    U32 flags;
+    U32 index;
+    U8 type;
+    WasmElementSegment segment = wasmEmptyElementSegment;
 
-    /* Read table index */
-    if (leb128ReadU32(&reader->buffer, &tableIndex) == 0) {
+    if (!leb128ReadU32(&reader->buffer, &flags) || flags > (inactiveFlag | explicitFlag | expressionsFlag)) {
         static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidElementSectionTableIndex
+            wasmModuleReaderInvalidElementSectionKind
         };
         *error = &wasmModuleReaderError;
         return;
     }
-
-    /* Read offset expression */
-    offset = reader->buffer;
-    if (!wasmReadConstantExpr(&reader->buffer)) {
-        static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidElementSectionOffsetExpression
-        };
-        *error = &wasmModuleReaderError;
-        return;
+    segment.mode = !(flags & inactiveFlag) ? wasmElementSegmentActive
+        : flags & explicitFlag ? wasmElementSegmentDeclarative : wasmElementSegmentPassive;
+    if (segment.mode == wasmElementSegmentActive) {
+        if ((flags & explicitFlag) && !leb128ReadU32(&reader->buffer, &segment.tableIndex)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidElementSectionTableIndex
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+        segment.offset = reader->buffer;
+        if (!wasmReadConstantExpr(&reader->buffer)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidElementSectionOffsetExpression
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+        segment.offset.length -= reader->buffer.length;
     }
-    offset.length -= reader->buffer.length;
-
-    /* Read function index count */
-    if (leb128ReadU32(&reader->buffer, &functionIndexCount) == 0) {
+    if (flags != 0 && flags != expressionsFlag) {
+        if (!bufferReadByte(&reader->buffer, &type)
+            || type != ((flags & expressionsFlag) ? wasmTableTypeFuncRef : 0)) {
+            static WasmModuleReaderError wasmModuleReaderError = {
+                wasmModuleReaderInvalidElementSectionType
+            };
+            *error = &wasmModuleReaderError;
+            return;
+        }
+    }
+    if (!leb128ReadU32(&reader->buffer, &segment.elementCount)
+        || (size_t) segment.elementCount > reader->buffer.length) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderInvalidElementSectionFunctionIndexCount
         };
         *error = &wasmModuleReaderError;
         return;
     }
-
-    if ((size_t) functionIndexCount > reader->buffer.length) {
-        static WasmModuleReaderError wasmModuleReaderError = {
-            wasmModuleReaderInvalidElementSectionFunctionIndexCount
-        };
-        *error = &wasmModuleReaderError;
-        return;
-    }
-
-    /* Allocate element segment array */
-    if (functionIndexCount > 0) {
-        functionIndices = calloc(functionIndexCount, sizeof(U32));
-        if (functionIndices == NULL) {
+    if (segment.elementCount != 0) {
+        segment.elements = calloc(segment.elementCount, sizeof(WasmElementInitializer));
+        if (segment.elements == NULL) {
             static WasmModuleReaderError wasmModuleReaderError = {
                 wasmModuleReaderAllocationFailed
             };
@@ -1905,34 +1926,37 @@ wasmReadElementSegment(
             return;
         }
     }
-
-    /* Read element segments */
-    {
-        U32 functionIndexIndex = 0;
-        for (; functionIndexIndex < functionIndexCount; functionIndexIndex++) {
-            U32 functionIndex;
-            if (leb128ReadU32(&reader->buffer, &functionIndex) == 0) {
+    for (index = 0; index < segment.elementCount; index++) {
+        WasmElementInitializer* element = &segment.elements[index];
+        if (flags & expressionsFlag) {
+            WasmOpcode end;
+            if (!wasmOpcodeRead(&reader->buffer, &element->opcode)
+                || !wasmReferenceInstructionRead(&reader->buffer, element->opcode, &element->index)
+                || !wasmOpcodeRead(&reader->buffer, &end)
+                || end != wasmOpcodeEnd) {
+                static WasmModuleReaderError wasmModuleReaderError = {
+                    wasmModuleReaderInvalidElementSectionInitializer
+                };
+                *error = &wasmModuleReaderError;
+                goto fail;
+            }
+        } else {
+            element->opcode = wasmOpcodeRefFunc;
+            if (!leb128ReadU32(&reader->buffer, &element->index)) {
                 static WasmModuleReaderError wasmModuleReaderError = {
                     wasmModuleReaderInvalidElementSectionFunctionIndex
                 };
                 *error = &wasmModuleReaderError;
                 goto fail;
             }
-            functionIndices[functionIndexIndex] = functionIndex;
         }
     }
-
+    *result = segment;
     *error = NULL;
-
-    result->tableIndex = tableIndex;
-    result->offset = offset;
-    result->functionIndexCount = functionIndexCount;
-    result->functionIndices = functionIndices;
-
     return;
 
 fail:
-    free(functionIndices);
+    free(segment.elements);
 }
 
 static

@@ -36,6 +36,18 @@ wasmOpcodeDescription(
             return "drop";
         case wasmOpcodeSelect:
             return "select";
+        case wasmOpcodeSelectTyped:
+            return "select";
+        case wasmOpcodeTableGet:
+            return "table.get";
+        case wasmOpcodeTableSet:
+            return "table.set";
+        case wasmOpcodeRefNull:
+            return "ref.null";
+        case wasmOpcodeRefIsNull:
+            return "ref.is_null";
+        case wasmOpcodeRefFunc:
+            return "ref.func";
         case wasmOpcodeLocalGet:
             return "local.get";
         case wasmOpcodeLocalSet:
@@ -370,6 +382,10 @@ wasmOpcodeResultType(
     const WasmOpcode opcode
 ) {
     switch (opcode) {
+        case wasmOpcodeRefFunc:
+            return wasmValueTypeFuncRef;
+        case wasmOpcodeRefIsNull:
+            return wasmValueTypeI32;
         case wasmOpcodeI32Const:
             return wasmValueTypeI32;
         case wasmOpcodeI64Const:

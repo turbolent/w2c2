@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_global.0.h"
 
-void test() {
-    m8_globalX2E0Instance instance;
+void test(void) {
+    static m8_globalX2E0Instance instance;
     m8_globalX2E0Instantiate(&instance, resolveTestImports);
     printStart("global.0.wasm");
     assertEqualU32(
@@ -58,10 +55,10 @@ void test() {
         13847442954257432576ull,
         "get-8()"
     );
-    m8_globalX2E0Export5_setX2Dx(&instance, 6u);
-    m8_globalX2E0Export5_setX2Dy(&instance, 7ull);
-    m8_globalX2E0Export5_setX2D7(&instance, 8.0);
-    m8_globalX2E0Export5_setX2D8(&instance, 9.0);
+    (void)(m8_globalX2E0Export5_setX2Dx(&instance, 6u));
+    (void)(m8_globalX2E0Export5_setX2Dy(&instance, 7ull));
+    (void)(m8_globalX2E0Export5_setX2D7(&instance, f32_reinterpret_i32(0x41000000u)));
+    (void)(m8_globalX2E0Export5_setX2D8(&instance, f64_reinterpret_i64(0x4022000000000000ull)));
     assertEqualU32(
         m8_globalX2E0Export5_getX2Dx(&instance),
         6u,
@@ -82,8 +79,8 @@ void test() {
         4621256167635550208ull,
         "get-8()"
     );
-    m8_globalX2E0Export5_setX2D7(&instance, 8.0);
-    m8_globalX2E0Export5_setX2D8(&instance, 9.0);
+    (void)(m8_globalX2E0Export5_setX2D7(&instance, f32_reinterpret_i32(0x41000000u)));
+    (void)(m8_globalX2E0Export5_setX2D8(&instance, f64_reinterpret_i64(0x4022000000000000ull)));
     assertEqualU32(
         m8_globalX2E0Export5_getX2Dx(&instance),
         6u,
@@ -179,8 +176,8 @@ void test() {
         2u,
         "as-call_indirect-mid()"
     );
-    m8_globalX2E0Export14_asX2DstoreX2Dfirst(&instance);
-    m8_globalX2E0Export13_asX2DstoreX2Dlast(&instance);
+    (void)(m8_globalX2E0Export14_asX2DstoreX2Dfirst(&instance));
+    (void)(m8_globalX2E0Export13_asX2DstoreX2Dlast(&instance));
     assertEqualU32(
         m8_globalX2E0Export15_asX2DloadX2Doperand(&instance),
         1u,
@@ -201,7 +198,7 @@ void test() {
         6u,
         "as-return-value()"
     );
-    m8_globalX2E0Export15_asX2DdropX2Doperand(&instance);
+    (void)(m8_globalX2E0Export15_asX2DdropX2Doperand(&instance));
     assertEqualU32(
         m8_globalX2E0Export11_asX2DbrX2Dvalue(&instance),
         6u,
@@ -237,4 +234,5 @@ void test() {
         1u,
         "as-compare-operand()"
     );
+    m8_globalX2E0FreeInstance(&instance);
 }

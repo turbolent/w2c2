@@ -1,0 +1,8 @@
+{"source_filename": "table_get.wast",
+ "commands": [
+  {"type": "module", "line": 92, "filename": "table_get.0.wasm"}, 
+  {"type": "assert_return", "line": 99, "action": {"type": "invoke", "field": "first", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 100, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 101, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "funcref", "value": "0"}]}, 
+  {"type": "assert_trap", "line": 102, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "2"}]}, "text": "out of bounds table access", "expected": [{"type": "funcref"}]}, 
+  {"type": "assert_trap", "line": 103, "action": {"type": "invoke", "field": "get", "args": [{"type": "i32", "value": "4294967295"}]}, "text": "out of bounds table access", "expected": [{"type": "funcref"}]}]}

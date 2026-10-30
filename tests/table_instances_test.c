@@ -139,6 +139,24 @@ int main(void) {
     CHECK(m11_tableX5FownerExport4_call(&first, 9, 2) == 42);
     CHECK(host.value == 42);
 
+    /* Moving a host reference through generated get/set preserves its context. */
+    m11_tableX5FownerExport7_setX2Dref(&second, 10, m11_tableX5FownerExport7_getX2Dref(&first, 9));
+    CHECK(m11_tableX5FownerExport4_call(&second, 10, 0) == 42);
+
+    /* Passive elements and their dropped state belong to each instance. */
+    m11_tableX5FownerExport13_initX2Delements(&first, 8);
+    expectedHostInstance = &first.common;
+    CHECK(m11_tableX5FownerExport4_call(&second, 9, 0) == 50006);
+    m11_tableX5FownerExport13_dropX2Delements(&first);
+    m11_tableX5FownerExport13_initX2Delements(&second, 8);
+    expectedHostInstance = &second.common;
+    CHECK(m11_tableX5FownerExport4_call(&first, 9, 0) == 30006);
+#if W2C2_RUNTIME_CHECKS
+    CHECK_TRAP(m11_tableX5FownerExport13_initX2Delements(&first, 8), trapTableOutOfBounds);
+#endif
+    wasmTableSetTyped(&sharedTable, 9, (wasmFunc)hostWithContext, &host.common, &hostType);
+    expectedHostInstance = &host.common;
+
     /* Equivalent types may have different indices within and across modules. */
     CHECK(m12_tableX5FcallerExport10_callX5Falias(&caller, 1, 0) == 50006);
     CHECK(m12_tableX5FcallerExport10_callX5Falias(&caller, 0, 0) == 93011);

@@ -20,7 +20,7 @@
   ;; W2C2: No support for external references
   ;; (global $r externref (ref.null extern))
   ;; (global $mr (mut externref) (ref.null extern))
-  ;; (global funcref (ref.null func))
+  (global funcref (ref.null func))
 
   (func (export "get-a") (result i32) (global.get $a))
   (func (export "get-b") (result i64) (global.get $b))

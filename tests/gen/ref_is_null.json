@@ -1,0 +1,4 @@
+{"source_filename": "ref_is_null.wast",
+ "commands": [
+  {"type": "assert_invalid", "line": 81, "filename": "ref_is_null.0.wasm", "text": "type mismatch", "module_type": "binary"}, 
+  {"type": "assert_invalid", "line": 85, "filename": "ref_is_null.1.wasm", "text": "type mismatch", "module_type": "binary"}]}

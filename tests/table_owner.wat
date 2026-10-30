@@ -8,6 +8,13 @@
   (memory 1)
   (global $value (mut i32) (i32.const 0))
   (elem (global.get $slot) $step $host $state $write)
+  (elem $passive func $step $host)
+
+  (func (export "init-elements") (param i32)
+    local.get 0 i32.const 0 i32.const 2 table.init $passive)
+  (func (export "drop-elements") elem.drop $passive)
+  (func (export "get-ref") (param i32) (result funcref) local.get 0 table.get)
+  (func (export "set-ref") (param i32 funcref) local.get 0 local.get 1 table.set)
 
   (func (export "init") (param $value i32) (param $byte i32)
     (global.set $value (local.get $value))

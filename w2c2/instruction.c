@@ -94,15 +94,37 @@ wasmCallIndirectInstructionRead(
     WasmCallIndirectInstruction* result
 ) {
     U32 typeIndex = 0;
-    U32 memoryIndex = 0;
+    U32 tableIndex = 0;
 
     MUST (leb128ReadU32(buffer, &typeIndex) > 0)
-    MUST (leb128ReadU32(buffer, &memoryIndex) > 0)
+    MUST (leb128ReadU32(buffer, &tableIndex) > 0)
 
     result->functionTypeIndex = typeIndex;
-    result->tableIndex = memoryIndex;
+    result->tableIndex = tableIndex;
 
     return true;
+}
+
+/* Reference instructions */
+
+bool
+wasmReferenceInstructionRead(
+    Buffer* buffer,
+    const WasmOpcode opcode,
+    U32* index
+) {
+    *index = 0;
+    switch (opcode) {
+        case wasmOpcodeRefNull: {
+            WasmValueType type;
+            return wasmReadValueType(buffer, &type) && type == wasmValueTypeFuncRef;
+        }
+        case wasmOpcodeRefFunc:
+        case wasmOpcodeGlobalGet:
+            return leb128ReadU32(buffer, index) > 0;
+        default:
+            return false;
+    }
 }
 
 /* WasmBranchInstruction */

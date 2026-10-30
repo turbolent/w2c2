@@ -1428,7 +1428,7 @@ typedef struct wasmModuleInstance wasmModuleInstance;
 typedef void (*wasmFunc)(void);
 
 /* Type strings use one character per value:
- * i = i32, j = i64, f = f32, d = f64. */
+ * i = i32, j = i64, f = f32, d = f64, v = v128, r = funcref. */
 typedef struct wasmFuncType {
     U32 parameterCount;
     const char* parameterTypes;
@@ -1446,6 +1446,38 @@ typedef struct wasmTableEntry {
     const wasmFuncType* type;
 #endif
 } wasmTableEntry;
+
+static const wasmTableEntry wasmNullFuncRef = {0};
+
+static
+W2C2_INLINE
+wasmTableEntry
+wasmFuncRef(
+    const wasmFunc func,
+    wasmModuleInstance* instance
+) {
+    wasmTableEntry ref = {0};
+    ref.func = func;
+    ref.instance = instance;
+    return ref;
+}
+
+#if W2C2_RUNTIME_CHECKS
+static
+W2C2_INLINE
+wasmTableEntry
+wasmFuncRefTyped(
+    const wasmFunc func,
+    wasmModuleInstance* instance,
+    const wasmFuncType* type
+) {
+    wasmTableEntry ref = wasmFuncRef(func, instance);
+    ref.type = type;
+    return ref;
+}
+#else
+#define wasmFuncRefTyped(func, instance, type) wasmFuncRef(func, instance)
+#endif
 
 typedef struct wasmTable {
     wasmTableEntry* data;
@@ -1481,6 +1513,137 @@ wasmTableCheckRange(
 
 #else
 #define wasmTableCheckRange(table, index, count) ((void)0)
+#endif
+
+static
+W2C2_INLINE
+wasmTableEntry
+wasmTableGetRef(
+    const wasmTable* table,
+    const U32 index
+) {
+    wasmTableCheckRange(table, index, 1);
+    return table->data[index];
+}
+
+static
+W2C2_INLINE
+void
+wasmTableSetRef(
+    wasmTable* table,
+    const U32 index,
+    const wasmTableEntry ref
+) {
+    wasmTableCheckRange(table, index, 1);
+    table->data[index] = ref;
+}
+
+static
+W2C2_INLINE
+U32
+wasmTableSize(const wasmTable* table) {
+    return table->size;
+}
+
+static
+W2C2_INLINE
+U32
+wasmTableGrow(
+    wasmTable* table,
+    const wasmTableEntry ref,
+    const U32 delta
+) {
+    const U32 oldSize = table->size;
+    const U64 newSize = (U64)oldSize + delta;
+    wasmTableEntry* data;
+    U32 index;
+    if (delta == 0) {
+        return oldSize;
+    }
+    if (newSize > table->maxSize || newSize > (size_t)-1 / sizeof(wasmTableEntry)) {
+        return UINT32_MAX;
+    }
+    data = (wasmTableEntry*)realloc(table->data, (size_t)newSize * sizeof(wasmTableEntry));
+    if (data == NULL) {
+        return UINT32_MAX;
+    }
+    for (index = oldSize; index < (U32)newSize; index++) {
+        data[index] = ref;
+    }
+    table->data = data;
+    table->size = (U32)newSize;
+    return oldSize;
+}
+
+static
+W2C2_INLINE
+void
+wasmTableFill(
+    wasmTable* table,
+    const U32 offset,
+    const wasmTableEntry ref,
+    const U32 count
+) {
+    U32 index;
+    wasmTableCheckRange(table, offset, count);
+    for (index = 0; index < count; index++) {
+        table->data[offset + index] = ref;
+    }
+}
+
+static
+W2C2_INLINE
+void
+wasmTableCopy(
+    wasmTable* destination,
+    const wasmTable* source,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    wasmTableCheckRange(destination, dest, count);
+    wasmTableCheckRange(source, src, count);
+    if (count != 0) {
+        memmove(destination->data + dest, source->data + src, (size_t)count * sizeof(wasmTableEntry));
+    }
+}
+
+static
+W2C2_INLINE
+void
+wasmTableInitUnchecked(
+    wasmTable* table,
+    const wasmTableEntry* elements,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    if (count != 0) {
+        memcpy(table->data + dest, elements + src, (size_t)count * sizeof(wasmTableEntry));
+    }
+}
+
+#if W2C2_RUNTIME_CHECKS
+static
+W2C2_INLINE
+void
+wasmTableInit(
+    wasmTable* table,
+    const wasmTableEntry* elements,
+    const U32 size,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    wasmTableCheckRange(table, dest, count);
+    if (src > size || count > size - src) {
+        trap(trapTableOutOfBounds);
+    }
+    wasmTableInitUnchecked(table, elements, dest, src, count);
+}
+#else
+#define wasmTableInit(table, elements, size, dest, src, count) \
+    wasmTableInitUnchecked(table, elements, dest, src, count)
 #endif
 
 static
@@ -1922,13 +2085,21 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
     atomic_load_U32(&(instance)->dataSegmentSizes[index])
 #define WASM_DATA_DROP(instance, index) \
     ((void)atomic_store_U32(&(instance)->dataSegmentSizes[index], 0))
+#define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) \
+    atomic_load_U32(&(instance)->elementSegmentSizes[index])
+#define WASM_ELEM_DROP(instance, index) \
+    ((void)atomic_store_U32(&(instance)->elementSegmentSizes[index], 0))
 #else
 #define WASM_DATA_SEGMENT_SIZE(instance, index, size) ((instance)->dataSegmentSizes[index])
 #define WASM_DATA_DROP(instance, index) ((void)((instance)->dataSegmentSizes[index] = 0))
+#define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) ((instance)->elementSegmentSizes[index])
+#define WASM_ELEM_DROP(instance, index) ((void)((instance)->elementSegmentSizes[index] = 0))
 #endif
 #else
 #define WASM_DATA_SEGMENT_SIZE(instance, index, size) (size)
 #define WASM_DATA_DROP(instance, index) ((void)0)
+#define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) (size)
+#define WASM_ELEM_DROP(instance, index) ((void)0)
 #endif
 
 U32
