@@ -1,0 +1,14 @@
+{"source_filename": "multivalue.wast",
+ "commands": [
+  {"type": "module", "line": 2, "filename": "multivalue.0.wasm"}, 
+  {"type": "assert_return", "line": 60, "action": {"type": "invoke", "field": "pair", "args": []}, "expected": [{"type": "i32", "value": "17"}, {"type": "i64", "value": "29"}]}, 
+  {"type": "assert_return", "line": 61, "action": {"type": "invoke", "field": "calls", "args": []}, "expected": [{"type": "i32", "value": "1"}]}, 
+  {"type": "assert_return", "line": 62, "action": {"type": "invoke", "field": "direct", "args": []}, "expected": [{"type": "i32", "value": "17"}, {"type": "i64", "value": "29"}]}, 
+  {"type": "assert_return", "line": 63, "action": {"type": "invoke", "field": "calls", "args": []}, "expected": [{"type": "i32", "value": "2"}]}, 
+  {"type": "assert_return", "line": 64, "action": {"type": "invoke", "field": "recursive", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "0"}, {"type": "i64", "value": "1"}]}, 
+  {"type": "assert_return", "line": 65, "action": {"type": "invoke", "field": "recursive", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "i32", "value": "1"}, {"type": "i64", "value": "1"}]}, 
+  {"type": "assert_return", "line": 66, "action": {"type": "invoke", "field": "recursive", "args": [{"type": "i32", "value": "5"}]}, "expected": [{"type": "i32", "value": "5"}, {"type": "i64", "value": "120"}]}, 
+  {"type": "assert_return", "line": 67, "action": {"type": "invoke", "field": "overlap", "args": [{"type": "i32", "value": "1"}]}, "expected": [{"type": "i32", "value": "1"}, {"type": "i32", "value": "2"}, {"type": "i32", "value": "3"}]}, 
+  {"type": "assert_return", "line": 68, "action": {"type": "invoke", "field": "overlap", "args": [{"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "105"}, {"type": "i32", "value": "5"}, {"type": "i32", "value": "6"}]}, 
+  {"type": "assert_return", "line": 69, "action": {"type": "invoke", "field": "loop-table", "args": []}, "expected": [{"type": "i32", "value": "0"}, {"type": "i64", "value": "3"}]}, 
+  {"type": "assert_return", "line": 70, "action": {"type": "invoke", "field": "nested-dead", "args": []}, "expected": [{"type": "i32", "value": "1"}, {"type": "i64", "value": "2"}]}]}

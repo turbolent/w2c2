@@ -92,6 +92,51 @@ leb128ReadI32(
     return count;
 }
 
+/* Maximum number of bytes in a signed 33-bit LEB128 encoding. */
+#define int33LEB128MaxByteCount 5
+
+/*
+ * leb128ReadI33 reads and decodes a signed 33-bit integer
+ * from the given buffer and stores the value in `result`.
+ * Returns the number of read bytes,
+ * or zero if the encoding is truncated or overflows.
+ */
+static
+W2C2_INLINE
+size_t
+leb128ReadI33(
+    Buffer* buffer,
+    I64* result
+) {
+    U64 value = 0;
+    U32 shift = 0;
+    size_t count = 0;
+    U8 byte = 0;
+
+    while (count < int33LEB128MaxByteCount && bufferReadByte(buffer, &byte)) {
+        count++;
+        /* The fifth byte's unused payload bits must repeat bit 32. */
+        if (count == int33LEB128MaxByteCount
+            && (byte & 0x70) != 0 && (byte & 0x70) != 0x70) {
+            return 0;
+        }
+
+        value |= (U64)(byte & 0x7F) << shift;
+        shift += 7;
+
+        if ((byte & 0x80) == 0) {
+            if (byte & 0x40) {
+                *result = -(I64)(((U64)1 << shift) - value);
+            } else {
+                *result = (I64)value;
+            }
+            return count;
+        }
+    }
+
+    return 0;
+}
+
 /*
  * int64LEB128MaxByteCount is the maximum number of bytes a 64-bit integer
  * (signed or unsigned) may be encoded as. From

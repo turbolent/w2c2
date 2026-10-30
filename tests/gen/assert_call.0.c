@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_call.0.h"
 
-void test() {
-    m6_callX2E0Instance instance;
+void test(void) {
+    static m6_callX2E0Instance instance;
     m6_callX2E0Instantiate(&instance, resolveTestImports);
     printStart("call.0.wasm");
     assertEqualU32(
@@ -28,6 +25,20 @@ void test() {
         4660882566700597248ull,
         "type-f64()"
     );
+    {
+        struct w2c2_result_ij result;
+        result = m6_callX2E0Export12_typeX2Di32X2Di64(&instance);
+        assertEqualU32(
+            result.v0,
+            306u,
+            "type-i32-i64() result 0"
+        );
+        assertEqualU64(
+            result.v1,
+            356ull,
+            "type-i32-i64() result 1"
+        );
+    }
     assertEqualU32(
         m6_callX2E0Export14_typeX2DfirstX2Di32(&instance),
         32u,
@@ -68,6 +79,86 @@ void test() {
         4634211053438658150ull,
         "type-second-f64()"
     );
+    {
+        struct w2c2_result_id result;
+        result = m6_callX2E0Export16_typeX2DallX2Di32X2Df64(&instance);
+        assertEqualU32(
+            result.v0,
+            32u,
+            "type-all-i32-f64() result 0"
+        );
+        assertEqualU64(
+            i64_reinterpret_f64(result.v1),
+            4610064722561534525ull,
+            "type-all-i32-f64() result 1"
+        );
+    }
+    {
+        struct w2c2_result_ii result;
+        result = m6_callX2E0Export16_typeX2DallX2Di32X2Di32(&instance);
+        assertEqualU32(
+            result.v0,
+            2u,
+            "type-all-i32-i32() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            1u,
+            "type-all-i32-i32() result 1"
+        );
+    }
+    {
+        struct w2c2_result_df result;
+        result = m6_callX2E0Export16_typeX2DallX2Df32X2Df64(&instance);
+        assertEqualU64(
+            i64_reinterpret_f64(result.v0),
+            4611686018427387904ull,
+            "type-all-f32-f64() result 0"
+        );
+        assertEqualU32(
+            i32_reinterpret_f32(result.v1),
+            1065353216u,
+            "type-all-f32-f64() result 1"
+        );
+    }
+    {
+        struct w2c2_result_id result;
+        result = m6_callX2E0Export16_typeX2DallX2Df64X2Di32(&instance);
+        assertEqualU32(
+            result.v0,
+            2u,
+            "type-all-f64-i32() result 0"
+        );
+        assertEqualU64(
+            i64_reinterpret_f64(result.v1),
+            4607182418800017408ull,
+            "type-all-f64-i32() result 1"
+        );
+    }
+    assertEqualU32(
+        m6_callX2E0Export22_asX2DbinaryX2DallX2Doperands(&instance),
+        7u,
+        "as-binary-all-operands()"
+    );
+    assertEqualU32(
+        m6_callX2E0Export17_asX2DmixedX2Doperands(&instance),
+        32u,
+        "as-mixed-operands()"
+    );
+    {
+        struct w2c2_result_ii result;
+        result = m6_callX2E0Export20_asX2DcallX2DallX2Doperands(&instance);
+        assertEqualU32(
+            result.v0,
+            3u,
+            "as-call-all-operands() result 0"
+        );
+        assertEqualU32(
+            result.v1,
+            4u,
+            "as-call-all-operands() result 1"
+        );
+    }
     assertEqualU64(
         m6_callX2E0Export3_fac(&instance, 0ull),
         1ull,
@@ -223,8 +314,8 @@ void test() {
         2u,
         "as-call_indirect-mid()"
     );
-    m6_callX2E0Export14_asX2DstoreX2Dfirst(&instance);
-    m6_callX2E0Export13_asX2DstoreX2Dlast(&instance);
+    (void)(m6_callX2E0Export14_asX2DstoreX2Dfirst(&instance));
+    (void)(m6_callX2E0Export13_asX2DstoreX2Dlast(&instance));
     assertEqualU32(
         m6_callX2E0Export20_asX2DmemoryX2EgrowX2Dvalue(&instance),
         1u,
@@ -235,7 +326,7 @@ void test() {
         306u,
         "as-return-value()"
     );
-    m6_callX2E0Export15_asX2DdropX2Doperand(&instance);
+    (void)(m6_callX2E0Export15_asX2DdropX2Doperand(&instance));
     assertEqualU32(
         m6_callX2E0Export11_asX2DbrX2Dvalue(&instance),
         306u,
@@ -301,4 +392,5 @@ void test() {
         42u,
         "return-from-long-argument-list(42u)"
     );
+    m6_callX2E0FreeInstance(&instance);
 }

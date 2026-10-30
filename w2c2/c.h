@@ -22,6 +22,13 @@ extern "C" {
  * External data uses the module prefix followed by Data for its base symbol.
  * Mach-O external-data modes use the module prefix as the section name in __DATA;
  * the encoded prefix must fit in 16 bytes.
+ *
+ * Functions with zero results return void.
+ * Functions with one result return that value directly.
+ * Multiple results use struct w2c2_result_<types>,
+ * with fields v0, v1, and so on in result order.
+ * Type codes are i (i32), j (i64), f (f32), d (f64), and v (v128).
+ * Shared declaration guards prevent duplicate definitions across module headers.
  */
 WasmBool
 WARN_UNUSED_RESULT

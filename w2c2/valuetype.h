@@ -18,6 +18,22 @@ typedef enum WasmValueType {
     wasmValueType_count
 } WasmValueType;
 
+/*
+ * Indexed signatures refer to immutable module types.
+ * Inline signatures store their result type by value,
+ * so they remain valid when the control stack grows.
+ */
+typedef struct WasmBlockSignature {
+    bool indexed;
+    U32 typeIndex;
+    WasmValueType type;
+} WasmBlockSignature;
+
+static const WasmBlockSignature wasmEmptyBlockSignature = {false, 0, wasmValueType_count};
+
+/* The empty block type byte (0x40) decodes to -64 as signed LEB128. */
+static const I32 wasmEmptyBlockTypeEncoding = -0x40;
+
 const char*
 WARN_UNUSED_RESULT
 wasmValueTypeDescription(
@@ -81,12 +97,40 @@ wasmReadBlockType(
 
     MUST (leb128ReadI32(buffer, &encodedValueType))
 
-    if (encodedValueType == -64 /* 0x40 */) {
+    if (encodedValueType == wasmEmptyBlockTypeEncoding) {
         *result = NULL;
         return true;
     }
 
     return wasmDecodeValueType(encodedValueType, *result);
+}
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmReadBlockSignature(
+    Buffer* buffer,
+    WasmBlockSignature* result
+) {
+    I64 encoded = 0;
+
+    *result = wasmEmptyBlockSignature;
+    MUST (leb128ReadI33(buffer, &encoded))
+
+    if (encoded >= 0) {
+        result->indexed = true;
+        result->typeIndex = (U32)encoded;
+        return true;
+    }
+    if (encoded == wasmEmptyBlockTypeEncoding) {
+        return true;
+    }
+    if (encoded < INT32_MIN) {
+        return false;
+    }
+
+    return wasmDecodeValueType((I32)encoded, &result->type);
 }
 
 

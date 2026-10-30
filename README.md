@@ -20,6 +20,7 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 - Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
 - Implements several extensions:
+  - [Multiple results and block parameters](https://github.com/WebAssembly/multi-value)
   - [Fixed-width SIMD](https://github.com/WebAssembly/simd)
   - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
   - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
@@ -93,6 +94,12 @@ cc -std=c99 -I/path/to/w2c2/w2c2 \
 SIMDe is header-only, so no additional library is needed at link time.
 Building and running the translator does not require SIMDe.
 Non-SIMD output continues to support C89.
+
+Define `W2C2_RUNTIME_CHECKS=1` when compiling generated C to enable traps for
+out-of-bounds memory and table accesses, unaligned atomics, and indirect-call signature mismatches.
+The default, `0`, omits these guards and their metadata to preserve the unchecked runtime's cost and layout.
+Invalid operations in this mode can cause C undefined behavior.
+Compile modules and host code that share runtime objects with the same setting.
 
 ### Separate Compilation
 

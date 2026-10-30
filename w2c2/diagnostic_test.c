@@ -246,9 +246,8 @@ testUnsupportedInstructions(void) {
         0x41, 0x00, 0x41, 0x00, 0x41, 0x00, 0xFC, 0x0E, 0x00, 0x00, 0x0B
     };
     static U8 unknownAtomic[] = {0xFE, 0x7F, 0x0B};
-    static U8 indirectMultiResult[] = {0x41, 0x00, 0x11, 0x01, 0x00, 0x1A, 0x1A, 0x0B};
     static U8 invalidCall[] = {0x10};
-    Buffer cases[4];
+    Buffer cases[3];
     size_t index;
     WasmModule* module = readDiagnosticModule();
     WasmFunctionIDs ids = diagnosticFunctionIDs(module);
@@ -256,11 +255,9 @@ testUnsupportedInstructions(void) {
     cases[0].length = sizeof(tableCopy);
     cases[1].data = unknownAtomic;
     cases[1].length = sizeof(unknownAtomic);
-    cases[2].data = indirectMultiResult;
-    cases[2].length = sizeof(indirectMultiResult);
-    cases[3].data = invalidCall;
-    cases[3].length = sizeof(invalidCall);
-    for (index = 0; index < 4; index++) {
+    cases[2].data = invalidCall;
+    cases[2].length = sizeof(invalidCall);
+    for (index = 0; index < 3; index++) {
         DiagnosticCapture capture;
         WasmCWriteModuleOptions options;
         captureInitialize(&capture);
@@ -276,10 +273,6 @@ testUnsupportedInstructions(void) {
             CHECK(capture.last.info.unsupportedOpcode.family
                 == (index == 0 ? wasmDiagnosticOpcodeMisc : wasmDiagnosticOpcodeThreads));
             CHECK(capture.last.info.unsupportedOpcode.opcode == (index == 0 ? 0x0EU : 0x7FU));
-        } else if (index == 2) {
-            CHECK(capture.last.code == wasmDiagnosticUnsupportedFunctionResults);
-            CHECK(capture.last.info.unsupportedFunctionResults.typeIndex == 1);
-            CHECK(capture.last.info.unsupportedFunctionResults.resultCount == 2);
         } else {
             CHECK(capture.last.code == wasmDiagnosticInvalidInstruction);
             CHECK(capture.last.info.invalidInstruction.opcode == wasmOpcodeCall);
@@ -311,7 +304,10 @@ testDataDropNoOp(void) {
 
 static
 void
-testUnsupportedSignatures(void) {
+testSupportedSignatures(void) {
+    static U8 results[] = {0x41, 0x01, 0x41, 0x02, 0x0B};
+    static U8 indirect[] = {0x41, 0x00, 0x11, 0x01, 0x00, 0x0B};
+    static U8 block[] = {0x02, 0x01, 0x41, 0x01, 0x41, 0x02, 0x0B, 0x0B};
     static U8 importModule[] = {
         0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
         0x01, 0x06, 0x01, 0x60, 0x00, 0x02, 0x7F, 0x7F,
@@ -326,23 +322,65 @@ testUnsupportedSignatures(void) {
     captureInitialize(&capture);
     options = diagnosticOptions(&capture);
     module->functions.functions[0].functionTypeIndex = 1;
-    CHECK(!wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
-    CHECK(capture.count == 1);
-    CHECK(capture.last.code == wasmDiagnosticUnsupportedFunctionResults);
-    CHECK(capture.last.info.unsupportedFunctionResults.typeIndex == 1);
+    module->functions.functions[0].code.data = results;
+    module->functions.functions[0].code.length = sizeof(results);
+    CHECK(wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
+    CHECK(capture.count == 0);
+    module->functions.functions[0].code.data = indirect;
+    module->functions.functions[0].code.length = sizeof(indirect);
+    CHECK(wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
+    module->functions.functions[0].code.data = block;
+    module->functions.functions[0].code.length = sizeof(block);
+    CHECK(wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
+    CHECK(capture.count == 0);
     reader.buffer.data = importModule;
     reader.buffer.length = sizeof(importModule);
     wasmModuleRead(&reader, &error);
     CHECK(error == NULL);
-    CHECK(!wasmCWriteModule(reader.module, "diagnostic", options,
+    CHECK(wasmCWriteModule(reader.module, "diagnostic", options,
         emptyWasmFunctionIDs, emptyWasmFunctionIDs));
-    CHECK(capture.count == 2);
-    CHECK(capture.last.code == wasmDiagnosticUnsupportedFunctionResults);
-    CHECK(capture.last.info.unsupportedFunctionResults.typeIndex == 0);
+    CHECK(capture.count == 0);
     wasmModuleFree(reader.module);
     wasmFunctionIDsFree(&ids);
     wasmModuleFree(module);
     captureDestroy(&capture);
+}
+
+static
+void
+testInvalidBlockSignatures(void) {
+    static const struct {
+        U8 bytes[5];
+        size_t length;
+    } cases[] = {
+        {{0x70}, 1},                         /* Unsupported value type. */
+        {{0x80}, 1},                         /* Truncated encoding. */
+        {{0x80, 0x80, 0x80, 0x80, 0x10}, 5}  /* Overflowing encoding. */
+    };
+    WasmModule* module = readDiagnosticModule();
+    WasmFunctionIDs ids = diagnosticFunctionIDs(module);
+    size_t index;
+    unsigned int reachable;
+    for (reachable = 0; reachable < 2; reachable++) {
+        for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+            U8 code[7] = {0x00, 0x02};
+            DiagnosticCapture capture;
+            WasmCWriteModuleOptions options;
+            captureInitialize(&capture);
+            options = diagnosticOptions(&capture);
+            memcpy(code + 2, cases[index].bytes, cases[index].length);
+            module->functions.functions[0].code.data = code + reachable;
+            module->functions.functions[0].code.length = 2 + cases[index].length - reachable;
+            CHECK(!wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
+            CHECK(capture.count == 1);
+            CHECK(capture.last.code == wasmDiagnosticInvalidBlockType);
+            CHECK(capture.last.location.hasFunctionIndex);
+            CHECK(capture.last.location.functionIndex == 0);
+            captureDestroy(&capture);
+        }
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(module);
 }
 
 static
@@ -482,7 +520,8 @@ testDiagnostics(void) {
     testReaderDiagnostics();
     testOutputFailures();
     testUnsupportedInstructions();
-    testUnsupportedSignatures();
+    testInvalidBlockSignatures();
+    testSupportedSignatures();
     testDataDropNoOp();
     testDwarfDiagnostics();
 #if HAS_PTHREAD

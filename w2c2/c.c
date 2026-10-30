@@ -22,6 +22,7 @@ static const char memoryNamePrefix = 'm';
 static const char tableNamePrefix = 't';
 static const char stackNamePrefix = 's';
 static const char labelNamePrefix = 'L';
+static const char* const resultName = "result";
 
 static const char* const valueTypeNames[wasmValueType_count] = {
     "U32", "U64", "F32", "F64", "V128"
@@ -311,28 +312,67 @@ wasmCWriteLabelName(
 }
 
 static
-W2C2_INLINE
+void
+wasmCWriteResultName(
+    WasmOutput* output,
+    const WasmFunctionType type
+) {
+    U32 index;
+    wasmOutputString(output, "w2c2_result_");
+    for (index = 0; index < type.resultCount; index++) {
+        wasmOutputChar(output, valueTypeStackNames[type.resultTypes[index]]);
+    }
+}
+
+static
 bool
 WARN_UNUSED_RESULT
-wasmCGetReturnType(
-    const WasmFunctionType functionType,
-    const U32 typeIndex,
-    const char** result,
-    WasmDiagnosticContext* diagnostics
+wasmCWriteReturnType(
+    WasmOutput* output,
+    const WasmFunctionType type
 ) {
-    switch (functionType.resultCount) {
-        case 0:
-            *result = "void";
-            return true;
-        case 1:
-            *result = valueTypeNames[functionType.resultTypes[0]];
-            return true;
-        default:
-            /* TODO: add support for multiple result values */
-            wasmDiagnosticReportUnsupportedFunctionResults(
-                diagnostics, typeIndex, functionType.resultCount
-            );
-            return false;
+    if (type.resultCount == 0) {
+        wasmOutputString(output, "void");
+    } else if (type.resultCount == 1) {
+        wasmOutputString(output, valueTypeNames[type.resultTypes[0]]);
+    } else {
+        wasmOutputString(output, "struct ");
+        wasmCWriteResultName(output, type);
+    }
+    return !output->failed;
+}
+
+static
+void
+wasmCWriteResultTypes(
+    WasmOutput* output,
+    const WasmModule* module,
+    const bool pretty
+) {
+    U32 index;
+    for (index = 0; index < module->functionTypes.count; index++) {
+        const WasmFunctionType type = module->functionTypes.functionTypes[index];
+        U32 item;
+        if (type.resultCount < 2) {
+            continue;
+        }
+        wasmOutputString(output, "#ifndef ");
+        wasmCWriteResultName(output, type);
+        wasmOutputString(output, "_DEFINED\n#define ");
+        wasmCWriteResultName(output, type);
+        wasmOutputString(output, "_DEFINED\nstruct ");
+        wasmCWriteResultName(output, type);
+        wasmOutputString(output, " {\n");
+        for (item = 0; item < type.resultCount; item++) {
+            if (pretty) {
+                wasmOutputString(output, indentation);
+            }
+            wasmOutputString(output, valueTypeNames[type.resultTypes[item]]);
+            wasmOutputString(output, " v");
+            wasmOutputU32(output, item);
+            wasmOutputString(output, ";\n");
+        }
+        wasmOutputString(output, "};\n#endif\n\n");
     }
 }
 
@@ -374,7 +414,9 @@ typedef struct WasmCControlFrame {
     WasmOpcode opcode;
     /* Whether the construct began in unreachable code. */
     bool ignore;
-    WasmValueType resultType;
+    WasmBlockSignature signature;
+    /* Whether the other arm can reach the end of an if. */
+    bool armReachable;
 } WasmCControlFrame;
 
 ARRAY_TYPE(WasmCControlStack, WasmCControlFrame, wasmCControlStack, frames, frame)
@@ -488,8 +530,34 @@ wasmCWritePlus(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteCallResults(
+    const WasmCFunctionWriter* writer,
+    const WasmFunctionType functionType
+) {
+    U32 resultIndex;
+    for (resultIndex = 0; resultIndex < functionType.resultCount; resultIndex++) {
+        const WasmValueType resultType = functionType.resultTypes[resultIndex];
+        if (functionType.resultCount > 1) {
+            const U32 resultStackIndex = assertSizeU32(writer->typeStack->length);
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, resultStackIndex, resultType))
+            MUST (wasmCWriteIndent(writer))
+            MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
+            MUST (wasmCWriteAssign(writer))
+            MUST (wasmCWrite(writer, resultName))
+            MUST (wasmCWrite(writer, ".v"))
+            wasmOutputU32(writer->output, resultIndex);
+            MUST (wasmCWrite(writer, ";\n"))
+        }
+        MUST (wasmTypeStackAppend(writer->typeStack, resultType))
+    }
+    return true;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteCallExpr(
-    const WasmCFunctionWriter* writer
+    WasmCFunctionWriter* writer
 ) {
     WasmCallInstruction instruction;
     if (!wasmCallInstructionRead(writer->code, &instruction)) {
@@ -510,14 +578,21 @@ wasmCWriteCallExpr(
 
             MUST (wasmCWriteIndent(writer))
 
-            if (resultCount > 0) {
-                /* TODO: add support for multiple result values */
+            if (resultCount > 1) {
+                MUST (wasmCWrite(writer, "{\n"))
+                writer->indent++;
+                MUST (wasmCWriteIndent(writer))
+                MUST (wasmCWriteReturnType(writer->output, functionType))
+                MUST (wasmCWriteChar(writer, ' '))
+                MUST (wasmCWrite(writer, resultName))
+                MUST (wasmCWrite(writer, ";\n"))
+                MUST (wasmCWriteIndent(writer))
+                MUST (wasmCWrite(writer, resultName))
+                MUST (wasmCWriteAssign(writer))
+            } else if (resultCount == 1) {
                 const WasmValueType resultType = functionType.resultTypes[0];
 
-                U32 resultStackIndex = assertSizeU32(writer->typeStack->length);
-                if (parameterCount > 0) {
-                    resultStackIndex -= parameterCount;
-                }
+                const U32 resultStackIndex = assertSizeU32(writer->typeStack->length - parameterCount);
 
                 MUST (wasmStackDeclarationsSet(writer->stackDeclarations, resultStackIndex, resultType))
                 MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
@@ -549,12 +624,11 @@ wasmCWriteCallExpr(
             MUST (wasmCWrite(writer, ");\n"))
 
             wasmTypeStackDrop(writer->typeStack, parameterCount);
-            {
-                U32 resultIndex = 0;
-                for (; resultIndex < resultCount; resultIndex++) {
-                    const WasmValueType resultType = functionType.resultTypes[resultIndex];
-                    MUST (wasmTypeStackAppend(writer->typeStack, resultType))
-                }
+            MUST (wasmCWriteCallResults(writer, functionType))
+            if (resultCount > 1) {
+                writer->indent--;
+                MUST (wasmCWriteIndent(writer))
+                MUST (wasmCWrite(writer, "}\n"))
             }
         }
     }
@@ -621,17 +695,20 @@ wasmCWriteCallIndirectExpr(
 
     if (!writer->ignore) {
         const WasmFunctionType functionType = writer->module->functionTypes.functionTypes[instruction.functionTypeIndex];
-        const char* returnType = NULL;
 
         const U32 parameterCount = functionType.parameterCount;
         const U32 resultCount = functionType.resultCount;
-
-        MUST (wasmCGetReturnType(functionType, instruction.functionTypeIndex, &returnType, writer->diagnostics))
-
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "{\n"))
         writer->indent++;
         MUST (wasmCWriteIndent(writer))
+        if (resultCount > 1) {
+            MUST (wasmCWriteReturnType(writer->output, functionType))
+            MUST (wasmCWriteChar(writer, ' '))
+            MUST (wasmCWrite(writer, resultName))
+            MUST (wasmCWrite(writer, ";\n"))
+            MUST (wasmCWriteIndent(writer))
+        }
         MUST (wasmCWrite(writer, "wasmTableEntry entry"))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmTableGet("))
@@ -647,14 +724,13 @@ wasmCWriteCallIndirectExpr(
         MUST (wasmCWrite(writer, ");\n"))
         MUST (wasmCWriteIndent(writer))
 
-        if (resultCount > 0) {
-            /* TODO: add support for multiple result values */
+        if (resultCount > 1) {
+            MUST (wasmCWrite(writer, resultName))
+            MUST (wasmCWriteAssign(writer))
+        } else if (resultCount == 1) {
             const WasmValueType resultType = functionType.resultTypes[0];
 
-            U32 resultStackIndex = assertSizeU32(writer->typeStack->length - 1);
-            if (parameterCount > 0) {
-                resultStackIndex -= parameterCount;
-            }
+            const U32 resultStackIndex = assertSizeU32(writer->typeStack->length - parameterCount - 1);
 
             MUST (wasmStackDeclarationsSet(writer->stackDeclarations, resultStackIndex, resultType))
             MUST (wasmCWriteStackName(writer->output, resultStackIndex, resultType))
@@ -662,7 +738,7 @@ wasmCWriteCallIndirectExpr(
         }
 
         MUST (wasmCWrite(writer, "(("))
-        MUST (wasmCWrite(writer, returnType))
+        MUST (wasmCWriteReturnType(writer->output, functionType))
         MUST (wasmCWrite(writer, " (*)"))
 
         MUST (wasmCWriteParameters(
@@ -684,18 +760,12 @@ wasmCWriteCallIndirectExpr(
             }
         }
         MUST (wasmCWrite(writer, ");\n"))
+
+        wasmTypeStackDrop(writer->typeStack, parameterCount + 1);
+        MUST (wasmCWriteCallResults(writer, functionType))
         writer->indent--;
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "}\n"))
-
-        wasmTypeStackDrop(writer->typeStack, parameterCount + 1);
-        {
-            U32 resultIndex = 0;
-            for (; resultIndex < resultCount; resultIndex++) {
-                const WasmValueType resultType = functionType.resultTypes[resultIndex];
-                MUST (wasmTypeStackAppend(writer->typeStack, resultType))
-            }
-        }
     }
 
     return true;
@@ -1662,11 +1732,9 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryFillExpr(
-    const WasmCFunctionWriter* writer,
-    const WasmMiscOpcode miscOpcode
+    const WasmCFunctionWriter* writer
 ) {
     WasmMemoryInstruction instruction;
-    UNUSED_PARAMETER(miscOpcode);
 
     if (!wasmMemoryInstructionRead(writer->code, &instruction)) {
         wasmDiagnosticReportInvalidInstruction(
@@ -2075,6 +2143,27 @@ wasmCWriteLabel(
     return true;
 }
 
+/*
+ * Inline types borrow storage from the caller's signature.
+ * Keep the signature stable while using the returned pointer.
+ */
+static
+const WasmValueType*
+wasmCSignatureTypes(
+    const WasmModule* module,
+    const WasmBlockSignature* signature,
+    const bool parameters,
+    U32* count
+) {
+    if (signature->indexed) {
+        const WasmFunctionType type = module->functionTypes.functionTypes[signature->typeIndex];
+        *count = parameters ? type.parameterCount : type.resultCount;
+        return parameters ? type.parameterTypes : type.resultTypes;
+    }
+    *count = parameters || signature->type == wasmValueType_count ? 0 : 1;
+    return &signature->type;
+}
+
 static
 bool
 WARN_UNUSED_RESULT
@@ -2084,12 +2173,13 @@ wasmCWriteControlStart(
 ) {
     WasmCControlFrame frame;
     WasmLabel label;
-    WasmValueType* blockType = &frame.resultType;
+    U32 parameterCount;
     frame.opcode = opcode;
     frame.ignore = writer->ignore;
-    frame.resultType = wasmValueType_count;
+    /* An omitted else passes the original parameters through. */
+    frame.armReachable = opcode == wasmOpcodeIf;
 
-    if (!wasmReadBlockType(writer->code, &blockType)) {
+    if (!wasmReadBlockSignature(writer->code, &frame.signature)) {
         wasmDiagnosticReportInvalidBlockType(writer->diagnostics, (U32)opcode);
         return false;
     }
@@ -2102,23 +2192,20 @@ wasmCWriteControlStart(
     }
 
     if (opcode == wasmOpcodeIf) {
-        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+        const U32 condition = wasmTypeStackGetTopIndex(writer->typeStack, 0);
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, writer->pretty ? "if (" : "if("))
-        MUST (wasmCWriteStackName(
-            writer->output,
-            stackIndex0,
-            writer->typeStack->valueTypes[stackIndex0]
-        ))
+        MUST (wasmCWriteStackName(writer->output, condition, wasmValueTypeI32))
         MUST (wasmCWrite(writer, writer->pretty ? ") {\n" : "){\n"))
         wasmTypeStackDrop(writer->typeStack, 1);
     }
 
+    wasmCSignatureTypes(writer->module, &frame.signature, true, &parameterCount);
     MUST (wasmLabelStackPush(
         writer->labelStack,
-        writer->typeStack->length,
-        /* NOTE: ignoring block type (result type) */
-        opcode == wasmOpcodeLoop ? wasmValueType_count : frame.resultType,
+        writer->typeStack->length - parameterCount,
+        frame.signature,
+        opcode == wasmOpcodeLoop,
         &label
     ))
 
@@ -2143,9 +2230,12 @@ wasmCWriteControlEnd(
     WasmCFunctionWriter* writer,
     const WasmOpcode opcode
 ) {
-    const WasmCControlFrame frame =
-        writer->controlStack->frames[writer->controlStack->length - 1];
+    WasmCControlFrame frame = writer->controlStack->frames[writer->controlStack->length - 1];
     WasmLabel label;
+    const WasmValueType* types;
+    U32 count;
+    U32 index;
+    bool reachable = !writer->ignore;
 
     if (opcode == wasmOpcodeEnd) {
         writer->controlStack->length--;
@@ -2155,7 +2245,6 @@ wasmCWriteControlEnd(
     }
 
     label = writer->labelStack->labels.labels[writer->labelStack->labels.length - 1];
-    writer->ignore = false;
     writer->typeStack->length = label.typeStackLength;
 
     if (frame.opcode != wasmOpcodeBlock || writer->pretty) {
@@ -2164,18 +2253,29 @@ wasmCWriteControlEnd(
         MUST (wasmCWrite(writer, opcode == wasmOpcodeElse ? "}" : "}\n"))
     }
     if (opcode == wasmOpcodeElse) {
+        frame.armReachable = reachable;
+        writer->controlStack->frames[writer->controlStack->length - 1] = frame;
+        writer->ignore = false;
+        types = wasmCSignatureTypes(writer->module, &frame.signature, true, &count);
+        for (index = 0; index < count; index++) {
+            MUST (wasmTypeStackAppend(writer->typeStack, types[index]))
+        }
         MUST (wasmCWrite(writer, writer->pretty ? " else {\n" : "else{\n"))
         writer->indent++;
         return true;
     }
 
     if (frame.opcode != wasmOpcodeLoop) {
+        reachable = reachable || label.branched;
         MUST (wasmCWriteLabel(writer, label.index))
     }
+    writer->ignore = !(reachable || frame.armReachable);
     wasmLabelStackPop(writer->labelStack);
-    if (frame.resultType != wasmValueType_count) {
-        MUST (wasmTypeStackAppend(writer->typeStack, frame.resultType))
+    types = wasmCSignatureTypes(writer->module, &frame.signature, false, &count);
+    for (index = 0; index < count; index++) {
+        MUST (wasmTypeStackAppend(writer->typeStack, types[index]))
     }
+
     return true;
 }
 
@@ -2186,37 +2286,32 @@ wasmCWriteGoto(
     const WasmCFunctionWriter* writer,
     const U32 labelStackIndex
 ) {
-    const WasmLabel label = writer->labelStack->labels.labels[labelStackIndex];
+    WasmLabel* label = &writer->labelStack->labels.labels[labelStackIndex];
+    U32 count;
+    const WasmValueType* types = wasmCSignatureTypes(writer->module, &label->signature, label->parameters, &count);
+    const size_t source = writer->typeStack->length - count;
 
+    label->branched = true;
     MUST (wasmCWriteIndent(writer))
 
-    if (label.type != wasmValueType_count) {
-        const WasmValueType resultType = label.type;
-
-        const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-        const U32 destinationStackIndex = assertSizeU32(label.typeStackLength);
-
-        if (destinationStackIndex != stackIndex0) {
-
-            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, destinationStackIndex, resultType))
-
-            MUST (wasmCWriteStackName(writer->output, destinationStackIndex, resultType))
+    if (source != label->typeStackLength) {
+        U32 index;
+        /*
+         * Destinations are below their sources.
+         * Copy in increasing slot order to preserve overlapping source values.
+         */
+        for (index = 0; index < count; index++) {
+            const U32 destination = assertSizeU32(label->typeStackLength + index);
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, destination, types[index]))
+            MUST (wasmCWriteStackName(writer->output, destination, types[index]))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteStackName(
-                writer->output,
-                stackIndex0,
-                writer->typeStack->valueTypes[stackIndex0]
-            ))
-            if (writer->pretty) {
-                MUST (wasmCWrite(writer, "; "))
-            } else {
-                MUST (wasmCWriteChar(writer, ';'))
-            }
+            MUST (wasmCWriteStackName(writer->output, assertSizeU32(source + index), types[index]))
+            MUST (wasmCWrite(writer, writer->pretty ? "; " : ";"))
         }
     }
 
     MUST (wasmCWrite(writer, "goto "))
-    MUST (wasmCWriteLabelName(writer->output, label.index))
+    MUST (wasmCWriteLabelName(writer->output, label->index))
     MUST (wasmCWrite(writer, ";\n"))
     return true;
 }
@@ -3584,7 +3679,7 @@ wasmCWriteFunctionCode(
                         continue;
                     }
                     case wasmMiscOpcodeMemoryFill: {
-                        MUST (wasmCWriteMemoryFillExpr(writer, miscOpcode))
+                        MUST (wasmCWriteMemoryFillExpr(writer))
                         continue;
                     }
                     case wasmMiscOpcodeTableInit: {
@@ -4250,46 +4345,60 @@ static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionReturn(
-    const WasmCFunctionWriter* writer,
-    const WasmFunctionType functionType
+    WasmCFunctionWriter* writer,
+    const WasmFunctionType type
 ) {
-    if (!functionType.resultCount) {
+    U32 index;
+    const bool reachable = !writer->ignore || writer->labelStack->labels.labels[0].branched;
+    if (type.resultCount == 0) {
         return true;
     }
-
-    if (writer->stackDeclarations->length > 0) {
-        /* TODO: add support for multiple result values */
-        const WasmValueType returnType = functionType.resultTypes[0];
-        wasmTypeStackClear(writer->typeStack);
-        MUST (wasmTypeStackAppend(writer->typeStack, returnType))
-
-        {
-            const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-
-            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, returnType))
-
-            MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWrite(writer, "return "))
-            MUST (wasmCWriteStackName(writer->output, stackIndex0, returnType))
-            MUST (wasmCWrite(writer, ";\n"))
-        }
-    } else {
-        /*
-         * A result without a stack slot is unreachable,
-         * but some C compilers still require a return statement.
-         */
+    MUST (wasmCWriteIndent(writer))
+    if (type.resultCount > 1) {
+        MUST (wasmCWrite(writer, "{\n"))
+        writer->indent++;
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, functionType.resultTypes[0] == wasmValueTypeV128
-            ? "return simde_wasm_i32x4_splat(0);\n" : "return 0;\n"))
+        MUST (wasmCWriteReturnType(writer->output, type))
+        MUST (wasmCWriteChar(writer, ' '))
+        MUST (wasmCWrite(writer, resultName))
+        MUST (wasmCWrite(writer, ";\n"))
     }
-
+    for (index = 0; index < type.resultCount; index++) {
+        if (type.resultCount > 1) {
+            MUST (wasmCWriteIndent(writer))
+            MUST (wasmCWrite(writer, resultName))
+            MUST (wasmCWrite(writer, ".v"))
+            wasmOutputU32(writer->output, index);
+            MUST (wasmCWriteAssign(writer))
+        } else {
+            MUST (wasmCWrite(writer, "return "))
+        }
+        if (reachable) {
+            MUST (wasmStackDeclarationsSet(writer->stackDeclarations, index, type.resultTypes[index]))
+            MUST (wasmCWriteStackName(writer->output, index, type.resultTypes[index]))
+        } else {
+            /* Supply a typed return value for an unreachable exit. */
+            MUST (wasmCWrite(writer, type.resultTypes[index] == wasmValueTypeV128
+                ? "simde_wasm_i32x4_splat(0)" : "0"))
+        }
+        MUST (wasmCWrite(writer, ";\n"))
+    }
+    if (type.resultCount > 1) {
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "return "))
+        MUST (wasmCWrite(writer, resultName))
+        MUST (wasmCWrite(writer, ";\n"))
+        writer->indent--;
+        MUST (wasmCWriteIndent(writer))
+        MUST (wasmCWrite(writer, "}\n"))
+    }
     return true;
 }
 
 static bool WARN_UNUSED_RESULT
 wasmCWriteFunctionSignature(
     WasmOutput*, const WasmModule*, const char*, const WasmFunction,
-    const U32, const bool, const bool, const bool, WasmDiagnosticContext*
+    const U32, const bool, const bool, const bool
 );
 
 static
@@ -4316,23 +4425,13 @@ wasmCWriteFunctionBody(
     bool usesSIMD = false;
     U32 localDeclaration;
     WasmLabel label = wasmEmptyLabel;
-    WasmValueType resultType = wasmValueType_count;
+    WasmBlockSignature signature = wasmEmptyBlockSignature;
 
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
-    if (functionType.resultCount) {
-        resultType = functionType.resultTypes[0];
-        /* TODO: add support for multiple result values */
-        if (functionType.resultCount > 1) {
-            wasmDiagnosticReportUnsupportedFunctionResults(
-                diagnostics,
-                function.functionTypeIndex,
-                functionType.resultCount
-            );
-            return false;
-        }
-    }
+    signature.indexed = true;
+    signature.typeIndex = function.functionTypeIndex;
 
     if (buffer->data == NULL && !outputBufferInitialize(buffer)) {
         wasmDiagnosticReportAllocationFailed(diagnostics);
@@ -4363,7 +4462,7 @@ wasmCWriteFunctionBody(
         writer.debugLines = debugLines;
         writer.usesSIMD = &usesSIMD;
 
-        MUST (wasmLabelStackPush(writer.labelStack, 0, resultType, &label))
+        MUST (wasmLabelStackPush(writer.labelStack, 0, signature, false, &label))
         MUST (wasmCWriteFunctionCode(&writer))
         MUST (wasmCWriteLabel(&writer, label.index))
         MUST (wasmCWriteFunctionReturn(&writer, functionType))
@@ -4374,7 +4473,7 @@ wasmCWriteFunctionBody(
     }
     if (usesSIMD) wasmOutputString(file, "#include \"w2c2_simd.h\"\n");
     MUST (wasmCWriteFunctionSignature(file, module, moduleName, function,
-        moduleFunctionIndex, true, pretty, multipleModules, diagnostics))
+        moduleFunctionIndex, true, pretty, multipleModules))
     wasmOutputString(file, " {\n");
     if (pretty) {
         wasmOutputString(file, indentation);
@@ -4404,15 +4503,12 @@ wasmCWriteFunctionSignature(
     const U32 functionIndex,
     const bool writeParameterNames,
     const bool pretty,
-    const bool prefix,
-    WasmDiagnosticContext* diagnostics
+    const bool prefix
 ) {
-    const char* returnType = NULL;
     const WasmFunctionType functionType =
         module->functionTypes.functionTypes[function.functionTypeIndex];
 
-    MUST (wasmCGetReturnType(functionType, function.functionTypeIndex, &returnType, diagnostics))
-    wasmOutputString(file, returnType);
+    MUST (wasmCWriteReturnType(file, functionType))
     wasmOutputChar(file, ' ');
     wasmCWriteFunctionUse(file, module, moduleName, functionIndex, false, prefix);
     wasmCWriteParameters(
@@ -4434,8 +4530,7 @@ wasmCWriteFunctionDeclarations(
     const char* moduleName,
     const bool pretty,
     const bool debug,
-    const bool multipleModules,
-    WasmDiagnosticContext* diagnostics
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
     const U32 functionCount = module->functions.count;
@@ -4452,8 +4547,7 @@ wasmCWriteFunctionDeclarations(
             moduleFunctionIndex,
             false,
             pretty,
-            multipleModules,
-            diagnostics
+            multipleModules
         ))
 
         if (debug && function.exportName.data == NULL && moduleFunctionIndex < module->functionNames.length) {
@@ -4767,13 +4861,10 @@ wasmCWriteFunctionImport(
     const char* moduleName,
     const WasmFunctionImport import,
     const bool pretty,
-    const bool prefix,
-    WasmDiagnosticContext* diagnostics
+    const bool prefix
 ) {
-    const char* returnType = NULL;
     const WasmFunctionType functionType = module->functionTypes.functionTypes[import.functionTypeIndex];
-    MUST (wasmCGetReturnType(functionType, import.functionTypeIndex, &returnType, diagnostics))
-    wasmOutputString(file, returnType);
+    MUST (wasmCWriteReturnType(file, functionType))
     wasmOutputChar(file, ' ');
     wasmCWriteFunctionImportName(file, prefix ? moduleName : NULL, import.module, import.name);
     wasmCWriteParameters(file, NULL, functionType, false, pretty);
@@ -4894,17 +4985,13 @@ wasmCWriteFunctionExport(
     const char* moduleName,
     const WasmExport export,
     const WasmFunctionType functionType,
-    const U32 functionTypeIndex,
     const bool writeBody,
     const bool pretty,
-    const bool multipleModules,
-    WasmDiagnosticContext* diagnostics
+    const bool multipleModules
 ) {
-    const char* returnType = NULL;
     const U32 parameterCount = functionType.parameterCount;
 
-    MUST (wasmCGetReturnType(functionType, functionTypeIndex, &returnType, diagnostics))
-    wasmOutputString(file, returnType);
+    MUST (wasmCWriteReturnType(file, functionType))
     wasmOutputChar(file, ' ');
     wasmCWriteExportName(file, moduleName, export.name);
     wasmCWriteParameters(
@@ -5008,7 +5095,7 @@ wasmCWriteExports(
                     functionTypeIndex = function.functionTypeIndex;
                 }
                 functionType = module->functionTypes.functionTypes[functionTypeIndex];
-                MUST (wasmCWriteFunctionExport(file, module, moduleName, export, functionType, functionTypeIndex, writeBody, pretty, multipleModules, diagnostics))
+                MUST (wasmCWriteFunctionExport(file, module, moduleName, export, functionType, writeBody, pretty, multipleModules))
                 break;
             }
             case wasmExportKindMemory: {
@@ -5675,8 +5762,7 @@ wasmCWriteFunctionImports(
     const WasmModule* module,
     const char* moduleName,
     const bool pretty,
-    const bool multipleModules,
-    WasmDiagnosticContext* diagnostics
+    const bool multipleModules
 ) {
     const size_t functionImportCount = module->functionImports.length;
     U32 functionIndex = 0;
@@ -5685,7 +5771,7 @@ wasmCWriteFunctionImports(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        MUST (wasmCWriteFunctionImport(file, module, moduleName, import, pretty, multipleModules, diagnostics))
+        MUST (wasmCWriteFunctionImport(file, module, moduleName, import, pretty, multipleModules))
         wasmOutputString(file, ";\n\n");
     }
     return true;
@@ -5779,8 +5865,8 @@ wasmCWriteModuleDeclarations(
     WasmDiagnosticContext* diagnostics
 ) {
     wasmCWriteModuleInstanceDeclaration(file, module, moduleName, pretty);
-    MUST (wasmCWriteFunctionImports(file, module, moduleName, pretty, multipleModules, diagnostics))
-    MUST (wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug, multipleModules, diagnostics))
+    MUST (wasmCWriteFunctionImports(file, module, moduleName, pretty, multipleModules))
+    MUST (wasmCWriteFunctionDeclarations(file, module, moduleName, pretty, debug, multipleModules))
     MUST (wasmCWriteExports(file, module, moduleName, false, pretty, multipleModules, diagnostics))
     return true;
 }
@@ -6075,6 +6161,7 @@ wasmCWriteModuleHeader(
     wasmOutputString(file, "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     wasmCWriteBaseInclude(file);
+    wasmCWriteResultTypes(file, module, pretty);
     wasmCWriteFunctionTypes(file, module, moduleName, true, pretty);
     {
         U32 dataSegmentIndex = 0;
@@ -6125,11 +6212,9 @@ wasmCWriteModuleFunctionExportsArray(
     WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
-    const bool pretty,
     const bool multipleModules
 ) {
     U32 functionExportCount = 0;
-    UNUSED_PARAMETER(pretty);
 
     {
         U32 exportIndex = 0;
@@ -6190,7 +6275,7 @@ wasmCWriteInits(
     WasmDiagnosticContext* diagnostics
 ) {
     wasmCWriteFunctionTypes(file, module, moduleName, false, pretty);
-    MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, pretty, multipleModules))
+    MUST (wasmCWriteModuleFunctionExportsArray(file, module, moduleName, multipleModules))
 
     MUST (wasmCWriteInitMemories(file, module, moduleName, pretty))
     MUST (wasmCWriteInitDataSegments(file, module, moduleName, dataSegmentMode, pretty, diagnostics))

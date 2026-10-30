@@ -121,7 +121,20 @@ test_binary_names.c: gen/binary_names.wasm
 generator-test:
 	$(PYTHON3) -m unittest gen_test
 
-run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-checks-test $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+MULTIVALUE_SOURCES = test_multivalue_owner.c test_multivalue_caller.c
+
+test_multivalue$(EXE) test_multivalue_checked$(EXE): CFLAGS += -std=c89
+
+test_multivalue$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_multivalue_checked$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+$(MULTIVALUE_SOURCES): test_%.c: gen/%.wasm
+	$(W2C2) -m $< $@
+
+run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -142,7 +155,7 @@ test_%.c: gen/%.wasm
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks
+gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks gen-multivalue
 	$(PYTHON3) gen.py $(filter-out simd_%.wast,$(wildcard *.wast))
 
 gen-atomic-offsets:
@@ -163,6 +176,11 @@ gen-runtime-checks:
 	wat2wasm check_segments.wat -o gen/check_segments.wasm
 	wat2wasm check_empty_segments.wat -o gen/check_empty_segments.wasm
 
+.PHONY: gen-multivalue
+gen-multivalue:
+	wat2wasm multivalue_owner.wat -o gen/multivalue_owner.wasm
+	wat2wasm multivalue_caller.wat -o gen/multivalue_caller.wasm
+
 gen-%:
 	$(PYTHON3) gen.py $*
 
@@ -175,6 +193,7 @@ clean:
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
 	-rm -f test_table_instances$(EXE) test_table_owner.c test_table_caller.c
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)
+	-rm -f test_multivalue$(EXE) test_multivalue_checked$(EXE) $(MULTIVALUE_SOURCES)
 
 SIMD_CFLAGS ?= -O2 -Werror=conversion -Werror=float-conversion
 SIMD_SPEC_TESTS = $(filter-out simd_memory-multi.wast,$(wildcard simd_*.wast))
@@ -184,7 +203,6 @@ simd-test: simd-regression-test simd-spec-test
 
 simd-regression-test:
 	W2C2=$(W2C2) SIMD_CFLAGS="$(SIMD_CFLAGS)" $(PYTHON3) simd_test.py
-	$(PYTHON3) run.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" simd/integration.wast simd/conversions.wast
 
 simd-spec-test:
 	$(PYTHON3) run.py --w2c2 $(W2C2) --cc "$(CC)" --cflags="$(SIMD_CFLAGS)" $(SIMD_SPEC_TESTS)

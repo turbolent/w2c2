@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_func.4.h"
 
-void test() {
-    m6_funcX2E4Instance instance;
+void test(void) {
+    static m6_funcX2E4Instance instance;
     m6_funcX2E4Instantiate(&instance, resolveTestImports);
     printStart("func.4.wasm");
     assertEqualU32(
@@ -23,4 +20,5 @@ void test() {
         42u,
         "p()"
     );
+    m6_funcX2E4FreeInstance(&instance);
 }
