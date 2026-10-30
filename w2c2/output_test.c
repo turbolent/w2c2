@@ -1992,6 +1992,39 @@ testIndependentTranslations(WasmModule* module, WasmFunctionIDs ids) {
 }
 #endif
 
+static
+void
+testIntegerFormatting(void) {
+    OutputBuffer buffer = emptyOutputBuffer;
+    WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+    WasmOutput output = wasmOutputForBuffer(&buffer, &diagnostics);
+    U32 value = 0;
+    size_t index;
+    char expected[160];
+    CHECK(outputBufferInitialize(&buffer));
+    for (index = 0; index < 4096; index++) {
+        const U64 wide = ((U64)value << 32) | (U64)(value ^ 0xabcdef01U);
+        const I32 signedValue = -(I32)(value & 0x7fffffffU);
+        const I64 signedWide = -(I64)(wide & (UINT64_MAX >> 1));
+        buffer.length = 0;
+        buffer.data[0] = 0;
+        sprintf(expected, "%u %llu %i %lli %x %02X %08X %016llX",
+            value, wide, signedValue, signedWide, value, value, value, wide);
+        wasmOutputU32(&output, value); wasmOutputChar(&output, ' ');
+        wasmOutputU64(&output, wide); wasmOutputChar(&output, ' ');
+        wasmOutputI32(&output, signedValue); wasmOutputChar(&output, ' ');
+        wasmOutputI64(&output, signedWide); wasmOutputChar(&output, ' ');
+        wasmOutputHex(&output, value, wasmOutputHexLower); wasmOutputChar(&output, ' ');
+        wasmOutputHex(&output, value, wasmOutputHexUpperPadded); wasmOutputChar(&output, ' ');
+        wasmOutputU32Hex(&output, value); wasmOutputChar(&output, ' ');
+        wasmOutputU64Hex(&output, wide);
+        CHECK(!output.failed);
+        CHECK(strcmp((const char*)buffer.data, expected) == 0);
+        value = index < 32 ? (U32)index : value * 1664525U + 1013904223U;
+    }
+    outputBufferFree(&buffer);
+}
+
 void
 testOutputs(void) {
     WasmModule* module = readOutputModule();
@@ -2019,6 +2052,7 @@ testOutputs(void) {
     testDeepControlFlow(true);
     testOutputBuffer();
     testOutputFormatting();
+    testIntegerFormatting();
     testBorrowedBuffer();
     testAbortedTranslation(module, ids, 1);
     testAbortedTranslation(module, ids, 2);
