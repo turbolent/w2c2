@@ -216,7 +216,7 @@ wasmModuleElementSegmentsFree(
     U32 index = 0;
 
     for (; index < elementSegments->count; index++) {
-        free(elementSegments->elementSegments[index].functionIndices);
+        free(elementSegments->elementSegments[index].elements);
     }
     free(elementSegments->elementSegments);
     elementSegments->elementSegments = NULL;

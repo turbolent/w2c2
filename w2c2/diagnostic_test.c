@@ -242,17 +242,15 @@ testOutputFailures(void) {
 static
 void
 testUnsupportedInstructions(void) {
-    static U8 tableCopy[] = {
-        0x41, 0x00, 0x41, 0x00, 0x41, 0x00, 0xFC, 0x0E, 0x00, 0x00, 0x0B
-    };
+    static U8 unknownMisc[] = {0xFC, 0x7F, 0x0B};
     static U8 unknownAtomic[] = {0xFE, 0x7F, 0x0B};
     static U8 invalidCall[] = {0x10};
     Buffer cases[3];
     size_t index;
     WasmModule* module = readDiagnosticModule();
     WasmFunctionIDs ids = diagnosticFunctionIDs(module);
-    cases[0].data = tableCopy;
-    cases[0].length = sizeof(tableCopy);
+    cases[0].data = unknownMisc;
+    cases[0].length = sizeof(unknownMisc);
     cases[1].data = unknownAtomic;
     cases[1].length = sizeof(unknownAtomic);
     cases[2].data = invalidCall;
@@ -272,12 +270,53 @@ testUnsupportedInstructions(void) {
             CHECK(capture.last.code == wasmDiagnosticUnsupportedOpcode);
             CHECK(capture.last.info.unsupportedOpcode.family
                 == (index == 0 ? wasmDiagnosticOpcodeMisc : wasmDiagnosticOpcodeThreads));
-            CHECK(capture.last.info.unsupportedOpcode.opcode == (index == 0 ? 0x0EU : 0x7FU));
+            CHECK(capture.last.info.unsupportedOpcode.opcode == 0x7FU);
         } else {
             CHECK(capture.last.code == wasmDiagnosticInvalidInstruction);
             CHECK(capture.last.info.invalidInstruction.opcode == wasmOpcodeCall);
         }
         captureDestroy(&capture);
+    }
+    wasmFunctionIDsFree(&ids);
+    wasmModuleFree(module);
+}
+
+static
+void
+testTruncatedTableInstructions(void) {
+    static const struct {
+        U8 bytes[3];
+        size_t length;
+    } cases[] = {
+        {{0x25}, 1}, {{0x26}, 1},
+        {{0xD0}, 1}, {{0xD2}, 1},
+        {{0x1C}, 1}, {{0x1C, 1}, 2},
+        {{0xFC, 12}, 2}, {{0xFC, 12, 0}, 3},
+        {{0xFC, 13}, 2},
+        {{0xFC, 14}, 2}, {{0xFC, 14, 0}, 3},
+        {{0xFC, 15}, 2}, {{0xFC, 16}, 2}, {{0xFC, 17}, 2}
+    };
+    WasmModule* module = readDiagnosticModule();
+    WasmFunctionIDs ids = diagnosticFunctionIDs(module);
+    size_t index;
+    unsigned int reachable;
+    for (reachable = 0; reachable < 2; reachable++) {
+        for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+            U8 code[4] = {0x00};
+            DiagnosticCapture capture;
+            WasmCWriteModuleOptions options;
+            captureInitialize(&capture);
+            options = diagnosticOptions(&capture);
+            memcpy(code + 1, cases[index].bytes, cases[index].length);
+            module->functions.functions[0].code.data = code + reachable;
+            module->functions.functions[0].code.length = 1 + cases[index].length - reachable;
+            CHECK(!wasmCWriteModule(module, "diagnostic", options, ids, emptyWasmFunctionIDs));
+            CHECK(capture.count == 1);
+            CHECK(capture.last.code == wasmDiagnosticTranslationFailed);
+            CHECK(capture.last.location.hasFunctionIndex);
+            CHECK(capture.last.location.functionIndex == 0);
+            captureDestroy(&capture);
+        }
     }
     wasmFunctionIDsFree(&ids);
     wasmModuleFree(module);
@@ -353,7 +392,7 @@ testInvalidBlockSignatures(void) {
         U8 bytes[5];
         size_t length;
     } cases[] = {
-        {{0x70}, 1},                         /* Unsupported value type. */
+        {{0x6F}, 1},                         /* Unsupported value type. */
         {{0x80}, 1},                         /* Truncated encoding. */
         {{0x80, 0x80, 0x80, 0x80, 0x10}, 5}  /* Overflowing encoding. */
     };
@@ -520,6 +559,7 @@ testDiagnostics(void) {
     testReaderDiagnostics();
     testOutputFailures();
     testUnsupportedInstructions();
+    testTruncatedTableInstructions();
     testInvalidBlockSignatures();
     testSupportedSignatures();
     testDataDropNoOp();

@@ -155,6 +155,16 @@ wasmCallIndirectInstructionRead(
     WasmCallIndirectInstruction* result
 );
 
+/* Reference instructions */
+
+bool
+WARN_UNUSED_RESULT
+wasmReferenceInstructionRead(
+    Buffer* buffer,
+    WasmOpcode opcode,
+    U32* index
+);
+
 /* WasmBranchInstruction */
 
 typedef struct WasmBranchInstruction {

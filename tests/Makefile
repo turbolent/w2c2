@@ -81,10 +81,15 @@ test_runtime_lifecycle_shared.c: gen/runtime_lifecycle.1.wasm
 test_runtime_lifecycle_imports.c: gen/runtime_lifecycle.2.wasm
 	$(W2C2) -m $< $@
 
-table-instances-test: run-test-table_instances
+table-instances-test: run-test-table_instances run-test-table_instances_checked
+
+test_table_instances$(EXE) test_table_instances_checked$(EXE): CFLAGS += -std=c89
 
 test_table_instances$(EXE): table_instances_test.c test_table_owner.c test_table_caller.c
 	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+
+test_table_instances_checked$(EXE): table_instances_test.c test_table_owner.c test_table_caller.c
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
 
 test_table_owner.c: gen/table_owner.wasm
 	$(W2C2) -m $< $@
@@ -135,6 +140,8 @@ $(MULTIVALUE_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
 run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+
+-include $(wildcard gen/*.mk)
 
 run-tests-%:
 	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
@@ -191,7 +198,7 @@ clean:
 	-rm -f test_binary_names$(EXE) test_binary_names.c
 	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
-	-rm -f test_table_instances$(EXE) test_table_owner.c test_table_caller.c
+	-rm -f test_table_instances$(EXE) test_table_instances_checked$(EXE) test_table_owner.c test_table_caller.c
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)
 	-rm -f test_multivalue$(EXE) test_multivalue_checked$(EXE) $(MULTIVALUE_SOURCES)
 

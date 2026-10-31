@@ -388,14 +388,13 @@
   "type mismatch"
 )
 
-;; W2C2: No support for reference types
-;; (assert_invalid
-;;   (module
-;;     (memory 1)
-;;     (data (ref.null func))
-;;   )
-;;   "type mismatch"
-;; )
+(assert_invalid
+  (module
+    (memory 1)
+    (data (ref.null func))
+  )
+  "type mismatch"
+)
 
 (assert_invalid
   (module

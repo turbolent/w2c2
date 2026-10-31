@@ -26,6 +26,10 @@ testOpcodes(void) {
         case wasmOpcodeCallIndirect:
         case wasmOpcodeDrop:
         case wasmOpcodeSelect:
+        case wasmOpcodeSelectTyped:
+        case wasmOpcodeTableGet:
+        case wasmOpcodeTableSet:
+        case wasmOpcodeRefNull:
         case wasmOpcodeLocalGet:
         case wasmOpcodeLocalSet:
         case wasmOpcodeLocalTee:
@@ -46,6 +50,8 @@ testOpcodes(void) {
             continue;
 
         case wasmOpcodeI32Load:
+        case wasmOpcodeRefFunc:
+        case wasmOpcodeRefIsNull:
         case wasmOpcodeI64Load:
         case wasmOpcodeF32Load:
         case wasmOpcodeF64Load:

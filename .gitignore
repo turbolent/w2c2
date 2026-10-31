@@ -1,5 +1,10 @@
 *.o
 *.a
+*.obj
+*.exe
+*.lib
+CMakeFiles/
+CMakeCache.txt
 compile_flags.txt
 .DS_Store
 .idea

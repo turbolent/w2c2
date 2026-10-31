@@ -17,12 +17,25 @@ ARCH=ppc EXECUTE=qemu-ppc-static CC=powerpc-linux-gnu-gcc make run-tests CFLAGS=
 ### Development
 
 When updating the test cases, re-run `make gen`, which requires Python 3 and wabt.
+Running the checked-in scalar fixtures does not require wabt.
+Scripts with registered modules generate a combined driver and Make dependencies.
+The normal `run-tests` target discovers these drivers and runs them
+with runtime checks enabled and disabled.
+
+The `table*.wast` and `ref_*.wast` specification tests were imported from
+[WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210),
+commit `44f1503f98409fa3737437bf9449a37a5def4210`.
+Unsupported externref and later-proposal cases are commented out.
+Function-reference variants supplement files whose upstream cases require externref.
+`table_operations.wast` covers control flow, ownership, and bulk operations.
+`table_instances_test.c` tests host functions and segment state across instances.
 
 ### SIMD
 
 The 59 imported `simd_*.wast` files in this directory are unmodified copies from [WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210), commit `44f1503f98409fa3737437bf9449a37a5def4210`.
 They are licensed under Apache-2.0.
-Local regressions are in `simd_integration.wast`, `simd_conversions_regression.wast`, and `simd_multivalue.wast`.
+Local regressions are in `simd_integration.wast`, `simd_conversions_regression.wast`,
+`simd_multivalue.wast`, and `simd_table.wast`.
 
 Set `SIMDE_HEADER` to the full path of `simde/wasm/simd128.h` in an external [SIMDe](https://github.com/simd-everywhere/simde) checkout:
 
@@ -51,12 +64,14 @@ Relaxed SIMD files are outside this import.
 
 `gen.py` generates both scalar and SIMD assertions using the shared `test.h` and `main.c` harness.
 `run.py` can run an existing test binary or generate, compile, and run a WAST script.
-Whole-script runs preserve module order and registered memory and global imports.
-The checked-in scalar fixtures retain their per-module layout and architecture-specific expected output.
+Whole-script runs preserve module order and registered function, table, memory, and global imports.
+Registered function wrappers call the exporting instance.
+Scripts without registrations use a per-module layout
+and architecture-specific expected output.
 Only generated code that uses SIMD enables C99 and the external SIMDe headers.
 The runner translates valid modules and executes their actions, return assertions, and trap assertions.
 It skips validation assertions (`assert_invalid`, `assert_malformed`, and `assert_unlinkable`) because w2c2 is not a Wasm validator.
-Module-instantiation traps and stack-exhaustion assertions remain outside this harness.
+Module-instantiation traps and stack-exhaustion assertions are outside this harness.
 The malformed-immediate regression tests run separately.
 A passing execution run does not establish validator conformance or verify the specific trap reason.
 

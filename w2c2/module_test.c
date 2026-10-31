@@ -147,9 +147,9 @@ testModuleFree(void) {
     module->elementSegments.elementSegments[0].offset.data = borrowedBytes;
     module->elementSegments.elementSegments[0].offset.length =
         sizeof borrowedBytes;
-    module->elementSegments.elementSegments[0].functionIndexCount = 1;
-    module->elementSegments.elementSegments[0].functionIndices =
-        testAllocate(1, sizeof(U32));
+    module->elementSegments.elementSegments[0].elementCount = 1;
+    module->elementSegments.elementSegments[0].elements =
+        testAllocate(1, sizeof(WasmElementInitializer));
 
     module->debugSections.length = 1;
     module->debugSections.capacity = 1;

@@ -1,0 +1,7 @@
+{"source_filename": "ref_null.wast",
+ "commands": [
+  {"type": "module", "line": 2, "filename": "ref_null.0.wasm"}, 
+  {"type": "assert_return", "line": 8, "action": {"type": "invoke", "field": "constant", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 9, "action": {"type": "invoke", "field": "local", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 10, "action": {"type": "invoke", "field": "global", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 11, "action": {"type": "invoke", "field": "parameter", "args": [{"type": "funcref", "value": "null"}]}, "expected": [{"type": "funcref", "value": "null"}]}]}

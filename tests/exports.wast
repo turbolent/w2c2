@@ -13,18 +13,17 @@
 (module (export "a" (func 0)) (func))
 (module (export "a" (func $a)) (func $a))
 
-;; W2C2: unsupported test setup
-;; (module $Func
-;;   (export "e" (func $f))
-;;   (func $f (param $n i32) (result i32)
-;;     (return (i32.add (local.get $n) (i32.const 1)))
-;;   )
-;; )
-;; (assert_return (invoke "e" (i32.const 42)) (i32.const 43))
-;; (assert_return (invoke $Func "e" (i32.const 42)) (i32.const 43))
-;; (module)
-;; (module $Other1)
-;; (assert_return (invoke $Func "e" (i32.const 42)) (i32.const 43))
+(module $Func
+  (export "e" (func $f))
+  (func $f (param $n i32) (result i32)
+    (return (i32.add (local.get $n) (i32.const 1)))
+  )
+)
+(assert_return (invoke "e" (i32.const 42)) (i32.const 43))
+(assert_return (invoke $Func "e" (i32.const 42)) (i32.const 43))
+(module)
+(module $Other1)
+(assert_return (invoke $Func "e" (i32.const 42)) (i32.const 43))
 
 (module
   (type (;0;) (func (result i32)))
@@ -131,8 +130,7 @@
 
 (module (table 0 funcref) (export "a" (table 0)))
 (module (table 0 funcref) (export "a" (table 0)) (export "b" (table 0)))
-;; W2C2: No support for multiple tables
-;; (module (table 0 funcref) (table 0 funcref) (export "a" (table 0)) (export "b" (table 1)))
+(module (table 0 funcref) (table 0 funcref) (export "a" (table 0)) (export "b" (table 1)))
 
 (module (table (export "a") 0 funcref))
 (module (table (export "a") 0 1 funcref))
@@ -165,11 +163,10 @@
   (module (table 0 funcref) (export "a" (table 0)) (export "a" (table 0)))
   "duplicate export name"
 )
-;; W2C2: No support for multiple tables
-;; (assert_invalid
-;;   (module (table 0 funcref) (table 0 funcref) (export "a" (table 0)) (export "a" (table 1)))
-;;   "duplicate export name"
-;; )
+(assert_invalid
+  (module (table 0 funcref) (table 0 funcref) (export "a" (table 0)) (export "a" (table 1)))
+  "duplicate export name"
+)
 (assert_invalid
   (module (table 0 funcref) (func) (export "a" (table 0)) (export "a" (func 0)))
   "duplicate export name"

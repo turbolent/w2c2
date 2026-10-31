@@ -21,9 +21,10 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 - Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
 - Implements several extensions:
   - [Multiple results and block parameters](https://github.com/WebAssembly/multi-value)
+  - [Function references, multiple tables, and table operations](https://github.com/WebAssembly/reference-types) (`funcref` only)
   - [Fixed-width SIMD](https://github.com/WebAssembly/simd)
   - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
-  - [Bulk memory operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
+  - [Bulk memory and table operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Conditional data segment initialization](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
   - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
   - [Non-trapping float-to-int conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)

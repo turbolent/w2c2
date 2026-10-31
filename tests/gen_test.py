@@ -11,6 +11,26 @@ import gen
 
 
 class MultiValueTests(unittest.TestCase):
+    def test_function_reference_results(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            manifest = directory / 'references.json'
+            manifest.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'references.wasm'},
+                {'type': 'assert_return', 'action': {'type': 'invoke', 'field': 'pair', 'args': []},
+                 'expected': [{'type': 'funcref', 'value': 'null'}, {'type': 'funcref', 'value': '0'}]},
+                {'type': 'assert_return', 'action': {'type': 'invoke', 'field': 'identity',
+                 'args': [{'type': 'funcref', 'value': 'null'}]},
+                 'expected': [{'type': 'funcref', 'value': 'null'}]},
+            ]}))
+            test, = gen.generate_test_files(manifest, output_dir=directory)
+            output = test['path'].read_text()
+        self.assertIn('struct w2c2_result_rr result;', output)
+        self.assertEqual(output.count(gen.export_name('references', 'pair') + '('), 1)
+        self.assertIn('(result.v0).func == NULL', output)
+        self.assertIn('(result.v1).func != NULL', output)
+        self.assertIn('(&instance, wasmNullFuncRef)).func == NULL', output)
+
     def test_tuple_call_is_evaluated_once(self):
         expected = [
             {'type': 'i32', 'value': '1'}, {'type': 'i64', 'value': '2'},

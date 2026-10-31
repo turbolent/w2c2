@@ -46,7 +46,14 @@ def export_name(module, name):
 
 
 def convert_type(t):
-    return {'i32': 'U32', 'i64': 'U64', 'f32': 'F32', 'f64': 'F64', 'v128': 'V128'}[t]
+    return {'i32': 'U32', 'i64': 'U64', 'f32': 'F32', 'f64': 'F64', 'v128': 'V128', 'funcref': 'wasmTableEntry'}[t]
+
+
+def result_type(types):
+    if len(types) > 1:
+        codes = {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'v', 'funcref': 'r'}
+        return 'struct w2c2_result_' + ''.join(codes[t] for t in types)
+    return convert_type(types[0]) if types else 'void'
 
 
 def bits(value, width):
@@ -80,6 +87,10 @@ def convert_value(value, t):
 
 
 def argument(value):
+    if value['type'] == 'funcref':
+        if value['value'] == 'null':
+            return 'wasmNullFuncRef'
+        raise ValueError('Unsupported function reference argument: ' + value['value'])
     if value['type'] == 'v128':
         return 'w2c2_v128_const(' + ', '.join(str(b if b < 128 else b - 256) for b in vector_bytes(value)) + ')'
     return convert_value(value['value'], convert_type(value['type']))
@@ -104,6 +115,9 @@ def c_string(value):
 
 
 def assertion(call, expected, description):
+    if expected['type'] == 'funcref':
+        comparison = '== NULL' if expected['value'] == 'null' else '!= NULL'
+        return '    assertEqualU32(({}).func {}, 1u, {});\n'.format(call, comparison, c_string(description))
     if expected['type'] == 'v128':
         return ('    {\n        static const U8 expected[16] = {'
                 + ', '.join(map(str, vector_bytes(expected))) + '};\n'
@@ -123,48 +137,107 @@ def assertion(call, expected, description):
         value_type, call, convert_value(value, value_type), c_string(description))
 
 
-def object_exports(path):
-    data = path.read_bytes()
+def module_metadata(path):
+    data = Path(path).read_bytes()
     offset = 8
+    types = []
+    imports = []
+    exports = {}
+    value_types = {0x7f: 'i32', 0x7e: 'i64', 0x7d: 'f32', 0x7c: 'f64',
+                   0x7b: 'v128', 0x70: 'funcref'}
 
     def integer():
         nonlocal offset
         result = 0
         shift = 0
         while True:
-            byte = data[offset]
+            value = data[offset]
             offset += 1
-            result |= (byte & 127) << shift
-            if not byte & 128:
+            result |= (value & 127) << shift
+            if not value & 128:
                 return result
             shift += 7
 
-    while offset < len(data):
-        section = data[offset]
+    def byte():
+        nonlocal offset
+        result = data[offset]
         offset += 1
+        return result
+
+    def name():
+        nonlocal offset
+        length = integer()
+        result = data[offset:offset + length].decode('utf-8')
+        offset += length
+        return result
+
+    def limits():
+        flags = integer()
+        integer()
+        if flags & 1:
+            integer()
+
+    while offset < len(data):
+        section = byte()
         length = integer()
         end = offset + length
-        if section == 7:
-            exports = []
+        if section == 1:
             for _ in range(integer()):
-                length = integer()
-                name = data[offset:offset + length].decode('utf-8')
-                offset += length
-                kind = data[offset]
-                offset += 1
+                byte()
+                parameters = [value_types[byte()] for _ in range(integer())]
+                results = [value_types[byte()] for _ in range(integer())]
+                types.append((parameters, results))
+        elif section == 2:
+            for _ in range(integer()):
+                module, field, kind = name(), name(), byte()
+                if kind == 0:
+                    signature = integer()
+                    imports.append((module, field, signature))
+                elif kind == 1:
+                    byte()
+                    limits()
+                elif kind == 2:
+                    limits()
+                else:
+                    byte()
+                    byte()
+        elif section == 7:
+            for _ in range(integer()):
+                field, kind = name(), byte()
                 integer()
-                if kind in (2, 3):
-                    exports.append(name)
-            return exports
+                exports[field] = kind
         offset = end
-    return []
+    return types, imports, exports
+
+
+def object_exports(path):
+    return [name for name, kind in module_metadata(path)[2].items() if kind in (1, 2, 3)]
+
+
+def forwarding_imports(name, metadata, registered):
+    types, imports, _ = metadata
+    wrappers = []
+    emitted = set()
+    for module, field, signature in imports:
+        if module not in registered or (module, field) in emitted:
+            continue
+        emitted.add((module, field))
+        owner, instance = registered[module]
+        parameters, results = types[signature]
+        arguments = ['{} p{}'.format(convert_type(t), i) for i, t in enumerate(parameters)]
+        values = ['p{}'.format(i) for i in range(len(parameters))]
+        symbol = module_identifier(name) + 'Import' + name_component(module) + name_component(field)
+        wrappers.append('{} {}({}) {{\n    (void)instance;\n    {}{}({});\n}}\n'.format(
+            result_type(results), symbol, ', '.join(['wasmModuleInstance* instance'] + arguments),
+            'return ' if results else '', export_name(owner, field), ', '.join(['&' + instance] + values)))
+    return wrappers
 
 
 def generate_test_files(json_path, combined=False, output_dir=None):
     """Generate assertions using the shared test.h/main.c harness.
 
-    The checked-in core fixtures retain their per-module layout and output. Combined output
-    preserves script order and instance state for registrations and named actions.
+    Per-module output uses one driver per module.
+    Combined output preserves script order and instance state for registrations and named actions.
     Both layouts use the same command and assertion generation.
     """
     json_path = Path(json_path)
@@ -172,11 +245,12 @@ def generate_test_files(json_path, combined=False, output_dir=None):
     commands = json.loads(json_path.read_text())['commands']
     tests = []
     named = {}
+    registered = {}
     current = None
 
     def new_test(name):
         test = {'path': output_dir / ('assert_' + name + '.c'),
-                'modules': [], 'declarations': [], 'body': [], 'count': 0}
+                'modules': [], 'declarations': [], 'wrappers': [], 'body': [], 'count': 0}
         tests.append(test)
         return test
 
@@ -192,18 +266,21 @@ def generate_test_files(json_path, combined=False, output_dir=None):
             if 'name' in command:
                 named[command['name']] = current
             test['modules'].append(filename)
+            if combined and registered:
+                metadata = module_metadata(json_path.parent / filename)
+                test['wrappers'] += forwarding_imports(name, metadata, registered)
             # Static storage preserves instance state across setjmp/longjmp.
             test['declarations'].append('    static {}Instance {};\n'.format(module_identifier(name), instance))
             test['body'].append('    {}Instantiate(&{}, resolveTestImports);\n'.format(module_identifier(name), instance))
             test['body'].append('    printStart({});\n'.format(c_string(filename)))
         elif kind == 'register':
             name, instance, test = named[command['name']] if 'name' in command else current
+            registered[command['as']] = (name, instance)
             for field in object_exports(json_path.parent / (name + '.wasm')):
                 test['body'].append('    bindTestImport({}, {}, (void*){}(&{}));\n'.format(
                     c_string(command['as']), c_string(field), export_name(name, field), instance))
         elif kind in ('assert_return', 'assert_trap', 'action'):
-            # Legacy per-module builds do not enable runtime bounds checks.
-            # Whole-script runs enable them and exercise the trap assertions.
+            # Trap assertions run only in combined drivers with runtime checks.
             if kind == 'assert_trap' and not combined:
                 continue
             action = command.get('action')
@@ -226,15 +303,14 @@ def generate_test_files(json_path, combined=False, output_dir=None):
             if combined:
                 description = 'WAST line {}: {}'.format(command.get('line', 0), description)
             if kind == 'assert_trap':
-                test['body'].append('    assertTrap({}, {});\n'.format(call, c_string(description)))
+                test['body'].append('#if W2C2_RUNTIME_CHECKS\n    assertTrap({}, {});\n#endif\n'.format(call, c_string(description)))
             elif kind == 'assert_return' and command['expected']:
                 expected = command['expected']
                 if len(expected) == 1:
                     test['body'].append(assertion(call, expected[0], description))
                 else:
-                    codes = {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'v'}
-                    result_type = 'w2c2_result_' + ''.join(codes[value['type']] for value in expected)
-                    test['body'].append('    {{\n        struct {} result;\n        result = {};\n'.format(result_type, call))
+                    test['body'].append('    {{\n        {} result;\n        result = {};\n'.format(
+                        result_type([value['type'] for value in expected]), call))
                     for index, value in enumerate(expected):
                         field = assertion('result.v{}'.format(index), value,
                                           '{} result {}'.format(description, index))
@@ -255,36 +331,42 @@ def generate_test_files(json_path, combined=False, output_dir=None):
         cleanup = ''.join('    {}FreeInstance(&{});\n'.format(
             module_identifier(Path(filename).stem), 'instance_' + str(i) if combined else 'instance')
             for i, filename in reversed(list(enumerate(test['modules']))))
-        source = ('#include "test.h"\n' + includes + '\nvoid test(void) {\n'
-                  + ''.join(test['declarations']) + ''.join(test['body']) + cleanup + '}\n')
+        declarations = ''.join(test['declarations'])
+        preamble = (textwrap.dedent(declarations) + '\n' + ''.join(test['wrappers'])) if combined else ''
+        source = ('#include "test.h"\n' + includes + '\n' + preamble + 'void test(void) {\n'
+                  + ('' if combined else declarations) + ''.join(test['body']) + cleanup + '}\n')
         with test['path'].open('w', newline='\n') as output:
             output.write(source)
     return tests
+
+
+def write_script_dependencies(name, test):
+    sources = ['test_' + Path(filename).with_suffix('.c').name for filename in test['modules']]
+    targets = 'test_{0}$(EXE) test_{0}_checked$(EXE)'.format(name)
+    rules = ['run-tests: run-test-{}_checked\n'.format(name),
+             targets + ': CFLAGS += -std=c89\n',
+             targets + ': gen/assert_' + name + '.c main.c ' + ' '.join(sources) + '\n',
+             'test_{}$(EXE):\n'.format(name),
+             '\t$(CC) $(CFLAGS) -I. $^ -o $@ $(LDFLAGS)\n',
+             'test_{}_checked$(EXE):\n'.format(name),
+             '\t$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -I. $^ -o $@ $(LDFLAGS)\n']
+    for source, filename in zip(sources, test['modules']):
+        rules += [source + ': gen/' + filename + '\n', '\t$(W2C2) -m $< $@\n']
+    with (gen_dir / (name + '.mk')).open('w', newline='\n') as output:
+        output.write(''.join(rules))
 
 
 def gen(paths):
     wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
     has_new_wabt = compare_versions(wast2json_version, "1.0.25") > 0
 
-    memory_files = {
-        'memory_copy.wast',
-        'memory_fill.wast',
-        'memory_init.wast',
-        'bulk.wast',
-        'binary-leb128.wast'
-    }
-
     for wast_path in paths:
         print(wast_path)
 
         wast2json_opts = ['--enable-threads']
 
-        if has_new_wabt:
-            if wast_path not in memory_files:
-                wast2json_opts.append('--disable-bulk-memory')
-        else:
-            if wast_path in memory_files:
-                wast2json_opts.append('--enable-bulk-memory')
+        if not has_new_wabt:
+            wast2json_opts.append('--enable-bulk-memory')
 
         # Convert WAST to JSON and WASM files, if needed
         json_path = gen_dir / Path(wast_path).with_suffix('.json').name
@@ -292,7 +374,26 @@ def gen(paths):
 
         subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
 
-        generate_test_files(json_path)
+        commands = json.loads(json_path.read_text())['commands']
+        combined = any(command['type'] == 'register' for command in commands)
+        tests = generate_test_files(json_path, combined=combined)
+        generated = {test['path'] for test in tests}
+        assertions = list(gen_dir.glob('assert_' + json_path.stem + '.*.c'))
+        assertions += [gen_dir / ('assert_' + json_path.stem + '.c')]
+        for old in assertions:
+            if old.exists() and old not in generated:
+                old.unlink()
+        modules = {command['filename'] for command in commands if 'filename' in command}
+        for extension in ('wasm', 'wat'):
+            for old in gen_dir.glob(json_path.stem + '.*.' + extension):
+                if old.name not in modules:
+                    old.unlink()
+        if combined:
+            write_script_dependencies(json_path.stem, tests[0])
+        else:
+            dependencies = gen_dir / (json_path.stem + '.mk')
+            if dependencies.exists():
+                dependencies.unlink()
 
 
 if __name__ == "__main__":
