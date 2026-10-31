@@ -5305,6 +5305,61 @@ wasmCWriteExports(
 
 #define DATA_SEGMENT_CHUNK_LENGTH 18
 
+/* Format data bytes and separators in a fixed stack buffer.
+ * One output write per chunk replaces writes for individual tokens.
+ * Temporary storage stays constant as the data segment grows. */
+static
+bool
+wasmCWriteDataBytes(
+    WasmOutput* file,
+    const Buffer bytes,
+    const bool pretty
+) {
+    static const char hex[] = "0123456789abcdef";
+    char buffer[4096];
+    size_t used = 0;
+    size_t index;
+    const size_t indentLength = strlen(indentation);
+    if (bytes.length == 0) {
+        /* C89 requires an element even for an empty data segment.
+         * The segment's logical length remains zero. */
+        wasmOutputChar(file, '0');
+        return !file->failed;
+    }
+    for (index = 0; index < bytes.length; index++) {
+        const U8 value = bytes.data[index];
+        /* Reserve room for the next byte literal and its separators,
+         * including indentation at a line boundary. */
+        if (used > sizeof(buffer) - (8 + indentLength)) {
+            wasmOutputWrite(file, (const U8*)buffer, used);
+            if (file->failed) return false;
+            used = 0;
+        }
+        if (index > 0) {
+            buffer[used++] = ',';
+            if (pretty) buffer[used++] = ' ';
+            if (index % DATA_SEGMENT_CHUNK_LENGTH == 0) {
+                buffer[used++] = '\n';
+                if (pretty) {
+                    memcpy(buffer + used, indentation, indentLength);
+                    used += indentLength;
+                }
+            }
+        }
+        /* Preserve the existing spelling: decimal below 10, lowercase hex otherwise. */
+        if (value < 10) {
+            buffer[used++] = (char)('0' + value);
+        } else {
+            buffer[used++] = '0';
+            buffer[used++] = 'x';
+            if (value >= 16) buffer[used++] = hex[value >> 4];
+            buffer[used++] = hex[value & 15];
+        }
+    }
+    wasmOutputWrite(file, (const U8*)buffer, used);
+    return !file->failed;
+}
+
 static
 bool
 WARN_UNUSED_RESULT
@@ -5338,36 +5393,7 @@ wasmCWriteDataSegments(
                         wasmOutputString(file, indentation);
                     }
                 }
-                {
-                    U32 byteIndex = 0;
-                    /* C89 requires an element even for an empty data segment.
-                     * The segment's logical length remains zero. */
-                    if (byteCount == 0) {
-                        wasmOutputChar(file, '0');
-                    }
-                    for (; byteIndex < byteCount; byteIndex++) {
-                        U8 value = dataSegment.bytes.data[byteIndex];
-                        if (byteIndex > 0) {
-                            if (pretty) {
-                                wasmOutputString(file, ", ");
-                            } else {
-                                wasmOutputChar(file, ',');
-                            }
-                            if (byteIndex % DATA_SEGMENT_CHUNK_LENGTH == 0) {
-                                wasmOutputString(file, "\n");
-                                if (pretty) {
-                                    wasmOutputString(file, indentation);
-                                }
-                            }
-                        }
-                        if (value < 10) {
-                            wasmOutputU32(file, value);
-                        } else {
-                            wasmOutputString(file, "0x");
-                            wasmOutputHex(file, (unsigned int)value, wasmOutputHexLower);
-                        }
-                    }
-                }
+                MUST (wasmCWriteDataBytes(file, dataSegment.bytes, pretty))
                 if (byteCount > DATA_SEGMENT_CHUNK_LENGTH) {
                     wasmOutputChar(file, '\n');
                 }

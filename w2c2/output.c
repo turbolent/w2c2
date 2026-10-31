@@ -124,39 +124,128 @@ wasmOutputChar(WasmOutput* output, char value) {
     wasmOutputWrite(output, (const U8*)&value, 1);
 }
 
+/* Convert decimal integers directly to avoid sprintf's format parsing.
+ * Fill the buffer backwards so the digits need no reversal.
+ * Reserve one extra byte for a minus sign.
+ * wasmOutputWrite takes a length, so the buffer needs no terminator. */
+static
+void
+outputDecimal32(
+    WasmOutput* output,
+    U32 value,
+    bool negative
+) {
+    char buffer[11];
+    char* end = buffer + sizeof(buffer);
+    char* cursor = end;
+    do {
+        *--cursor = (char)('0' + value % 10);
+        value /= 10;
+    } while (value != 0);
+    if (negative) *--cursor = '-';
+    wasmOutputWrite(output, (const U8*)cursor, (size_t)(end - cursor));
+}
+
+static
+void
+outputDecimal64(
+    WasmOutput* output,
+    U64 value,
+    bool negative
+) {
+    char buffer[21];
+    char* end = buffer + sizeof(buffer);
+    char* cursor = end;
+    do {
+        *--cursor = (char)('0' + value % 10);
+        value /= 10;
+    } while (value != 0);
+    if (negative) *--cursor = '-';
+    wasmOutputWrite(output, (const U8*)cursor, (size_t)(end - cursor));
+}
+
+/* Extract one hexadecimal digit per four bits and pad with leading zeroes.
+ * Callers select the letter case and a minimum width that fits the buffer. */
+static
+void
+outputHex32(
+    WasmOutput* output,
+    U32 value,
+    size_t minimum,
+    const char* digits
+) {
+    char buffer[sizeof(U32) * 2];
+    char* end = buffer + sizeof(buffer);
+    char* cursor = end;
+    do {
+        *--cursor = digits[value & 15];
+        value >>= 4;
+    } while (value != 0);
+    while ((size_t)(end - cursor) < minimum) *--cursor = '0';
+    wasmOutputWrite(output, (const U8*)cursor, (size_t)(end - cursor));
+}
+
+static
+void
+outputHex64(
+    WasmOutput* output,
+    U64 value,
+    size_t minimum,
+    const char* digits
+) {
+    char buffer[sizeof(U64) * 2];
+    char* end = buffer + sizeof(buffer);
+    char* cursor = end;
+    do {
+        *--cursor = digits[value & 15];
+        value >>= 4;
+    } while (value != 0);
+    while ((size_t)(end - cursor) < minimum) *--cursor = '0';
+    wasmOutputWrite(output, (const U8*)cursor, (size_t)(end - cursor));
+}
+
 void
 wasmOutputU32(WasmOutput* output, U32 value) {
-    char buffer[11];
-    const int length = sprintf(buffer, "%u", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    outputDecimal32(output, value, false);
 }
 
 void
 wasmOutputU64(WasmOutput* output, U64 value) {
-    char buffer[21];
-    const int length = sprintf(buffer, "%llu", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    outputDecimal64(output, value, false);
 }
 
 void
-wasmOutputHex(WasmOutput* output, unsigned int value, WasmOutputHexFormat format) {
-    char buffer[sizeof(value) * 2 + 1];
-    const int length = sprintf(buffer, format == wasmOutputHexUpperPadded ? "%02X" : "%x", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+wasmOutputHex(
+    WasmOutput* output,
+    unsigned int value,
+    WasmOutputHexFormat format
+) {
+    outputHex32(
+        output,
+        value,
+        format == wasmOutputHexUpperPadded ? 2 : 1,
+        format == wasmOutputHexUpperPadded ? "0123456789ABCDEF" : "0123456789abcdef"
+    );
 }
 
 void
 wasmOutputI32(WasmOutput* output, I32 value) {
-    char buffer[12];
-    const int length = sprintf(buffer, "%i", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    /* Unsigned subtraction also handles INT32_MIN without signed overflow. */
+    outputDecimal32(
+        output,
+        value < 0 ? (U32)0 - (U32)value : (U32)value,
+        value < 0
+    );
 }
 
 void
 wasmOutputI64(WasmOutput* output, I64 value) {
-    char buffer[22];
-    const int length = sprintf(buffer, "%lli", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    /* Unsigned subtraction also handles INT64_MIN without signed overflow. */
+    outputDecimal64(
+        output,
+        value < 0 ? (U64)0 - (U64)value : (U64)value,
+        value < 0
+    );
 }
 
 void
@@ -177,14 +266,10 @@ wasmOutputF64(WasmOutput* output, F64 value) {
 
 void
 wasmOutputU32Hex(WasmOutput* output, U32 value) {
-    char buffer[9];
-    const int length = sprintf(buffer, "%08X", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    outputHex32(output, value, 8, "0123456789ABCDEF");
 }
 
 void
 wasmOutputU64Hex(WasmOutput* output, U64 value) {
-    char buffer[17];
-    const int length = sprintf(buffer, "%016llX", value);
-    wasmOutputWrite(output, (const U8*)buffer, (size_t)length);
+    outputHex64(output, value, 16, "0123456789ABCDEF");
 }
