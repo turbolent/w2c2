@@ -79,9 +79,10 @@ typedef struct WasmTableImport {
     U32 min;
     U32 max;
     WasmBool shared;
+    WasmValueType elementType;
 } WasmTableImport;
 
-static const WasmTableImport wasmEmptyTableImport = {{NULL, 0}, {NULL, 0}, 0, 0, false};
+static const WasmTableImport wasmEmptyTableImport = {{NULL, 0}, {NULL, 0}, 0, 0, false, wasmValueTypeFuncRef};
 
 ARRAY_TYPE(
     WasmTableImports,

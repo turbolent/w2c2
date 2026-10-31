@@ -22,13 +22,21 @@ Scripts with registered modules generate a combined driver and Make dependencies
 The normal `run-tests` target discovers these drivers and runs them
 with runtime checks enabled and disabled.
 
-The `table*.wast` and `ref_*.wast` specification tests were imported from
+The `table*.wast`, `ref.wast`, `ref_*.wast`, `imports.wast`, and `linking.wast`
+specification tests were imported from
 [WebAssembly/testsuite](https://github.com/WebAssembly/testsuite/tree/44f1503f98409fa3737437bf9449a37a5def4210),
 commit `44f1503f98409fa3737437bf9449a37a5def4210`.
-Unsupported externref and later-proposal cases are commented out.
-Function-reference variants supplement files whose upstream cases require externref.
+Later-proposal cases, including typed references and GC, are commented out.
+The reference-type cases in the older general fixtures are checked against this revision.
+The `extern.wast` conversion tests require GC;
+the numbered import/linking variants require multiple memories.
+Function-reference variants supplement the upstream external-reference cases.
 `table_operations.wast` covers control flow, ownership, and bulk operations.
-`table_instances_test.c` tests host functions and segment state across instances.
+`table_instances_test.c` tests host functions, borrowed host objects,
+and segment state across instances.
+The shared harness maps each `ref.extern` ID to a stable host object;
+ID zero is non-null.
+It releases these objects after freeing the generated instances.
 
 ### SIMD
 

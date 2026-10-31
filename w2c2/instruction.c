@@ -111,17 +111,14 @@ bool
 wasmReferenceInstructionRead(
     Buffer* buffer,
     const WasmOpcode opcode,
-    U32* index
+    WasmReferenceImmediate* result
 ) {
-    *index = 0;
     switch (opcode) {
-        case wasmOpcodeRefNull: {
-            WasmValueType type;
-            return wasmReadValueType(buffer, &type) && type == wasmValueTypeFuncRef;
-        }
+        case wasmOpcodeRefNull:
+            return wasmReadReferenceType(buffer, &result->type);
         case wasmOpcodeRefFunc:
         case wasmOpcodeGlobalGet:
-            return leb128ReadU32(buffer, index) > 0;
+            return leb128ReadU32(buffer, &result->index) > 0;
         default:
             return false;
     }

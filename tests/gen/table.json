@@ -18,6 +18,8 @@
   {"type": "assert_invalid", "line": 47, "filename": "table.15.wat", "text": "table size", "module_type": "text"}, 
   {"type": "assert_invalid", "line": 54, "filename": "table.16.wasm", "text": "unknown table", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 55, "filename": "table.17.wasm", "text": "unknown table", "module_type": "binary"}, 
-  {"type": "assert_malformed", "line": 153, "filename": "table.18.wat", "text": "duplicate table", "module_type": "text"}, 
-  {"type": "assert_malformed", "line": 160, "filename": "table.19.wat", "text": "duplicate table", "module_type": "text"}, 
-  {"type": "assert_malformed", "line": 167, "filename": "table.20.wat", "text": "duplicate table", "module_type": "text"}]}
+  {"type": "module", "line": 98, "filename": "table.18.wasm"}, 
+  {"type": "assert_return", "line": 120, "action": {"type": "invoke", "field": "get1", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_malformed", "line": 157, "filename": "table.19.wat", "text": "duplicate table", "module_type": "text"}, 
+  {"type": "assert_malformed", "line": 164, "filename": "table.20.wat", "text": "duplicate table", "module_type": "text"}, 
+  {"type": "assert_malformed", "line": 171, "filename": "table.21.wat", "text": "duplicate table", "module_type": "text"}]}

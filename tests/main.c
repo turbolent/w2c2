@@ -13,6 +13,31 @@ typedef struct TestImport {
 
 static TestImport* testImports;
 
+typedef struct TestExternRef {
+    U32 id;
+    struct TestExternRef* next;
+} TestExternRef;
+
+static TestExternRef* testExternRefs;
+
+wasmExternRef
+testExternRef(const U32 id) {
+    TestExternRef* ref;
+    for (ref = testExternRefs; ref != NULL; ref = ref->next) {
+        if (ref->id == id) {
+            return ref;
+        }
+    }
+    ref = (TestExternRef*)malloc(sizeof(TestExternRef));
+    if (ref == NULL) {
+        abort();
+    }
+    ref->id = id;
+    ref->next = testExternRefs;
+    testExternRefs = ref;
+    return ref;
+}
+
 void
 bindTestImport(const char* module, const char* name, void* value) {
     TestImport* binding = (TestImport*)malloc(sizeof(TestImport));
@@ -30,6 +55,12 @@ static U32 spectest_global_i32 = 666;
 
 static U64 spectest_global_i64 = 666;
 
+static F32 spectest_global_f32 = 666.6f;
+
+static F64 spectest_global_f64 = 666.6;
+
+static wasmExternRef spectest_global_externref;
+
 void i8_spectest5_print(wasmModuleInstance* instance) {
     UNUSED_PARAMETER(instance);
     printf("spectest.print()\n");
@@ -38,6 +69,31 @@ void i8_spectest5_print(wasmModuleInstance* instance) {
 void i8_spectest9_printX5Fi32(wasmModuleInstance* instance, U32 l0) {
     UNUSED_PARAMETER(instance);
     printf("spectest.print_i32(%u)\n", l0);
+}
+
+void i8_spectest9_printX5Fi64(wasmModuleInstance* instance, U64 l0) {
+    UNUSED_PARAMETER(instance);
+    printf("spectest.print_i64(%llu)\n", l0);
+}
+
+void i8_spectest9_printX5Ff32(wasmModuleInstance* instance, F32 l0) {
+    UNUSED_PARAMETER(instance);
+    printf("spectest.print_f32(%g)\n", l0);
+}
+
+void i8_spectest9_printX5Ff64(wasmModuleInstance* instance, F64 l0) {
+    UNUSED_PARAMETER(instance);
+    printf("spectest.print_f64(%g)\n", l0);
+}
+
+void i8_spectest13_printX5Fi32X5Ff32(wasmModuleInstance* instance, U32 l0, F32 l1) {
+    UNUSED_PARAMETER(instance);
+    printf("spectest.print_i32_f32(%u, %g)\n", l0, l1);
+}
+
+void i8_spectest13_printX5Ff64X5Ff64(wasmModuleInstance* instance, F64 l0, F64 l1) {
+    UNUSED_PARAMETER(instance);
+    printf("spectest.print_f64_f64(%g, %g)\n", l0, l1);
 }
 
 static wasmTable spectest_table;
@@ -82,6 +138,22 @@ resolveTestImports(
     if (name.length == sizeof("global_i64") - 1
         && memcmp(name.data, "global_i64", name.length) == 0) {
         return (void*)&spectest_global_i64;
+    }
+
+    if (name.length == sizeof("global_f32") - 1
+        && memcmp(name.data, "global_f32", name.length) == 0) {
+        return (void*)&spectest_global_f32;
+    }
+
+    if (name.length == sizeof("global_f64") - 1
+        && memcmp(name.data, "global_f64", name.length) == 0) {
+        return (void*)&spectest_global_f64;
+    }
+
+    if (name.length == sizeof("global_externref") - 1
+        && memcmp(name.data, "global_externref", name.length) == 0) {
+        spectest_global_externref = testExternRef(0);
+        return &spectest_global_externref;
     }
 
     if (name.length == sizeof("shared_memory") - 1
@@ -181,6 +253,11 @@ int main() {
         TestImport* binding = testImports;
         testImports = binding->next;
         free(binding);
+    }
+    while (testExternRefs != NULL) {
+        TestExternRef* ref = testExternRefs;
+        testExternRefs = ref->next;
+        free(ref);
     }
     return 0;
 }

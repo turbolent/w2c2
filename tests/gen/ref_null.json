@@ -4,4 +4,12 @@
   {"type": "assert_return", "line": 8, "action": {"type": "invoke", "field": "constant", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
   {"type": "assert_return", "line": 9, "action": {"type": "invoke", "field": "local", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
   {"type": "assert_return", "line": 10, "action": {"type": "invoke", "field": "global", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
-  {"type": "assert_return", "line": 11, "action": {"type": "invoke", "field": "parameter", "args": [{"type": "funcref", "value": "null"}]}, "expected": [{"type": "funcref", "value": "null"}]}]}
+  {"type": "assert_return", "line": 11, "action": {"type": "invoke", "field": "parameter", "args": [{"type": "funcref", "value": "null"}]}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "module", "line": 13, "filename": "ref_null.1.wasm"}, 
+  {"type": "assert_return", "line": 19, "action": {"type": "invoke", "field": "constant", "args": []}, "expected": [{"type": "externref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 20, "action": {"type": "invoke", "field": "local", "args": []}, "expected": [{"type": "externref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 21, "action": {"type": "invoke", "field": "global", "args": []}, "expected": [{"type": "externref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 22, "action": {"type": "invoke", "field": "parameter", "args": [{"type": "externref", "value": "null"}]}, "expected": [{"type": "externref", "value": "null"}]}, 
+  {"type": "module", "line": 24, "filename": "ref_null.2.wasm"}, 
+  {"type": "assert_return", "line": 47, "action": {"type": "invoke", "field": "funcref", "args": []}, "expected": [{"type": "funcref", "value": "null"}]}, 
+  {"type": "assert_return", "line": 50, "action": {"type": "invoke", "field": "externref", "args": []}, "expected": [{"type": "externref", "value": "null"}]}]}

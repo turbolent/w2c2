@@ -16,6 +16,7 @@ typedef enum WasmValueType {
     wasmValueTypeF64,
     wasmValueTypeV128,
     wasmValueTypeFuncRef,
+    wasmValueTypeExternRef,
     wasmValueType_count
 } WasmValueType;
 
@@ -68,6 +69,9 @@ wasmDecodeValueType(
         case -0x10: /* 0x70 */
             *result = wasmValueTypeFuncRef;
             return true;
+        case -0x11: /* 0x6F */
+            *result = wasmValueTypeExternRef;
+            return true;
         default: {
             return false;
         }
@@ -89,6 +93,28 @@ wasmReadValueType(
     return wasmDecodeValueType(encodedValueType, result);
 }
 
+
+static
+W2C2_INLINE
+bool
+WARN_UNUSED_RESULT
+wasmReadReferenceType(
+    Buffer* buffer,
+    WasmValueType* result
+) {
+    U8 encodedType;
+    MUST (bufferReadByte(buffer, &encodedType))
+    switch (encodedType) {
+        case 0x70:
+            *result = wasmValueTypeFuncRef;
+            return true;
+        case 0x6F:
+            *result = wasmValueTypeExternRef;
+            return true;
+        default:
+            return false;
+    }
+}
 
 static
 W2C2_INLINE

@@ -6,6 +6,9 @@
 #include "test_table_operations.4.h"
 #include "test_table_operations.5.h"
 #include "test_table_operations.6.h"
+#include "test_table_operations.7.h"
+#include "test_table_operations.8.h"
+#include "test_table_operations.9.h"
 
 static m18_tableX5FoperationsX2E0Instance instance_0;
 static m18_tableX5FoperationsX2E1Instance instance_1;
@@ -14,6 +17,9 @@ static m18_tableX5FoperationsX2E3Instance instance_3;
 static m18_tableX5FoperationsX2E4Instance instance_4;
 static m18_tableX5FoperationsX2E5Instance instance_5;
 static m18_tableX5FoperationsX2E6Instance instance_6;
+static m18_tableX5FoperationsX2E7Instance instance_7;
+static m18_tableX5FoperationsX2E8Instance instance_8;
+static m18_tableX5FoperationsX2E9Instance instance_9;
 
 struct w2c2_result_ri m18_tableX5FoperationsX2E1Import5_owner9_recursive(wasmModuleInstance* instance, U32 p0) {
     (void)instance;
@@ -26,6 +32,10 @@ wasmTableEntry m18_tableX5FoperationsX2E4Import8_producer3_ref(wasmModuleInstanc
 wasmTableEntry m18_tableX5FoperationsX2E6Import8_producer3_ref(wasmModuleInstance* instance) {
     (void)instance;
     return m18_tableX5FoperationsX2E5Export3_ref(&instance_5);
+}
+struct w2c2_result_er m18_tableX5FoperationsX2E8Import6_extern4_pair(wasmModuleInstance* instance, wasmExternRef p0) {
+    (void)instance;
+    return m18_tableX5FoperationsX2E7Export4_pair(&instance_7, p0);
 }
 void test(void) {
     m18_tableX5FoperationsX2E0Instantiate(&instance_0, resolveTestImports);
@@ -334,6 +344,322 @@ void test(void) {
         92u,
         "WAST line 199: call()"
     );
+    m18_tableX5FoperationsX2E7Instantiate(&instance_7, resolveTestImports);
+    printStart("table_operations.7.wasm");
+    bindTestImport("extern", "host", (void*)m18_tableX5FoperationsX2E7Export4_host(&instance_7));
+    bindTestImport("extern", "table", (void*)m18_tableX5FoperationsX2E7Export5_table(&instance_7));
+    assertEqualU32((*m18_tableX5FoperationsX2E7Export4_host(&instance_7)) == testExternRef(0u), 1u, "WAST line 291: get host");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == wasmNullExternRef, 1u, "WAST line 292: get(0u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 1u)) == testExternRef(0u), 1u, "WAST line 293: get(1u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export10_nullX2Dlocal(&instance_7)) == wasmNullExternRef, 1u, "WAST line 294: null-local()");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export8_trapX2Dref(&instance_7), "WAST line 295: trap-ref()");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export10_getX2Dglobal(&instance_7)) == wasmNullExternRef, 1u, "WAST line 296: get-global()");
+    (void)(m18_tableX5FoperationsX2E7Export10_setX2Dglobal(&instance_7, testExternRef(4294967295u)));
+    printOK("WAST line 297: set-global(testExternRef(4294967295u))");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export10_getX2Dglobal(&instance_7)) == testExternRef(4294967295u), 1u, "WAST line 298: get-global()");
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export7_isX2Dnull(&instance_7, testExternRef(0u)),
+        0u,
+        "WAST line 299: is-null(testExternRef(0u))"
+    );
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export7_isX2Dnull(&instance_7, wasmNullExternRef),
+        1u,
+        "WAST line 300: is-null(wasmNullExternRef)"
+    );
+    {
+        struct w2c2_result_er result;
+        result = m18_tableX5FoperationsX2E7Export4_pair(&instance_7, testExternRef(0u));
+        assertEqualU32((result.v0) == testExternRef(0u), 1u, "WAST line 301: pair(testExternRef(0u)) result 0");
+        assertEqualU32((result.v1).func != NULL, 1u, "WAST line 301: pair(testExternRef(0u)) result 1");
+    }
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export5_calls(&instance_7),
+        1u,
+        "WAST line 302: calls()"
+    );
+    {
+        struct w2c2_result_er result;
+        result = m18_tableX5FoperationsX2E7Export8_indirect(&instance_7, testExternRef(1u));
+        assertEqualU32((result.v0) == testExternRef(1u), 1u, "WAST line 303: indirect(testExternRef(1u)) result 0");
+        assertEqualU32((result.v1).func != NULL, 1u, "WAST line 303: indirect(testExternRef(1u)) result 1");
+    }
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export5_calls(&instance_7),
+        2u,
+        "WAST line 304: calls()"
+    );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export15_wrongX2Dparameter(&instance_7), "WAST line 305: wrong-parameter()");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export12_wrongX2Dresult(&instance_7), "WAST line 306: wrong-result()");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export6_select(&instance_7, testExternRef(0u), testExternRef(1u), 1u)) == testExternRef(0u), 1u, "WAST line 307: select(testExternRef(0u), testExternRef(1u), 1u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export6_select(&instance_7, testExternRef(0u), wasmNullExternRef, 0u)) == wasmNullExternRef, 1u, "WAST line 308: select(testExternRef(0u), wasmNullExternRef, 0u)");
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export9_recursive(&instance_7, testExternRef(2u), 5u);
+        assertEqualU32((result.v0) == testExternRef(2u), 1u, "WAST line 309: recursive(testExternRef(2u), 5u) result 0");
+        assertEqualU32(
+            result.v1,
+            5u,
+            "WAST line 309: recursive(testExternRef(2u), 5u) result 1"
+        );
+    }
+    {
+        struct w2c2_result_eie result;
+        result = m18_tableX5FoperationsX2E7Export6_branch(&instance_7, testExternRef(3u), 1u);
+        assertEqualU32((result.v0) == testExternRef(3u), 1u, "WAST line 310: branch(testExternRef(3u), 1u) result 0");
+        assertEqualU32(
+            result.v1,
+            7u,
+            "WAST line 310: branch(testExternRef(3u), 1u) result 1"
+        );
+        assertEqualU32((result.v2) == wasmNullExternRef, 1u, "WAST line 310: branch(testExternRef(3u), 1u) result 2");
+    }
+    {
+        struct w2c2_result_eie result;
+        result = m18_tableX5FoperationsX2E7Export6_branch(&instance_7, testExternRef(3u), 0u);
+        assertEqualU32((result.v0) == wasmNullExternRef, 1u, "WAST line 311: branch(testExternRef(3u), 0u) result 0");
+        assertEqualU32(
+            result.v1,
+            8u,
+            "WAST line 311: branch(testExternRef(3u), 0u) result 1"
+        );
+        assertEqualU32((result.v2) == testExternRef(3u), 1u, "WAST line 311: branch(testExternRef(3u), 0u) result 2");
+    }
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export12_branchX2Dtable(&instance_7, testExternRef(4u), 0u);
+        assertEqualU32((result.v0) == testExternRef(4u), 1u, "WAST line 312: branch-table(testExternRef(4u), 0u) result 0");
+        assertEqualU32(
+            result.v1,
+            12u,
+            "WAST line 312: branch-table(testExternRef(4u), 0u) result 1"
+        );
+    }
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export12_branchX2Dtable(&instance_7, testExternRef(4u), 1u);
+        assertEqualU32((result.v0) == testExternRef(4u), 1u, "WAST line 313: branch-table(testExternRef(4u), 1u) result 0");
+        assertEqualU32(
+            result.v1,
+            11u,
+            "WAST line 313: branch-table(testExternRef(4u), 1u) result 1"
+        );
+    }
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export12_branchX2Dtable(&instance_7, testExternRef(4u), 2u);
+        assertEqualU32((result.v0) == testExternRef(4u), 1u, "WAST line 314: branch-table(testExternRef(4u), 2u) result 0");
+        assertEqualU32(
+            result.v1,
+            12u,
+            "WAST line 314: branch-table(testExternRef(4u), 2u) result 1"
+        );
+    }
+    assertEqualU32((m18_tableX5FoperationsX2E7Export8_identity(&instance_7, testExternRef(5u), 0u)) == testExternRef(5u), 1u, "WAST line 315: identity(testExternRef(5u), 0u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export8_identity(&instance_7, testExternRef(5u), 1u)) == testExternRef(5u), 1u, "WAST line 316: identity(testExternRef(5u), 1u)");
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export5_block(&instance_7, testExternRef(5u));
+        assertEqualU32((result.v0) == testExternRef(5u), 1u, "WAST line 317: block(testExternRef(5u)) result 0");
+        assertEqualU32(
+            result.v1,
+            42u,
+            "WAST line 317: block(testExternRef(5u)) result 1"
+        );
+    }
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export2_if(&instance_7, testExternRef(5u), 0u);
+        assertEqualU32((result.v0) == testExternRef(5u), 1u, "WAST line 318: if(testExternRef(5u), 0u) result 0");
+        assertEqualU32(
+            result.v1,
+            2u,
+            "WAST line 318: if(testExternRef(5u), 0u) result 1"
+        );
+    }
+    {
+        struct w2c2_result_ei result;
+        result = m18_tableX5FoperationsX2E7Export2_if(&instance_7, testExternRef(5u), 1u);
+        assertEqualU32((result.v0) == testExternRef(5u), 1u, "WAST line 319: if(testExternRef(5u), 1u) result 0");
+        assertEqualU32(
+            result.v1,
+            1u,
+            "WAST line 319: if(testExternRef(5u), 1u) result 1"
+        );
+    }
+    assertEqualU32((m18_tableX5FoperationsX2E7Export4_loop(&instance_7, testExternRef(6u))) == testExternRef(6u), 1u, "WAST line 320: loop(testExternRef(6u))");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export14_functionX2Dlabel(&instance_7, testExternRef(7u))) == testExternRef(7u), 1u, "WAST line 321: function-label(testExternRef(7u))");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_dead(&instance_7), "WAST line 322: dead()");
+#endif
+    (void)(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 0u, testExternRef(1u)));
+    printOK("WAST line 325: set(0u, testExternRef(1u))");
+    (void)(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 1u, testExternRef(2u)));
+    printOK("WAST line 326: set(1u, testExternRef(2u))");
+    (void)(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 2u, testExternRef(3u)));
+    printOK("WAST line 327: set(2u, testExternRef(3u))");
+    (void)(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 1u, 0u, 3u));
+    printOK("WAST line 328: copy(1u, 0u, 3u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 1u)) == testExternRef(1u), 1u, "WAST line 329: get(1u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 2u)) == testExternRef(2u), 1u, "WAST line 330: get(2u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 3u)) == testExternRef(3u), 1u, "WAST line 331: get(3u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 0u, 1u, 3u));
+    printOK("WAST line 332: copy(0u, 1u, 3u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 333: get(0u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 1u)) == testExternRef(2u), 1u, "WAST line 334: get(1u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 2u)) == testExternRef(3u), 1u, "WAST line 335: get(2u)");
+    (void)(m18_tableX5FoperationsX2E7Export11_copyX2Dsource(&instance_7, 4u, 0u, 2u));
+    printOK("WAST line 336: copy-source(4u, 0u, 2u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4u)) == testExternRef(0u), 1u, "WAST line 337: get(4u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 338: get(5u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 6u), "WAST line 339: get(6u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4294967295u), "WAST line 340: get(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 6u, testExternRef(9u)), "WAST line 341: set(6u, testExternRef(9u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 4294967295u, testExternRef(9u)), "WAST line 342: set(4294967295u, testExternRef(9u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 5u, testExternRef(9u), 2u), "WAST line 343: fill(5u, testExternRef(9u), 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 344: get(5u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 5u, 0u, 2u), "WAST line 345: copy(5u, 0u, 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 346: get(5u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 0u, 5u, 2u), "WAST line 347: copy(0u, 5u, 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 348: get(0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export11_copyX2Dsource(&instance_7, 0u, 2u, 2u), "WAST line 349: copy-source(0u, 2u, 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 350: get(0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 5u, 0u, 2u), "WAST line 351: init(5u, 0u, 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 352: get(5u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 2u, 2u), "WAST line 353: init(0u, 2u, 2u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 354: get(0u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 6u, 6u, 0u));
+    printOK("WAST line 355: copy(6u, 6u, 0u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 3u, 0u));
+    printOK("WAST line 356: init(6u, 3u, 0u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 6u, testExternRef(9u), 0u));
+    printOK("WAST line 357: fill(6u, testExternRef(9u), 0u)");
+    (void)(m18_tableX5FoperationsX2E7Export5_empty(&instance_7));
+    printOK("WAST line 358: empty()");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 7u, testExternRef(9u), 0u), "WAST line 359: fill(7u, testExternRef(9u), 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 7u, 6u, 0u), "WAST line 360: copy(7u, 6u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 6u, 7u, 0u), "WAST line 361: copy(6u, 7u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 7u, 3u, 0u), "WAST line 362: init(7u, 3u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 4u, 0u), "WAST line 363: init(6u, 4u, 0u)");
+#endif
+    (void)(m18_tableX5FoperationsX2E7Export6_active(&instance_7, 0u));
+    printOK("WAST line 364: active(0u)");
+    (void)(m18_tableX5FoperationsX2E7Export8_declared(&instance_7, 0u));
+    printOK("WAST line 365: declared(0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export6_active(&instance_7, 1u), "WAST line 366: active(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export8_declared(&instance_7, 1u), "WAST line 367: declared(1u)");
+#endif
+    (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 1u, 0u, 3u));
+    printOK("WAST line 368: init(1u, 0u, 3u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 3u, 0u, 3u));
+    printOK("WAST line 369: init(3u, 0u, 3u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 1u)) == testExternRef(0u), 1u, "WAST line 370: get(1u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 2u)) == wasmNullExternRef, 1u, "WAST line 371: get(2u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 3u)) == testExternRef(0u), 1u, "WAST line 372: get(3u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4u)) == wasmNullExternRef, 1u, "WAST line 373: get(4u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == testExternRef(0u), 1u, "WAST line 374: get(5u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_drop(&instance_7));
+    printOK("WAST line 375: drop()");
+    (void)(m18_tableX5FoperationsX2E7Export4_drop(&instance_7));
+    printOK("WAST line 376: drop()");
+    (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 0u, 0u));
+    printOK("WAST line 377: init(6u, 0u, 0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 1u, 0u), "WAST line 378: init(6u, 1u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 0u, 1u), "WAST line 379: init(0u, 0u, 1u)");
+#endif
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 380: get(0u)");
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export4_grow(&instance_7, testExternRef(10u), 0u),
+        6u,
+        "WAST line 381: grow(testExternRef(10u), 0u)"
+    );
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export4_grow(&instance_7, testExternRef(10u), 2u),
+        6u,
+        "WAST line 382: grow(testExternRef(10u), 2u)"
+    );
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 6u)) == testExternRef(10u), 1u, "WAST line 383: get(6u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 7u)) == testExternRef(10u), 1u, "WAST line 384: get(7u)");
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export4_grow(&instance_7, wasmNullExternRef, 1u),
+        4294967295u,
+        "WAST line 385: grow(wasmNullExternRef, 1u)"
+    );
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export4_grow(&instance_7, wasmNullExternRef, 4294967295u),
+        4294967295u,
+        "WAST line 386: grow(wasmNullExternRef, 4294967295u)"
+    );
+    assertEqualU32(
+        m18_tableX5FoperationsX2E7Export4_size(&instance_7),
+        8u,
+        "WAST line 387: size()"
+    );
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 7u)) == testExternRef(10u), 1u, "WAST line 388: get(7u)");
+    (void)(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 6u, wasmNullExternRef, 2u));
+    printOK("WAST line 389: fill(6u, wasmNullExternRef, 2u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 7u)) == wasmNullExternRef, 1u, "WAST line 390: get(7u)");
+    m18_tableX5FoperationsX2E8Instantiate(&instance_8, resolveTestImports);
+    printStart("table_operations.8.wasm");
+    bindTestImport("externalias", "table", (void*)m18_tableX5FoperationsX2E8Export5_table(&instance_8));
+    bindTestImport("externalias", "host", (void*)m18_tableX5FoperationsX2E8Export4_host(&instance_8));
+    {
+        struct w2c2_result_er result;
+        result = m18_tableX5FoperationsX2E8Export9_roundtrip(&instance_8, testExternRef(0u));
+        assertEqualU32((result.v0) == testExternRef(0u), 1u, "WAST line 408: roundtrip(testExternRef(0u)) result 0");
+        assertEqualU32((result.v1).func != NULL, 1u, "WAST line 408: roundtrip(testExternRef(0u)) result 1");
+    }
+    assertEqualU32((m18_tableX5FoperationsX2E8Export5_alias(&instance_8, testExternRef(20u))) == testExternRef(20u), 1u, "WAST line 409: alias(testExternRef(20u))");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(0u), 1u, "WAST line 410: get(0u)");
+    assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 2u)) == testExternRef(20u), 1u, "WAST line 411: get(2u)");
+    m18_tableX5FoperationsX2E9Instantiate(&instance_9, resolveTestImports);
+    printStart("table_operations.9.wasm");
+    assertEqualU32((m18_tableX5FoperationsX2E9Export3_get(&instance_9)) == testExternRef(20u), 1u, "WAST line 417: get()");
+    assertEqualU32((m18_tableX5FoperationsX2E9Export4_host(&instance_9)) == testExternRef(0u), 1u, "WAST line 418: host()");
+    m18_tableX5FoperationsX2E9FreeInstance(&instance_9);
+    m18_tableX5FoperationsX2E8FreeInstance(&instance_8);
+    m18_tableX5FoperationsX2E7FreeInstance(&instance_7);
     m18_tableX5FoperationsX2E6FreeInstance(&instance_6);
     m18_tableX5FoperationsX2E5FreeInstance(&instance_5);
     m18_tableX5FoperationsX2E4FreeInstance(&instance_4);

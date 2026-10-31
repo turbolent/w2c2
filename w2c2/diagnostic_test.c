@@ -392,7 +392,7 @@ testInvalidBlockSignatures(void) {
         U8 bytes[5];
         size_t length;
     } cases[] = {
-        {{0x6F}, 1},                         /* Unsupported value type. */
+        {{0x6E}, 1},                         /* Unsupported value type. */
         {{0x80}, 1},                         /* Truncated encoding. */
         {{0x80, 0x80, 0x80, 0x80, 0x10}, 5}  /* Overflowing encoding. */
     };

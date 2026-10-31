@@ -1,17 +1,14 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_br_table.0.h"
 
-void test() {
-    m10_brX5FtableX2E0Instance instance;
+void test(void) {
+    static m10_brX5FtableX2E0Instance instance;
     m10_brX5FtableX2E0Instantiate(&instance, resolveTestImports);
     printStart("br_table.0.wasm");
-    m10_brX5FtableX2E0Export8_typeX2Di32(&instance);
-    m10_brX5FtableX2E0Export8_typeX2Di64(&instance);
-    m10_brX5FtableX2E0Export8_typeX2Df32(&instance);
-    m10_brX5FtableX2E0Export8_typeX2Df64(&instance);
+    (void)(m10_brX5FtableX2E0Export8_typeX2Di32(&instance));
+    (void)(m10_brX5FtableX2E0Export8_typeX2Di64(&instance));
+    (void)(m10_brX5FtableX2E0Export8_typeX2Df32(&instance));
+    (void)(m10_brX5FtableX2E0Export8_typeX2Df64(&instance));
     assertEqualU32(
         m10_brX5FtableX2E0Export14_typeX2Di32X2Dvalue(&instance),
         1u,
@@ -292,9 +289,9 @@ void test() {
         1u,
         "large(1000001u)"
     );
-    m10_brX5FtableX2E0Export14_asX2DblockX2Dfirst(&instance);
-    m10_brX5FtableX2E0Export12_asX2DblockX2Dmid(&instance);
-    m10_brX5FtableX2E0Export13_asX2DblockX2Dlast(&instance);
+    (void)(m10_brX5FtableX2E0Export14_asX2DblockX2Dfirst(&instance));
+    (void)(m10_brX5FtableX2E0Export12_asX2DblockX2Dmid(&instance));
+    (void)(m10_brX5FtableX2E0Export13_asX2DblockX2Dlast(&instance));
     assertEqualU32(
         m10_brX5FtableX2E0Export14_asX2DblockX2Dvalue(&instance),
         2u,
@@ -320,7 +317,7 @@ void test() {
         9u,
         "as-br-value()"
     );
-    m10_brX5FtableX2E0Export13_asX2DbrX5FifX2Dcond(&instance);
+    (void)(m10_brX5FtableX2E0Export13_asX2DbrX5FifX2Dcond(&instance));
     assertEqualU32(
         m10_brX5FtableX2E0Export14_asX2DbrX5FifX2Dvalue(&instance),
         8u,
@@ -331,7 +328,7 @@ void test() {
         9u,
         "as-br_if-value-cond()"
     );
-    m10_brX5FtableX2E0Export17_asX2DbrX5FtableX2Dindex(&instance);
+    (void)(m10_brX5FtableX2E0Export17_asX2DbrX5FtableX2Dindex(&instance));
     assertEqualU32(
         m10_brX5FtableX2E0Export17_asX2DbrX5FtableX2Dvalue(&instance),
         10u,
@@ -702,4 +699,8 @@ void test() {
         3u,
         "nested-br_table-loop-block(1u)"
     );
+    assertEqualU32((m10_brX5FtableX2E0Export14_meetX2Dexternref(&instance, 0u, testExternRef(1u))) == testExternRef(1u), 1u, "meet-externref(0u, testExternRef(1u))");
+    assertEqualU32((m10_brX5FtableX2E0Export14_meetX2Dexternref(&instance, 1u, testExternRef(1u))) == testExternRef(1u), 1u, "meet-externref(1u, testExternRef(1u))");
+    assertEqualU32((m10_brX5FtableX2E0Export14_meetX2Dexternref(&instance, 2u, testExternRef(1u))) == testExternRef(1u), 1u, "meet-externref(2u, testExternRef(1u))");
+    m10_brX5FtableX2E0FreeInstance(&instance);
 }

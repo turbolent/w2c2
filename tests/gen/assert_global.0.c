@@ -15,6 +15,8 @@ void test(void) {
         18446744073709551611ull,
         "get-b()"
     );
+    assertEqualU32((m8_globalX2E0Export5_getX2Dr(&instance)) == wasmNullExternRef, 1u, "get-r()");
+    assertEqualU32((m8_globalX2E0Export6_getX2Dmr(&instance)) == wasmNullExternRef, 1u, "get-mr()");
     assertEqualU32(
         m8_globalX2E0Export5_getX2Dx(&instance),
         4294967284u,
@@ -81,6 +83,7 @@ void test(void) {
     );
     (void)(m8_globalX2E0Export5_setX2D7(&instance, f32_reinterpret_i32(0x41000000u)));
     (void)(m8_globalX2E0Export5_setX2D8(&instance, f64_reinterpret_i64(0x4022000000000000ull)));
+    (void)(m8_globalX2E0Export6_setX2Dmr(&instance, testExternRef(10u)));
     assertEqualU32(
         m8_globalX2E0Export5_getX2Dx(&instance),
         6u,
@@ -101,6 +104,7 @@ void test(void) {
         4621256167635550208ull,
         "get-8()"
     );
+    assertEqualU32((m8_globalX2E0Export6_getX2Dmr(&instance)) == testExternRef(10u), 1u, "get-mr()");
     assertEqualU32(
         m8_globalX2E0Export15_asX2DselectX2Dfirst(&instance),
         6u,

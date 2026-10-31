@@ -3,12 +3,16 @@
   (type $write (func (param i32)))
   (type $step (func (param i32) (result i32)))
   (type $step_alias (func (param i32) (result i32)))
+  (type $pair (func (param externref) (result externref externref)))
   (table 12 12 funcref)
   (memory 1)
   (global $value (mut i32) (i32.const 90))
   (data (i32.const 0) "\05\00\00\00")
   (elem (i32.const 0) $step)
   (elem (i32.const 5) $float_parameter $wide_result)
+
+  (func (export "pair") (param i32 externref) (result externref externref)
+    local.get 1 local.get 0 call_indirect (type $pair))
 
   (func $float_parameter (param f32) (result i32)
     (i32.const 42))

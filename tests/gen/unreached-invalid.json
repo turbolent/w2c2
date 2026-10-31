@@ -116,4 +116,5 @@
   {"type": "assert_invalid", "line": 715, "filename": "unreached-invalid.113.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 720, "filename": "unreached-invalid.114.wasm", "text": "type mismatch", "module_type": "binary"}, 
   {"type": "assert_invalid", "line": 726, "filename": "unreached-invalid.115.wasm", "text": "type mismatch", "module_type": "binary"}, 
-  {"type": "assert_invalid", "line": 733, "filename": "unreached-invalid.116.wasm", "text": "type mismatch", "module_type": "binary"}]}
+  {"type": "assert_invalid", "line": 733, "filename": "unreached-invalid.116.wasm", "text": "type mismatch", "module_type": "binary"}, 
+  {"type": "assert_invalid", "line": 738, "filename": "unreached-invalid.117.wasm", "text": "type mismatch", "module_type": "binary"}]}

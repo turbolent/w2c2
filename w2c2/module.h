@@ -154,6 +154,20 @@ wasmModuleGetGlobalType(
 
 static
 W2C2_INLINE
+WasmValueType
+WARN_UNUSED_RESULT
+wasmModuleGetTableType(
+    const WasmModule* module,
+    const U32 tableIndex
+) {
+    const U32 tableImportCount = assertSizeU32(module->tableImports.length);
+    return tableIndex < tableImportCount
+        ? module->tableImports.imports[tableIndex].elementType
+        : module->tables.tables[tableIndex - tableImportCount].elementType;
+}
+
+static
+W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasmModuleGetFunctionType(

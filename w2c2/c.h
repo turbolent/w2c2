@@ -27,7 +27,7 @@ extern "C" {
  * Functions with one result return that value directly.
  * Multiple results use struct w2c2_result_<types>,
  * with fields v0, v1, and so on in result order.
- * Type codes are i (i32), j (i64), f (f32), d (f64), v (v128), and r (funcref).
+ * Type codes are i (i32), j (i64), f (f32), d (f64), v (v128), r (funcref), and e (externref).
  * Shared declaration guards prevent duplicate definitions across module headers.
  *
  * Function references use wasmTableEntry by value.
@@ -35,8 +35,17 @@ extern "C" {
  * wasmFuncRef and wasmFuncRefTyped construct references to host functions.
  * References borrow their owning instance, which must outlive their use.
  * Copies retain the function, instance, and optional signature metadata.
- * Table exports return wasmTable pointers, including the original imported table
- * when re-exported.
+ *
+ * External references use wasmExternRef, an opaque void pointer.
+ * wasmNullExternRef is the null reference.
+ * The host owns the referenced objects and must keep them alive
+ * while any module or table can use their references.
+ * Generated code copies pointers without accessing, retaining, or releasing objects.
+ *
+ * Table exports return wasmTable pointers for funcref
+ * and wasmExternTable pointers for externref.
+ * Re-exports return the original imported table.
+ * Freeing a table releases its storage, not the objects or instances it references.
  */
 WasmBool
 WARN_UNUSED_RESULT

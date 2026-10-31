@@ -1428,7 +1428,7 @@ typedef struct wasmModuleInstance wasmModuleInstance;
 typedef void (*wasmFunc)(void);
 
 /* Type strings use one character per value:
- * i = i32, j = i64, f = f32, d = f64, v = v128, r = funcref. */
+ * i = i32, j = i64, f = f32, d = f64, v = v128, r = funcref, e = externref. */
 typedef struct wasmFuncType {
     U32 parameterCount;
     const char* parameterTypes;
@@ -1718,10 +1718,192 @@ void
 wasmTableFree(
     wasmTable* table
 ) {
-    if (table->data == NULL) {
-        return;
-    }
+    free(table->data);
 
+    table->data = NULL;
+    table->size = 0;
+    table->maxSize = 0;
+}
+
+/* External references borrow host objects.
+ * Table operations copy pointers without accessing their pointees. */
+typedef void* wasmExternRef;
+
+static const wasmExternRef wasmNullExternRef = NULL;
+
+typedef struct wasmExternTable {
+    wasmExternRef* data;
+    U32 size, maxSize;
+} wasmExternTable;
+
+static
+W2C2_INLINE
+void
+wasmExternTableAllocate(
+    wasmExternTable* table,
+    const U32 size,
+    const U32 maxSize
+) {
+    table->size = size;
+    table->maxSize = maxSize;
+    table->data = (wasmExternRef*)calloc(size, sizeof(wasmExternRef));
+}
+
+#if W2C2_RUNTIME_CHECKS
+static
+W2C2_INLINE
+void
+wasmExternTableCheckRange(
+    const wasmExternTable* table,
+    const U32 index,
+    const U32 count
+) {
+    if (index > table->size || count > table->size - index) {
+        trap(trapTableOutOfBounds);
+    }
+}
+
+#else
+#define wasmExternTableCheckRange(table, index, count) ((void)0)
+#endif
+
+static
+W2C2_INLINE
+wasmExternRef
+wasmExternTableGetRef(
+    const wasmExternTable* table,
+    const U32 index
+) {
+    wasmExternTableCheckRange(table, index, 1);
+    return table->data[index];
+}
+
+static
+W2C2_INLINE
+void
+wasmExternTableSetRef(
+    wasmExternTable* table,
+    const U32 index,
+    const wasmExternRef ref
+) {
+    wasmExternTableCheckRange(table, index, 1);
+    table->data[index] = ref;
+}
+
+static
+W2C2_INLINE
+U32
+wasmExternTableSize(const wasmExternTable* table) {
+    return table->size;
+}
+
+static
+W2C2_INLINE
+U32
+wasmExternTableGrow(
+    wasmExternTable* table,
+    const wasmExternRef ref,
+    const U32 delta
+) {
+    const U32 oldSize = table->size;
+    const U64 newSize = (U64)oldSize + delta;
+    wasmExternRef* data;
+    U32 index;
+    if (delta == 0) {
+        return oldSize;
+    }
+    if (newSize > table->maxSize || newSize > (size_t)-1 / sizeof(wasmExternRef)) {
+        return UINT32_MAX;
+    }
+    data = (wasmExternRef*)realloc(table->data, (size_t)newSize * sizeof(wasmExternRef));
+    if (data == NULL) {
+        return UINT32_MAX;
+    }
+    for (index = oldSize; index < (U32)newSize; index++) {
+        data[index] = ref;
+    }
+    table->data = data;
+    table->size = (U32)newSize;
+    return oldSize;
+}
+
+static
+W2C2_INLINE
+void
+wasmExternTableFill(
+    wasmExternTable* table,
+    const U32 offset,
+    const wasmExternRef ref,
+    const U32 count
+) {
+    U32 index;
+    wasmExternTableCheckRange(table, offset, count);
+    for (index = 0; index < count; index++) {
+        table->data[offset + index] = ref;
+    }
+}
+
+static
+W2C2_INLINE
+void
+wasmExternTableCopy(
+    wasmExternTable* destination,
+    const wasmExternTable* source,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    wasmExternTableCheckRange(destination, dest, count);
+    wasmExternTableCheckRange(source, src, count);
+    if (count != 0) {
+        memmove(destination->data + dest, source->data + src, (size_t)count * sizeof(wasmExternRef));
+    }
+}
+
+static
+W2C2_INLINE
+void
+wasmExternTableInitUnchecked(
+    wasmExternTable* table,
+    const wasmExternRef* elements,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    if (count != 0) {
+        memcpy(table->data + dest, elements + src, (size_t)count * sizeof(wasmExternRef));
+    }
+}
+
+#if W2C2_RUNTIME_CHECKS
+static
+W2C2_INLINE
+void
+wasmExternTableInit(
+    wasmExternTable* table,
+    const wasmExternRef* elements,
+    const U32 size,
+    const U32 dest,
+    const U32 src,
+    const U32 count
+) {
+    wasmExternTableCheckRange(table, dest, count);
+    if (src > size || count > size - src) {
+        trap(trapTableOutOfBounds);
+    }
+    wasmExternTableInitUnchecked(table, elements, dest, src, count);
+}
+#else
+#define wasmExternTableInit(table, elements, size, dest, src, count) \
+    wasmExternTableInitUnchecked(table, elements, dest, src, count)
+#endif
+
+static
+W2C2_INLINE
+void
+wasmExternTableFree(
+    wasmExternTable* table
+) {
     free(table->data);
 
     table->data = NULL;
