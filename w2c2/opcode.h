@@ -330,6 +330,17 @@ wasmOpcodeRead(
     return true;
 }
 
+/* SIMD opcodes used outside the instruction table in simd_opcodes.def. */
+typedef enum WasmSIMDOpcode {
+    wasmSIMDOpcodeV128Const          = 0x0C,
+    wasmSIMDOpcodeI8x16Shuffle       = 0x0D,
+    wasmSIMDOpcodeI8x16Splat         = 0x0F,
+    wasmSIMDOpcodeI16x8Splat          = 0x10,
+    wasmSIMDOpcodeI8x16ReplaceLane   = 0x17,
+    wasmSIMDOpcodeI16x8ReplaceLane   = 0x1A,
+    wasmSIMDOpcodeF64x2ReplaceLane   = 0x22
+} WasmSIMDOpcode;
+
 const char*
 wasmSIMDOpcodeDescription(U32 opcode);
 

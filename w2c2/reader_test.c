@@ -5,10 +5,10 @@
 #include "reader.h"
 #include "reader_test.h"
 
-#define CHECK_NAME(condition) \
+#define CHECK(condition) \
     do { \
         if (!(condition)) { \
-            fprintf(stderr, "FAIL testReadNames: line %d: %s\n", __LINE__, #condition); \
+            fprintf(stderr, "FAIL reader test: line %d: %s\n", __LINE__, #condition); \
             exit(1); \
         } \
     } while (0)
@@ -230,7 +230,7 @@ testReadNameCase(const U8* name, size_t length, unsigned int kind) {
     reader.buffer.length = offset;
     reader.debug = true;
     wasmModuleRead(&reader, &error);
-    CHECK_NAME(error == NULL && reader.module != NULL);
+    CHECK(error == NULL && reader.module != NULL);
     if (kind == 1) {
         actual = reader.module->globalImports.imports[0].module;
     } else if (kind == 2) {
@@ -242,9 +242,9 @@ testReadNameCase(const U8* name, size_t length, unsigned int kind) {
     }
     if (kind != 0) {
         memset(bytes, 0, sizeof(bytes));
-        CHECK_NAME(actual.length == length);
-        CHECK_NAME(memcmp(actual.data, name, length) == 0);
-        CHECK_NAME(actual.data[length] == 0);
+        CHECK(actual.length == length);
+        CHECK(memcmp(actual.data, name, length) == 0);
+        CHECK(actual.data[length] == 0);
     }
     wasmModuleFree(reader.module);
 }
@@ -275,17 +275,17 @@ testBinaryFunctionNames(void) {
     reader.buffer.length = sizeof(bytes);
     reader.debug = true;
     wasmModuleRead(&reader, &error);
-    CHECK_NAME(error == NULL && reader.module != NULL);
-    CHECK_NAME(reader.module->debugSections.length == 0);
-    CHECK_NAME(reader.module->functionNames.length == 4);
-    CHECK_NAME(reader.module->functionNames.names[0].length == 3);
-    CHECK_NAME(memcmp(reader.module->functionNames.names[0].data, "f\0a", 3) == 0);
-    CHECK_NAME(reader.module->functionNames.names[2].length == 3);
-    CHECK_NAME(memcmp(reader.module->functionNames.names[2].data, "f\0a", 3) == 0);
-    CHECK_NAME(reader.module->functionNames.names[1].length == 3);
-    CHECK_NAME(memcmp(reader.module->functionNames.names[1].data, "f\0b", 3) == 0);
-    CHECK_NAME(reader.module->functionNames.names[3].length == 1);
-    CHECK_NAME(reader.module->functionNames.names[3].data[0] == 'f');
+    CHECK(error == NULL && reader.module != NULL);
+    CHECK(reader.module->debugSections.length == 0);
+    CHECK(reader.module->functionNames.length == 4);
+    CHECK(reader.module->functionNames.names[0].length == 3);
+    CHECK(memcmp(reader.module->functionNames.names[0].data, "f\0a", 3) == 0);
+    CHECK(reader.module->functionNames.names[2].length == 3);
+    CHECK(memcmp(reader.module->functionNames.names[2].data, "f\0a", 3) == 0);
+    CHECK(reader.module->functionNames.names[1].length == 3);
+    CHECK(memcmp(reader.module->functionNames.names[1].data, "f\0b", 3) == 0);
+    CHECK(reader.module->functionNames.names[3].length == 1);
+    CHECK(reader.module->functionNames.names[3].data[0] == 'f');
     wasmModuleFree(reader.module);
 }
 
@@ -311,6 +311,80 @@ testReadNames(void) {
     }
     testBinaryFunctionNames();
     fprintf(stderr, "PASS testReadNames\n");
+}
+
+void
+testReadConstantExpressions(void) {
+    static const struct {
+        U8 bytes[12];
+        size_t length;
+        bool valid;
+    } cases[] = {
+        {{0x41, 2, 0x41, 1, 0x6A, 0x0B}, 6, true},
+        {{0x41, 2, 0x41, 1, 0x6B, 0x0B}, 6, true},
+        {{0x41, 2, 0x41, 1, 0x6C, 0x0B}, 6, true},
+        {{0x41, 2, 0x41, 1, 0x6A, 0x41, 3, 0x6C, 0x0B}, 9, true},
+        {{0x41}, 1, false},
+        {{0x41, 0x80}, 2, false},
+        {{0x41, 0}, 2, false},
+        {{0x41, 0, 0x41}, 3, false},
+        {{0x41, 0, 0x41, 1, 0x6D, 0x0B}, 6, false},
+        {{0x41, 0, 0x1A, 0x0B}, 4, false},
+        {{0xFD, 13, 0x0B}, 3, false}
+    };
+    static const WasmModuleReaderErrorCode errors[] = {
+        wasmModuleReaderInvalidGlobalSectionInitExpression,
+        wasmModuleReaderInvalidDataSectionOffsetExpression,
+        wasmModuleReaderInvalidElementSectionOffsetExpression
+    };
+    size_t index;
+    unsigned int context;
+    for (context = 0; context < 3; context++) {
+        for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
+            U8 bytes[64] = {0, 0x61, 0x73, 0x6D, 1, 0, 0, 0};
+            size_t length = 8;
+            size_t sectionStart;
+            size_t expressionStart;
+            Buffer expression = emptyBuffer;
+            WasmModuleReader reader = emptyWasmModuleReader;
+            WasmModuleReaderError* error = NULL;
+            if (context == 1) {
+                static const U8 memory[] = {5, 3, 1, 0, 1};
+                memcpy(bytes + length, memory, sizeof(memory));
+                length += sizeof(memory);
+            } else if (context == 2) {
+                static const U8 table[] = {4, 4, 1, 0x70, 0, 1};
+                memcpy(bytes + length, table, sizeof(table));
+                length += sizeof(table);
+            }
+            bytes[length++] = context == 0 ? 6 : context == 1 ? 11 : 9;
+            sectionStart = length++;
+            bytes[length++] = 1;
+            if (context == 0) bytes[length++] = 0x7F;
+            bytes[length++] = 0;
+            expressionStart = length;
+            memcpy(bytes + length, cases[index].bytes, cases[index].length);
+            length += cases[index].length;
+            if (context != 0) bytes[length++] = 0;
+            bytes[sectionStart] = (U8)(length - sectionStart - 1);
+            reader.buffer.data = bytes;
+            reader.buffer.length = length;
+            wasmModuleRead(&reader, &error);
+            if (cases[index].valid) {
+                CHECK(error == NULL && reader.module != NULL);
+                expression = context == 0 ? reader.module->globals.globals[0].init
+                    : context == 1 ? reader.module->dataSegments.dataSegments[0].offset
+                    : reader.module->elementSegments.elementSegments[0].offset;
+                CHECK(expression.data == bytes + expressionStart);
+                CHECK(expression.length == cases[index].length);
+            } else {
+                CHECK(error != NULL && error->code == errors[context]);
+                CHECK(reader.module == NULL);
+            }
+            wasmModuleFree(reader.module);
+        }
+    }
+    fprintf(stderr, "PASS testReadConstantExpressions\n");
 }
 
 void

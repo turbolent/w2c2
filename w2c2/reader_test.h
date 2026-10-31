@@ -10,4 +10,7 @@ testReadNames(void);
 void
 testReadElementSegments(void);
 
+void
+testReadConstantExpressions(void);
+
 #endif /* W2C2_READER_TEST_H */

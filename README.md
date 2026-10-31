@@ -18,8 +18,9 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 ## Features
 
-- Supports [WebAssembly 2.0](https://www.w3.org/TR/2025/CRD-wasm-core-2-20250616/)
-- Supports the [threads and atomics extension](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
+- Supports [WebAssembly 2.0](https://www.w3.org/TR/2025/CRD-wasm-core-2-20250616/) and these extensions:
+  - [Extended constant expressions](https://github.com/WebAssembly/extended-const) (finalized in WebAssembly 3.0)
+  - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
 - Tested with the [WebAssembly specification test suite](tests/README.md)
 - Written in (mostly) C89 and generates (mostly) C89 (some common extensions are used and not all limits are followed, see e.g. #98)
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
@@ -172,7 +173,9 @@ make
 
 ## Testing
 
-Requires Python 3 and [wabt](https://github.com/WebAssembly/wabt) (for `wast2json`).
+Running the checked-in tests requires Python 3. Regenerating fixtures also requires
+[WABT](https://github.com/WebAssembly/wabt).
+See the [test documentation](tests/README.md) for versions and extended-const coverage.
 
 ```sh
 cd tests

@@ -44,6 +44,7 @@ main(void) {
     testReadLimits();
     testReadNames();
     testReadElementSegments();
+    testReadConstantExpressions();
     testDiagnostics();
     testOutputs();
     testFileOutputs();

@@ -12,6 +12,24 @@ from pathlib import Path
 
 gen_dir = Path('gen')
 
+# WABT 1.0.42 assembles these scripts, but its validator restricts global.get
+# in initializers to imported globals.
+EXTENDED_CONST_SCRIPTS = {
+    'global.wast', 'data.wast', 'elem.wast', 'extended_const.wast', 'runtime_lifecycle.wast',
+}
+
+
+def wast_to_json(wast_path, json_path):
+    wast_path, json_path = Path(wast_path), Path(json_path)
+    version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
+    command = ['wast2json', '--enable-threads']
+    if compare_versions(version, '1.0.25') <= 0:
+        command.append('--enable-bulk-memory')
+    if wast_path.name in EXTENDED_CONST_SCRIPTS:
+        command.append('--no-check')
+    command += ['-o', json_path.as_posix(), wast_path.as_posix()]
+    subprocess.run(command, check=True, capture_output=True)
+
 
 def compare_versions(a, b):
     versions = [
@@ -122,7 +140,7 @@ def assertion(call, expected, description):
     if expected['type'] == 'externref':
         return '    assertEqualU32(({}) == {}, 1u, {});\n'.format(call, argument(expected), c_string(description))
     if expected['type'] == 'funcref':
-        comparison = '== NULL' if expected['value'] == 'null' else '!= NULL'
+        comparison = '== NULL' if expected.get('value') == 'null' else '!= NULL'
         return '    assertEqualU32(({}).func {}, 1u, {});\n'.format(call, comparison, c_string(description))
     if expected['type'] == 'v128':
         return ('    {\n        static const U8 expected[16] = {'
@@ -372,22 +390,10 @@ def write_script_dependencies(name, test):
 
 
 def gen(paths):
-    wast2json_version = subprocess.check_output(['wast2json', '--version']).decode('utf-8').strip()
-    has_new_wabt = compare_versions(wast2json_version, "1.0.25") > 0
-
     for wast_path in paths:
         print(wast_path)
-
-        wast2json_opts = ['--enable-threads']
-
-        if not has_new_wabt:
-            wast2json_opts.append('--enable-bulk-memory')
-
-        # Convert WAST to JSON and WASM files, if needed
         json_path = gen_dir / Path(wast_path).with_suffix('.json').name
-        wast2json_opts.extend(['-o', str(json_path)])
-
-        subprocess.check_call(['wast2json', *wast2json_opts, wast_path])
+        wast_to_json(wast_path, json_path)
 
         commands = json.loads(json_path.read_text())['commands']
         combined = any(command['type'] == 'register' for command in commands)
