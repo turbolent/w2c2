@@ -1008,7 +1008,7 @@ testOutputNames(WasmModule* module, WasmFunctionIDs ids) {
 static
 void
 testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
-    static const char* values[] = {"17", "23", "31"};
+    static const char* values[] = {"si0=17U;\n", "si0=23U;\n", "si0=31U;\n"};
     static U8 invalidConstant[] = {0x41};
     Buffer* expressions[3];
     size_t index;
@@ -1020,10 +1020,10 @@ testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
     CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
     generated = findOutput(&capture, "output-test.c");
     CHECK(generated != NULL);
-    CHECK(strstr((const char*)generated->bytes, "i->g1=17U;") != NULL);
-    CHECK(strstr((const char*)generated->bytes, "i->g2=(*i->g0);") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "si0=17U;") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "si0=(*i->g0);") != NULL);
     CHECK(strstr((const char*)generated->bytes, "23U") != NULL);
-    CHECK(strstr((const char*)generated->bytes, "offset=31U;") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "si0=31U;\noffset=si0;") != NULL);
     CHECK(capture.diagnosticCount == 0);
     checkClosed(&capture);
     captureFree(&capture);
@@ -1059,6 +1059,31 @@ testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
         checkClosed(&capture);
         captureFree(&capture);
         *expressions[index] = previous;
+    }
+    {
+        const Buffer previous = *expressions[0];
+        const size_t count = 4096;
+        U8* code = (U8*)malloc(3 * count + 3);
+        size_t position = 0;
+        CHECK(code != NULL);
+        code[position++] = 0x41;
+        code[position++] = 0;
+        for (index = 0; index < count; index++) {
+            code[position++] = 0x41;
+            code[position++] = 1;
+            code[position++] = 0x6A;
+        }
+        code[position++] = 0x0B;
+        expressions[0]->data = code;
+        expressions[0]->length = position;
+        captureInitialize(&capture);
+        options = captureOptions(&capture);
+        CHECK(wasmCWriteModule(module, "outputTest", options, ids, emptyWasmFunctionIDs));
+        CHECK(capture.diagnosticCount == 0);
+        checkClosed(&capture);
+        captureFree(&capture);
+        *expressions[0] = previous;
+        free(code);
     }
 }
 

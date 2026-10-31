@@ -11,6 +11,22 @@ import gen
 
 
 class MultiValueTests(unittest.TestCase):
+    def test_extended_const_assembly_skips_wabt_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = Path(directory) / 'suite.json'
+            for script, flags in [('global.wast', ['--no-check']), ('i32.wast', [])]:
+                with self.subTest(script=script), \
+                        patch('gen.subprocess.check_output', return_value=b'1.0.42\n'), \
+                        patch('gen.subprocess.run') as run:
+                    gen.wast_to_json(Path(script), manifest)
+                run.assert_called_once_with(
+                    ['wast2json', '--enable-threads', *flags, '-o', manifest.as_posix(), script],
+                    check=True, capture_output=True)
+
+    def test_unindexed_function_reference_result(self):
+        output = gen.assertion('get_reference()', {'type': 'funcref'}, 'reference')
+        self.assertIn('(get_reference()).func != NULL', output)
+
     def test_external_reference_results(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

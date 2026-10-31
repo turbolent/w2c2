@@ -463,7 +463,7 @@ typedef struct WasmCFunctionWriter {
     WasmTypeStack* typeStack;
     WasmStackDeclarations* stackDeclarations;
     WasmLabelStack* labelStack;
-    WasmCControlStack* controlStack;
+    WasmCControlStack* controlStack; /* NULL for constant expressions. */
     const WasmModule* module;
     const char* moduleName;
     WasmFunction function;
@@ -1276,7 +1276,7 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
     const WasmSIMDInstructionInfo* info = NULL;
     WasmMemoryArgumentInstruction memarg = {0, 0};
     WasmValue value;
-    U8 immediate[16];
+    U8 immediate[sizeof(value.v128)];
     U32 argument = 0;
     U32 base = 0;
     bool replaceLane;
@@ -1307,7 +1307,8 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
     for (; argument < info->immediateBytes; argument++) {
         if (!bufferReadByte(writer->code, &immediate[argument])) goto invalid;
         if (info->laneCount && immediate[argument] >= info->laneCount) goto invalid;
-        if (opcode == 13 && immediate[argument] >= 32) goto invalid;
+        if (opcode == wasmSIMDOpcodeI8x16Shuffle
+            && immediate[argument] >= 2 * sizeof(value.v128)) goto invalid;
     }
     *writer->usesSIMD = true;
     /* Immediates must still be consumed and validated in unreachable code. */
@@ -1325,8 +1326,8 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
         MUST (wasmCWriteStackName(writer->output, base, info->result))
         MUST (wasmCWriteAssign(writer))
     }
-    if (opcode == 12) {
-        memcpy(value.v128, immediate, 16);
+    if (opcode == wasmSIMDOpcodeV128Const) {
+        memcpy(value.v128, immediate, sizeof(value.v128));
         MUST (wasmCWriteLiteral(writer->output, wasmValueTypeV128, value, writer->diagnostics))
     } else {
         if (info->result != wasmValueTypeV128 && info->result != wasmValueType_count) {
@@ -1356,9 +1357,11 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
                 /* SIMD scalar operands are signed lane values. Explicit casts
                  * preserve the Wasm bit pattern without implicit narrowing. */
                 if (info->arguments[argument] == wasmValueTypeI32
-                    && opcode >= 15 && opcode <= 34) {
-                    const char* cast = (opcode == 15 || opcode == 23) ? "(I8)"
-                        : (opcode == 16 || opcode == 26) ? "(I16)" : "(I32)";
+                    && opcode >= wasmSIMDOpcodeI8x16Splat && opcode <= wasmSIMDOpcodeF64x2ReplaceLane) {
+                    const char* cast = (opcode == wasmSIMDOpcodeI8x16Splat
+                        || opcode == wasmSIMDOpcodeI8x16ReplaceLane) ? "(I8)"
+                        : (opcode == wasmSIMDOpcodeI16x8Splat
+                        || opcode == wasmSIMDOpcodeI16x8ReplaceLane) ? "(I16)" : "(I32)";
                     MUST (wasmCWrite(writer, cast))
                 } else if (info->arguments[argument] == wasmValueTypeI64) {
                     MUST (wasmCWrite(writer, "(I64)"))
@@ -3565,7 +3568,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteFunctionCode(
+wasmCWriteCode(
     WasmCFunctionWriter* writer
 ) {
     WasmOpcode opcode = wasmOpcodeUnreachable;
@@ -3594,7 +3597,7 @@ wasmCWriteFunctionCode(
                 break;
             case wasmOpcodeElse:
             case wasmOpcodeEnd:
-                if (writer->controlStack->length == 0) {
+                if (writer->controlStack == NULL || writer->controlStack->length == 0) {
                     return true;
                 }
                 MUST (wasmCWriteControlEnd(writer, opcode))
@@ -4612,7 +4615,7 @@ wasmCWriteFunctionBody(
         writer.usesSIMD = &usesSIMD;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, signature, false, &label))
-        MUST (wasmCWriteFunctionCode(&writer))
+        MUST (wasmCWriteCode(&writer))
         MUST (wasmCWriteLabel(&writer, label.index))
         MUST (wasmCWriteFunctionReturn(&writer, functionType))
     }
@@ -4853,62 +4856,57 @@ wasmCWriteGlobals(
     }
 }
 
+/* Open a C89 scope containing the expression's typed temporaries and computation.
+ * The caller consumes stack slot zero and closes the scope after its statement. */
 static
 bool
 WARN_UNUSED_RESULT
-wasmCWriteConstantExpr(
-    WasmOutput* output,
+wasmCWriteConstantExprBegin(
+    WasmOutput* file,
     const WasmModule* module,
     const char* moduleName,
     Buffer code,
+    const bool pretty,
     const bool multipleModules,
     WasmDiagnosticContext* diagnostics
 ) {
-    WasmOpcode opcode;
-    MUST (!output->failed)
-    MUST (wasmOpcodeRead(&code, &opcode))
-    switch (opcode) {
-        case wasmOpcodeI32Const:
-        case wasmOpcodeI64Const:
-        case wasmOpcodeF32Const:
-        case wasmOpcodeF64Const: {
-            const WasmValueType resultType = wasmOpcodeResultType(opcode);
-            WasmConstInstruction instruction;
-            if (!wasmConstInstructionRead(&code, opcode, &instruction)) {
-                wasmDiagnosticReportInvalidInstruction(
-                    diagnostics,
-                    wasmDiagnosticOpcodeUnprefixed,
-                    (U32)opcode
-                );
-                return false;
-            }
-            MUST (wasmCWriteLiteral(output, resultType, instruction.value, diagnostics))
-            break;
-        }
-        case wasmOpcodeSIMDPrefix: {
-            U32 subopcode;
-            WasmValue value;
-            MUST (leb128ReadU32(&code, &subopcode))
-            MUST (subopcode == 12)
-            MUST (wasmV128ConstRead(&code, &value))
-            MUST (wasmCWriteLiteral(output, wasmValueTypeV128, value, diagnostics))
-            break;
-        }
-        case wasmOpcodeGlobalGet:
-        case wasmOpcodeRefNull:
-        case wasmOpcodeRefFunc: {
-            WasmReferenceImmediate immediate;
-            MUST (wasmReferenceInstructionRead(&code, opcode, &immediate))
-            MUST (wasmCWriteReference(output, module, moduleName, opcode, immediate, multipleModules))
-            break;
-        }
-        default: {
-            wasmDiagnosticReportUnsupportedOpcode(diagnostics, wasmDiagnosticOpcodeUnprefixed, (U32)opcode);
-            return false;
-        }
+    OutputBuffer buffer = emptyOutputBuffer;
+    WasmTypeStack types = wasmEmptyTypeStack;
+    WasmStackDeclarations declarations = wasmEmptyStackDeclarations;
+    WasmCFunctionWriter writer;
+    WasmOutput output;
+    bool usesSIMD = false;
+    bool result = false;
+    if (file->failed) return false;
+    if (!outputBufferInitialize(&buffer)) {
+        wasmDiagnosticReportAllocationFailed(diagnostics);
+        return false;
     }
-
-    return !output->failed;
+    output = wasmOutputForBuffer(&buffer, diagnostics);
+    memset(&writer, 0, sizeof(writer));
+    writer.output = &output;
+    writer.diagnostics = diagnostics;
+    writer.typeStack = &types;
+    writer.stackDeclarations = &declarations;
+    writer.module = module;
+    writer.moduleName = moduleName;
+    writer.code = &code;
+    writer.pretty = pretty;
+    writer.multipleModules = multipleModules;
+    writer.usesSIMD = &usesSIMD;
+    MUST_OR_GOTO (cleanup, wasmCWriteCode(&writer))
+    wasmOutputString(file, "{\n");
+    wasmCWriteStackDeclarations(file, &declarations, pretty);
+    wasmOutputWrite(file, buffer.data, buffer.length);
+    result = !file->failed;
+cleanup:
+    if (!result && !diagnostics->hasError) {
+        wasmDiagnosticReportTranslationFailed(diagnostics);
+    }
+    outputBufferFree(&buffer);
+    wasmTypeStackFree(&types);
+    wasmStackDeclarationsFree(&declarations);
+    return result;
 }
 
 static
@@ -4937,6 +4935,8 @@ wasmCWriteInitGlobals(
             for (; globalIndex < globalCount; globalIndex++) {
                 const WasmGlobal global = module->globals.globals[globalIndex];
 
+                MUST (wasmCWriteConstantExprBegin(file, module, moduleName, global.init,
+                    pretty, multipleModules, diagnostics))
                 if (pretty) {
                     wasmOutputString(file, indentation);
                 }
@@ -4946,11 +4946,8 @@ wasmCWriteInitGlobals(
                 } else {
                     wasmOutputChar(file, '=');
                 }
-                {
-                    const Buffer code = global.init;
-                    MUST (wasmCWriteConstantExpr(file, module, moduleName, code, multipleModules, diagnostics))
-                }
-                wasmOutputString(file, ";\n");
+                MUST (wasmCWriteStackName(file, 0, global.type.valueType))
+                wasmOutputString(file, ";\n}\n");
             }
         }
 
@@ -5743,6 +5740,8 @@ wasmCWriteInitDataSegments(
                 if (!dataSegment.passive) {
                     /* Load active segments */
                     if (code.data != NULL) {
+                        MUST (wasmCWriteConstantExprBegin(file, module, moduleName, code,
+                            pretty, multipleModules, diagnostics))
                         if (pretty) {
                             wasmOutputString(file, indentation);
                         }
@@ -5754,12 +5753,12 @@ wasmCWriteInitDataSegments(
                             false
                         );
                         wasmOutputString(file, ", ");
-                        MUST (wasmCWriteConstantExpr(file, module, moduleName, code, multipleModules, diagnostics))
+                        MUST (wasmCWriteStackName(file, 0, wasmValueTypeI32))
                         wasmOutputString(file, ", ");
                         wasmCWriteDataSegmentName(file, moduleName, dataSegmentIndex);
                         wasmOutputString(file, ", ");
                         wasmOutputU64(file, (unsigned long) dataSegmentLength);
-                        wasmOutputString(file, ");\n");
+                        wasmOutputString(file, ");\n}\n");
                     }
                 }
 
@@ -5918,12 +5917,14 @@ wasmCWriteInitTables(
             continue;
         }
         if (segment.mode == wasmElementSegmentActive) {
+            MUST (wasmCWriteConstantExprBegin(file, module, moduleName, segment.offset,
+                pretty, multipleModules, diagnostics))
             if (pretty) {
                 wasmOutputString(file, indentation);
             }
             wasmOutputString(file, pretty ? "offset = " : "offset=");
-            MUST (wasmCWriteConstantExpr(file, module, moduleName, segment.offset, multipleModules, diagnostics))
-            wasmOutputString(file, ";\n");
+            MUST (wasmCWriteStackName(file, 0, wasmValueTypeI32))
+            wasmOutputString(file, ";\n}\n");
             if (pretty) {
                 wasmOutputString(file, indentation);
             }
@@ -6210,6 +6211,14 @@ wasmCWriteNewChildFunction(
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitImports(child, self->common.resolveImports);\n");
 
+    if (module->globals.count > 0) {
+        if (pretty) {
+            wasmOutputString(file, indentation);
+        }
+        wasmCWriteModuleName(file, moduleName);
+        wasmOutputString(file, "InitGlobals(child);\n");
+    }
+
     if (module->memories.count > 0) {
         if (pretty) {
             wasmOutputString(file, indentation);
@@ -6234,14 +6243,6 @@ wasmCWriteNewChildFunction(
         }
         wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitTables(child);\n");
-    }
-
-    if (module->globals.count > 0) {
-        if (pretty) {
-            wasmOutputString(file, indentation);
-        }
-        wasmCWriteModuleName(file, moduleName);
-        wasmOutputString(file, "InitGlobals(child);\n");
     }
 
     if (module->hasStartFunction) {
@@ -6308,6 +6309,14 @@ wasmCWriteInstantiateFunction(
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitImports(i, resolveImports);\n");
 
+    if (module->globals.count > 0) {
+        if (pretty) {
+            wasmOutputString(file, indentation);
+        }
+        wasmCWriteModuleName(file, moduleName);
+        wasmOutputString(file, "InitGlobals(i);\n");
+    }
+
     if (module->memories.count > 0) {
         if (pretty) {
             wasmOutputString(file, indentation);
@@ -6332,14 +6341,6 @@ wasmCWriteInstantiateFunction(
         }
         wasmCWriteModuleName(file, moduleName);
         wasmOutputString(file, "InitTables(i);\n");
-    }
-
-    if (module->globals.count > 0) {
-        if (pretty) {
-            wasmOutputString(file, indentation);
-        }
-        wasmCWriteModuleName(file, moduleName);
-        wasmOutputString(file, "InitGlobals(i);\n");
     }
 
     if (module->hasStartFunction) {

@@ -16,11 +16,18 @@ ARCH=ppc EXECUTE=qemu-ppc-static CC=powerpc-linux-gnu-gcc make run-tests CFLAGS=
 
 ### Development
 
-When updating the test cases, re-run `make gen`, which requires Python 3 and wabt.
-Running the checked-in scalar fixtures does not require wabt.
+When updating the test cases, re-run `make gen` with Python 3 and WABT 1.0.42.
+Extended-const scripts use `--no-check` to bypass WABT's older initializer validation rules.
+Running the checked-in scalar fixtures does not require WABT.
 Scripts with registered modules generate a combined driver and Make dependencies.
 The normal `run-tests` target discovers these drivers and runs them
 with runtime checks enabled and disabled.
+
+Extended-const cases in `global.wast`, `data.wast`, and `elem.wast` were restored
+from the same upstream revision linked below, including six formerly invalid cases.
+The definition-order test uses equivalent default-null table syntax and an explicit
+`func` type for its null assertion. Local regressions are in `extended_const.wast`
+and the runtime lifecycle tests. Validation assertions remain skipped: w2c2 assumes validated input.
 
 The `table*.wast`, `ref.wast`, `ref_*.wast`, `imports.wast`, and `linking.wast`
 specification tests were imported from

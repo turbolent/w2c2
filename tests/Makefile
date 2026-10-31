@@ -66,11 +66,13 @@ RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_imports.c
 RUNTIME_LIFECYCLE_LDFLAGS = $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
 
-runtime-lifecycle-test: test_runtime_lifecycle
-	./test_runtime_lifecycle
+runtime-lifecycle-test: run-test-runtime_lifecycle run-test-runtime_lifecycle_checked
 
-test_runtime_lifecycle: runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
+test_runtime_lifecycle$(EXE): runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $@ $(RUNTIME_LIFECYCLE_LDFLAGS)
+
+test_runtime_lifecycle_checked$(EXE): runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(RUNTIME_LIFECYCLE_LDFLAGS)
 
 test_runtime_lifecycle_owned.c: gen/runtime_lifecycle.0.wasm
 	$(W2C2) -m $< $@
@@ -139,7 +141,7 @@ test_multivalue_checked$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
 $(MULTIVALUE_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
-run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-lifecycle-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
 
 -include $(wildcard gen/*.mk)
 
@@ -196,7 +198,7 @@ clean:
 	-rm -f test_atomic_offsets$(EXE) test_atomic_offsets.c
 	-rm -f test_c_strings$(EXE) test_c_strings.c
 	-rm -f test_binary_names$(EXE) test_binary_names.c
-	-rm -f test_runtime_lifecycle $(RUNTIME_LIFECYCLE_SOURCES)
+	-rm -f test_runtime_lifecycle$(EXE) test_runtime_lifecycle_checked$(EXE) $(RUNTIME_LIFECYCLE_SOURCES)
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
 	-rm -f test_table_instances$(EXE) test_table_instances_checked$(EXE) test_table_owner.c test_table_caller.c
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)

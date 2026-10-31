@@ -8,6 +8,8 @@
 
 static wasmMemory* importedMemory = NULL;
 static wasmTable* importedTable = NULL;
+static U32 importedBases[] = {8, 16};
+static U32* importedBase = importedBases;
 
 void
 trap(
@@ -45,6 +47,10 @@ resolveRuntimeImports(
     if (name.length == sizeof("table") - 1
         && memcmp(name.data, "table", name.length) == 0) {
         return importedTable;
+    }
+    if (name.length == sizeof("global_i32") - 1
+        && memcmp(name.data, "global_i32", name.length) == 0) {
+        return importedBase;
     }
 
     expect(false, "unexpected import name");
@@ -94,6 +100,15 @@ testOwnedInstanceLifecycle(void) {
         child->t0.data != root.t0.data,
         "child table was not independently allocated"
     );
+    expect(memcmp(root.m0->data + 12, "root", 4) == 0,
+        "root segment used an uninitialized defined global");
+    expect(memcmp(child->m0->data + 12, "root", 4) == 0,
+        "child segment used an uninitialized defined global");
+    expect(root.t0.data[0].func != NULL && child->t0.data[0].func != NULL,
+        "defined function-reference globals did not initialize the tables");
+    expect(root.t0.data[0].instance == &root.common
+        && child->t0.data[0].instance == &child->common,
+        "function-reference initializer used the wrong instance");
     child->common.freeChild((wasmModuleInstance*)child);
     root.m0->data[0] = 1;
     expect(root.t0.data != NULL, "child destruction released the root table");
@@ -132,6 +147,7 @@ testImportedResourceLifecycle(void) {
     memset(importedMemory->data, 0xA5, 32);
     wasmTableAllocate(&table, 10, 20);
     importedTable = &table;
+    importedBase = &importedBases[0];
 
     m19_runtimeX5FlifecycleX2E2Instantiate(&root, resolveRuntimeImports);
     expect(
@@ -143,6 +159,7 @@ testImportedResourceLifecycle(void) {
         "active segment changed surrounding imported memory"
     );
     importedMemory->data[12] = 0;
+    importedBase = &importedBases[1];
     child = (m19_runtimeX5FlifecycleX2E2Instance*)root.common.newChild(
         (wasmModuleInstance*)&root
     );
@@ -151,8 +168,9 @@ testImportedResourceLifecycle(void) {
         "child did not borrow imported memory"
     );
     expect(
-        memcmp(importedMemory->data + 12, "data", 4) == 0,
-        "child did not initialize its active segment"
+        memcmp(importedMemory->data + 20, "data", 4) == 0
+            && importedMemory->data[12] == 0,
+        "child did not evaluate its own imported base before loading its active segment"
     );
     expect(
         child->t0 == importedTable,

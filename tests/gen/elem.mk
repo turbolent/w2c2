@@ -1,6 +1,6 @@
 run-tests: run-test-elem_checked
 test_elem$(EXE) test_elem_checked$(EXE): CFLAGS += -std=c89
-test_elem$(EXE) test_elem_checked$(EXE): gen/assert_elem.c main.c test_elem.0.c test_elem.1.c test_elem.2.c test_elem.3.c test_elem.4.c test_elem.5.c test_elem.6.c test_elem.7.c test_elem.8.c test_elem.9.c test_elem.12.c test_elem.13.c test_elem.14.c test_elem.15.c test_elem.16.c test_elem.17.c test_elem.18.c test_elem.19.c test_elem.20.c test_elem.21.c test_elem.22.c test_elem.23.c test_elem.24.c test_elem.25.c test_elem.26.c test_elem.27.c test_elem.28.c test_elem.29.c test_elem.30.c test_elem.31.c test_elem.32.c test_elem.33.c test_elem.34.c test_elem.35.c test_elem.36.c test_elem.37.c test_elem.38.c test_elem.39.c test_elem.40.c test_elem.41.c test_elem.42.c test_elem.43.c test_elem.44.c test_elem.57.c test_elem.58.c test_elem.79.c test_elem.80.c test_elem.81.c test_elem.82.c test_elem.83.c test_elem.88.c test_elem.89.c test_elem.90.c test_elem.91.c test_elem.92.c
+test_elem$(EXE) test_elem_checked$(EXE): gen/assert_elem.c main.c test_elem.0.c test_elem.1.c test_elem.2.c test_elem.3.c test_elem.4.c test_elem.5.c test_elem.6.c test_elem.7.c test_elem.8.c test_elem.9.c test_elem.10.c test_elem.11.c test_elem.12.c test_elem.13.c test_elem.14.c test_elem.15.c test_elem.16.c test_elem.17.c test_elem.18.c test_elem.19.c test_elem.20.c test_elem.21.c test_elem.22.c test_elem.23.c test_elem.24.c test_elem.25.c test_elem.26.c test_elem.27.c test_elem.28.c test_elem.29.c test_elem.30.c test_elem.31.c test_elem.32.c test_elem.33.c test_elem.34.c test_elem.35.c test_elem.36.c test_elem.37.c test_elem.38.c test_elem.39.c test_elem.40.c test_elem.41.c test_elem.42.c test_elem.43.c test_elem.44.c test_elem.57.c test_elem.58.c test_elem.79.c test_elem.80.c test_elem.81.c test_elem.82.c test_elem.83.c test_elem.88.c test_elem.89.c test_elem.90.c test_elem.91.c test_elem.92.c test_elem.93.c test_elem.94.c test_elem.95.c test_elem.96.c
 test_elem$(EXE):
 	$(CC) $(CFLAGS) -I. $^ -o $@ $(LDFLAGS)
 test_elem_checked$(EXE):
@@ -24,6 +24,10 @@ test_elem.7.c: gen/elem.7.wasm
 test_elem.8.c: gen/elem.8.wasm
 	$(W2C2) -m $< $@
 test_elem.9.c: gen/elem.9.wasm
+	$(W2C2) -m $< $@
+test_elem.10.c: gen/elem.10.wasm
+	$(W2C2) -m $< $@
+test_elem.11.c: gen/elem.11.wasm
 	$(W2C2) -m $< $@
 test_elem.12.c: gen/elem.12.wasm
 	$(W2C2) -m $< $@
@@ -114,4 +118,12 @@ test_elem.90.c: gen/elem.90.wasm
 test_elem.91.c: gen/elem.91.wasm
 	$(W2C2) -m $< $@
 test_elem.92.c: gen/elem.92.wasm
+	$(W2C2) -m $< $@
+test_elem.93.c: gen/elem.93.wasm
+	$(W2C2) -m $< $@
+test_elem.94.c: gen/elem.94.wasm
+	$(W2C2) -m $< $@
+test_elem.95.c: gen/elem.95.wasm
+	$(W2C2) -m $< $@
+test_elem.96.c: gen/elem.96.wasm
 	$(W2C2) -m $< $@

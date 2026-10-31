@@ -1110,42 +1110,45 @@ wasmReadConstantExpr(
     Buffer* buffer
 ) {
     WasmOpcode opcode;
-    MUST (wasmOpcodeRead(buffer, &opcode))
-    switch (opcode) {
-        case wasmOpcodeI32Const:
-        case wasmOpcodeI64Const:
-        case wasmOpcodeF32Const:
-        case wasmOpcodeF64Const: {
-            WasmConstInstruction instruction;
-            MUST (wasmConstInstructionRead(buffer, opcode, &instruction))
-            break;
+    for (;;) {
+        MUST (wasmOpcodeRead(buffer, &opcode))
+        switch (opcode) {
+            case wasmOpcodeI32Const:
+            case wasmOpcodeI64Const:
+            case wasmOpcodeF32Const:
+            case wasmOpcodeF64Const: {
+                WasmConstInstruction instruction;
+                MUST (wasmConstInstructionRead(buffer, opcode, &instruction))
+                break;
+            }
+            case wasmOpcodeSIMDPrefix: {
+                U32 subopcode;
+                WasmValue value;
+                MUST (leb128ReadU32(buffer, &subopcode))
+                MUST (subopcode == wasmSIMDOpcodeV128Const)
+                MUST (wasmV128ConstRead(buffer, &value))
+                break;
+            }
+            case wasmOpcodeGlobalGet:
+            case wasmOpcodeRefNull:
+            case wasmOpcodeRefFunc: {
+                WasmReferenceImmediate immediate;
+                MUST (wasmReferenceInstructionRead(buffer, opcode, &immediate))
+                break;
+            }
+            case wasmOpcodeEnd:
+                return true;
+            case wasmOpcodeI32Add:
+            case wasmOpcodeI32Sub:
+            case wasmOpcodeI32Mul:
+            case wasmOpcodeI64Add:
+            case wasmOpcodeI64Sub:
+            case wasmOpcodeI64Mul:
+                break;
+            default:
+                return false;
         }
-        case wasmOpcodeSIMDPrefix: {
-            U32 subopcode;
-            WasmValue value;
-            MUST (leb128ReadU32(buffer, &subopcode))
-            MUST (subopcode == 12)
-            MUST (wasmV128ConstRead(buffer, &value))
-            break;
-        }
-        case wasmOpcodeGlobalGet:
-        case wasmOpcodeRefNull:
-        case wasmOpcodeRefFunc: {
-            WasmReferenceImmediate immediate;
-            MUST (wasmReferenceInstructionRead(buffer, opcode, &immediate))
-            break;
-        }
-        case wasmOpcodeEnd:
-            return true;
-        default:
-            return false;
     }
-
-    /* Read end opcode */
-    MUST (wasmOpcodeRead(buffer, &opcode))
-    MUST (opcode == wasmOpcodeEnd)
-
-    return true;
 }
 
 static

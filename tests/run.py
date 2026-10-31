@@ -25,8 +25,7 @@ def run_wast(path, args):
     with tempfile.TemporaryDirectory(prefix='w2c2-wast-') as directory:
         directory = Path(directory)
         manifest = directory / 'suite.json'
-        subprocess.run(['wast2json', '--enable-threads', path.as_posix(), '-o', manifest.as_posix()],
-                       check=True, capture_output=True)
+        gen.wast_to_json(path, manifest)
         test, = gen.generate_test_files(manifest, combined=True, output_dir=directory)
         modules = []
         uses_simd = False
