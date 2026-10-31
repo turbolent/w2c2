@@ -852,18 +852,14 @@ static
 void
 wasmReadTableType(
     WasmModuleReader* reader,
+    WasmValueType* elementType,
     U32* min,
     U32* max,
     WasmBool* shared,
     WasmModuleReaderError** error
 ) {
-    U8 tableType = 0;
-
     /* Read table type */
-    if (
-        !bufferReadByte(&reader->buffer, &tableType)
-        || tableType != wasmTableTypeFuncRef
-        ) {
+    if (!wasmReadReferenceType(&reader->buffer, elementType)) {
         static WasmModuleReaderError wasmModuleReaderError = {
             wasmModuleReaderInvalidTableSectionTableType
         };
@@ -887,7 +883,7 @@ wasmReadTableImport(
     import.module = module;
     import.name = name;
 
-    wasmReadTableType(reader, &import.min, &import.max, &import.shared, error);
+    wasmReadTableType(reader, &import.elementType, &import.min, &import.max, &import.shared, error);
     if (*error != NULL) {
         return;
     }
@@ -1135,8 +1131,8 @@ wasmReadConstantExpr(
         case wasmOpcodeGlobalGet:
         case wasmOpcodeRefNull:
         case wasmOpcodeRefFunc: {
-            U32 index;
-            MUST (wasmReferenceInstructionRead(buffer, opcode, &index))
+            WasmReferenceImmediate immediate;
+            MUST (wasmReferenceInstructionRead(buffer, opcode, &immediate))
             break;
         }
         case wasmOpcodeEnd:
@@ -1836,7 +1832,7 @@ wasmReadTableSection(
         U32 tableIndex = 0;
         for (; tableIndex < tableCount; tableIndex++) {
             WasmTable table = wasmEmptyTable;
-            wasmReadTableType(reader, &table.min, &table.max, &table.shared, error);
+            wasmReadTableType(reader, &table.elementType, &table.min, &table.max, &table.shared, error);
             if (*error != NULL) {
                 goto fail;
             }
@@ -1899,8 +1895,10 @@ wasmReadElementSegment(
         segment.offset.length -= reader->buffer.length;
     }
     if (flags != 0 && flags != expressionsFlag) {
-        if (!bufferReadByte(&reader->buffer, &type)
-            || type != ((flags & expressionsFlag) ? wasmTableTypeFuncRef : 0)) {
+        const bool validType = flags & expressionsFlag
+            ? wasmReadReferenceType(&reader->buffer, &segment.elementType)
+            : bufferReadByte(&reader->buffer, &type) && type == 0;
+        if (!validType) {
             static WasmModuleReaderError wasmModuleReaderError = {
                 wasmModuleReaderInvalidElementSectionType
             };
@@ -1931,7 +1929,7 @@ wasmReadElementSegment(
         if (flags & expressionsFlag) {
             WasmOpcode end;
             if (!wasmOpcodeRead(&reader->buffer, &element->opcode)
-                || !wasmReferenceInstructionRead(&reader->buffer, element->opcode, &element->index)
+                || !wasmReferenceInstructionRead(&reader->buffer, element->opcode, &element->immediate)
                 || !wasmOpcodeRead(&reader->buffer, &end)
                 || end != wasmOpcodeEnd) {
                 static WasmModuleReaderError wasmModuleReaderError = {
@@ -1942,7 +1940,7 @@ wasmReadElementSegment(
             }
         } else {
             element->opcode = wasmOpcodeRefFunc;
-            if (!leb128ReadU32(&reader->buffer, &element->index)) {
+            if (!leb128ReadU32(&reader->buffer, &element->immediate.index)) {
                 static WasmModuleReaderError wasmModuleReaderError = {
                     wasmModuleReaderInvalidElementSectionFunctionIndex
                 };

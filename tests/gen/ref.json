@@ -1,0 +1,3 @@
+{"source_filename": "ref.wast",
+ "commands": [
+  {"type": "module", "line": 3, "filename": "ref.0.wasm"}]}

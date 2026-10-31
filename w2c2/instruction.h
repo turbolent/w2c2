@@ -4,6 +4,7 @@
 #include "w2c2_base.h"
 #include "buffer.h"
 #include "opcode.h"
+#include "reference.h"
 
 /* WasmLocalInstruction */
 
@@ -162,7 +163,7 @@ WARN_UNUSED_RESULT
 wasmReferenceInstructionRead(
     Buffer* buffer,
     WasmOpcode opcode,
-    U32* index
+    WasmReferenceImmediate* result
 );
 
 /* WasmBranchInstruction */

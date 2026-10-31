@@ -44,6 +44,54 @@ static
 void
 tableTestFunction(void) {}
 
+static
+void
+testRuntimeExternTable(void) {
+    U32 object = 42;
+    wasmExternRef ref = &object;
+    wasmExternTable table;
+    wasmExternRef* original;
+    wasmExternTableAllocate(&table, 1, 4);
+    CHECK(wasmExternTableGetRef(&table, 0) == wasmNullExternRef);
+    wasmExternTableSetRef(&table, 0, ref);
+    original = table.data;
+    failAllocation = true;
+    CHECK(wasmExternTableGrow(&table, ref, 0) == 1);
+    CHECK(wasmExternTableGrow(&table, ref, 1) == UINT32_MAX);
+    CHECK(table.size == 1 && table.data == original && table.data[0] == ref);
+    failAllocation = false;
+    CHECK(wasmExternTableGrow(&table, wasmNullExternRef, 2) == 1);
+    CHECK(table.size == 3 && table.data[1] == NULL && table.data[2] == NULL);
+    CHECK(wasmExternTableGrow(&table, ref, 1) == 3);
+    CHECK(table.data[3] == ref);
+    original = table.data;
+    CHECK(wasmExternTableGrow(&table, ref, 1) == UINT32_MAX);
+    CHECK(wasmExternTableGrow(&table, ref, UINT32_MAX) == UINT32_MAX);
+    CHECK(table.size == 4 && table.data == original);
+    wasmExternTableCopy(&table, &table, 4, 4, 0);
+    wasmExternTableInit(&table, NULL, 0, 4, 0, 0);
+    expectTrap = true;
+    if (setjmp(trapTarget) == 0) {
+        wasmExternTableInit(&table, &ref, 1, 0, 1, 1);
+        CHECK(false);
+    }
+    expectTrap = false;
+    CHECK(actualTrap == trapTableOutOfBounds && table.data[0] == ref);
+    table.size = UINT32_MAX;
+    table.maxSize = UINT32_MAX;
+    CHECK(wasmExternTableGrow(&table, ref, 1) == UINT32_MAX);
+    CHECK(table.data == original);
+    wasmExternTableFree(&table);
+    CHECK(table.data == NULL && table.size == 0 && table.maxSize == 0);
+    CHECK(object == 42);
+    table.maxSize = 4;
+    wasmExternTableCopy(&table, &table, 0, 0, 0);
+    wasmExternTableInit(&table, NULL, 0, 0, 0, 0);
+    wasmExternTableFill(&table, 0, ref, 0);
+    wasmExternTableFree(&table);
+    CHECK(table.data == NULL && table.size == 0 && table.maxSize == 0);
+}
+
 void
 testRuntimeTable(void) {
     static const wasmFuncType type = {0, "", 0, ""};
@@ -82,5 +130,10 @@ testRuntimeTable(void) {
     CHECK(wasmTableGrow(&table, ref, 1) == UINT32_MAX);
     CHECK(table.data == original);
     wasmTableFree(&table);
+    CHECK(table.data == NULL && table.size == 0 && table.maxSize == 0);
+    table.maxSize = 4;
+    wasmTableFree(&table);
+    CHECK(table.data == NULL && table.size == 0 && table.maxSize == 0);
+    testRuntimeExternTable();
     fprintf(stderr, "PASS testRuntimeTable\n");
 }

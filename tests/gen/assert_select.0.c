@@ -146,6 +146,7 @@ void test(void) {
         "select-f64-t(1.0, 2.0, 1u)"
     );
     assertEqualU32((m8_selectX2E0Export14_selectX2Dfuncref(&instance, wasmNullFuncRef, wasmNullFuncRef, 1u)).func == NULL, 1u, "select-funcref(wasmNullFuncRef, wasmNullFuncRef, 1u)");
+    assertEqualU32((m8_selectX2E0Export16_selectX2Dexternref(&instance, testExternRef(1u), testExternRef(2u), 1u)) == testExternRef(1u), 1u, "select-externref(testExternRef(1u), testExternRef(2u), 1u)");
     assertEqualU32(
         m8_selectX2E0Export12_selectX2Di32X2Dt(&instance, 1u, 2u, 0u),
         2u,
@@ -166,6 +167,8 @@ void test(void) {
         2ull,
         "select-i64-t(2ull, 1ull, 4042322160u)"
     );
+    assertEqualU32((m8_selectX2E0Export16_selectX2Dexternref(&instance, testExternRef(1u), testExternRef(2u), 0u)) == testExternRef(2u), 1u, "select-externref(testExternRef(1u), testExternRef(2u), 0u)");
+    assertEqualU32((m8_selectX2E0Export16_selectX2Dexternref(&instance, testExternRef(2u), testExternRef(1u), 0u)) == testExternRef(1u), 1u, "select-externref(testExternRef(2u), testExternRef(1u), 0u)");
     assertEqualU32(
         i32_reinterpret_f32(m8_selectX2E0Export12_selectX2Df32X2Dt(&instance, f32_reinterpret_i32(0x7fc00000u), f32_reinterpret_i32(0x3f800000u), 1u)),
         2143289344u,

@@ -17,24 +17,21 @@
   (global $z1 i32 (global.get 0))
   (global $z2 i64 (global.get 1))
 
-  ;; W2C2: No support for external references
-  ;; (global $r externref (ref.null extern))
-  ;; (global $mr (mut externref) (ref.null extern))
+  (global $r externref (ref.null extern))
+  (global $mr (mut externref) (ref.null extern))
   (global funcref (ref.null func))
 
   (func (export "get-a") (result i32) (global.get $a))
   (func (export "get-b") (result i64) (global.get $b))
-  ;; W2C2: No support for external references
-  ;; (func (export "get-r") (result externref) (global.get $r))
-  ;; (func (export "get-mr") (result externref) (global.get $mr))
+  (func (export "get-r") (result externref) (global.get $r))
+  (func (export "get-mr") (result externref) (global.get $mr))
   (func (export "get-x") (result i32) (global.get $x))
   (func (export "get-y") (result i64) (global.get $y))
   (func (export "get-z1") (result i32) (global.get $z1))
   (func (export "get-z2") (result i64) (global.get $z2))
   (func (export "set-x") (param i32) (global.set $x (local.get 0)))
   (func (export "set-y") (param i64) (global.set $y (local.get 0)))
-  ;; W2C2: No support for external references
-  ;; (func (export "set-mr") (param externref) (global.set $mr (local.get 0)))
+  (func (export "set-mr") (param externref) (global.set $mr (local.get 0)))
 
   (func (export "get-3") (result f32) (global.get 3))
   (func (export "get-4") (result f64) (global.get 4))
@@ -198,9 +195,8 @@
 
 (assert_return (invoke "get-a") (i32.const -2))
 (assert_return (invoke "get-b") (i64.const -5))
-;; W2C2: No support for external references
-;; (assert_return (invoke "get-r") (ref.null extern))
-;; (assert_return (invoke "get-mr") (ref.null extern))
+(assert_return (invoke "get-r") (ref.null extern))
+(assert_return (invoke "get-mr") (ref.null extern))
 (assert_return (invoke "get-x") (i32.const -12))
 (assert_return (invoke "get-y") (i64.const -15))
 (assert_return (invoke "get-z1") (i32.const 666))
@@ -224,15 +220,13 @@
 
 (assert_return (invoke "set-7" (f32.const 8)))
 (assert_return (invoke "set-8" (f64.const 9)))
-;; W2C2: No support for external references
-;; (assert_return (invoke "set-mr" (ref.extern 10)))
+(assert_return (invoke "set-mr" (ref.extern 10)))
 
 (assert_return (invoke "get-x") (i32.const 6))
 (assert_return (invoke "get-y") (i64.const 7))
 (assert_return (invoke "get-7") (f32.const 8))
 (assert_return (invoke "get-8") (f64.const 9))
-;; W2C2: No support for external references
-;; (assert_return (invoke "get-mr") (ref.extern 10))
+(assert_return (invoke "get-mr") (ref.extern 10))
 
 (assert_return (invoke "as-select-first") (i32.const 6))
 (assert_return (invoke "as-select-mid") (i32.const 2))
@@ -334,11 +328,10 @@
   "type mismatch"
 )
 
-;; W2C2: No support for external references
-;; (assert_invalid
-;;   (module (global (import "" "") externref) (global funcref (global.get 0)))
-;;   "type mismatch"
-;; )
+(assert_invalid
+  (module (global (import "" "") externref) (global funcref (global.get 0)))
+  "type mismatch"
+)
 
 (assert_invalid
   (module (global (import "test" "global-i32") i32) (global i32 (global.get 0) (global.get 0)))

@@ -18,17 +18,9 @@ Working towards [WebAssembly as the Elusive Universal Binary](https://kripken.gi
 
 ## Features
 
-- Implements the [WebAssembly Core Specification 1.0](https://www.w3.org/TR/wasm-core-1/)
-- Implements several extensions:
-  - [Multiple results and block parameters](https://github.com/WebAssembly/multi-value)
-  - [Function references, multiple tables, and table operations](https://github.com/WebAssembly/reference-types) (`funcref` only)
-  - [Fixed-width SIMD](https://github.com/WebAssembly/simd)
-  - [Threads and atomics](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
-  - [Bulk memory and table operations](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
-  - [Conditional data segment initialization](https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md)
-  - [Sign-extension operators](https://github.com/WebAssembly/sign-extension-ops/blob/master/proposals/sign-extension-ops/Overview.md)
-  - [Non-trapping float-to-int conversions](https://github.com/WebAssembly/nontrapping-float-to-int-conversions/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md)
-- Passes 99.9% of the WebAssembly core semantics test suite
+- Supports [WebAssembly 2.0](https://www.w3.org/TR/2025/CRD-wasm-core-2-20250616/)
+- Supports the [threads and atomics extension](https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md)
+- Tested with the [WebAssembly specification test suite](tests/README.md)
 - Written in (mostly) C89 and generates (mostly) C89 (some common extensions are used and not all limits are followed, see e.g. #98)
 - Support for many operating systems (e.g. Mac OS X, Mac OS 9, Haiku, Rhapsody, OPENSTEP, NeXTSTEP, DOS, Windows XP, etc.)
 - Support for many architectures (e.g. x86, ARM, PowerPC, SPARC, PA-RISC, etc.)
@@ -76,6 +68,8 @@ cmake --build build
 ```
 
 ## Usage
+
+w2c2 assumes valid WebAssembly input and does not perform full validation.
 
 For example, to compile `module.wasm` to `module.c` (and `module.h`):
 

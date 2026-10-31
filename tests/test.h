@@ -66,6 +66,11 @@ bindTestImport(
     void* value
 );
 
+wasmExternRef
+testExternRef(
+    U32 id
+);
+
 void*
 resolveTestImports(
     WasmName module,

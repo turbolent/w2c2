@@ -20,6 +20,7 @@ name.h
 opcode.h
 output.h
 reader.h
+reference.h
 sha1.h
 table.h
 valuetype.h

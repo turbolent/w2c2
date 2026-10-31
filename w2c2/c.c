@@ -25,7 +25,7 @@ static const char labelNamePrefix = 'L';
 static const char* const resultName = "result";
 
 static const char* const valueTypeNames[wasmValueType_count] = {
-    "U32", "U64", "F32", "F64", "V128", "wasmTableEntry"
+    "U32", "U64", "F32", "F64", "V128", "wasmTableEntry", "wasmExternRef"
 };
 
 static const char* const signedTypeNames[2] = {
@@ -37,7 +37,7 @@ static const char* const shiftMaskStrings[2] = {
 };
 
 static const char valueTypeStackNames[wasmValueType_count] = {
-    'i', 'j', 'f', 'd', 'v', 'r'
+    'i', 'j', 'f', 'd', 'v', 'r', 'e'
 };
 
 static const char* const indentation = "  ";
@@ -289,14 +289,15 @@ wasmCWriteReference(
     const WasmModule* module,
     const char* moduleName,
     const WasmOpcode opcode,
-    const U32 index,
+    const WasmReferenceImmediate immediate,
     const bool multipleModules
 ) {
     if (opcode == wasmOpcodeRefNull) {
-        wasmOutputString(file, "wasmNullFuncRef");
+        wasmOutputString(file, immediate.type == wasmValueTypeExternRef ? "wasmNullExternRef" : "wasmNullFuncRef");
     } else if (opcode == wasmOpcodeGlobalGet) {
-        MUST (wasmCWriteGlobalUse(file, module, index, false))
+        MUST (wasmCWriteGlobalUse(file, module, immediate.index, false))
     } else {
+        const U32 index = immediate.index;
         const U32 typeIndex = index < module->functionImports.length
             ? module->functionImports.imports[index].functionTypeIndex
             : module->functions.functions[index - module->functionImports.length].functionTypeIndex;
@@ -688,16 +689,27 @@ wasmCWriteStackArguments(
 }
 
 static
+W2C2_INLINE
+void
+wasmCWriteTableType(
+    WasmOutput* file,
+    const WasmValueType elementType
+) {
+    wasmOutputString(file, elementType == wasmValueTypeExternRef ? "wasmExternTable" : "wasmTable");
+}
+
+static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteTableCall(
     const WasmCFunctionWriter* writer,
-    const char* function,
+    const char* operation,
     const U32 tableIndex,
     const U32 parameterCount,
     const WasmValueType resultType
 ) {
     if (!writer->ignore) {
+        const WasmValueType elementType = wasmModuleGetTableType(writer->module, tableIndex);
         const U32 base = assertSizeU32(writer->typeStack->length - parameterCount);
         MUST (wasmCWriteIndent(writer))
         if (resultType != wasmValueType_count) {
@@ -705,7 +717,8 @@ wasmCWriteTableCall(
             MUST (wasmCWriteStackName(writer->output, base, resultType))
             MUST (wasmCWriteAssign(writer))
         }
-        MUST (wasmCWrite(writer, function))
+        wasmCWriteTableType(writer->output, elementType);
+        MUST (wasmCWrite(writer, operation))
         MUST (wasmCWriteChar(writer, '('))
         MUST (wasmCWriteTableUse(writer->output, writer->module, tableIndex, true))
         MUST (wasmCWriteStackArguments(writer, parameterCount))
@@ -735,8 +748,10 @@ wasmCWriteTableCopyExpr(
         MUST (leb128ReadU32(writer->code, &source))
     }
     if (!writer->ignore) {
+        const WasmValueType elementType = wasmModuleGetTableType(writer->module, destination);
         MUST (wasmCWriteIndent(writer))
-        MUST (wasmCWrite(writer, opcode == wasmMiscOpcodeTableInit ? "wasmTableInit(" : "wasmTableCopy("))
+        wasmCWriteTableType(writer->output, elementType);
+        MUST (wasmCWrite(writer, opcode == wasmMiscOpcodeTableInit ? "Init(" : "Copy("))
         MUST (wasmCWriteTableUse(writer->output, writer->module, destination, true))
         MUST (wasmCWriteComma(writer))
         if (opcode == wasmMiscOpcodeTableInit) {
@@ -3781,29 +3796,34 @@ wasmCWriteFunctionCode(
             }
             case wasmOpcodeRefNull:
             case wasmOpcodeRefFunc: {
-                U32 index;
-                MUST (wasmReferenceInstructionRead(writer->code, opcode, &index))
+                WasmReferenceImmediate immediate;
+                MUST (wasmReferenceInstructionRead(writer->code, opcode, &immediate))
                 if (!writer->ignore) {
+                    const WasmValueType type = opcode == wasmOpcodeRefNull ? immediate.type : wasmValueTypeFuncRef;
                     const U32 slot = assertSizeU32(writer->typeStack->length);
-                    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, slot, wasmValueTypeFuncRef))
+                    MUST (wasmStackDeclarationsSet(writer->stackDeclarations, slot, type))
                     MUST (wasmCWriteIndent(writer))
-                    MUST (wasmCWriteStackName(writer->output, slot, wasmValueTypeFuncRef))
+                    MUST (wasmCWriteStackName(writer->output, slot, type))
                     MUST (wasmCWriteAssign(writer))
                     MUST (wasmCWriteReference(writer->output, writer->module, writer->moduleName,
-                        opcode, index, writer->multipleModules))
+                        opcode, immediate, writer->multipleModules))
                     MUST (wasmCWrite(writer, ";\n"))
-                    MUST (wasmTypeStackAppend(writer->typeStack, wasmValueTypeFuncRef))
+                    MUST (wasmTypeStackAppend(writer->typeStack, type))
                 }
                 break;
             }
             case wasmOpcodeTableGet:
             case wasmOpcodeTableSet: {
-                U32 index;
-                MUST (leb128ReadU32(writer->code, &index))
+                U32 tableIndex;
+                WasmValueType resultType;
+                MUST (leb128ReadU32(writer->code, &tableIndex))
+                resultType = opcode == wasmOpcodeTableGet
+                    ? wasmModuleGetTableType(writer->module, tableIndex)
+                    : wasmValueType_count;
                 MUST (wasmCWriteTableCall(writer,
-                    opcode == wasmOpcodeTableGet ? "wasmTableGetRef" : "wasmTableSetRef", index,
+                    opcode == wasmOpcodeTableGet ? "GetRef" : "SetRef", tableIndex,
                     opcode == wasmOpcodeTableGet ? 1 : 2,
-                    opcode == wasmOpcodeTableGet ? wasmValueTypeFuncRef : wasmValueType_count))
+                    resultType))
                 break;
             }
             case wasmOpcodeSelectTyped: {
@@ -3872,13 +3892,13 @@ wasmCWriteFunctionCode(
                         MUST (leb128ReadU32(writer->code, &tableIndex))
                         switch (miscOpcode) {
                             case wasmMiscOpcodeTableGrow:
-                                MUST (wasmCWriteTableCall(writer, "wasmTableGrow", tableIndex, 2, wasmValueTypeI32))
+                                MUST (wasmCWriteTableCall(writer, "Grow", tableIndex, 2, wasmValueTypeI32))
                                 break;
                             case wasmMiscOpcodeTableSize:
-                                MUST (wasmCWriteTableCall(writer, "wasmTableSize", tableIndex, 0, wasmValueTypeI32))
+                                MUST (wasmCWriteTableCall(writer, "Size", tableIndex, 0, wasmValueTypeI32))
                                 break;
                             default:
-                                MUST (wasmCWriteTableCall(writer, "wasmTableFill", tableIndex, 3, wasmValueType_count))
+                                MUST (wasmCWriteTableCall(writer, "Fill", tableIndex, 3, wasmValueType_count))
                                 break;
                         }
                         break;
@@ -3954,12 +3974,16 @@ wasmCWriteFunctionCode(
                     }
                     case wasmOpcodeRefIsNull: {
                         const U32 slot = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+                        const WasmValueType type = writer->typeStack->valueTypes[slot];
                         MUST (wasmStackDeclarationsSet(writer->stackDeclarations, slot, wasmValueTypeI32))
                         MUST (wasmCWriteIndent(writer))
                         MUST (wasmCWriteStackName(writer->output, slot, wasmValueTypeI32))
                         MUST (wasmCWriteAssign(writer))
-                        MUST (wasmCWriteStackName(writer->output, slot, wasmValueTypeFuncRef))
-                        MUST (wasmCWrite(writer, ".func == NULL;\n"))
+                        MUST (wasmCWriteStackName(writer->output, slot, type))
+                        if (type == wasmValueTypeFuncRef) {
+                            MUST (wasmCWrite(writer, ".func"))
+                        }
+                        MUST (wasmCWrite(writer, " == NULL;\n"))
                         writer->typeStack->valueTypes[slot] = wasmValueTypeI32;
                         break;
                     }
@@ -4873,9 +4897,9 @@ wasmCWriteConstantExpr(
         case wasmOpcodeGlobalGet:
         case wasmOpcodeRefNull:
         case wasmOpcodeRefFunc: {
-            U32 index;
-            MUST (wasmReferenceInstructionRead(&code, opcode, &index))
-            MUST (wasmCWriteReference(output, module, moduleName, opcode, index, multipleModules))
+            WasmReferenceImmediate immediate;
+            MUST (wasmReferenceInstructionRead(&code, opcode, &immediate))
+            MUST (wasmCWriteReference(output, module, moduleName, opcode, immediate, multipleModules))
             break;
         }
         default: {
@@ -5050,15 +5074,6 @@ wasmCWriteInitMemoryImports(
 }
 
 static
-W2C2_INLINE
-void
-wasmCWriteTableType(
-    WasmOutput* file
-) {
-    wasmOutputString(file, "wasmTable*");
-}
-
-static
 void
 wasmCWriteInitTableImports(
     WasmOutput* file,
@@ -5072,7 +5087,8 @@ wasmCWriteInitTableImports(
         const WasmTableImport import = module->tableImports.imports[tableIndex];
         wasmCWriteInitImportAssignment(file, tableNamePrefix, tableIndex, pretty);
         wasmOutputChar(file, '(');
-        wasmCWriteTableType(file);
+        wasmCWriteTableType(file, import.elementType);
+        wasmOutputChar(file, '*');
         wasmOutputChar(file, ')');
         wasmCWriteInitImportValue(file, import.module, import.name);
     }
@@ -5206,7 +5222,9 @@ wasmCWriteTableExport(
     const bool writeBody,
     const bool pretty
 ) {
-    wasmCWriteTableType(file);
+    const WasmValueType elementType = wasmModuleGetTableType(module, export.index);
+    wasmCWriteTableType(file, elementType);
+    wasmOutputChar(file, '*');
     if (pretty) {
         wasmOutputChar(file, ' ');
     }
@@ -5774,10 +5792,12 @@ wasmCWriteTableImports(
 
     U32 tableIndex = 0;
     for (; tableIndex < tableImportCount; tableIndex++) {
+        const WasmValueType elementType = module->tableImports.imports[tableIndex].elementType;
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmCWriteTableType(file);
+        wasmCWriteTableType(file, elementType);
+        wasmOutputChar(file, '*');
         if (pretty) {
             wasmOutputChar(file, ' ');
         }
@@ -5798,10 +5818,12 @@ wasmCWriteTables(
 
     U32 tableIndex = 0;
     for (; tableIndex < tableCount; tableIndex++) {
+        const WasmValueType elementType = module->tables.tables[tableIndex].elementType;
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, "wasmTable ");
+        wasmCWriteTableType(file, elementType);
+        wasmOutputChar(file, ' ');
         wasmCWriteTableName(file, assertSizeU32(tableImportCount) + tableIndex);
         wasmOutputString(file, ";\n");
     }
@@ -5843,7 +5865,8 @@ wasmCWriteInitTables(
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, "wasmTableAllocate(");
+        wasmCWriteTableType(file, table.elementType);
+        wasmOutputString(file, "Allocate(");
         MUST (wasmCWriteTableUse(file, module, assertSizeU32(module->tableImports.length) + index, true))
         wasmOutputString(file, ", ");
         wasmOutputU32(file, table.min);
@@ -5878,7 +5901,8 @@ wasmCWriteInitTables(
             if (pretty) {
                 wasmOutputString(file, indentation);
             }
-            wasmOutputString(file, "wasmTableCheckRange(");
+            wasmCWriteTableType(file, segment.elementType);
+            wasmOutputString(file, "CheckRange(");
             MUST (wasmCWriteTableUse(file, module, segment.tableIndex, true))
             wasmOutputString(file, ",offset,");
             wasmOutputU32(file, segment.elementCount);
@@ -5890,7 +5914,8 @@ wasmCWriteInitTables(
                 wasmOutputString(file, indentation);
             }
             if (segment.mode == wasmElementSegmentActive) {
-                wasmOutputString(file, "wasmTableSetRef(");
+                wasmCWriteTableType(file, segment.elementType);
+                wasmOutputString(file, "SetRef(");
                 MUST (wasmCWriteTableUse(file, module, segment.tableIndex, true))
                 wasmOutputString(file, pretty ? ", offset + " : ",offset+");
                 wasmOutputU32(file, elementIndex);
@@ -5902,7 +5927,7 @@ wasmCWriteInitTables(
                 wasmOutputU32(file, elementIndex);
                 wasmOutputString(file, pretty ? "] = " : "]=");
             }
-            MUST (wasmCWriteReference(file, module, moduleName, element.opcode, element.index, multipleModules))
+            MUST (wasmCWriteReference(file, module, moduleName, element.opcode, element.immediate, multipleModules))
             wasmOutputString(file, segment.mode == wasmElementSegmentActive ? ");\n" : ";\n");
         }
     }
@@ -5921,10 +5946,12 @@ wasmCWriteFreeTables(
     const U32 tableCount = module->tables.count;
     U32 tableIndex = 0;
     for (; tableIndex < tableCount; tableIndex++) {
+        const WasmValueType elementType = module->tables.tables[tableIndex].elementType;
         if (pretty) {
             wasmOutputString(file, indentation);
         }
-        wasmOutputString(file, "wasmTableFree(");
+        wasmCWriteTableType(file, elementType);
+        wasmOutputString(file, "Free(");
         wasmCWriteTableUse(file, module, assertSizeU32(tableImportCount) + tableIndex, true);
         wasmOutputString(file, ");\n");
     }
@@ -6028,7 +6055,8 @@ wasmCWriteModuleInstanceDeclaration(
                 if (pretty) {
                     wasmOutputString(file, indentation);
                 }
-                wasmOutputString(file, "wasmTableEntry ");
+                wasmOutputString(file, valueTypeNames[segment.elementType]);
+                wasmOutputChar(file, ' ');
                 wasmCWriteElementSegmentName(file, index);
                 wasmOutputChar(file, '[');
                 wasmOutputU32(file, segment.elementCount);

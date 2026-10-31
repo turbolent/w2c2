@@ -959,3 +959,12 @@
   "duplicate local")
 (assert_malformed (module quote "(func (local $foo i32) (local $foo i32))")
   "duplicate local")
+
+(assert_invalid
+  (module
+    (func $f (drop (ref.func $g)))
+    (func $g (type 4))
+    (elem declare func $g)
+  )
+  "unknown type"
+)

@@ -11,6 +11,29 @@ import gen
 
 
 class MultiValueTests(unittest.TestCase):
+    def test_external_reference_results(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            manifest = directory / 'references.json'
+            manifest.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'references.wasm'},
+                {'type': 'assert_return', 'action': {'type': 'invoke', 'field': 'pair',
+                 'args': [{'type': 'externref', 'value': '0'}]},
+                 'expected': [{'type': 'externref', 'value': '0'}, {'type': 'funcref', 'value': 'null'}]},
+                {'type': 'assert_return', 'action': {'type': 'invoke', 'field': 'identity',
+                 'args': [{'type': 'externref', 'value': 'null'}]},
+                 'expected': [{'type': 'externref', 'value': 'null'}]},
+            ]}))
+            test, = gen.generate_test_files(manifest, output_dir=directory)
+            output = test['path'].read_text()
+        self.assertIn('struct w2c2_result_er result;', output)
+        self.assertEqual(output.count(gen.export_name('references', 'pair') + '('), 1)
+        self.assertIn('(&instance, testExternRef(0u))', output)
+        self.assertIn('(result.v0) == testExternRef(0u)', output)
+        self.assertIn('(&instance, wasmNullExternRef)) == wasmNullExternRef', output)
+        self.assertIn('void test(void)', output)
+        self.assertTrue(output.endswith('    m10_referencesFreeInstance(&instance);\n}\n'))
+
     def test_function_reference_results(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -195,10 +218,18 @@ class GlobalTests(unittest.TestCase):
 
 
 class ScriptTests(unittest.TestCase):
+    def test_host_import_forwarding(self):
+        metadata = ([(['i64'], [])], [('spectest', 'print_i64', 0)] * 2, {})
+        wrapper, = gen.forwarding_imports('script', metadata, {})
+        self.assertIn('void i8_spectest9_printX5Fi64(wasmModuleInstance* instance, U64 p0);', wrapper)
+        self.assertIn('i8_spectest9_printX5Fi64(instance, p0);', wrapper)
+
     def test_combined_actions_keep_script_order(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             source = directory / 'script.json'
+            for name in ['script.0.wasm', 'script.1.wasm']:
+                (directory / name).write_bytes(b'\0asm\1\0\0\0')
             source.write_text(json.dumps({'commands': [
                 {'type': 'module', 'filename': 'script.0.wasm', 'name': '$first'},
                 {'type': 'module', 'filename': 'script.1.wasm', 'name': '$second'},
@@ -224,6 +255,7 @@ class ScriptTests(unittest.TestCase):
 
     def test_unknown_registered_module_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / 'script.0.wasm').write_bytes(b'\0asm\1\0\0\0')
             source = Path(directory) / 'script.json'
             source.write_text(json.dumps({'commands': [
                 {'type': 'module', 'filename': 'script.0.wasm'},

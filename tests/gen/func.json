@@ -171,4 +171,5 @@
   {"type": "assert_malformed", "line": 951, "filename": "func.72.wat", "text": "duplicate func", "module_type": "text"}, 
   {"type": "assert_malformed", "line": 956, "filename": "func.73.wat", "text": "duplicate local", "module_type": "text"}, 
   {"type": "assert_malformed", "line": 958, "filename": "func.74.wat", "text": "duplicate local", "module_type": "text"}, 
-  {"type": "assert_malformed", "line": 960, "filename": "func.75.wat", "text": "duplicate local", "module_type": "text"}]}
+  {"type": "assert_malformed", "line": 960, "filename": "func.75.wat", "text": "duplicate local", "module_type": "text"}, 
+  {"type": "assert_invalid", "line": 964, "filename": "func.76.wasm", "text": "unknown type", "module_type": "binary"}]}

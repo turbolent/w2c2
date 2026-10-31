@@ -46,12 +46,13 @@ def export_name(module, name):
 
 
 def convert_type(t):
-    return {'i32': 'U32', 'i64': 'U64', 'f32': 'F32', 'f64': 'F64', 'v128': 'V128', 'funcref': 'wasmTableEntry'}[t]
+    return {'i32': 'U32', 'i64': 'U64', 'f32': 'F32', 'f64': 'F64', 'v128': 'V128',
+            'funcref': 'wasmTableEntry', 'externref': 'wasmExternRef'}[t]
 
 
 def result_type(types):
     if len(types) > 1:
-        codes = {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'v', 'funcref': 'r'}
+        codes = {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'v', 'funcref': 'r', 'externref': 'e'}
         return 'struct w2c2_result_' + ''.join(codes[t] for t in types)
     return convert_type(types[0]) if types else 'void'
 
@@ -87,6 +88,9 @@ def convert_value(value, t):
 
 
 def argument(value):
+    if value['type'] == 'externref':
+        return ('wasmNullExternRef' if value['value'] == 'null'
+                else 'testExternRef({})'.format(convert_value(value['value'], 'U32')))
     if value['type'] == 'funcref':
         if value['value'] == 'null':
             return 'wasmNullFuncRef'
@@ -115,6 +119,8 @@ def c_string(value):
 
 
 def assertion(call, expected, description):
+    if expected['type'] == 'externref':
+        return '    assertEqualU32(({}) == {}, 1u, {});\n'.format(call, argument(expected), c_string(description))
     if expected['type'] == 'funcref':
         comparison = '== NULL' if expected['value'] == 'null' else '!= NULL'
         return '    assertEqualU32(({}).func {}, 1u, {});\n'.format(call, comparison, c_string(description))
@@ -144,7 +150,7 @@ def module_metadata(path):
     imports = []
     exports = {}
     value_types = {0x7f: 'i32', 0x7e: 'i64', 0x7d: 'f32', 0x7c: 'f64',
-                   0x7b: 'v128', 0x70: 'funcref'}
+                   0x7b: 'v128', 0x70: 'funcref', 0x6f: 'externref'}
 
     def integer():
         nonlocal offset
@@ -219,17 +225,26 @@ def forwarding_imports(name, metadata, registered):
     wrappers = []
     emitted = set()
     for module, field, signature in imports:
-        if module not in registered or (module, field) in emitted:
+        if (module, field) in emitted:
             continue
         emitted.add((module, field))
-        owner, instance = registered[module]
         parameters, results = types[signature]
         arguments = ['{} p{}'.format(convert_type(t), i) for i, t in enumerate(parameters)]
         values = ['p{}'.format(i) for i in range(len(parameters))]
+        parameter_list = ', '.join(['wasmModuleInstance* instance'] + arguments)
+        if module in registered:
+            owner, instance = registered[module]
+            target = export_name(owner, field)
+            values.insert(0, '&' + instance)
+            preamble = '    (void)instance;\n'
+        else:
+            target = 'i' + name_component(module) + name_component(field)
+            values.insert(0, 'instance')
+            preamble = '    {} {}({});\n'.format(result_type(results), target, parameter_list)
         symbol = module_identifier(name) + 'Import' + name_component(module) + name_component(field)
-        wrappers.append('{} {}({}) {{\n    (void)instance;\n    {}{}({});\n}}\n'.format(
-            result_type(results), symbol, ', '.join(['wasmModuleInstance* instance'] + arguments),
-            'return ' if results else '', export_name(owner, field), ', '.join(['&' + instance] + values)))
+        wrappers.append('{} {}({}) {{\n{}    {}{}({});\n}}\n'.format(
+            result_type(results), symbol, parameter_list, preamble,
+            'return ' if results else '', target, ', '.join(values)))
     return wrappers
 
 
@@ -266,7 +281,7 @@ def generate_test_files(json_path, combined=False, output_dir=None):
             if 'name' in command:
                 named[command['name']] = current
             test['modules'].append(filename)
-            if combined and registered:
+            if combined:
                 metadata = module_metadata(json_path.parent / filename)
                 test['wrappers'] += forwarding_imports(name, metadata, registered)
             # Static storage preserves instance state across setjmp/longjmp.

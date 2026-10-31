@@ -17,6 +17,8 @@ wasmValueTypeDescription(
             return "v128";
         case wasmValueTypeFuncRef:
             return "funcref";
+        case wasmValueTypeExternRef:
+            return "externref";
         default:
             return "unknown";
     }

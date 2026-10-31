@@ -994,14 +994,13 @@
     )
   )
 
-  ;; W2C2: No support for externref
-  ;; (func (export "meet-externref") (param i32) (param externref) (result externref)
-  ;;   (block $l1 (result externref)
-  ;;     (block $l2 (result externref)
-  ;;       (br_table $l1 $l2 $l1 (local.get 1) (local.get 0))
-  ;;     )
-  ;;   )
-  ;; )
+  (func (export "meet-externref") (param i32) (param externref) (result externref)
+    (block $l1 (result externref)
+      (block $l2 (result externref)
+        (br_table $l1 $l2 $l1 (local.get 1) (local.get 0))
+      )
+    )
+  )
 )
 
 (assert_return (invoke "type-i32"))
@@ -1185,10 +1184,9 @@
 
 (assert_return (invoke "nested-br_table-loop-block" (i32.const 1)) (i32.const 3))
 
-;; W2C2: No support for externref
-;; (assert_return (invoke "meet-externref" (i32.const 0) (ref.extern 1)) (ref.extern 1))
-;; (assert_return (invoke "meet-externref" (i32.const 1) (ref.extern 1)) (ref.extern 1))
-;; (assert_return (invoke "meet-externref" (i32.const 2) (ref.extern 1)) (ref.extern 1))
+(assert_return (invoke "meet-externref" (i32.const 0) (ref.extern 1)) (ref.extern 1))
+(assert_return (invoke "meet-externref" (i32.const 1) (ref.extern 1)) (ref.extern 1))
+(assert_return (invoke "meet-externref" (i32.const 2) (ref.extern 1)) (ref.extern 1))
 
 (assert_invalid
   (module (func $type-arg-void-vs-num (result i32)

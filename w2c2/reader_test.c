@@ -318,9 +318,9 @@ testReadElementSegments(void) {
     static const U8 prefix[] = {
         0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00,
         0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
-        0x02, 0x06, 0x01, 0x00, 0x00, 0x03, 0x70, 0x00,
+        0x02, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x70, 0x00, 0x00, 0x00, 0x03, 0x6F, 0x00,
         0x03, 0x02, 0x01, 0x00,
-        0x04, 0x07, 0x02, 0x70, 0x00, 0x01, 0x70, 0x00, 0x01
+        0x04, 0x0A, 0x03, 0x70, 0x00, 0x01, 0x70, 0x00, 0x01, 0x6F, 0x00, 0x01
     };
     static const U8 code[] = {0x0A, 0x04, 0x01, 0x02, 0x00, 0x0B};
     static const struct {
@@ -329,15 +329,20 @@ testReadElementSegments(void) {
         WasmElementSegmentMode mode;
         U32 table;
         WasmOpcode initializer;
+        WasmValueType elementType;
+        U32 initializerIndex;
     } cases[] = {
-        {{0, 0x41, 0, 0x0B, 1, 0}, 6, wasmElementSegmentActive, 0, wasmOpcodeRefFunc},
-        {{1, 0, 1, 0}, 4, wasmElementSegmentPassive, 0, wasmOpcodeRefFunc},
-        {{2, 1, 0x41, 0, 0x0B, 0, 1, 0}, 8, wasmElementSegmentActive, 1, wasmOpcodeRefFunc},
-        {{3, 0, 1, 0}, 4, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc},
-        {{4, 0x41, 0, 0x0B, 1, 0xD2, 0, 0x0B}, 8, wasmElementSegmentActive, 0, wasmOpcodeRefFunc},
-        {{5, 0x70, 1, 0xD0, 0x70, 0x0B}, 6, wasmElementSegmentPassive, 0, wasmOpcodeRefNull},
-        {{6, 1, 0x41, 0, 0x0B, 0x70, 1, 0x23, 0, 0x0B}, 10, wasmElementSegmentActive, 1, wasmOpcodeGlobalGet},
-        {{7, 0x70, 1, 0xD2, 0, 0x0B}, 6, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc}
+        {{0, 0x41, 0, 0x0B, 1, 0}, 6, wasmElementSegmentActive, 0, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{1, 0, 1, 0}, 4, wasmElementSegmentPassive, 0, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{2, 1, 0x41, 0, 0x0B, 0, 1, 0}, 8, wasmElementSegmentActive, 1, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{3, 0, 1, 0}, 4, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{4, 0x41, 0, 0x0B, 1, 0xD2, 0, 0x0B}, 8, wasmElementSegmentActive, 0, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{5, 0x70, 1, 0xD0, 0x70, 0x0B}, 6, wasmElementSegmentPassive, 0, wasmOpcodeRefNull, wasmValueTypeFuncRef, 0},
+        {{6, 1, 0x41, 0, 0x0B, 0x70, 1, 0x23, 0, 0x0B}, 10, wasmElementSegmentActive, 1, wasmOpcodeGlobalGet, wasmValueTypeFuncRef, 0},
+        {{7, 0x70, 1, 0xD2, 0, 0x0B}, 6, wasmElementSegmentDeclarative, 0, wasmOpcodeRefFunc, wasmValueTypeFuncRef, 0},
+        {{5, 0x6F, 1, 0xD0, 0x6F, 0x0B}, 6, wasmElementSegmentPassive, 0, wasmOpcodeRefNull, wasmValueTypeExternRef, 0},
+        {{6, 2, 0x41, 0, 0x0B, 0x6F, 1, 0x23, 1, 0x0B}, 10, wasmElementSegmentActive, 2, wasmOpcodeGlobalGet, wasmValueTypeExternRef, 1},
+        {{7, 0x6F, 1, 0xD0, 0x6F, 0x0B}, 6, wasmElementSegmentDeclarative, 0, wasmOpcodeRefNull, wasmValueTypeExternRef, 0}
     };
     size_t index;
     for (index = 0; index < sizeof(cases) / sizeof(cases[0]); index++) {
@@ -360,8 +365,11 @@ testReadElementSegments(void) {
             if (length == cases[index].length && error == NULL) {
                 const WasmElementSegment segment = reader.module->elementSegments.elementSegments[0];
                 passed = segment.mode == cases[index].mode && segment.tableIndex == cases[index].table
-                    && segment.elementCount == 1 && segment.elements[0].opcode == cases[index].initializer
-                    && segment.elements[0].index == 0;
+                    && segment.elementType == cases[index].elementType && segment.elementCount == 1
+                    && segment.elements[0].opcode == cases[index].initializer
+                    && (segment.elements[0].opcode == wasmOpcodeRefNull
+                        ? segment.elements[0].immediate.type == cases[index].elementType
+                        : segment.elements[0].immediate.index == cases[index].initializerIndex);
             } else if (length == cases[index].length) {
                 passed = false;
             }
@@ -380,8 +388,10 @@ testReadElementSegments(void) {
             {{8}, 1},
             {{0x80, 0x80, 0x80, 0x80, 0x10}, 5},
             {{1, 1, 0}, 3},
-            {{5, 0x6F, 0}, 3},
-            {{5, 0x70, 1, 0xD0, 0x6F, 0x0B}, 6},
+            {{5, 0x6E, 0}, 3},
+            {{5, 0xEF, 0x7F, 0}, 4},
+            {{5, 0x6F, 1, 0xD0, 0xEF, 0x7F, 0x0B}, 7},
+            {{5, 0x70, 1, 0xD0, 0x6E, 0x0B}, 6},
             {{5, 0x70, 1, 0xD2, 0, 0}, 6},
             {{5, 0x70, 1, 0x41, 0, 0x0B}, 6}
         };

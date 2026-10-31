@@ -1,4 +1,4 @@
-;; Function references use the same null value in locals and globals.
+;; Reference locals and globals have typed null defaults.
 (module
   (global funcref (ref.null func))
   (func (export "constant") (result funcref) ref.null func)
@@ -10,30 +10,49 @@
 (assert_return (invoke "global") (ref.null func))
 (assert_return (invoke "parameter" (ref.null func)) (ref.null func))
 
-;; W2C2: externref and later-proposal reference types are unsupported.
-;; (module
-;;   (type $t (func))
-;;   (func (export "anyref") (result anyref) (ref.null any))
-;;   (func (export "funcref") (result funcref) (ref.null func))
-;;   (func (export "exnref") (result exnref) (ref.null exn))
-;;   (func (export "externref") (result externref) (ref.null extern))
-;;   (func (export "ref") (result (ref null $t)) (ref.null $t))
-;;
-;;   (global anyref (ref.null any))
-;;   (global funcref (ref.null func))
-;;   (global exnref (ref.null exn))
-;;   (global externref (ref.null extern))
-;;   (global (ref null $t) (ref.null $t))
-;; )
+(module
+  (global externref (ref.null extern))
+  (func (export "constant") (result externref) ref.null extern)
+  (func (export "local") (result externref) (local externref) local.get 0)
+  (func (export "global") (result externref) global.get 0)
+  (func (export "parameter") (param externref) (result externref) local.get 0))
+(assert_return (invoke "constant") (ref.null extern))
+(assert_return (invoke "local") (ref.null extern))
+(assert_return (invoke "global") (ref.null extern))
+(assert_return (invoke "parameter" (ref.null extern)) (ref.null extern))
 
+(module
+  (type $t (func))
+  ;; W2C2: GC reference types are unsupported.
+  ;; (func (export "anyref") (result anyref) (ref.null any))
+  (func (export "funcref") (result funcref) (ref.null func))
+  ;; W2C2: Exception references are unsupported.
+  ;; (func (export "exnref") (result exnref) (ref.null exn))
+  (func (export "externref") (result externref) (ref.null extern))
+  ;; W2C2: Typed function references are unsupported.
+  ;; (func (export "ref") (result (ref null $t)) (ref.null $t))
+
+  ;; W2C2: GC reference types are unsupported.
+  ;; (global anyref (ref.null any))
+  (global funcref (ref.null func))
+  ;; W2C2: Exception references are unsupported.
+  ;; (global exnref (ref.null exn))
+  (global externref (ref.null extern))
+  ;; W2C2: Typed function references are unsupported.
+  ;; (global (ref null $t) (ref.null $t))
+)
+
+;; W2C2: GC reference types are unsupported.
 ;; (assert_return (invoke "anyref") (ref.null any))
-;; (assert_return (invoke "funcref") (ref.null func))
+(assert_return (invoke "funcref") (ref.null func))
+;; W2C2: Exception references are unsupported.
 ;; (assert_return (invoke "exnref") (ref.null exn))
-;; (assert_return (invoke "externref") (ref.null extern))
+(assert_return (invoke "externref") (ref.null extern))
+;; W2C2: Typed function references are unsupported.
 ;; (assert_return (invoke "ref") (ref.null))
 
 
-;; W2C2: Later-proposal reference types are unsupported.
+;; W2C2: GC, exception references, and typed function references are unsupported.
 ;; (module
 ;;   (type $t (func))
 ;;   (global $null nullref (ref.null none))
