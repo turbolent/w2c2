@@ -55,6 +55,7 @@ static void* resolve(WasmName module, WasmName name) {
         (void)name(memory, memory->size - width); \
         (void)name(memory, 1); \
         CHECK_TRAP(name(memory, memory->size - width + 1), trapMemoryOutOfBounds); \
+        CHECK_TRAP(name(memory, (U64)UINT32_MAX + 2), trapMemoryOutOfBounds); \
     } while (0)
 
 #define CHECK_STORE_BOUNDS(name, width) \
@@ -62,6 +63,7 @@ static void* resolve(WasmName module, WasmName name) {
         name(memory, memory->size - width, 7); \
         name(memory, 1, 7); \
         CHECK_TRAP(name(memory, memory->size - width + 1, 0), trapMemoryOutOfBounds); \
+        CHECK_TRAP(name(memory, (U64)UINT32_MAX + 2, 0), trapMemoryOutOfBounds); \
         CHECK(memory->data[memory->size - width] == 7); \
     } while (0)
 

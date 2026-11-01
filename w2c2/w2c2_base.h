@@ -1168,13 +1168,14 @@ wasmMemoryInit(
 #if defined(__APPLE__)
 
 #include <libkern/OSByteOrder.h>
-#define readSwapU16(base, offset) OSReadSwapInt16(base, offset)
-#define readSwapU32(base, offset) OSReadSwapInt32(base, offset)
-#define readSwapU64(base, offset) OSReadSwapInt64(base, offset)
+/* With runtime checks, callers validate the full address before narrowing. */
+#define readSwapU16(base, offset) OSReadSwapInt16(base, (uintptr_t)(offset))
+#define readSwapU32(base, offset) OSReadSwapInt32(base, (uintptr_t)(offset))
+#define readSwapU64(base, offset) OSReadSwapInt64(base, (uintptr_t)(offset))
 
-#define writeSwapU16(base, offset, value) OSWriteSwapInt16(base, offset, value)
-#define writeSwapU32(base, offset, value) OSWriteSwapInt32(base, offset, value)
-#define writeSwapU64(base, offset, value) OSWriteSwapInt64(base, offset, value)
+#define writeSwapU16(base, offset, value) OSWriteSwapInt16(base, (uintptr_t)(offset), value)
+#define writeSwapU32(base, offset, value) OSWriteSwapInt32(base, (uintptr_t)(offset), value)
+#define writeSwapU64(base, offset, value) OSWriteSwapInt64(base, (uintptr_t)(offset), value)
 
 #else
 

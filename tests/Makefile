@@ -60,6 +60,15 @@ test_runtime_checks_checked$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES
 $(RUNTIME_CHECK_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
+# Reuse the existing i386 test run for the Apple byte-order API regression.
+ifeq ($(ARCH),i386)
+run-tests: apple-byte-order-test
+endif
+
+.PHONY: apple-byte-order-test
+apple-byte-order-test:
+	$(CC) -std=c89 -Werror=conversion $(CFLAGS) -D__APPLE__ -DWASM_ENDIAN=WASM_BIG_ENDIAN -Iapple_byte_order -fsyntax-only ../w2c2/runtime_table_test.c
+
 RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
 	test_runtime_lifecycle_shared.c \
