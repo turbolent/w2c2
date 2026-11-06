@@ -1640,7 +1640,9 @@ wasmTableInit(
     if (src > size || count > size - src) {
         trap(trapTableOutOfBounds);
     }
-    wasmTableInitUnchecked(table, elements, dest, src, count);
+    if (size != 0) {
+        wasmTableInitUnchecked(table, elements, dest, src, count);
+    }
 }
 #else
 #define wasmTableInit(table, elements, size, dest, src, count) \
@@ -1892,7 +1894,9 @@ wasmExternTableInit(
     if (src > size || count > size - src) {
         trap(trapTableOutOfBounds);
     }
-    wasmExternTableInitUnchecked(table, elements, dest, src, count);
+    if (size != 0) {
+        wasmExternTableInitUnchecked(table, elements, dest, src, count);
+    }
 }
 #else
 #define wasmExternTableInit(table, elements, size, dest, src, count) \
