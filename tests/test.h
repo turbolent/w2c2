@@ -18,17 +18,25 @@ assertEqualV128(
 
 extern jmp_buf testTrapTarget;
 extern int testTrapExpected;
+extern Trap testTrapReason;
 
-#define assertTrap(expression, description) do { \
+#define assertTrap(expression, reason, description) do { \
     testTrapExpected = 1; \
     if (setjmp(testTrapTarget) == 0) { \
         (void)(expression); \
         printFail(description); \
     } else { \
-        printOK(description); \
+        assertEqualTrap(testTrapReason, reason, description); \
     } \
     testTrapExpected = 0; \
 } while (0)
+
+void
+assertEqualTrap(
+    Trap actual,
+    Trap expected,
+    const char* description
+);
 
 void
 assertEqualU32(

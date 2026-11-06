@@ -266,6 +266,26 @@ def forwarding_imports(name, metadata, registered):
     return wrappers
 
 
+def trap_reason(text):
+    if re.fullmatch(r'uninitialized element(?: \d+)?', text):
+        return 'trapUninitializedElement'
+    reasons = {
+        'unreachable': 'trapUnreachable',
+        'integer divide by zero': 'trapDivByZero',
+        'integer overflow': 'trapIntOverflow',
+        'invalid conversion to integer': 'trapInvalidConversion',
+        'out of bounds memory access': 'trapMemoryOutOfBounds',
+        'out of bounds table access': 'trapTableOutOfBounds',
+        'undefined element': 'trapTableOutOfBounds',
+        'indirect call type mismatch': 'trapIndirectCallTypeMismatch',
+        'unaligned atomic': 'trapUnalignedAtomic',
+        'expected shared memory': 'trapUnsharedMemoryWait',
+    }
+    if text not in reasons:
+        raise ValueError('Unsupported trap reason: ' + text)
+    return reasons[text]
+
+
 def generate_test_files(json_path, combined=False, output_dir=None):
     """Generate assertions using the shared test.h/main.c harness.
 
@@ -313,9 +333,6 @@ def generate_test_files(json_path, combined=False, output_dir=None):
                 test['body'].append('    bindTestImport({}, {}, (void*){}(&{}));\n'.format(
                     c_string(command['as']), c_string(field), export_name(name, field), instance))
         elif kind in ('assert_return', 'assert_trap', 'action'):
-            # Trap assertions run only in combined drivers with runtime checks.
-            if kind == 'assert_trap' and not combined:
-                continue
             action = command.get('action')
             # Module-instantiation assertions are outside this harness.
             if action is None:
@@ -336,7 +353,8 @@ def generate_test_files(json_path, combined=False, output_dir=None):
             if combined:
                 description = 'WAST line {}: {}'.format(command.get('line', 0), description)
             if kind == 'assert_trap':
-                test['body'].append('#if W2C2_RUNTIME_CHECKS\n    assertTrap({}, {});\n#endif\n'.format(call, c_string(description)))
+                test['body'].append('#if W2C2_RUNTIME_CHECKS\n    assertTrap({}, {}, {});\n#endif\n'.format(
+                    call, trap_reason(command['text']), c_string(description)))
             elif kind == 'assert_return' and command['expected']:
                 expected = command['expected']
                 if len(expected) == 1:
@@ -376,13 +394,12 @@ def generate_test_files(json_path, combined=False, output_dir=None):
 def write_script_dependencies(name, test):
     sources = ['test_' + Path(filename).with_suffix('.c').name for filename in test['modules']]
     targets = 'test_{0}$(EXE) test_{0}_checked$(EXE)'.format(name)
-    rules = ['run-tests: run-test-{}_checked\n'.format(name),
-             targets + ': CFLAGS += -std=c89\n',
-             targets + ': gen/assert_' + name + '.c main.c ' + ' '.join(sources) + '\n',
+    rules = [targets + ': CFLAGS += -std=c89\n',
+             targets + ': gen/assert_' + name + '.c main.c ' + ' '.join(sources) + ' $(TEST_HEADERS)\n',
              'test_{}$(EXE):\n'.format(name),
-             '\t$(CC) $(CFLAGS) -I. $^ -o $@ $(LDFLAGS)\n',
-             'test_{}_checked$(EXE):\n'.format(name),
-             '\t$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -I. $^ -o $@ $(LDFLAGS)\n']
+             '\t$(CC) $(CFLAGS) -I. $(filter %.c,$^) -o $@ $(FUTEX_LDFLAGS) $(LDFLAGS)\n',
+             'test_{}_checked$(EXE): $(CHECKED_FUTEX_OBJECTS)\n'.format(name),
+             '\t$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -I. $(filter %.c %.o,$^) -o $@ $(LDFLAGS)\n']
     for source, filename in zip(sources, test['modules']):
         rules += [source + ': gen/' + filename + '\n', '\t$(W2C2) -m $< $@\n']
     with (gen_dir / (name + '.mk')).open('w', newline='\n') as output:

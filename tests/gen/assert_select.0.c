@@ -249,6 +249,18 @@ void test(void) {
         9218868437227537156ull,
         "select-f64-t(2.0, f64_reinterpret_i64(0x7ff0000000020304ull), 0u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export16_selectX2DtrapX2Dleft(&instance, 1u), trapUnreachable, "select-trap-left(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export16_selectX2DtrapX2Dleft(&instance, 0u), trapUnreachable, "select-trap-left(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export17_selectX2DtrapX2Dright(&instance, 1u), trapUnreachable, "select-trap-right(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export17_selectX2DtrapX2Dright(&instance, 0u), trapUnreachable, "select-trap-right(0u)");
+#endif
     assertEqualU32(
         m8_selectX2E0Export15_asX2DselectX2Dfirst(&instance, 0u),
         1u,
@@ -391,6 +403,12 @@ void test(void) {
         1u,
         "as-call_indirect-mid(1u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance, 0u), trapTableOutOfBounds, "as-call_indirect-last(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_selectX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance, 1u), trapTableOutOfBounds, "as-call_indirect-last(1u)");
+#endif
     (void)(m8_selectX2E0Export14_asX2DstoreX2Dfirst(&instance, 0u));
     (void)(m8_selectX2E0Export14_asX2DstoreX2Dfirst(&instance, 1u));
     (void)(m8_selectX2E0Export13_asX2DstoreX2Dlast(&instance, 0u));

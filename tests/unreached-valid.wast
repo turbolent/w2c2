@@ -44,6 +44,11 @@
 (assert_trap (invoke "select-trap-right" (i32.const 1)) "unreachable")
 (assert_trap (invoke "select-trap-right" (i32.const 0)) "unreachable")
 
+(assert_trap (invoke "select_unreached_result_1") "unreachable")
+(assert_trap (invoke "select_unreached_result_2") "unreachable")
+(assert_trap (invoke "unreachable-num") "unreachable")
+(assert_trap (invoke "unreachable-ref") "unreachable")
+
 ;; Validation after unreachable
 
 (module

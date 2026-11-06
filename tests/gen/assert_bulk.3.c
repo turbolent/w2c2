@@ -114,5 +114,11 @@ void test(void) {
     printOK("copy(65536u, 0u, 0u)");
     (void)(m6_bulkX2E3Export4_copy(&instance, 0u, 65536u, 0u));
     printOK("copy(0u, 65536u, 0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_bulkX2E3Export4_copy(&instance, 65537u, 0u, 0u), trapMemoryOutOfBounds, "copy(65537u, 0u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_bulkX2E3Export4_copy(&instance, 0u, 65537u, 0u), trapMemoryOutOfBounds, "copy(0u, 65537u, 0u)");
+#endif
     m6_bulkX2E3FreeInstance(&instance);
 }

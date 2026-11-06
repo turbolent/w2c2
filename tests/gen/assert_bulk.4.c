@@ -24,6 +24,9 @@ void test(void) {
     );
     (void)(m6_bulkX2E4Export4_init(&instance, 65532u, 0u, 4u));
     printOK("init(65532u, 0u, 4u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_bulkX2E4Export4_init(&instance, 65534u, 0u, 3u), trapMemoryOutOfBounds, "init(65534u, 0u, 3u)");
+#endif
     assertEqualU32(
         m6_bulkX2E4Export7_load8X5Fu(&instance, 65534u),
         204u,
@@ -38,5 +41,11 @@ void test(void) {
     printOK("init(65536u, 0u, 0u)");
     (void)(m6_bulkX2E4Export4_init(&instance, 0u, 4u, 0u));
     printOK("init(0u, 4u, 0u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_bulkX2E4Export4_init(&instance, 65537u, 0u, 0u), trapMemoryOutOfBounds, "init(65537u, 0u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_bulkX2E4Export4_init(&instance, 0u, 5u, 0u), trapMemoryOutOfBounds, "init(0u, 5u, 0u)");
+#endif
     m6_bulkX2E4FreeInstance(&instance);
 }

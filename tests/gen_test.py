@@ -234,6 +234,34 @@ class GlobalTests(unittest.TestCase):
 
 
 class ScriptTests(unittest.TestCase):
+    def test_traps_without_registration_in_both_layouts(self):
+        # The old generator imposed this restriction:
+        # Trap assertions run only in combined drivers with runtime checks.
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            (directory / 'script.0.wasm').write_bytes(b'\0asm\1\0\0\0')
+            source = directory / 'script.json'
+            source.write_text(json.dumps({'commands': [
+                {'type': 'module', 'filename': 'script.0.wasm'},
+                {'type': 'assert_trap', 'text': 'out of bounds memory access',
+                 'action': {'type': 'invoke', 'field': 'load', 'args': []}},
+            ]}))
+            for combined in (False, True):
+                with self.subTest(combined=combined):
+                    test, = gen.generate_test_files(source, combined=combined, output_dir=directory)
+                    output = test['path'].read_text()
+                    self.assertIn('#if W2C2_RUNTIME_CHECKS\n    assertTrap(', output)
+                    self.assertIn(', trapMemoryOutOfBounds, ', output)
+                    self.assertEqual(test['count'], 1)
+
+    def test_unknown_trap_reason_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'Unsupported trap reason'):
+            gen.trap_reason('unknown trap')
+
+    def test_legacy_trap_reasons(self):
+        self.assertEqual(gen.trap_reason('undefined element'), 'trapTableOutOfBounds')
+        self.assertEqual(gen.trap_reason('uninitialized element 2'), 'trapUninitializedElement')
+
     def test_host_import_forwarding(self):
         metadata = ([(['i64'], [])], [('spectest', 'print_i64', 0)] * 2, {})
         wrapper, = gen.forwarding_imports('script', metadata, {})
@@ -252,7 +280,8 @@ class ScriptTests(unittest.TestCase):
                 {'type': 'action', 'action': {'type': 'invoke', 'field': 'change', 'args': []}},
                 {'type': 'assert_return', 'action': {'type': 'get', 'module': '$first', 'field': 'value'},
                  'expected': [{'type': 'i32', 'value': '42'}]},
-                {'type': 'assert_trap', 'action': {'type': 'invoke', 'field': 'trap', 'args': []}},
+                {'type': 'assert_trap', 'text': 'unreachable',
+                 'action': {'type': 'invoke', 'field': 'trap', 'args': []}},
             ]}))
             test, = gen.generate_test_files(source, combined=True, output_dir=directory)
             output = test['path'].read_text()

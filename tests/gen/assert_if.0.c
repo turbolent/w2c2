@@ -260,6 +260,9 @@ void test(void) {
         2u,
         "as-call_indirect-last(0u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m4_ifX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance, 1u), trapTableOutOfBounds, "as-call_indirect-last(1u)");
+#endif
     (void)(m4_ifX2E0Export14_asX2DstoreX2Dfirst(&instance, 0u));
     (void)(m4_ifX2E0Export14_asX2DstoreX2Dfirst(&instance, 1u));
     (void)(m4_ifX2E0Export13_asX2DstoreX2Dlast(&instance, 0u));

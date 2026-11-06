@@ -106,7 +106,7 @@ void test(void) {
         "WAST line 71: call(11u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m16_extendedX5FconstX2E2Export4_call(&instance_2, 0u), "WAST line 72: call(0u)");
+    assertTrap(m16_extendedX5FconstX2E2Export4_call(&instance_2, 0u), trapUninitializedElement, "WAST line 72: call(0u)");
 #endif
     (void)(m16_extendedX5FconstX2E2Export4_init(&instance_2));
     printOK("WAST line 73: init()");

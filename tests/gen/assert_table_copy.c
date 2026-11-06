@@ -473,10 +473,10 @@ void test(void) {
     (void)(m12_tableX5FcopyX2E1Export4_test(&instance_1));
     printOK("WAST line 45: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 0u), "WAST line 46: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 0u), trapUninitializedElement, "WAST line 46: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 1u), "WAST line 47: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 1u), trapUninitializedElement, "WAST line 47: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 2u),
@@ -499,22 +499,22 @@ void test(void) {
         "WAST line 51: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 6u), "WAST line 52: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 6u), trapUninitializedElement, "WAST line 52: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 7u), "WAST line 53: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 7u), trapUninitializedElement, "WAST line 53: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 8u), "WAST line 54: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 8u), trapUninitializedElement, "WAST line 54: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 9u), "WAST line 55: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 9u), trapUninitializedElement, "WAST line 55: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 10u), "WAST line 56: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 10u), trapUninitializedElement, "WAST line 56: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 11u), "WAST line 57: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 11u), trapUninitializedElement, "WAST line 57: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 12u),
@@ -542,52 +542,52 @@ void test(void) {
         "WAST line 62: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 17u), "WAST line 63: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 17u), trapUninitializedElement, "WAST line 63: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 18u), "WAST line 64: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 18u), trapUninitializedElement, "WAST line 64: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 19u), "WAST line 65: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 19u), trapUninitializedElement, "WAST line 65: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 20u), "WAST line 66: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 20u), trapUninitializedElement, "WAST line 66: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 21u), "WAST line 67: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 21u), trapUninitializedElement, "WAST line 67: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 22u), "WAST line 68: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 22u), trapUninitializedElement, "WAST line 68: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 23u), "WAST line 69: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 23u), trapUninitializedElement, "WAST line 69: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 24u), "WAST line 70: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 24u), trapUninitializedElement, "WAST line 70: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 25u), "WAST line 71: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 25u), trapUninitializedElement, "WAST line 71: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 26u), "WAST line 72: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 26u), trapUninitializedElement, "WAST line 72: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 27u), "WAST line 73: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 27u), trapUninitializedElement, "WAST line 73: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 28u), "WAST line 74: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 28u), trapUninitializedElement, "WAST line 74: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 29u), "WAST line 75: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft0(&instance_1, 29u), trapUninitializedElement, "WAST line 75: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 0u), "WAST line 76: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 0u), trapUninitializedElement, "WAST line 76: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 1u), "WAST line 77: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 1u), trapUninitializedElement, "WAST line 77: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 2u), "WAST line 78: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 2u), trapUninitializedElement, "WAST line 78: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 3u),
@@ -610,16 +610,16 @@ void test(void) {
         "WAST line 82: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 7u), "WAST line 83: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 7u), trapUninitializedElement, "WAST line 83: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 8u), "WAST line 84: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 8u), trapUninitializedElement, "WAST line 84: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 9u), "WAST line 85: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 9u), trapUninitializedElement, "WAST line 85: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 10u), "WAST line 86: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 10u), trapUninitializedElement, "WAST line 86: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 11u),
@@ -647,56 +647,56 @@ void test(void) {
         "WAST line 91: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 16u), "WAST line 92: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 16u), trapUninitializedElement, "WAST line 92: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 17u), "WAST line 93: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 17u), trapUninitializedElement, "WAST line 93: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 18u), "WAST line 94: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 18u), trapUninitializedElement, "WAST line 94: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 19u), "WAST line 95: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 19u), trapUninitializedElement, "WAST line 95: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 20u), "WAST line 96: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 20u), trapUninitializedElement, "WAST line 96: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 21u), "WAST line 97: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 21u), trapUninitializedElement, "WAST line 97: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 22u), "WAST line 98: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 22u), trapUninitializedElement, "WAST line 98: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 23u), "WAST line 99: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 23u), trapUninitializedElement, "WAST line 99: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 24u), "WAST line 100: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 24u), trapUninitializedElement, "WAST line 100: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 25u), "WAST line 101: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 25u), trapUninitializedElement, "WAST line 101: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 26u), "WAST line 102: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 26u), trapUninitializedElement, "WAST line 102: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 27u), "WAST line 103: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 27u), trapUninitializedElement, "WAST line 103: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 28u), "WAST line 104: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 28u), trapUninitializedElement, "WAST line 104: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 29u), "WAST line 105: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E1Export8_checkX5Ft1(&instance_1, 29u), trapUninitializedElement, "WAST line 105: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E2Instantiate(&instance_2, resolveTestImports);
     printStart("table_copy.2.wasm");
     (void)(m12_tableX5FcopyX2E2Export4_test(&instance_2));
     printOK("WAST line 137: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 0u), "WAST line 138: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 0u), trapUninitializedElement, "WAST line 138: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 1u), "WAST line 139: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 1u), trapUninitializedElement, "WAST line 139: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 2u),
@@ -719,22 +719,22 @@ void test(void) {
         "WAST line 143: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 6u), "WAST line 144: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 6u), trapUninitializedElement, "WAST line 144: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 7u), "WAST line 145: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 7u), trapUninitializedElement, "WAST line 145: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 8u), "WAST line 146: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 8u), trapUninitializedElement, "WAST line 146: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 9u), "WAST line 147: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 9u), trapUninitializedElement, "WAST line 147: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 10u), "WAST line 148: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 10u), trapUninitializedElement, "WAST line 148: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 11u), "WAST line 149: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 11u), trapUninitializedElement, "WAST line 149: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 12u),
@@ -762,52 +762,52 @@ void test(void) {
         "WAST line 154: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 17u), "WAST line 155: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 17u), trapUninitializedElement, "WAST line 155: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 18u), "WAST line 156: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 18u), trapUninitializedElement, "WAST line 156: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 19u), "WAST line 157: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 19u), trapUninitializedElement, "WAST line 157: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 20u), "WAST line 158: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 20u), trapUninitializedElement, "WAST line 158: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 21u), "WAST line 159: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 21u), trapUninitializedElement, "WAST line 159: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 22u), "WAST line 160: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 22u), trapUninitializedElement, "WAST line 160: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 23u), "WAST line 161: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 23u), trapUninitializedElement, "WAST line 161: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 24u), "WAST line 162: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 24u), trapUninitializedElement, "WAST line 162: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 25u), "WAST line 163: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 25u), trapUninitializedElement, "WAST line 163: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 26u), "WAST line 164: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 26u), trapUninitializedElement, "WAST line 164: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 27u), "WAST line 165: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 27u), trapUninitializedElement, "WAST line 165: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 28u), "WAST line 166: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 28u), trapUninitializedElement, "WAST line 166: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 29u), "WAST line 167: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft0(&instance_2, 29u), trapUninitializedElement, "WAST line 167: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 0u), "WAST line 168: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 0u), trapUninitializedElement, "WAST line 168: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 1u), "WAST line 169: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 1u), trapUninitializedElement, "WAST line 169: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 2u), "WAST line 170: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 2u), trapUninitializedElement, "WAST line 170: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 3u),
@@ -830,16 +830,16 @@ void test(void) {
         "WAST line 174: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 7u), "WAST line 175: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 7u), trapUninitializedElement, "WAST line 175: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 8u), "WAST line 176: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 8u), trapUninitializedElement, "WAST line 176: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 9u), "WAST line 177: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 9u), trapUninitializedElement, "WAST line 177: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 10u), "WAST line 178: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 10u), trapUninitializedElement, "WAST line 178: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 11u),
@@ -867,56 +867,56 @@ void test(void) {
         "WAST line 183: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 16u), "WAST line 184: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 16u), trapUninitializedElement, "WAST line 184: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 17u), "WAST line 185: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 17u), trapUninitializedElement, "WAST line 185: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 18u), "WAST line 186: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 18u), trapUninitializedElement, "WAST line 186: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 19u), "WAST line 187: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 19u), trapUninitializedElement, "WAST line 187: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 20u), "WAST line 188: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 20u), trapUninitializedElement, "WAST line 188: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 21u), "WAST line 189: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 21u), trapUninitializedElement, "WAST line 189: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 22u), "WAST line 190: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 22u), trapUninitializedElement, "WAST line 190: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 23u), "WAST line 191: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 23u), trapUninitializedElement, "WAST line 191: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 24u), "WAST line 192: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 24u), trapUninitializedElement, "WAST line 192: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 25u), "WAST line 193: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 25u), trapUninitializedElement, "WAST line 193: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 26u), "WAST line 194: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 26u), trapUninitializedElement, "WAST line 194: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 27u), "WAST line 195: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 27u), trapUninitializedElement, "WAST line 195: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 28u), "WAST line 196: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 28u), trapUninitializedElement, "WAST line 196: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 29u), "WAST line 197: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E2Export8_checkX5Ft1(&instance_2, 29u), trapUninitializedElement, "WAST line 197: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E3Instantiate(&instance_3, resolveTestImports);
     printStart("table_copy.3.wasm");
     (void)(m12_tableX5FcopyX2E3Export4_test(&instance_3));
     printOK("WAST line 229: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 0u), "WAST line 230: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 0u), trapUninitializedElement, "WAST line 230: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 1u), "WAST line 231: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 1u), trapUninitializedElement, "WAST line 231: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 2u),
@@ -939,22 +939,22 @@ void test(void) {
         "WAST line 235: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 6u), "WAST line 236: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 6u), trapUninitializedElement, "WAST line 236: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 7u), "WAST line 237: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 7u), trapUninitializedElement, "WAST line 237: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 8u), "WAST line 238: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 8u), trapUninitializedElement, "WAST line 238: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 9u), "WAST line 239: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 9u), trapUninitializedElement, "WAST line 239: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 10u), "WAST line 240: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 10u), trapUninitializedElement, "WAST line 240: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 11u), "WAST line 241: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 11u), trapUninitializedElement, "WAST line 241: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 12u),
@@ -982,28 +982,28 @@ void test(void) {
         "WAST line 246: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 17u), "WAST line 247: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 17u), trapUninitializedElement, "WAST line 247: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 18u), "WAST line 248: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 18u), trapUninitializedElement, "WAST line 248: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 19u), "WAST line 249: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 19u), trapUninitializedElement, "WAST line 249: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 20u), "WAST line 250: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 20u), trapUninitializedElement, "WAST line 250: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 21u), "WAST line 251: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 21u), trapUninitializedElement, "WAST line 251: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 22u), "WAST line 252: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 22u), trapUninitializedElement, "WAST line 252: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 23u), "WAST line 253: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 23u), trapUninitializedElement, "WAST line 253: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 24u), "WAST line 254: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 24u), trapUninitializedElement, "WAST line 254: check_t0(24u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 25u),
@@ -1016,22 +1016,22 @@ void test(void) {
         "WAST line 256: check_t0(26u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 27u), "WAST line 257: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 27u), trapUninitializedElement, "WAST line 257: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 28u), "WAST line 258: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 28u), trapUninitializedElement, "WAST line 258: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 29u), "WAST line 259: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft0(&instance_3, 29u), trapUninitializedElement, "WAST line 259: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 0u), "WAST line 260: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 0u), trapUninitializedElement, "WAST line 260: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 1u), "WAST line 261: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 1u), trapUninitializedElement, "WAST line 261: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 2u), "WAST line 262: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 2u), trapUninitializedElement, "WAST line 262: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 3u),
@@ -1054,16 +1054,16 @@ void test(void) {
         "WAST line 266: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 7u), "WAST line 267: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 7u), trapUninitializedElement, "WAST line 267: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 8u), "WAST line 268: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 8u), trapUninitializedElement, "WAST line 268: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 9u), "WAST line 269: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 9u), trapUninitializedElement, "WAST line 269: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 10u), "WAST line 270: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 10u), trapUninitializedElement, "WAST line 270: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 11u),
@@ -1091,56 +1091,56 @@ void test(void) {
         "WAST line 275: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 16u), "WAST line 276: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 16u), trapUninitializedElement, "WAST line 276: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 17u), "WAST line 277: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 17u), trapUninitializedElement, "WAST line 277: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 18u), "WAST line 278: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 18u), trapUninitializedElement, "WAST line 278: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 19u), "WAST line 279: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 19u), trapUninitializedElement, "WAST line 279: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 20u), "WAST line 280: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 20u), trapUninitializedElement, "WAST line 280: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 21u), "WAST line 281: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 21u), trapUninitializedElement, "WAST line 281: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 22u), "WAST line 282: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 22u), trapUninitializedElement, "WAST line 282: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 23u), "WAST line 283: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 23u), trapUninitializedElement, "WAST line 283: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 24u), "WAST line 284: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 24u), trapUninitializedElement, "WAST line 284: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 25u), "WAST line 285: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 25u), trapUninitializedElement, "WAST line 285: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 26u), "WAST line 286: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 26u), trapUninitializedElement, "WAST line 286: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 27u), "WAST line 287: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 27u), trapUninitializedElement, "WAST line 287: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 28u), "WAST line 288: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 28u), trapUninitializedElement, "WAST line 288: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 29u), "WAST line 289: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E3Export8_checkX5Ft1(&instance_3, 29u), trapUninitializedElement, "WAST line 289: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E4Instantiate(&instance_4, resolveTestImports);
     printStart("table_copy.4.wasm");
     (void)(m12_tableX5FcopyX2E4Export4_test(&instance_4));
     printOK("WAST line 321: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 0u), "WAST line 322: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 0u), trapUninitializedElement, "WAST line 322: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 1u), "WAST line 323: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 1u), trapUninitializedElement, "WAST line 323: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 2u),
@@ -1163,22 +1163,22 @@ void test(void) {
         "WAST line 327: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 6u), "WAST line 328: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 6u), trapUninitializedElement, "WAST line 328: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 7u), "WAST line 329: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 7u), trapUninitializedElement, "WAST line 329: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 8u), "WAST line 330: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 8u), trapUninitializedElement, "WAST line 330: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 9u), "WAST line 331: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 9u), trapUninitializedElement, "WAST line 331: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 10u), "WAST line 332: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 10u), trapUninitializedElement, "WAST line 332: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 11u), "WAST line 333: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 11u), trapUninitializedElement, "WAST line 333: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 12u),
@@ -1186,13 +1186,13 @@ void test(void) {
         "WAST line 334: check_t0(12u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 13u), "WAST line 335: check_t0(13u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 13u), trapUninitializedElement, "WAST line 335: check_t0(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 14u), "WAST line 336: check_t0(14u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 14u), trapUninitializedElement, "WAST line 336: check_t0(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 15u), "WAST line 337: check_t0(15u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 15u), trapUninitializedElement, "WAST line 337: check_t0(15u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 16u),
@@ -1200,52 +1200,52 @@ void test(void) {
         "WAST line 338: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 17u), "WAST line 339: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 17u), trapUninitializedElement, "WAST line 339: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 18u), "WAST line 340: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 18u), trapUninitializedElement, "WAST line 340: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 19u), "WAST line 341: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 19u), trapUninitializedElement, "WAST line 341: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 20u), "WAST line 342: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 20u), trapUninitializedElement, "WAST line 342: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 21u), "WAST line 343: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 21u), trapUninitializedElement, "WAST line 343: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 22u), "WAST line 344: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 22u), trapUninitializedElement, "WAST line 344: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 23u), "WAST line 345: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 23u), trapUninitializedElement, "WAST line 345: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 24u), "WAST line 346: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 24u), trapUninitializedElement, "WAST line 346: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 25u), "WAST line 347: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 25u), trapUninitializedElement, "WAST line 347: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 26u), "WAST line 348: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 26u), trapUninitializedElement, "WAST line 348: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 27u), "WAST line 349: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 27u), trapUninitializedElement, "WAST line 349: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 28u), "WAST line 350: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 28u), trapUninitializedElement, "WAST line 350: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 29u), "WAST line 351: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft0(&instance_4, 29u), trapUninitializedElement, "WAST line 351: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 0u), "WAST line 352: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 0u), trapUninitializedElement, "WAST line 352: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 1u), "WAST line 353: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 1u), trapUninitializedElement, "WAST line 353: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 2u), "WAST line 354: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 2u), trapUninitializedElement, "WAST line 354: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 3u),
@@ -1268,16 +1268,16 @@ void test(void) {
         "WAST line 358: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 7u), "WAST line 359: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 7u), trapUninitializedElement, "WAST line 359: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 8u), "WAST line 360: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 8u), trapUninitializedElement, "WAST line 360: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 9u), "WAST line 361: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 9u), trapUninitializedElement, "WAST line 361: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 10u), "WAST line 362: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 10u), trapUninitializedElement, "WAST line 362: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 11u),
@@ -1305,56 +1305,56 @@ void test(void) {
         "WAST line 367: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 16u), "WAST line 368: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 16u), trapUninitializedElement, "WAST line 368: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 17u), "WAST line 369: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 17u), trapUninitializedElement, "WAST line 369: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 18u), "WAST line 370: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 18u), trapUninitializedElement, "WAST line 370: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 19u), "WAST line 371: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 19u), trapUninitializedElement, "WAST line 371: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 20u), "WAST line 372: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 20u), trapUninitializedElement, "WAST line 372: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 21u), "WAST line 373: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 21u), trapUninitializedElement, "WAST line 373: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 22u), "WAST line 374: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 22u), trapUninitializedElement, "WAST line 374: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 23u), "WAST line 375: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 23u), trapUninitializedElement, "WAST line 375: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 24u), "WAST line 376: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 24u), trapUninitializedElement, "WAST line 376: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 25u), "WAST line 377: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 25u), trapUninitializedElement, "WAST line 377: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 26u), "WAST line 378: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 26u), trapUninitializedElement, "WAST line 378: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 27u), "WAST line 379: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 27u), trapUninitializedElement, "WAST line 379: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 28u), "WAST line 380: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 28u), trapUninitializedElement, "WAST line 380: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 29u), "WAST line 381: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E4Export8_checkX5Ft1(&instance_4, 29u), trapUninitializedElement, "WAST line 381: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E5Instantiate(&instance_5, resolveTestImports);
     printStart("table_copy.5.wasm");
     (void)(m12_tableX5FcopyX2E5Export4_test(&instance_5));
     printOK("WAST line 413: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 0u), "WAST line 414: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 0u), trapUninitializedElement, "WAST line 414: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 1u), "WAST line 415: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 1u), trapUninitializedElement, "WAST line 415: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 2u),
@@ -1377,22 +1377,22 @@ void test(void) {
         "WAST line 419: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 6u), "WAST line 420: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 6u), trapUninitializedElement, "WAST line 420: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 7u), "WAST line 421: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 7u), trapUninitializedElement, "WAST line 421: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 8u), "WAST line 422: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 8u), trapUninitializedElement, "WAST line 422: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 9u), "WAST line 423: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 9u), trapUninitializedElement, "WAST line 423: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 10u), "WAST line 424: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 10u), trapUninitializedElement, "WAST line 424: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 11u), "WAST line 425: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 11u), trapUninitializedElement, "WAST line 425: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 12u),
@@ -1420,52 +1420,52 @@ void test(void) {
         "WAST line 430: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 17u), "WAST line 431: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 17u), trapUninitializedElement, "WAST line 431: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 18u), "WAST line 432: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 18u), trapUninitializedElement, "WAST line 432: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 19u), "WAST line 433: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 19u), trapUninitializedElement, "WAST line 433: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 20u), "WAST line 434: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 20u), trapUninitializedElement, "WAST line 434: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 21u), "WAST line 435: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 21u), trapUninitializedElement, "WAST line 435: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 22u), "WAST line 436: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 22u), trapUninitializedElement, "WAST line 436: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 23u), "WAST line 437: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 23u), trapUninitializedElement, "WAST line 437: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 24u), "WAST line 438: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 24u), trapUninitializedElement, "WAST line 438: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 25u), "WAST line 439: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 25u), trapUninitializedElement, "WAST line 439: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 26u), "WAST line 440: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 26u), trapUninitializedElement, "WAST line 440: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 27u), "WAST line 441: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 27u), trapUninitializedElement, "WAST line 441: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 28u), "WAST line 442: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 28u), trapUninitializedElement, "WAST line 442: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 29u), "WAST line 443: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft0(&instance_5, 29u), trapUninitializedElement, "WAST line 443: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 0u), "WAST line 444: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 0u), trapUninitializedElement, "WAST line 444: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 1u), "WAST line 445: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 1u), trapUninitializedElement, "WAST line 445: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 2u), "WAST line 446: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 2u), trapUninitializedElement, "WAST line 446: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 3u),
@@ -1488,16 +1488,16 @@ void test(void) {
         "WAST line 450: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 7u), "WAST line 451: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 7u), trapUninitializedElement, "WAST line 451: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 8u), "WAST line 452: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 8u), trapUninitializedElement, "WAST line 452: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 9u), "WAST line 453: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 9u), trapUninitializedElement, "WAST line 453: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 10u), "WAST line 454: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 10u), trapUninitializedElement, "WAST line 454: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 11u),
@@ -1525,56 +1525,56 @@ void test(void) {
         "WAST line 459: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 16u), "WAST line 460: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 16u), trapUninitializedElement, "WAST line 460: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 17u), "WAST line 461: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 17u), trapUninitializedElement, "WAST line 461: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 18u), "WAST line 462: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 18u), trapUninitializedElement, "WAST line 462: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 19u), "WAST line 463: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 19u), trapUninitializedElement, "WAST line 463: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 20u), "WAST line 464: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 20u), trapUninitializedElement, "WAST line 464: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 21u), "WAST line 465: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 21u), trapUninitializedElement, "WAST line 465: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 22u), "WAST line 466: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 22u), trapUninitializedElement, "WAST line 466: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 23u), "WAST line 467: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 23u), trapUninitializedElement, "WAST line 467: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 24u), "WAST line 468: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 24u), trapUninitializedElement, "WAST line 468: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 25u), "WAST line 469: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 25u), trapUninitializedElement, "WAST line 469: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 26u), "WAST line 470: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 26u), trapUninitializedElement, "WAST line 470: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 27u), "WAST line 471: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 27u), trapUninitializedElement, "WAST line 471: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 28u), "WAST line 472: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 28u), trapUninitializedElement, "WAST line 472: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 29u), "WAST line 473: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E5Export8_checkX5Ft1(&instance_5, 29u), trapUninitializedElement, "WAST line 473: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E6Instantiate(&instance_6, resolveTestImports);
     printStart("table_copy.6.wasm");
     (void)(m12_tableX5FcopyX2E6Export4_test(&instance_6));
     printOK("WAST line 505: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 0u), "WAST line 506: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 0u), trapUninitializedElement, "WAST line 506: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 1u), "WAST line 507: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 1u), trapUninitializedElement, "WAST line 507: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 2u),
@@ -1597,22 +1597,22 @@ void test(void) {
         "WAST line 511: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 6u), "WAST line 512: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 6u), trapUninitializedElement, "WAST line 512: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 7u), "WAST line 513: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 7u), trapUninitializedElement, "WAST line 513: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 8u), "WAST line 514: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 8u), trapUninitializedElement, "WAST line 514: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 9u), "WAST line 515: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 9u), trapUninitializedElement, "WAST line 515: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 10u), "WAST line 516: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 10u), trapUninitializedElement, "WAST line 516: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 11u), "WAST line 517: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 11u), trapUninitializedElement, "WAST line 517: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 12u),
@@ -1640,31 +1640,31 @@ void test(void) {
         "WAST line 522: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 17u), "WAST line 523: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 17u), trapUninitializedElement, "WAST line 523: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 18u), "WAST line 524: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 18u), trapUninitializedElement, "WAST line 524: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 19u), "WAST line 525: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 19u), trapUninitializedElement, "WAST line 525: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 20u), "WAST line 526: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 20u), trapUninitializedElement, "WAST line 526: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 21u), "WAST line 527: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 21u), trapUninitializedElement, "WAST line 527: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 22u), "WAST line 528: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 22u), trapUninitializedElement, "WAST line 528: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 23u), "WAST line 529: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 23u), trapUninitializedElement, "WAST line 529: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 24u), "WAST line 530: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 24u), trapUninitializedElement, "WAST line 530: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 25u), "WAST line 531: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 25u), trapUninitializedElement, "WAST line 531: check_t0(25u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 26u),
@@ -1677,19 +1677,19 @@ void test(void) {
         "WAST line 533: check_t0(27u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 28u), "WAST line 534: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 28u), trapUninitializedElement, "WAST line 534: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 29u), "WAST line 535: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft0(&instance_6, 29u), trapUninitializedElement, "WAST line 535: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 0u), "WAST line 536: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 0u), trapUninitializedElement, "WAST line 536: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 1u), "WAST line 537: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 1u), trapUninitializedElement, "WAST line 537: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 2u), "WAST line 538: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 2u), trapUninitializedElement, "WAST line 538: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 3u),
@@ -1712,16 +1712,16 @@ void test(void) {
         "WAST line 542: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 7u), "WAST line 543: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 7u), trapUninitializedElement, "WAST line 543: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 8u), "WAST line 544: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 8u), trapUninitializedElement, "WAST line 544: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 9u), "WAST line 545: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 9u), trapUninitializedElement, "WAST line 545: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 10u), "WAST line 546: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 10u), trapUninitializedElement, "WAST line 546: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 11u),
@@ -1749,56 +1749,56 @@ void test(void) {
         "WAST line 551: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 16u), "WAST line 552: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 16u), trapUninitializedElement, "WAST line 552: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 17u), "WAST line 553: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 17u), trapUninitializedElement, "WAST line 553: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 18u), "WAST line 554: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 18u), trapUninitializedElement, "WAST line 554: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 19u), "WAST line 555: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 19u), trapUninitializedElement, "WAST line 555: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 20u), "WAST line 556: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 20u), trapUninitializedElement, "WAST line 556: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 21u), "WAST line 557: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 21u), trapUninitializedElement, "WAST line 557: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 22u), "WAST line 558: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 22u), trapUninitializedElement, "WAST line 558: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 23u), "WAST line 559: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 23u), trapUninitializedElement, "WAST line 559: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 24u), "WAST line 560: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 24u), trapUninitializedElement, "WAST line 560: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 25u), "WAST line 561: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 25u), trapUninitializedElement, "WAST line 561: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 26u), "WAST line 562: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 26u), trapUninitializedElement, "WAST line 562: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 27u), "WAST line 563: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 27u), trapUninitializedElement, "WAST line 563: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 28u), "WAST line 564: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 28u), trapUninitializedElement, "WAST line 564: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 29u), "WAST line 565: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E6Export8_checkX5Ft1(&instance_6, 29u), trapUninitializedElement, "WAST line 565: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E7Instantiate(&instance_7, resolveTestImports);
     printStart("table_copy.7.wasm");
     (void)(m12_tableX5FcopyX2E7Export4_test(&instance_7));
     printOK("WAST line 597: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 0u), "WAST line 598: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 0u), trapUninitializedElement, "WAST line 598: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 1u), "WAST line 599: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 1u), trapUninitializedElement, "WAST line 599: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 2u),
@@ -1821,16 +1821,16 @@ void test(void) {
         "WAST line 603: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 6u), "WAST line 604: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 6u), trapUninitializedElement, "WAST line 604: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 7u), "WAST line 605: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 7u), trapUninitializedElement, "WAST line 605: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 8u), "WAST line 606: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 8u), trapUninitializedElement, "WAST line 606: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 9u), "WAST line 607: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 9u), trapUninitializedElement, "WAST line 607: check_t0(9u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 10u),
@@ -1858,58 +1858,58 @@ void test(void) {
         "WAST line 612: check_t0(14u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 15u), "WAST line 613: check_t0(15u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 15u), trapUninitializedElement, "WAST line 613: check_t0(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 16u), "WAST line 614: check_t0(16u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 16u), trapUninitializedElement, "WAST line 614: check_t0(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 17u), "WAST line 615: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 17u), trapUninitializedElement, "WAST line 615: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 18u), "WAST line 616: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 18u), trapUninitializedElement, "WAST line 616: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 19u), "WAST line 617: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 19u), trapUninitializedElement, "WAST line 617: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 20u), "WAST line 618: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 20u), trapUninitializedElement, "WAST line 618: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 21u), "WAST line 619: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 21u), trapUninitializedElement, "WAST line 619: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 22u), "WAST line 620: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 22u), trapUninitializedElement, "WAST line 620: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 23u), "WAST line 621: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 23u), trapUninitializedElement, "WAST line 621: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 24u), "WAST line 622: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 24u), trapUninitializedElement, "WAST line 622: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 25u), "WAST line 623: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 25u), trapUninitializedElement, "WAST line 623: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 26u), "WAST line 624: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 26u), trapUninitializedElement, "WAST line 624: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 27u), "WAST line 625: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 27u), trapUninitializedElement, "WAST line 625: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 28u), "WAST line 626: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 28u), trapUninitializedElement, "WAST line 626: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 29u), "WAST line 627: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft0(&instance_7, 29u), trapUninitializedElement, "WAST line 627: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 0u), "WAST line 628: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 0u), trapUninitializedElement, "WAST line 628: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 1u), "WAST line 629: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 1u), trapUninitializedElement, "WAST line 629: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 2u), "WAST line 630: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 2u), trapUninitializedElement, "WAST line 630: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 3u),
@@ -1932,16 +1932,16 @@ void test(void) {
         "WAST line 634: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 7u), "WAST line 635: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 7u), trapUninitializedElement, "WAST line 635: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 8u), "WAST line 636: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 8u), trapUninitializedElement, "WAST line 636: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 9u), "WAST line 637: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 9u), trapUninitializedElement, "WAST line 637: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 10u), "WAST line 638: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 10u), trapUninitializedElement, "WAST line 638: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 11u),
@@ -1969,56 +1969,56 @@ void test(void) {
         "WAST line 643: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 16u), "WAST line 644: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 16u), trapUninitializedElement, "WAST line 644: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 17u), "WAST line 645: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 17u), trapUninitializedElement, "WAST line 645: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 18u), "WAST line 646: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 18u), trapUninitializedElement, "WAST line 646: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 19u), "WAST line 647: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 19u), trapUninitializedElement, "WAST line 647: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 20u), "WAST line 648: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 20u), trapUninitializedElement, "WAST line 648: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 21u), "WAST line 649: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 21u), trapUninitializedElement, "WAST line 649: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 22u), "WAST line 650: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 22u), trapUninitializedElement, "WAST line 650: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 23u), "WAST line 651: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 23u), trapUninitializedElement, "WAST line 651: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 24u), "WAST line 652: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 24u), trapUninitializedElement, "WAST line 652: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 25u), "WAST line 653: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 25u), trapUninitializedElement, "WAST line 653: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 26u), "WAST line 654: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 26u), trapUninitializedElement, "WAST line 654: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 27u), "WAST line 655: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 27u), trapUninitializedElement, "WAST line 655: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 28u), "WAST line 656: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 28u), trapUninitializedElement, "WAST line 656: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 29u), "WAST line 657: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E7Export8_checkX5Ft1(&instance_7, 29u), trapUninitializedElement, "WAST line 657: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E8Instantiate(&instance_8, resolveTestImports);
     printStart("table_copy.8.wasm");
     (void)(m12_tableX5FcopyX2E8Export4_test(&instance_8));
     printOK("WAST line 689: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 0u), "WAST line 690: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 0u), trapUninitializedElement, "WAST line 690: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 1u), "WAST line 691: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 1u), trapUninitializedElement, "WAST line 691: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 2u),
@@ -2041,28 +2041,28 @@ void test(void) {
         "WAST line 695: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 6u), "WAST line 696: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 6u), trapUninitializedElement, "WAST line 696: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 7u), "WAST line 697: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 7u), trapUninitializedElement, "WAST line 697: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 8u), "WAST line 698: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 8u), trapUninitializedElement, "WAST line 698: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 9u), "WAST line 699: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 9u), trapUninitializedElement, "WAST line 699: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 10u), "WAST line 700: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 10u), trapUninitializedElement, "WAST line 700: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 11u), "WAST line 701: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 11u), trapUninitializedElement, "WAST line 701: check_t0(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 12u), "WAST line 702: check_t0(12u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 12u), trapUninitializedElement, "WAST line 702: check_t0(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 13u), "WAST line 703: check_t0(13u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 13u), trapUninitializedElement, "WAST line 703: check_t0(13u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 14u),
@@ -2090,46 +2090,46 @@ void test(void) {
         "WAST line 708: check_t0(18u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 19u), "WAST line 709: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 19u), trapUninitializedElement, "WAST line 709: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 20u), "WAST line 710: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 20u), trapUninitializedElement, "WAST line 710: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 21u), "WAST line 711: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 21u), trapUninitializedElement, "WAST line 711: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 22u), "WAST line 712: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 22u), trapUninitializedElement, "WAST line 712: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 23u), "WAST line 713: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 23u), trapUninitializedElement, "WAST line 713: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 24u), "WAST line 714: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 24u), trapUninitializedElement, "WAST line 714: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 25u), "WAST line 715: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 25u), trapUninitializedElement, "WAST line 715: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 26u), "WAST line 716: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 26u), trapUninitializedElement, "WAST line 716: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 27u), "WAST line 717: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 27u), trapUninitializedElement, "WAST line 717: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 28u), "WAST line 718: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 28u), trapUninitializedElement, "WAST line 718: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 29u), "WAST line 719: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft0(&instance_8, 29u), trapUninitializedElement, "WAST line 719: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 0u), "WAST line 720: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 0u), trapUninitializedElement, "WAST line 720: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 1u), "WAST line 721: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 1u), trapUninitializedElement, "WAST line 721: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 2u), "WAST line 722: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 2u), trapUninitializedElement, "WAST line 722: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 3u),
@@ -2152,16 +2152,16 @@ void test(void) {
         "WAST line 726: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 7u), "WAST line 727: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 7u), trapUninitializedElement, "WAST line 727: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 8u), "WAST line 728: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 8u), trapUninitializedElement, "WAST line 728: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 9u), "WAST line 729: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 9u), trapUninitializedElement, "WAST line 729: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 10u), "WAST line 730: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 10u), trapUninitializedElement, "WAST line 730: check_t1(10u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 11u),
@@ -2189,56 +2189,56 @@ void test(void) {
         "WAST line 735: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 16u), "WAST line 736: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 16u), trapUninitializedElement, "WAST line 736: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 17u), "WAST line 737: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 17u), trapUninitializedElement, "WAST line 737: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 18u), "WAST line 738: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 18u), trapUninitializedElement, "WAST line 738: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 19u), "WAST line 739: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 19u), trapUninitializedElement, "WAST line 739: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 20u), "WAST line 740: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 20u), trapUninitializedElement, "WAST line 740: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 21u), "WAST line 741: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 21u), trapUninitializedElement, "WAST line 741: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 22u), "WAST line 742: check_t1(22u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 22u), trapUninitializedElement, "WAST line 742: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 23u), "WAST line 743: check_t1(23u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 23u), trapUninitializedElement, "WAST line 743: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 24u), "WAST line 744: check_t1(24u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 24u), trapUninitializedElement, "WAST line 744: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 25u), "WAST line 745: check_t1(25u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 25u), trapUninitializedElement, "WAST line 745: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 26u), "WAST line 746: check_t1(26u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 26u), trapUninitializedElement, "WAST line 746: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 27u), "WAST line 747: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 27u), trapUninitializedElement, "WAST line 747: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 28u), "WAST line 748: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 28u), trapUninitializedElement, "WAST line 748: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 29u), "WAST line 749: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E8Export8_checkX5Ft1(&instance_8, 29u), trapUninitializedElement, "WAST line 749: check_t1(29u)");
 #endif
     m12_tableX5FcopyX2E9Instantiate(&instance_9, resolveTestImports);
     printStart("table_copy.9.wasm");
     (void)(m12_tableX5FcopyX2E9Export4_test(&instance_9));
     printOK("WAST line 781: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 0u), "WAST line 782: check_t0(0u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 0u), trapUninitializedElement, "WAST line 782: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 1u), "WAST line 783: check_t0(1u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 1u), trapUninitializedElement, "WAST line 783: check_t0(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 2u),
@@ -2261,22 +2261,22 @@ void test(void) {
         "WAST line 787: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 6u), "WAST line 788: check_t0(6u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 6u), trapUninitializedElement, "WAST line 788: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 7u), "WAST line 789: check_t0(7u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 7u), trapUninitializedElement, "WAST line 789: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 8u), "WAST line 790: check_t0(8u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 8u), trapUninitializedElement, "WAST line 790: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 9u), "WAST line 791: check_t0(9u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 9u), trapUninitializedElement, "WAST line 791: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 10u), "WAST line 792: check_t0(10u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 10u), trapUninitializedElement, "WAST line 792: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 11u), "WAST line 793: check_t0(11u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 11u), trapUninitializedElement, "WAST line 793: check_t0(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 12u),
@@ -2304,52 +2304,52 @@ void test(void) {
         "WAST line 798: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 17u), "WAST line 799: check_t0(17u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 17u), trapUninitializedElement, "WAST line 799: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 18u), "WAST line 800: check_t0(18u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 18u), trapUninitializedElement, "WAST line 800: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 19u), "WAST line 801: check_t0(19u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 19u), trapUninitializedElement, "WAST line 801: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 20u), "WAST line 802: check_t0(20u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 20u), trapUninitializedElement, "WAST line 802: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 21u), "WAST line 803: check_t0(21u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 21u), trapUninitializedElement, "WAST line 803: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 22u), "WAST line 804: check_t0(22u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 22u), trapUninitializedElement, "WAST line 804: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 23u), "WAST line 805: check_t0(23u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 23u), trapUninitializedElement, "WAST line 805: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 24u), "WAST line 806: check_t0(24u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 24u), trapUninitializedElement, "WAST line 806: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 25u), "WAST line 807: check_t0(25u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 25u), trapUninitializedElement, "WAST line 807: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 26u), "WAST line 808: check_t0(26u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 26u), trapUninitializedElement, "WAST line 808: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 27u), "WAST line 809: check_t0(27u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 27u), trapUninitializedElement, "WAST line 809: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 28u), "WAST line 810: check_t0(28u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 28u), trapUninitializedElement, "WAST line 810: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 29u), "WAST line 811: check_t0(29u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft0(&instance_9, 29u), trapUninitializedElement, "WAST line 811: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 0u), "WAST line 812: check_t1(0u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 0u), trapUninitializedElement, "WAST line 812: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 1u), "WAST line 813: check_t1(1u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 1u), trapUninitializedElement, "WAST line 813: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 2u), "WAST line 814: check_t1(2u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 2u), trapUninitializedElement, "WAST line 814: check_t1(2u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 3u),
@@ -2372,19 +2372,19 @@ void test(void) {
         "WAST line 818: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 7u), "WAST line 819: check_t1(7u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 7u), trapUninitializedElement, "WAST line 819: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 8u), "WAST line 820: check_t1(8u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 8u), trapUninitializedElement, "WAST line 820: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 9u), "WAST line 821: check_t1(9u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 9u), trapUninitializedElement, "WAST line 821: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 10u), "WAST line 822: check_t1(10u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 10u), trapUninitializedElement, "WAST line 822: check_t1(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 11u), "WAST line 823: check_t1(11u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 11u), trapUninitializedElement, "WAST line 823: check_t1(11u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 12u),
@@ -2407,22 +2407,22 @@ void test(void) {
         "WAST line 827: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 16u), "WAST line 828: check_t1(16u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 16u), trapUninitializedElement, "WAST line 828: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 17u), "WAST line 829: check_t1(17u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 17u), trapUninitializedElement, "WAST line 829: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 18u), "WAST line 830: check_t1(18u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 18u), trapUninitializedElement, "WAST line 830: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 19u), "WAST line 831: check_t1(19u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 19u), trapUninitializedElement, "WAST line 831: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 20u), "WAST line 832: check_t1(20u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 20u), trapUninitializedElement, "WAST line 832: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 21u), "WAST line 833: check_t1(21u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 21u), trapUninitializedElement, "WAST line 833: check_t1(21u)");
 #endif
     assertEqualU32(
         m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 22u),
@@ -2450,23 +2450,23 @@ void test(void) {
         "WAST line 838: check_t1(26u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 27u), "WAST line 839: check_t1(27u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 27u), trapUninitializedElement, "WAST line 839: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 28u), "WAST line 840: check_t1(28u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 28u), trapUninitializedElement, "WAST line 840: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 29u), "WAST line 841: check_t1(29u)");
+    assertTrap(m12_tableX5FcopyX2E9Export8_checkX5Ft1(&instance_9, 29u), trapUninitializedElement, "WAST line 841: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E10Instantiate(&instance_10, resolveTestImports);
     printStart("table_copy.10.wasm");
     (void)(m13_tableX5FcopyX2E10Export4_test(&instance_10));
     printOK("WAST line 873: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 0u), "WAST line 874: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 0u), trapUninitializedElement, "WAST line 874: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 1u), "WAST line 875: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 1u), trapUninitializedElement, "WAST line 875: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 2u),
@@ -2489,22 +2489,22 @@ void test(void) {
         "WAST line 879: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 6u), "WAST line 880: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 6u), trapUninitializedElement, "WAST line 880: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 7u), "WAST line 881: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 7u), trapUninitializedElement, "WAST line 881: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 8u), "WAST line 882: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 8u), trapUninitializedElement, "WAST line 882: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 9u), "WAST line 883: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 9u), trapUninitializedElement, "WAST line 883: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 10u), "WAST line 884: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 10u), trapUninitializedElement, "WAST line 884: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 11u), "WAST line 885: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 11u), trapUninitializedElement, "WAST line 885: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 12u),
@@ -2532,52 +2532,52 @@ void test(void) {
         "WAST line 890: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 17u), "WAST line 891: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 17u), trapUninitializedElement, "WAST line 891: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 18u), "WAST line 892: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 18u), trapUninitializedElement, "WAST line 892: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 19u), "WAST line 893: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 19u), trapUninitializedElement, "WAST line 893: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 20u), "WAST line 894: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 20u), trapUninitializedElement, "WAST line 894: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 21u), "WAST line 895: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 21u), trapUninitializedElement, "WAST line 895: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 22u), "WAST line 896: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 22u), trapUninitializedElement, "WAST line 896: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 23u), "WAST line 897: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 23u), trapUninitializedElement, "WAST line 897: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 24u), "WAST line 898: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 24u), trapUninitializedElement, "WAST line 898: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 25u), "WAST line 899: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 25u), trapUninitializedElement, "WAST line 899: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 26u), "WAST line 900: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 26u), trapUninitializedElement, "WAST line 900: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 27u), "WAST line 901: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 27u), trapUninitializedElement, "WAST line 901: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 28u), "WAST line 902: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 28u), trapUninitializedElement, "WAST line 902: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 29u), "WAST line 903: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft0(&instance_10, 29u), trapUninitializedElement, "WAST line 903: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 0u), "WAST line 904: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 0u), trapUninitializedElement, "WAST line 904: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 1u), "WAST line 905: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 1u), trapUninitializedElement, "WAST line 905: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 2u), "WAST line 906: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 2u), trapUninitializedElement, "WAST line 906: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 3u),
@@ -2600,16 +2600,16 @@ void test(void) {
         "WAST line 910: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 7u), "WAST line 911: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 7u), trapUninitializedElement, "WAST line 911: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 8u), "WAST line 912: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 8u), trapUninitializedElement, "WAST line 912: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 9u), "WAST line 913: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 9u), trapUninitializedElement, "WAST line 913: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 10u), "WAST line 914: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 10u), trapUninitializedElement, "WAST line 914: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 11u),
@@ -2637,56 +2637,56 @@ void test(void) {
         "WAST line 919: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 16u), "WAST line 920: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 16u), trapUninitializedElement, "WAST line 920: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 17u), "WAST line 921: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 17u), trapUninitializedElement, "WAST line 921: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 18u), "WAST line 922: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 18u), trapUninitializedElement, "WAST line 922: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 19u), "WAST line 923: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 19u), trapUninitializedElement, "WAST line 923: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 20u), "WAST line 924: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 20u), trapUninitializedElement, "WAST line 924: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 21u), "WAST line 925: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 21u), trapUninitializedElement, "WAST line 925: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 22u), "WAST line 926: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 22u), trapUninitializedElement, "WAST line 926: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 23u), "WAST line 927: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 23u), trapUninitializedElement, "WAST line 927: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 24u), "WAST line 928: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 24u), trapUninitializedElement, "WAST line 928: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 25u), "WAST line 929: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 25u), trapUninitializedElement, "WAST line 929: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 26u), "WAST line 930: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 26u), trapUninitializedElement, "WAST line 930: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 27u), "WAST line 931: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 27u), trapUninitializedElement, "WAST line 931: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 28u), "WAST line 932: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 28u), trapUninitializedElement, "WAST line 932: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 29u), "WAST line 933: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E10Export8_checkX5Ft1(&instance_10, 29u), trapUninitializedElement, "WAST line 933: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E11Instantiate(&instance_11, resolveTestImports);
     printStart("table_copy.11.wasm");
     (void)(m13_tableX5FcopyX2E11Export4_test(&instance_11));
     printOK("WAST line 965: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 0u), "WAST line 966: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 0u), trapUninitializedElement, "WAST line 966: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 1u), "WAST line 967: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 1u), trapUninitializedElement, "WAST line 967: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 2u),
@@ -2709,22 +2709,22 @@ void test(void) {
         "WAST line 971: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 6u), "WAST line 972: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 6u), trapUninitializedElement, "WAST line 972: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 7u), "WAST line 973: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 7u), trapUninitializedElement, "WAST line 973: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 8u), "WAST line 974: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 8u), trapUninitializedElement, "WAST line 974: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 9u), "WAST line 975: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 9u), trapUninitializedElement, "WAST line 975: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 10u), "WAST line 976: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 10u), trapUninitializedElement, "WAST line 976: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 11u), "WAST line 977: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 11u), trapUninitializedElement, "WAST line 977: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 12u),
@@ -2752,52 +2752,52 @@ void test(void) {
         "WAST line 982: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 17u), "WAST line 983: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 17u), trapUninitializedElement, "WAST line 983: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 18u), "WAST line 984: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 18u), trapUninitializedElement, "WAST line 984: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 19u), "WAST line 985: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 19u), trapUninitializedElement, "WAST line 985: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 20u), "WAST line 986: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 20u), trapUninitializedElement, "WAST line 986: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 21u), "WAST line 987: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 21u), trapUninitializedElement, "WAST line 987: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 22u), "WAST line 988: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 22u), trapUninitializedElement, "WAST line 988: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 23u), "WAST line 989: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 23u), trapUninitializedElement, "WAST line 989: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 24u), "WAST line 990: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 24u), trapUninitializedElement, "WAST line 990: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 25u), "WAST line 991: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 25u), trapUninitializedElement, "WAST line 991: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 26u), "WAST line 992: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 26u), trapUninitializedElement, "WAST line 992: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 27u), "WAST line 993: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 27u), trapUninitializedElement, "WAST line 993: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 28u), "WAST line 994: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 28u), trapUninitializedElement, "WAST line 994: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 29u), "WAST line 995: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft0(&instance_11, 29u), trapUninitializedElement, "WAST line 995: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 0u), "WAST line 996: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 0u), trapUninitializedElement, "WAST line 996: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 1u), "WAST line 997: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 1u), trapUninitializedElement, "WAST line 997: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 2u), "WAST line 998: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 2u), trapUninitializedElement, "WAST line 998: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 3u),
@@ -2820,16 +2820,16 @@ void test(void) {
         "WAST line 1002: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 7u), "WAST line 1003: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 7u), trapUninitializedElement, "WAST line 1003: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 8u), "WAST line 1004: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 8u), trapUninitializedElement, "WAST line 1004: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 9u), "WAST line 1005: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 9u), trapUninitializedElement, "WAST line 1005: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 10u), "WAST line 1006: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 10u), trapUninitializedElement, "WAST line 1006: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 11u),
@@ -2857,56 +2857,56 @@ void test(void) {
         "WAST line 1011: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 16u), "WAST line 1012: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 16u), trapUninitializedElement, "WAST line 1012: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 17u), "WAST line 1013: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 17u), trapUninitializedElement, "WAST line 1013: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 18u), "WAST line 1014: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 18u), trapUninitializedElement, "WAST line 1014: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 19u), "WAST line 1015: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 19u), trapUninitializedElement, "WAST line 1015: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 20u), "WAST line 1016: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 20u), trapUninitializedElement, "WAST line 1016: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 21u), "WAST line 1017: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 21u), trapUninitializedElement, "WAST line 1017: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 22u), "WAST line 1018: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 22u), trapUninitializedElement, "WAST line 1018: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 23u), "WAST line 1019: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 23u), trapUninitializedElement, "WAST line 1019: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 24u), "WAST line 1020: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 24u), trapUninitializedElement, "WAST line 1020: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 25u), "WAST line 1021: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 25u), trapUninitializedElement, "WAST line 1021: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 26u), "WAST line 1022: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 26u), trapUninitializedElement, "WAST line 1022: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 27u), "WAST line 1023: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 27u), trapUninitializedElement, "WAST line 1023: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 28u), "WAST line 1024: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 28u), trapUninitializedElement, "WAST line 1024: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 29u), "WAST line 1025: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E11Export8_checkX5Ft1(&instance_11, 29u), trapUninitializedElement, "WAST line 1025: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E12Instantiate(&instance_12, resolveTestImports);
     printStart("table_copy.12.wasm");
     (void)(m13_tableX5FcopyX2E12Export4_test(&instance_12));
     printOK("WAST line 1057: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 0u), "WAST line 1058: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 0u), trapUninitializedElement, "WAST line 1058: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 1u), "WAST line 1059: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 1u), trapUninitializedElement, "WAST line 1059: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 2u),
@@ -2929,22 +2929,22 @@ void test(void) {
         "WAST line 1063: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 6u), "WAST line 1064: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 6u), trapUninitializedElement, "WAST line 1064: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 7u), "WAST line 1065: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 7u), trapUninitializedElement, "WAST line 1065: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 8u), "WAST line 1066: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 8u), trapUninitializedElement, "WAST line 1066: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 9u), "WAST line 1067: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 9u), trapUninitializedElement, "WAST line 1067: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 10u), "WAST line 1068: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 10u), trapUninitializedElement, "WAST line 1068: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 11u), "WAST line 1069: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 11u), trapUninitializedElement, "WAST line 1069: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 12u),
@@ -2972,28 +2972,28 @@ void test(void) {
         "WAST line 1074: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 17u), "WAST line 1075: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 17u), trapUninitializedElement, "WAST line 1075: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 18u), "WAST line 1076: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 18u), trapUninitializedElement, "WAST line 1076: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 19u), "WAST line 1077: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 19u), trapUninitializedElement, "WAST line 1077: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 20u), "WAST line 1078: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 20u), trapUninitializedElement, "WAST line 1078: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 21u), "WAST line 1079: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 21u), trapUninitializedElement, "WAST line 1079: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 22u), "WAST line 1080: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 22u), trapUninitializedElement, "WAST line 1080: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 23u), "WAST line 1081: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 23u), trapUninitializedElement, "WAST line 1081: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 24u), "WAST line 1082: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 24u), trapUninitializedElement, "WAST line 1082: check_t0(24u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 25u),
@@ -3006,22 +3006,22 @@ void test(void) {
         "WAST line 1084: check_t0(26u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 27u), "WAST line 1085: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 27u), trapUninitializedElement, "WAST line 1085: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 28u), "WAST line 1086: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 28u), trapUninitializedElement, "WAST line 1086: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 29u), "WAST line 1087: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft0(&instance_12, 29u), trapUninitializedElement, "WAST line 1087: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 0u), "WAST line 1088: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 0u), trapUninitializedElement, "WAST line 1088: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 1u), "WAST line 1089: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 1u), trapUninitializedElement, "WAST line 1089: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 2u), "WAST line 1090: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 2u), trapUninitializedElement, "WAST line 1090: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 3u),
@@ -3044,16 +3044,16 @@ void test(void) {
         "WAST line 1094: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 7u), "WAST line 1095: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 7u), trapUninitializedElement, "WAST line 1095: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 8u), "WAST line 1096: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 8u), trapUninitializedElement, "WAST line 1096: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 9u), "WAST line 1097: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 9u), trapUninitializedElement, "WAST line 1097: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 10u), "WAST line 1098: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 10u), trapUninitializedElement, "WAST line 1098: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 11u),
@@ -3081,56 +3081,56 @@ void test(void) {
         "WAST line 1103: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 16u), "WAST line 1104: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 16u), trapUninitializedElement, "WAST line 1104: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 17u), "WAST line 1105: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 17u), trapUninitializedElement, "WAST line 1105: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 18u), "WAST line 1106: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 18u), trapUninitializedElement, "WAST line 1106: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 19u), "WAST line 1107: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 19u), trapUninitializedElement, "WAST line 1107: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 20u), "WAST line 1108: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 20u), trapUninitializedElement, "WAST line 1108: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 21u), "WAST line 1109: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 21u), trapUninitializedElement, "WAST line 1109: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 22u), "WAST line 1110: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 22u), trapUninitializedElement, "WAST line 1110: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 23u), "WAST line 1111: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 23u), trapUninitializedElement, "WAST line 1111: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 24u), "WAST line 1112: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 24u), trapUninitializedElement, "WAST line 1112: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 25u), "WAST line 1113: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 25u), trapUninitializedElement, "WAST line 1113: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 26u), "WAST line 1114: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 26u), trapUninitializedElement, "WAST line 1114: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 27u), "WAST line 1115: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 27u), trapUninitializedElement, "WAST line 1115: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 28u), "WAST line 1116: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 28u), trapUninitializedElement, "WAST line 1116: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 29u), "WAST line 1117: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E12Export8_checkX5Ft1(&instance_12, 29u), trapUninitializedElement, "WAST line 1117: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E13Instantiate(&instance_13, resolveTestImports);
     printStart("table_copy.13.wasm");
     (void)(m13_tableX5FcopyX2E13Export4_test(&instance_13));
     printOK("WAST line 1149: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 0u), "WAST line 1150: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 0u), trapUninitializedElement, "WAST line 1150: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 1u), "WAST line 1151: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 1u), trapUninitializedElement, "WAST line 1151: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 2u),
@@ -3153,22 +3153,22 @@ void test(void) {
         "WAST line 1155: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 6u), "WAST line 1156: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 6u), trapUninitializedElement, "WAST line 1156: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 7u), "WAST line 1157: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 7u), trapUninitializedElement, "WAST line 1157: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 8u), "WAST line 1158: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 8u), trapUninitializedElement, "WAST line 1158: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 9u), "WAST line 1159: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 9u), trapUninitializedElement, "WAST line 1159: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 10u), "WAST line 1160: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 10u), trapUninitializedElement, "WAST line 1160: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 11u), "WAST line 1161: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 11u), trapUninitializedElement, "WAST line 1161: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 12u),
@@ -3176,13 +3176,13 @@ void test(void) {
         "WAST line 1162: check_t0(12u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 13u), "WAST line 1163: check_t0(13u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 13u), trapUninitializedElement, "WAST line 1163: check_t0(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 14u), "WAST line 1164: check_t0(14u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 14u), trapUninitializedElement, "WAST line 1164: check_t0(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 15u), "WAST line 1165: check_t0(15u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 15u), trapUninitializedElement, "WAST line 1165: check_t0(15u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 16u),
@@ -3190,52 +3190,52 @@ void test(void) {
         "WAST line 1166: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 17u), "WAST line 1167: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 17u), trapUninitializedElement, "WAST line 1167: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 18u), "WAST line 1168: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 18u), trapUninitializedElement, "WAST line 1168: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 19u), "WAST line 1169: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 19u), trapUninitializedElement, "WAST line 1169: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 20u), "WAST line 1170: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 20u), trapUninitializedElement, "WAST line 1170: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 21u), "WAST line 1171: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 21u), trapUninitializedElement, "WAST line 1171: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 22u), "WAST line 1172: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 22u), trapUninitializedElement, "WAST line 1172: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 23u), "WAST line 1173: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 23u), trapUninitializedElement, "WAST line 1173: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 24u), "WAST line 1174: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 24u), trapUninitializedElement, "WAST line 1174: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 25u), "WAST line 1175: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 25u), trapUninitializedElement, "WAST line 1175: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 26u), "WAST line 1176: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 26u), trapUninitializedElement, "WAST line 1176: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 27u), "WAST line 1177: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 27u), trapUninitializedElement, "WAST line 1177: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 28u), "WAST line 1178: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 28u), trapUninitializedElement, "WAST line 1178: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 29u), "WAST line 1179: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft0(&instance_13, 29u), trapUninitializedElement, "WAST line 1179: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 0u), "WAST line 1180: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 0u), trapUninitializedElement, "WAST line 1180: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 1u), "WAST line 1181: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 1u), trapUninitializedElement, "WAST line 1181: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 2u), "WAST line 1182: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 2u), trapUninitializedElement, "WAST line 1182: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 3u),
@@ -3258,16 +3258,16 @@ void test(void) {
         "WAST line 1186: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 7u), "WAST line 1187: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 7u), trapUninitializedElement, "WAST line 1187: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 8u), "WAST line 1188: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 8u), trapUninitializedElement, "WAST line 1188: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 9u), "WAST line 1189: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 9u), trapUninitializedElement, "WAST line 1189: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 10u), "WAST line 1190: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 10u), trapUninitializedElement, "WAST line 1190: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 11u),
@@ -3295,56 +3295,56 @@ void test(void) {
         "WAST line 1195: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 16u), "WAST line 1196: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 16u), trapUninitializedElement, "WAST line 1196: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 17u), "WAST line 1197: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 17u), trapUninitializedElement, "WAST line 1197: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 18u), "WAST line 1198: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 18u), trapUninitializedElement, "WAST line 1198: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 19u), "WAST line 1199: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 19u), trapUninitializedElement, "WAST line 1199: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 20u), "WAST line 1200: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 20u), trapUninitializedElement, "WAST line 1200: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 21u), "WAST line 1201: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 21u), trapUninitializedElement, "WAST line 1201: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 22u), "WAST line 1202: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 22u), trapUninitializedElement, "WAST line 1202: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 23u), "WAST line 1203: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 23u), trapUninitializedElement, "WAST line 1203: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 24u), "WAST line 1204: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 24u), trapUninitializedElement, "WAST line 1204: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 25u), "WAST line 1205: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 25u), trapUninitializedElement, "WAST line 1205: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 26u), "WAST line 1206: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 26u), trapUninitializedElement, "WAST line 1206: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 27u), "WAST line 1207: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 27u), trapUninitializedElement, "WAST line 1207: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 28u), "WAST line 1208: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 28u), trapUninitializedElement, "WAST line 1208: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 29u), "WAST line 1209: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E13Export8_checkX5Ft1(&instance_13, 29u), trapUninitializedElement, "WAST line 1209: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E14Instantiate(&instance_14, resolveTestImports);
     printStart("table_copy.14.wasm");
     (void)(m13_tableX5FcopyX2E14Export4_test(&instance_14));
     printOK("WAST line 1241: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 0u), "WAST line 1242: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 0u), trapUninitializedElement, "WAST line 1242: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 1u), "WAST line 1243: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 1u), trapUninitializedElement, "WAST line 1243: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 2u),
@@ -3367,22 +3367,22 @@ void test(void) {
         "WAST line 1247: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 6u), "WAST line 1248: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 6u), trapUninitializedElement, "WAST line 1248: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 7u), "WAST line 1249: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 7u), trapUninitializedElement, "WAST line 1249: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 8u), "WAST line 1250: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 8u), trapUninitializedElement, "WAST line 1250: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 9u), "WAST line 1251: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 9u), trapUninitializedElement, "WAST line 1251: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 10u), "WAST line 1252: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 10u), trapUninitializedElement, "WAST line 1252: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 11u), "WAST line 1253: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 11u), trapUninitializedElement, "WAST line 1253: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 12u),
@@ -3410,52 +3410,52 @@ void test(void) {
         "WAST line 1258: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 17u), "WAST line 1259: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 17u), trapUninitializedElement, "WAST line 1259: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 18u), "WAST line 1260: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 18u), trapUninitializedElement, "WAST line 1260: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 19u), "WAST line 1261: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 19u), trapUninitializedElement, "WAST line 1261: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 20u), "WAST line 1262: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 20u), trapUninitializedElement, "WAST line 1262: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 21u), "WAST line 1263: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 21u), trapUninitializedElement, "WAST line 1263: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 22u), "WAST line 1264: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 22u), trapUninitializedElement, "WAST line 1264: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 23u), "WAST line 1265: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 23u), trapUninitializedElement, "WAST line 1265: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 24u), "WAST line 1266: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 24u), trapUninitializedElement, "WAST line 1266: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 25u), "WAST line 1267: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 25u), trapUninitializedElement, "WAST line 1267: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 26u), "WAST line 1268: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 26u), trapUninitializedElement, "WAST line 1268: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 27u), "WAST line 1269: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 27u), trapUninitializedElement, "WAST line 1269: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 28u), "WAST line 1270: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 28u), trapUninitializedElement, "WAST line 1270: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 29u), "WAST line 1271: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft0(&instance_14, 29u), trapUninitializedElement, "WAST line 1271: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 0u), "WAST line 1272: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 0u), trapUninitializedElement, "WAST line 1272: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 1u), "WAST line 1273: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 1u), trapUninitializedElement, "WAST line 1273: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 2u), "WAST line 1274: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 2u), trapUninitializedElement, "WAST line 1274: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 3u),
@@ -3478,16 +3478,16 @@ void test(void) {
         "WAST line 1278: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 7u), "WAST line 1279: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 7u), trapUninitializedElement, "WAST line 1279: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 8u), "WAST line 1280: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 8u), trapUninitializedElement, "WAST line 1280: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 9u), "WAST line 1281: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 9u), trapUninitializedElement, "WAST line 1281: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 10u), "WAST line 1282: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 10u), trapUninitializedElement, "WAST line 1282: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 11u),
@@ -3515,56 +3515,56 @@ void test(void) {
         "WAST line 1287: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 16u), "WAST line 1288: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 16u), trapUninitializedElement, "WAST line 1288: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 17u), "WAST line 1289: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 17u), trapUninitializedElement, "WAST line 1289: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 18u), "WAST line 1290: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 18u), trapUninitializedElement, "WAST line 1290: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 19u), "WAST line 1291: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 19u), trapUninitializedElement, "WAST line 1291: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 20u), "WAST line 1292: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 20u), trapUninitializedElement, "WAST line 1292: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 21u), "WAST line 1293: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 21u), trapUninitializedElement, "WAST line 1293: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 22u), "WAST line 1294: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 22u), trapUninitializedElement, "WAST line 1294: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 23u), "WAST line 1295: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 23u), trapUninitializedElement, "WAST line 1295: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 24u), "WAST line 1296: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 24u), trapUninitializedElement, "WAST line 1296: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 25u), "WAST line 1297: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 25u), trapUninitializedElement, "WAST line 1297: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 26u), "WAST line 1298: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 26u), trapUninitializedElement, "WAST line 1298: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 27u), "WAST line 1299: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 27u), trapUninitializedElement, "WAST line 1299: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 28u), "WAST line 1300: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 28u), trapUninitializedElement, "WAST line 1300: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 29u), "WAST line 1301: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E14Export8_checkX5Ft1(&instance_14, 29u), trapUninitializedElement, "WAST line 1301: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E15Instantiate(&instance_15, resolveTestImports);
     printStart("table_copy.15.wasm");
     (void)(m13_tableX5FcopyX2E15Export4_test(&instance_15));
     printOK("WAST line 1333: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 0u), "WAST line 1334: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 0u), trapUninitializedElement, "WAST line 1334: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 1u), "WAST line 1335: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 1u), trapUninitializedElement, "WAST line 1335: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 2u),
@@ -3587,22 +3587,22 @@ void test(void) {
         "WAST line 1339: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 6u), "WAST line 1340: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 6u), trapUninitializedElement, "WAST line 1340: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 7u), "WAST line 1341: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 7u), trapUninitializedElement, "WAST line 1341: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 8u), "WAST line 1342: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 8u), trapUninitializedElement, "WAST line 1342: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 9u), "WAST line 1343: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 9u), trapUninitializedElement, "WAST line 1343: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 10u), "WAST line 1344: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 10u), trapUninitializedElement, "WAST line 1344: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 11u), "WAST line 1345: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 11u), trapUninitializedElement, "WAST line 1345: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 12u),
@@ -3630,31 +3630,31 @@ void test(void) {
         "WAST line 1350: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 17u), "WAST line 1351: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 17u), trapUninitializedElement, "WAST line 1351: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 18u), "WAST line 1352: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 18u), trapUninitializedElement, "WAST line 1352: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 19u), "WAST line 1353: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 19u), trapUninitializedElement, "WAST line 1353: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 20u), "WAST line 1354: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 20u), trapUninitializedElement, "WAST line 1354: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 21u), "WAST line 1355: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 21u), trapUninitializedElement, "WAST line 1355: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 22u), "WAST line 1356: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 22u), trapUninitializedElement, "WAST line 1356: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 23u), "WAST line 1357: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 23u), trapUninitializedElement, "WAST line 1357: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 24u), "WAST line 1358: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 24u), trapUninitializedElement, "WAST line 1358: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 25u), "WAST line 1359: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 25u), trapUninitializedElement, "WAST line 1359: check_t0(25u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 26u),
@@ -3667,19 +3667,19 @@ void test(void) {
         "WAST line 1361: check_t0(27u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 28u), "WAST line 1362: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 28u), trapUninitializedElement, "WAST line 1362: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 29u), "WAST line 1363: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft0(&instance_15, 29u), trapUninitializedElement, "WAST line 1363: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 0u), "WAST line 1364: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 0u), trapUninitializedElement, "WAST line 1364: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 1u), "WAST line 1365: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 1u), trapUninitializedElement, "WAST line 1365: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 2u), "WAST line 1366: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 2u), trapUninitializedElement, "WAST line 1366: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 3u),
@@ -3702,16 +3702,16 @@ void test(void) {
         "WAST line 1370: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 7u), "WAST line 1371: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 7u), trapUninitializedElement, "WAST line 1371: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 8u), "WAST line 1372: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 8u), trapUninitializedElement, "WAST line 1372: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 9u), "WAST line 1373: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 9u), trapUninitializedElement, "WAST line 1373: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 10u), "WAST line 1374: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 10u), trapUninitializedElement, "WAST line 1374: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 11u),
@@ -3739,56 +3739,56 @@ void test(void) {
         "WAST line 1379: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 16u), "WAST line 1380: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 16u), trapUninitializedElement, "WAST line 1380: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 17u), "WAST line 1381: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 17u), trapUninitializedElement, "WAST line 1381: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 18u), "WAST line 1382: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 18u), trapUninitializedElement, "WAST line 1382: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 19u), "WAST line 1383: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 19u), trapUninitializedElement, "WAST line 1383: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 20u), "WAST line 1384: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 20u), trapUninitializedElement, "WAST line 1384: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 21u), "WAST line 1385: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 21u), trapUninitializedElement, "WAST line 1385: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 22u), "WAST line 1386: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 22u), trapUninitializedElement, "WAST line 1386: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 23u), "WAST line 1387: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 23u), trapUninitializedElement, "WAST line 1387: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 24u), "WAST line 1388: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 24u), trapUninitializedElement, "WAST line 1388: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 25u), "WAST line 1389: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 25u), trapUninitializedElement, "WAST line 1389: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 26u), "WAST line 1390: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 26u), trapUninitializedElement, "WAST line 1390: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 27u), "WAST line 1391: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 27u), trapUninitializedElement, "WAST line 1391: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 28u), "WAST line 1392: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 28u), trapUninitializedElement, "WAST line 1392: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 29u), "WAST line 1393: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E15Export8_checkX5Ft1(&instance_15, 29u), trapUninitializedElement, "WAST line 1393: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E16Instantiate(&instance_16, resolveTestImports);
     printStart("table_copy.16.wasm");
     (void)(m13_tableX5FcopyX2E16Export4_test(&instance_16));
     printOK("WAST line 1425: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 0u), "WAST line 1426: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 0u), trapUninitializedElement, "WAST line 1426: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 1u), "WAST line 1427: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 1u), trapUninitializedElement, "WAST line 1427: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 2u),
@@ -3811,16 +3811,16 @@ void test(void) {
         "WAST line 1431: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 6u), "WAST line 1432: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 6u), trapUninitializedElement, "WAST line 1432: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 7u), "WAST line 1433: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 7u), trapUninitializedElement, "WAST line 1433: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 8u), "WAST line 1434: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 8u), trapUninitializedElement, "WAST line 1434: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 9u), "WAST line 1435: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 9u), trapUninitializedElement, "WAST line 1435: check_t0(9u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 10u),
@@ -3848,58 +3848,58 @@ void test(void) {
         "WAST line 1440: check_t0(14u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 15u), "WAST line 1441: check_t0(15u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 15u), trapUninitializedElement, "WAST line 1441: check_t0(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 16u), "WAST line 1442: check_t0(16u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 16u), trapUninitializedElement, "WAST line 1442: check_t0(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 17u), "WAST line 1443: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 17u), trapUninitializedElement, "WAST line 1443: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 18u), "WAST line 1444: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 18u), trapUninitializedElement, "WAST line 1444: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 19u), "WAST line 1445: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 19u), trapUninitializedElement, "WAST line 1445: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 20u), "WAST line 1446: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 20u), trapUninitializedElement, "WAST line 1446: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 21u), "WAST line 1447: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 21u), trapUninitializedElement, "WAST line 1447: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 22u), "WAST line 1448: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 22u), trapUninitializedElement, "WAST line 1448: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 23u), "WAST line 1449: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 23u), trapUninitializedElement, "WAST line 1449: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 24u), "WAST line 1450: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 24u), trapUninitializedElement, "WAST line 1450: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 25u), "WAST line 1451: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 25u), trapUninitializedElement, "WAST line 1451: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 26u), "WAST line 1452: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 26u), trapUninitializedElement, "WAST line 1452: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 27u), "WAST line 1453: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 27u), trapUninitializedElement, "WAST line 1453: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 28u), "WAST line 1454: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 28u), trapUninitializedElement, "WAST line 1454: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 29u), "WAST line 1455: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft0(&instance_16, 29u), trapUninitializedElement, "WAST line 1455: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 0u), "WAST line 1456: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 0u), trapUninitializedElement, "WAST line 1456: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 1u), "WAST line 1457: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 1u), trapUninitializedElement, "WAST line 1457: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 2u), "WAST line 1458: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 2u), trapUninitializedElement, "WAST line 1458: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 3u),
@@ -3922,16 +3922,16 @@ void test(void) {
         "WAST line 1462: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 7u), "WAST line 1463: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 7u), trapUninitializedElement, "WAST line 1463: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 8u), "WAST line 1464: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 8u), trapUninitializedElement, "WAST line 1464: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 9u), "WAST line 1465: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 9u), trapUninitializedElement, "WAST line 1465: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 10u), "WAST line 1466: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 10u), trapUninitializedElement, "WAST line 1466: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 11u),
@@ -3959,56 +3959,56 @@ void test(void) {
         "WAST line 1471: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 16u), "WAST line 1472: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 16u), trapUninitializedElement, "WAST line 1472: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 17u), "WAST line 1473: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 17u), trapUninitializedElement, "WAST line 1473: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 18u), "WAST line 1474: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 18u), trapUninitializedElement, "WAST line 1474: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 19u), "WAST line 1475: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 19u), trapUninitializedElement, "WAST line 1475: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 20u), "WAST line 1476: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 20u), trapUninitializedElement, "WAST line 1476: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 21u), "WAST line 1477: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 21u), trapUninitializedElement, "WAST line 1477: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 22u), "WAST line 1478: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 22u), trapUninitializedElement, "WAST line 1478: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 23u), "WAST line 1479: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 23u), trapUninitializedElement, "WAST line 1479: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 24u), "WAST line 1480: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 24u), trapUninitializedElement, "WAST line 1480: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 25u), "WAST line 1481: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 25u), trapUninitializedElement, "WAST line 1481: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 26u), "WAST line 1482: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 26u), trapUninitializedElement, "WAST line 1482: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 27u), "WAST line 1483: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 27u), trapUninitializedElement, "WAST line 1483: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 28u), "WAST line 1484: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 28u), trapUninitializedElement, "WAST line 1484: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 29u), "WAST line 1485: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E16Export8_checkX5Ft1(&instance_16, 29u), trapUninitializedElement, "WAST line 1485: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E17Instantiate(&instance_17, resolveTestImports);
     printStart("table_copy.17.wasm");
     (void)(m13_tableX5FcopyX2E17Export4_test(&instance_17));
     printOK("WAST line 1517: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 0u), "WAST line 1518: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 0u), trapUninitializedElement, "WAST line 1518: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 1u), "WAST line 1519: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 1u), trapUninitializedElement, "WAST line 1519: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 2u),
@@ -4031,28 +4031,28 @@ void test(void) {
         "WAST line 1523: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 6u), "WAST line 1524: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 6u), trapUninitializedElement, "WAST line 1524: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 7u), "WAST line 1525: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 7u), trapUninitializedElement, "WAST line 1525: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 8u), "WAST line 1526: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 8u), trapUninitializedElement, "WAST line 1526: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 9u), "WAST line 1527: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 9u), trapUninitializedElement, "WAST line 1527: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 10u), "WAST line 1528: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 10u), trapUninitializedElement, "WAST line 1528: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 11u), "WAST line 1529: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 11u), trapUninitializedElement, "WAST line 1529: check_t0(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 12u), "WAST line 1530: check_t0(12u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 12u), trapUninitializedElement, "WAST line 1530: check_t0(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 13u), "WAST line 1531: check_t0(13u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 13u), trapUninitializedElement, "WAST line 1531: check_t0(13u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 14u),
@@ -4080,46 +4080,46 @@ void test(void) {
         "WAST line 1536: check_t0(18u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 19u), "WAST line 1537: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 19u), trapUninitializedElement, "WAST line 1537: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 20u), "WAST line 1538: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 20u), trapUninitializedElement, "WAST line 1538: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 21u), "WAST line 1539: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 21u), trapUninitializedElement, "WAST line 1539: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 22u), "WAST line 1540: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 22u), trapUninitializedElement, "WAST line 1540: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 23u), "WAST line 1541: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 23u), trapUninitializedElement, "WAST line 1541: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 24u), "WAST line 1542: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 24u), trapUninitializedElement, "WAST line 1542: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 25u), "WAST line 1543: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 25u), trapUninitializedElement, "WAST line 1543: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 26u), "WAST line 1544: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 26u), trapUninitializedElement, "WAST line 1544: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 27u), "WAST line 1545: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 27u), trapUninitializedElement, "WAST line 1545: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 28u), "WAST line 1546: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 28u), trapUninitializedElement, "WAST line 1546: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 29u), "WAST line 1547: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft0(&instance_17, 29u), trapUninitializedElement, "WAST line 1547: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 0u), "WAST line 1548: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 0u), trapUninitializedElement, "WAST line 1548: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 1u), "WAST line 1549: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 1u), trapUninitializedElement, "WAST line 1549: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 2u), "WAST line 1550: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 2u), trapUninitializedElement, "WAST line 1550: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 3u),
@@ -4142,16 +4142,16 @@ void test(void) {
         "WAST line 1554: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 7u), "WAST line 1555: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 7u), trapUninitializedElement, "WAST line 1555: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 8u), "WAST line 1556: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 8u), trapUninitializedElement, "WAST line 1556: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 9u), "WAST line 1557: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 9u), trapUninitializedElement, "WAST line 1557: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 10u), "WAST line 1558: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 10u), trapUninitializedElement, "WAST line 1558: check_t1(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 11u),
@@ -4179,56 +4179,56 @@ void test(void) {
         "WAST line 1563: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 16u), "WAST line 1564: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 16u), trapUninitializedElement, "WAST line 1564: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 17u), "WAST line 1565: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 17u), trapUninitializedElement, "WAST line 1565: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 18u), "WAST line 1566: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 18u), trapUninitializedElement, "WAST line 1566: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 19u), "WAST line 1567: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 19u), trapUninitializedElement, "WAST line 1567: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 20u), "WAST line 1568: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 20u), trapUninitializedElement, "WAST line 1568: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 21u), "WAST line 1569: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 21u), trapUninitializedElement, "WAST line 1569: check_t1(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 22u), "WAST line 1570: check_t1(22u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 22u), trapUninitializedElement, "WAST line 1570: check_t1(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 23u), "WAST line 1571: check_t1(23u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 23u), trapUninitializedElement, "WAST line 1571: check_t1(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 24u), "WAST line 1572: check_t1(24u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 24u), trapUninitializedElement, "WAST line 1572: check_t1(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 25u), "WAST line 1573: check_t1(25u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 25u), trapUninitializedElement, "WAST line 1573: check_t1(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 26u), "WAST line 1574: check_t1(26u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 26u), trapUninitializedElement, "WAST line 1574: check_t1(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 27u), "WAST line 1575: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 27u), trapUninitializedElement, "WAST line 1575: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 28u), "WAST line 1576: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 28u), trapUninitializedElement, "WAST line 1576: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 29u), "WAST line 1577: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E17Export8_checkX5Ft1(&instance_17, 29u), trapUninitializedElement, "WAST line 1577: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E18Instantiate(&instance_18, resolveTestImports);
     printStart("table_copy.18.wasm");
     (void)(m13_tableX5FcopyX2E18Export4_test(&instance_18));
     printOK("WAST line 1609: test()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 0u), "WAST line 1610: check_t0(0u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 0u), trapUninitializedElement, "WAST line 1610: check_t0(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 1u), "WAST line 1611: check_t0(1u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 1u), trapUninitializedElement, "WAST line 1611: check_t0(1u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 2u),
@@ -4251,22 +4251,22 @@ void test(void) {
         "WAST line 1615: check_t0(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 6u), "WAST line 1616: check_t0(6u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 6u), trapUninitializedElement, "WAST line 1616: check_t0(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 7u), "WAST line 1617: check_t0(7u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 7u), trapUninitializedElement, "WAST line 1617: check_t0(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 8u), "WAST line 1618: check_t0(8u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 8u), trapUninitializedElement, "WAST line 1618: check_t0(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 9u), "WAST line 1619: check_t0(9u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 9u), trapUninitializedElement, "WAST line 1619: check_t0(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 10u), "WAST line 1620: check_t0(10u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 10u), trapUninitializedElement, "WAST line 1620: check_t0(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 11u), "WAST line 1621: check_t0(11u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 11u), trapUninitializedElement, "WAST line 1621: check_t0(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 12u),
@@ -4294,52 +4294,52 @@ void test(void) {
         "WAST line 1626: check_t0(16u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 17u), "WAST line 1627: check_t0(17u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 17u), trapUninitializedElement, "WAST line 1627: check_t0(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 18u), "WAST line 1628: check_t0(18u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 18u), trapUninitializedElement, "WAST line 1628: check_t0(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 19u), "WAST line 1629: check_t0(19u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 19u), trapUninitializedElement, "WAST line 1629: check_t0(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 20u), "WAST line 1630: check_t0(20u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 20u), trapUninitializedElement, "WAST line 1630: check_t0(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 21u), "WAST line 1631: check_t0(21u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 21u), trapUninitializedElement, "WAST line 1631: check_t0(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 22u), "WAST line 1632: check_t0(22u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 22u), trapUninitializedElement, "WAST line 1632: check_t0(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 23u), "WAST line 1633: check_t0(23u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 23u), trapUninitializedElement, "WAST line 1633: check_t0(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 24u), "WAST line 1634: check_t0(24u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 24u), trapUninitializedElement, "WAST line 1634: check_t0(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 25u), "WAST line 1635: check_t0(25u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 25u), trapUninitializedElement, "WAST line 1635: check_t0(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 26u), "WAST line 1636: check_t0(26u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 26u), trapUninitializedElement, "WAST line 1636: check_t0(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 27u), "WAST line 1637: check_t0(27u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 27u), trapUninitializedElement, "WAST line 1637: check_t0(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 28u), "WAST line 1638: check_t0(28u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 28u), trapUninitializedElement, "WAST line 1638: check_t0(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 29u), "WAST line 1639: check_t0(29u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft0(&instance_18, 29u), trapUninitializedElement, "WAST line 1639: check_t0(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 0u), "WAST line 1640: check_t1(0u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 0u), trapUninitializedElement, "WAST line 1640: check_t1(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 1u), "WAST line 1641: check_t1(1u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 1u), trapUninitializedElement, "WAST line 1641: check_t1(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 2u), "WAST line 1642: check_t1(2u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 2u), trapUninitializedElement, "WAST line 1642: check_t1(2u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 3u),
@@ -4362,19 +4362,19 @@ void test(void) {
         "WAST line 1646: check_t1(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 7u), "WAST line 1647: check_t1(7u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 7u), trapUninitializedElement, "WAST line 1647: check_t1(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 8u), "WAST line 1648: check_t1(8u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 8u), trapUninitializedElement, "WAST line 1648: check_t1(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 9u), "WAST line 1649: check_t1(9u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 9u), trapUninitializedElement, "WAST line 1649: check_t1(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 10u), "WAST line 1650: check_t1(10u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 10u), trapUninitializedElement, "WAST line 1650: check_t1(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 11u), "WAST line 1651: check_t1(11u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 11u), trapUninitializedElement, "WAST line 1651: check_t1(11u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 12u),
@@ -4397,22 +4397,22 @@ void test(void) {
         "WAST line 1655: check_t1(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 16u), "WAST line 1656: check_t1(16u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 16u), trapUninitializedElement, "WAST line 1656: check_t1(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 17u), "WAST line 1657: check_t1(17u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 17u), trapUninitializedElement, "WAST line 1657: check_t1(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 18u), "WAST line 1658: check_t1(18u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 18u), trapUninitializedElement, "WAST line 1658: check_t1(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 19u), "WAST line 1659: check_t1(19u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 19u), trapUninitializedElement, "WAST line 1659: check_t1(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 20u), "WAST line 1660: check_t1(20u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 20u), trapUninitializedElement, "WAST line 1660: check_t1(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 21u), "WAST line 1661: check_t1(21u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 21u), trapUninitializedElement, "WAST line 1661: check_t1(21u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 22u),
@@ -4440,33 +4440,33 @@ void test(void) {
         "WAST line 1666: check_t1(26u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 27u), "WAST line 1667: check_t1(27u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 27u), trapUninitializedElement, "WAST line 1667: check_t1(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 28u), "WAST line 1668: check_t1(28u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 28u), trapUninitializedElement, "WAST line 1668: check_t1(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 29u), "WAST line 1669: check_t1(29u)");
+    assertTrap(m13_tableX5FcopyX2E18Export8_checkX5Ft1(&instance_18, 29u), trapUninitializedElement, "WAST line 1669: check_t1(29u)");
 #endif
     m13_tableX5FcopyX2E19Instantiate(&instance_19, resolveTestImports);
     printStart("table_copy.19.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E19Export4_test(&instance_19), "WAST line 1694: test()");
+    assertTrap(m13_tableX5FcopyX2E19Export4_test(&instance_19), trapTableOutOfBounds, "WAST line 1694: test()");
 #endif
     m13_tableX5FcopyX2E20Instantiate(&instance_20, resolveTestImports);
     printStart("table_copy.20.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E20Export4_test(&instance_20), "WAST line 1719: test()");
+    assertTrap(m13_tableX5FcopyX2E20Export4_test(&instance_20), trapTableOutOfBounds, "WAST line 1719: test()");
 #endif
     m13_tableX5FcopyX2E21Instantiate(&instance_21, resolveTestImports);
     printStart("table_copy.21.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E21Export4_test(&instance_21), "WAST line 1744: test()");
+    assertTrap(m13_tableX5FcopyX2E21Export4_test(&instance_21), trapTableOutOfBounds, "WAST line 1744: test()");
 #endif
     m13_tableX5FcopyX2E22Instantiate(&instance_22, resolveTestImports);
     printStart("table_copy.22.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E22Export4_test(&instance_22), "WAST line 1769: test()");
+    assertTrap(m13_tableX5FcopyX2E22Export4_test(&instance_22), trapTableOutOfBounds, "WAST line 1769: test()");
 #endif
     m13_tableX5FcopyX2E23Instantiate(&instance_23, resolveTestImports);
     printStart("table_copy.23.wasm");
@@ -4479,7 +4479,7 @@ void test(void) {
     m13_tableX5FcopyX2E25Instantiate(&instance_25, resolveTestImports);
     printStart("table_copy.25.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E25Export4_test(&instance_25), "WAST line 1844: test()");
+    assertTrap(m13_tableX5FcopyX2E25Export4_test(&instance_25), trapTableOutOfBounds, "WAST line 1844: test()");
 #endif
     m13_tableX5FcopyX2E26Instantiate(&instance_26, resolveTestImports);
     printStart("table_copy.26.wasm");
@@ -4488,7 +4488,7 @@ void test(void) {
     m13_tableX5FcopyX2E27Instantiate(&instance_27, resolveTestImports);
     printStart("table_copy.27.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E27Export4_test(&instance_27), "WAST line 1894: test()");
+    assertTrap(m13_tableX5FcopyX2E27Export4_test(&instance_27), trapTableOutOfBounds, "WAST line 1894: test()");
 #endif
     m13_tableX5FcopyX2E28Instantiate(&instance_28, resolveTestImports);
     printStart("table_copy.28.wasm");
@@ -4497,27 +4497,27 @@ void test(void) {
     m13_tableX5FcopyX2E29Instantiate(&instance_29, resolveTestImports);
     printStart("table_copy.29.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E29Export4_test(&instance_29), "WAST line 1944: test()");
+    assertTrap(m13_tableX5FcopyX2E29Export4_test(&instance_29), trapTableOutOfBounds, "WAST line 1944: test()");
 #endif
     m13_tableX5FcopyX2E30Instantiate(&instance_30, resolveTestImports);
     printStart("table_copy.30.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E30Export4_test(&instance_30), "WAST line 1969: test()");
+    assertTrap(m13_tableX5FcopyX2E30Export4_test(&instance_30), trapTableOutOfBounds, "WAST line 1969: test()");
 #endif
     m13_tableX5FcopyX2E31Instantiate(&instance_31, resolveTestImports);
     printStart("table_copy.31.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E31Export4_test(&instance_31), "WAST line 1994: test()");
+    assertTrap(m13_tableX5FcopyX2E31Export4_test(&instance_31), trapTableOutOfBounds, "WAST line 1994: test()");
 #endif
     m13_tableX5FcopyX2E32Instantiate(&instance_32, resolveTestImports);
     printStart("table_copy.32.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E32Export4_test(&instance_32), "WAST line 2019: test()");
+    assertTrap(m13_tableX5FcopyX2E32Export4_test(&instance_32), trapTableOutOfBounds, "WAST line 2019: test()");
 #endif
     m13_tableX5FcopyX2E33Instantiate(&instance_33, resolveTestImports);
     printStart("table_copy.33.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E33Export4_test(&instance_33), "WAST line 2044: test()");
+    assertTrap(m13_tableX5FcopyX2E33Export4_test(&instance_33), trapTableOutOfBounds, "WAST line 2044: test()");
 #endif
     m13_tableX5FcopyX2E34Instantiate(&instance_34, resolveTestImports);
     printStart("table_copy.34.wasm");
@@ -4530,7 +4530,7 @@ void test(void) {
     m13_tableX5FcopyX2E36Instantiate(&instance_36, resolveTestImports);
     printStart("table_copy.36.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E36Export4_test(&instance_36), "WAST line 2119: test()");
+    assertTrap(m13_tableX5FcopyX2E36Export4_test(&instance_36), trapTableOutOfBounds, "WAST line 2119: test()");
 #endif
     m13_tableX5FcopyX2E37Instantiate(&instance_37, resolveTestImports);
     printStart("table_copy.37.wasm");
@@ -4539,7 +4539,7 @@ void test(void) {
     m13_tableX5FcopyX2E38Instantiate(&instance_38, resolveTestImports);
     printStart("table_copy.38.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E38Export4_test(&instance_38), "WAST line 2169: test()");
+    assertTrap(m13_tableX5FcopyX2E38Export4_test(&instance_38), trapTableOutOfBounds, "WAST line 2169: test()");
 #endif
     m13_tableX5FcopyX2E39Instantiate(&instance_39, resolveTestImports);
     printStart("table_copy.39.wasm");
@@ -4548,12 +4548,12 @@ void test(void) {
     m13_tableX5FcopyX2E40Instantiate(&instance_40, resolveTestImports);
     printStart("table_copy.40.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E40Export4_test(&instance_40), "WAST line 2219: test()");
+    assertTrap(m13_tableX5FcopyX2E40Export4_test(&instance_40), trapTableOutOfBounds, "WAST line 2219: test()");
 #endif
     m13_tableX5FcopyX2E41Instantiate(&instance_41, resolveTestImports);
     printStart("table_copy.41.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export3_run(&instance_41, 24u, 0u, 16u), "WAST line 2247: run(24u, 0u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E41Export3_run(&instance_41, 24u, 0u, 16u), trapTableOutOfBounds, "WAST line 2247: run(24u, 0u, 16u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E41Export4_test(&instance_41, 0u),
@@ -4596,81 +4596,81 @@ void test(void) {
         "WAST line 2256: test(7u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 8u), "WAST line 2257: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 8u), trapUninitializedElement, "WAST line 2257: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 9u), "WAST line 2258: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 9u), trapUninitializedElement, "WAST line 2258: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 10u), "WAST line 2259: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 10u), trapUninitializedElement, "WAST line 2259: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 11u), "WAST line 2260: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 11u), trapUninitializedElement, "WAST line 2260: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 12u), "WAST line 2261: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 12u), trapUninitializedElement, "WAST line 2261: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 13u), "WAST line 2262: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 13u), trapUninitializedElement, "WAST line 2262: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 14u), "WAST line 2263: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 14u), trapUninitializedElement, "WAST line 2263: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 15u), "WAST line 2264: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 15u), trapUninitializedElement, "WAST line 2264: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 16u), "WAST line 2265: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 16u), trapUninitializedElement, "WAST line 2265: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 17u), "WAST line 2266: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 17u), trapUninitializedElement, "WAST line 2266: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 18u), "WAST line 2267: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 18u), trapUninitializedElement, "WAST line 2267: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 19u), "WAST line 2268: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 19u), trapUninitializedElement, "WAST line 2268: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 20u), "WAST line 2269: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 20u), trapUninitializedElement, "WAST line 2269: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 21u), "WAST line 2270: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 21u), trapUninitializedElement, "WAST line 2270: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 22u), "WAST line 2271: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 22u), trapUninitializedElement, "WAST line 2271: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 23u), "WAST line 2272: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 23u), trapUninitializedElement, "WAST line 2272: test(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 24u), "WAST line 2273: test(24u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 24u), trapUninitializedElement, "WAST line 2273: test(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 25u), "WAST line 2274: test(25u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 25u), trapUninitializedElement, "WAST line 2274: test(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 26u), "WAST line 2275: test(26u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 26u), trapUninitializedElement, "WAST line 2275: test(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 27u), "WAST line 2276: test(27u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 27u), trapUninitializedElement, "WAST line 2276: test(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 28u), "WAST line 2277: test(28u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 28u), trapUninitializedElement, "WAST line 2277: test(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 29u), "WAST line 2278: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 29u), trapUninitializedElement, "WAST line 2278: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 30u), "WAST line 2279: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 30u), trapUninitializedElement, "WAST line 2279: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 31u), "WAST line 2280: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E41Export4_test(&instance_41, 31u), trapUninitializedElement, "WAST line 2280: test(31u)");
 #endif
     m13_tableX5FcopyX2E42Instantiate(&instance_42, resolveTestImports);
     printStart("table_copy.42.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export3_run(&instance_42, 23u, 0u, 15u), "WAST line 2308: run(23u, 0u, 15u)");
+    assertTrap(m13_tableX5FcopyX2E42Export3_run(&instance_42, 23u, 0u, 15u), trapTableOutOfBounds, "WAST line 2308: run(23u, 0u, 15u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E42Export4_test(&instance_42, 0u),
@@ -4718,150 +4718,150 @@ void test(void) {
         "WAST line 2318: test(8u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 9u), "WAST line 2319: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 9u), trapUninitializedElement, "WAST line 2319: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 10u), "WAST line 2320: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 10u), trapUninitializedElement, "WAST line 2320: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 11u), "WAST line 2321: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 11u), trapUninitializedElement, "WAST line 2321: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 12u), "WAST line 2322: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 12u), trapUninitializedElement, "WAST line 2322: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 13u), "WAST line 2323: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 13u), trapUninitializedElement, "WAST line 2323: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 14u), "WAST line 2324: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 14u), trapUninitializedElement, "WAST line 2324: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 15u), "WAST line 2325: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 15u), trapUninitializedElement, "WAST line 2325: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 16u), "WAST line 2326: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 16u), trapUninitializedElement, "WAST line 2326: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 17u), "WAST line 2327: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 17u), trapUninitializedElement, "WAST line 2327: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 18u), "WAST line 2328: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 18u), trapUninitializedElement, "WAST line 2328: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 19u), "WAST line 2329: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 19u), trapUninitializedElement, "WAST line 2329: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 20u), "WAST line 2330: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 20u), trapUninitializedElement, "WAST line 2330: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 21u), "WAST line 2331: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 21u), trapUninitializedElement, "WAST line 2331: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 22u), "WAST line 2332: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 22u), trapUninitializedElement, "WAST line 2332: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 23u), "WAST line 2333: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 23u), trapUninitializedElement, "WAST line 2333: test(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 24u), "WAST line 2334: test(24u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 24u), trapUninitializedElement, "WAST line 2334: test(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 25u), "WAST line 2335: test(25u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 25u), trapUninitializedElement, "WAST line 2335: test(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 26u), "WAST line 2336: test(26u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 26u), trapUninitializedElement, "WAST line 2336: test(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 27u), "WAST line 2337: test(27u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 27u), trapUninitializedElement, "WAST line 2337: test(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 28u), "WAST line 2338: test(28u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 28u), trapUninitializedElement, "WAST line 2338: test(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 29u), "WAST line 2339: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 29u), trapUninitializedElement, "WAST line 2339: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 30u), "WAST line 2340: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 30u), trapUninitializedElement, "WAST line 2340: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 31u), "WAST line 2341: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E42Export4_test(&instance_42, 31u), trapUninitializedElement, "WAST line 2341: test(31u)");
 #endif
     m13_tableX5FcopyX2E43Instantiate(&instance_43, resolveTestImports);
     printStart("table_copy.43.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export3_run(&instance_43, 0u, 24u, 16u), "WAST line 2369: run(0u, 24u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E43Export3_run(&instance_43, 0u, 24u, 16u), trapTableOutOfBounds, "WAST line 2369: run(0u, 24u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 0u), "WAST line 2371: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 0u), trapUninitializedElement, "WAST line 2371: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 1u), "WAST line 2372: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 1u), trapUninitializedElement, "WAST line 2372: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 2u), "WAST line 2373: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 2u), trapUninitializedElement, "WAST line 2373: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 3u), "WAST line 2374: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 3u), trapUninitializedElement, "WAST line 2374: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 4u), "WAST line 2375: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 4u), trapUninitializedElement, "WAST line 2375: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 5u), "WAST line 2376: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 5u), trapUninitializedElement, "WAST line 2376: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 6u), "WAST line 2377: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 6u), trapUninitializedElement, "WAST line 2377: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 7u), "WAST line 2378: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 7u), trapUninitializedElement, "WAST line 2378: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 8u), "WAST line 2379: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 8u), trapUninitializedElement, "WAST line 2379: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 9u), "WAST line 2380: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 9u), trapUninitializedElement, "WAST line 2380: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 10u), "WAST line 2381: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 10u), trapUninitializedElement, "WAST line 2381: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 11u), "WAST line 2382: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 11u), trapUninitializedElement, "WAST line 2382: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 12u), "WAST line 2383: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 12u), trapUninitializedElement, "WAST line 2383: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 13u), "WAST line 2384: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 13u), trapUninitializedElement, "WAST line 2384: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 14u), "WAST line 2385: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 14u), trapUninitializedElement, "WAST line 2385: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 15u), "WAST line 2386: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 15u), trapUninitializedElement, "WAST line 2386: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 16u), "WAST line 2387: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 16u), trapUninitializedElement, "WAST line 2387: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 17u), "WAST line 2388: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 17u), trapUninitializedElement, "WAST line 2388: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 18u), "WAST line 2389: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 18u), trapUninitializedElement, "WAST line 2389: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 19u), "WAST line 2390: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 19u), trapUninitializedElement, "WAST line 2390: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 20u), "WAST line 2391: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 20u), trapUninitializedElement, "WAST line 2391: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 21u), "WAST line 2392: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 21u), trapUninitializedElement, "WAST line 2392: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 22u), "WAST line 2393: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 22u), trapUninitializedElement, "WAST line 2393: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 23u), "WAST line 2394: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E43Export4_test(&instance_43, 23u), trapUninitializedElement, "WAST line 2394: test(23u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E43Export4_test(&instance_43, 24u),
@@ -4906,76 +4906,76 @@ void test(void) {
     m13_tableX5FcopyX2E44Instantiate(&instance_44, resolveTestImports);
     printStart("table_copy.44.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export3_run(&instance_44, 0u, 23u, 15u), "WAST line 2430: run(0u, 23u, 15u)");
+    assertTrap(m13_tableX5FcopyX2E44Export3_run(&instance_44, 0u, 23u, 15u), trapTableOutOfBounds, "WAST line 2430: run(0u, 23u, 15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 0u), "WAST line 2432: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 0u), trapUninitializedElement, "WAST line 2432: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 1u), "WAST line 2433: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 1u), trapUninitializedElement, "WAST line 2433: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 2u), "WAST line 2434: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 2u), trapUninitializedElement, "WAST line 2434: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 3u), "WAST line 2435: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 3u), trapUninitializedElement, "WAST line 2435: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 4u), "WAST line 2436: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 4u), trapUninitializedElement, "WAST line 2436: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 5u), "WAST line 2437: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 5u), trapUninitializedElement, "WAST line 2437: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 6u), "WAST line 2438: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 6u), trapUninitializedElement, "WAST line 2438: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 7u), "WAST line 2439: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 7u), trapUninitializedElement, "WAST line 2439: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 8u), "WAST line 2440: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 8u), trapUninitializedElement, "WAST line 2440: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 9u), "WAST line 2441: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 9u), trapUninitializedElement, "WAST line 2441: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 10u), "WAST line 2442: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 10u), trapUninitializedElement, "WAST line 2442: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 11u), "WAST line 2443: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 11u), trapUninitializedElement, "WAST line 2443: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 12u), "WAST line 2444: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 12u), trapUninitializedElement, "WAST line 2444: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 13u), "WAST line 2445: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 13u), trapUninitializedElement, "WAST line 2445: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 14u), "WAST line 2446: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 14u), trapUninitializedElement, "WAST line 2446: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 15u), "WAST line 2447: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 15u), trapUninitializedElement, "WAST line 2447: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 16u), "WAST line 2448: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 16u), trapUninitializedElement, "WAST line 2448: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 17u), "WAST line 2449: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 17u), trapUninitializedElement, "WAST line 2449: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 18u), "WAST line 2450: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 18u), trapUninitializedElement, "WAST line 2450: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 19u), "WAST line 2451: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 19u), trapUninitializedElement, "WAST line 2451: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 20u), "WAST line 2452: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 20u), trapUninitializedElement, "WAST line 2452: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 21u), "WAST line 2453: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 21u), trapUninitializedElement, "WAST line 2453: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 22u), "WAST line 2454: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E44Export4_test(&instance_44, 22u), trapUninitializedElement, "WAST line 2454: test(22u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E44Export4_test(&instance_44, 23u),
@@ -5025,40 +5025,40 @@ void test(void) {
     m13_tableX5FcopyX2E45Instantiate(&instance_45, resolveTestImports);
     printStart("table_copy.45.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export3_run(&instance_45, 24u, 11u, 16u), "WAST line 2491: run(24u, 11u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E45Export3_run(&instance_45, 24u, 11u, 16u), trapTableOutOfBounds, "WAST line 2491: run(24u, 11u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 0u), "WAST line 2493: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 0u), trapUninitializedElement, "WAST line 2493: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 1u), "WAST line 2494: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 1u), trapUninitializedElement, "WAST line 2494: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 2u), "WAST line 2495: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 2u), trapUninitializedElement, "WAST line 2495: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 3u), "WAST line 2496: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 3u), trapUninitializedElement, "WAST line 2496: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 4u), "WAST line 2497: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 4u), trapUninitializedElement, "WAST line 2497: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 5u), "WAST line 2498: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 5u), trapUninitializedElement, "WAST line 2498: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 6u), "WAST line 2499: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 6u), trapUninitializedElement, "WAST line 2499: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 7u), "WAST line 2500: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 7u), trapUninitializedElement, "WAST line 2500: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 8u), "WAST line 2501: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 8u), trapUninitializedElement, "WAST line 2501: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 9u), "WAST line 2502: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 9u), trapUninitializedElement, "WAST line 2502: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 10u), "WAST line 2503: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 10u), trapUninitializedElement, "WAST line 2503: test(10u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E45Export4_test(&instance_45, 11u),
@@ -5101,120 +5101,120 @@ void test(void) {
         "WAST line 2511: test(18u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 19u), "WAST line 2512: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 19u), trapUninitializedElement, "WAST line 2512: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 20u), "WAST line 2513: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 20u), trapUninitializedElement, "WAST line 2513: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 21u), "WAST line 2514: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 21u), trapUninitializedElement, "WAST line 2514: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 22u), "WAST line 2515: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 22u), trapUninitializedElement, "WAST line 2515: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 23u), "WAST line 2516: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 23u), trapUninitializedElement, "WAST line 2516: test(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 24u), "WAST line 2517: test(24u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 24u), trapUninitializedElement, "WAST line 2517: test(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 25u), "WAST line 2518: test(25u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 25u), trapUninitializedElement, "WAST line 2518: test(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 26u), "WAST line 2519: test(26u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 26u), trapUninitializedElement, "WAST line 2519: test(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 27u), "WAST line 2520: test(27u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 27u), trapUninitializedElement, "WAST line 2520: test(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 28u), "WAST line 2521: test(28u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 28u), trapUninitializedElement, "WAST line 2521: test(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 29u), "WAST line 2522: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 29u), trapUninitializedElement, "WAST line 2522: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 30u), "WAST line 2523: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 30u), trapUninitializedElement, "WAST line 2523: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 31u), "WAST line 2524: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E45Export4_test(&instance_45, 31u), trapUninitializedElement, "WAST line 2524: test(31u)");
 #endif
     m13_tableX5FcopyX2E46Instantiate(&instance_46, resolveTestImports);
     printStart("table_copy.46.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export3_run(&instance_46, 11u, 24u, 16u), "WAST line 2552: run(11u, 24u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E46Export3_run(&instance_46, 11u, 24u, 16u), trapTableOutOfBounds, "WAST line 2552: run(11u, 24u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 0u), "WAST line 2554: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 0u), trapUninitializedElement, "WAST line 2554: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 1u), "WAST line 2555: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 1u), trapUninitializedElement, "WAST line 2555: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 2u), "WAST line 2556: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 2u), trapUninitializedElement, "WAST line 2556: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 3u), "WAST line 2557: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 3u), trapUninitializedElement, "WAST line 2557: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 4u), "WAST line 2558: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 4u), trapUninitializedElement, "WAST line 2558: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 5u), "WAST line 2559: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 5u), trapUninitializedElement, "WAST line 2559: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 6u), "WAST line 2560: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 6u), trapUninitializedElement, "WAST line 2560: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 7u), "WAST line 2561: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 7u), trapUninitializedElement, "WAST line 2561: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 8u), "WAST line 2562: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 8u), trapUninitializedElement, "WAST line 2562: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 9u), "WAST line 2563: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 9u), trapUninitializedElement, "WAST line 2563: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 10u), "WAST line 2564: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 10u), trapUninitializedElement, "WAST line 2564: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 11u), "WAST line 2565: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 11u), trapUninitializedElement, "WAST line 2565: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 12u), "WAST line 2566: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 12u), trapUninitializedElement, "WAST line 2566: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 13u), "WAST line 2567: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 13u), trapUninitializedElement, "WAST line 2567: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 14u), "WAST line 2568: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 14u), trapUninitializedElement, "WAST line 2568: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 15u), "WAST line 2569: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 15u), trapUninitializedElement, "WAST line 2569: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 16u), "WAST line 2570: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 16u), trapUninitializedElement, "WAST line 2570: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 17u), "WAST line 2571: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 17u), trapUninitializedElement, "WAST line 2571: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 18u), "WAST line 2572: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 18u), trapUninitializedElement, "WAST line 2572: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 19u), "WAST line 2573: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 19u), trapUninitializedElement, "WAST line 2573: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 20u), "WAST line 2574: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 20u), trapUninitializedElement, "WAST line 2574: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 21u), "WAST line 2575: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 21u), trapUninitializedElement, "WAST line 2575: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 22u), "WAST line 2576: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 22u), trapUninitializedElement, "WAST line 2576: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 23u), "WAST line 2577: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E46Export4_test(&instance_46, 23u), trapUninitializedElement, "WAST line 2577: test(23u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E46Export4_test(&instance_46, 24u),
@@ -5259,70 +5259,70 @@ void test(void) {
     m13_tableX5FcopyX2E47Instantiate(&instance_47, resolveTestImports);
     printStart("table_copy.47.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export3_run(&instance_47, 24u, 21u, 16u), "WAST line 2613: run(24u, 21u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E47Export3_run(&instance_47, 24u, 21u, 16u), trapTableOutOfBounds, "WAST line 2613: run(24u, 21u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 0u), "WAST line 2615: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 0u), trapUninitializedElement, "WAST line 2615: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 1u), "WAST line 2616: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 1u), trapUninitializedElement, "WAST line 2616: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 2u), "WAST line 2617: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 2u), trapUninitializedElement, "WAST line 2617: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 3u), "WAST line 2618: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 3u), trapUninitializedElement, "WAST line 2618: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 4u), "WAST line 2619: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 4u), trapUninitializedElement, "WAST line 2619: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 5u), "WAST line 2620: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 5u), trapUninitializedElement, "WAST line 2620: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 6u), "WAST line 2621: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 6u), trapUninitializedElement, "WAST line 2621: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 7u), "WAST line 2622: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 7u), trapUninitializedElement, "WAST line 2622: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 8u), "WAST line 2623: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 8u), trapUninitializedElement, "WAST line 2623: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 9u), "WAST line 2624: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 9u), trapUninitializedElement, "WAST line 2624: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 10u), "WAST line 2625: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 10u), trapUninitializedElement, "WAST line 2625: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 11u), "WAST line 2626: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 11u), trapUninitializedElement, "WAST line 2626: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 12u), "WAST line 2627: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 12u), trapUninitializedElement, "WAST line 2627: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 13u), "WAST line 2628: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 13u), trapUninitializedElement, "WAST line 2628: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 14u), "WAST line 2629: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 14u), trapUninitializedElement, "WAST line 2629: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 15u), "WAST line 2630: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 15u), trapUninitializedElement, "WAST line 2630: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 16u), "WAST line 2631: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 16u), trapUninitializedElement, "WAST line 2631: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 17u), "WAST line 2632: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 17u), trapUninitializedElement, "WAST line 2632: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 18u), "WAST line 2633: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 18u), trapUninitializedElement, "WAST line 2633: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 19u), "WAST line 2634: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 19u), trapUninitializedElement, "WAST line 2634: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 20u), "WAST line 2635: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 20u), trapUninitializedElement, "WAST line 2635: test(20u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E47Export4_test(&instance_47, 21u),
@@ -5365,90 +5365,90 @@ void test(void) {
         "WAST line 2643: test(28u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 29u), "WAST line 2644: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 29u), trapUninitializedElement, "WAST line 2644: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 30u), "WAST line 2645: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 30u), trapUninitializedElement, "WAST line 2645: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 31u), "WAST line 2646: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E47Export4_test(&instance_47, 31u), trapUninitializedElement, "WAST line 2646: test(31u)");
 #endif
     m13_tableX5FcopyX2E48Instantiate(&instance_48, resolveTestImports);
     printStart("table_copy.48.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export3_run(&instance_48, 21u, 24u, 16u), "WAST line 2674: run(21u, 24u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E48Export3_run(&instance_48, 21u, 24u, 16u), trapTableOutOfBounds, "WAST line 2674: run(21u, 24u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 0u), "WAST line 2676: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 0u), trapUninitializedElement, "WAST line 2676: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 1u), "WAST line 2677: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 1u), trapUninitializedElement, "WAST line 2677: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 2u), "WAST line 2678: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 2u), trapUninitializedElement, "WAST line 2678: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 3u), "WAST line 2679: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 3u), trapUninitializedElement, "WAST line 2679: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 4u), "WAST line 2680: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 4u), trapUninitializedElement, "WAST line 2680: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 5u), "WAST line 2681: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 5u), trapUninitializedElement, "WAST line 2681: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 6u), "WAST line 2682: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 6u), trapUninitializedElement, "WAST line 2682: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 7u), "WAST line 2683: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 7u), trapUninitializedElement, "WAST line 2683: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 8u), "WAST line 2684: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 8u), trapUninitializedElement, "WAST line 2684: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 9u), "WAST line 2685: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 9u), trapUninitializedElement, "WAST line 2685: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 10u), "WAST line 2686: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 10u), trapUninitializedElement, "WAST line 2686: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 11u), "WAST line 2687: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 11u), trapUninitializedElement, "WAST line 2687: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 12u), "WAST line 2688: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 12u), trapUninitializedElement, "WAST line 2688: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 13u), "WAST line 2689: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 13u), trapUninitializedElement, "WAST line 2689: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 14u), "WAST line 2690: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 14u), trapUninitializedElement, "WAST line 2690: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 15u), "WAST line 2691: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 15u), trapUninitializedElement, "WAST line 2691: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 16u), "WAST line 2692: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 16u), trapUninitializedElement, "WAST line 2692: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 17u), "WAST line 2693: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 17u), trapUninitializedElement, "WAST line 2693: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 18u), "WAST line 2694: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 18u), trapUninitializedElement, "WAST line 2694: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 19u), "WAST line 2695: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 19u), trapUninitializedElement, "WAST line 2695: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 20u), "WAST line 2696: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 20u), trapUninitializedElement, "WAST line 2696: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 21u), "WAST line 2697: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 21u), trapUninitializedElement, "WAST line 2697: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 22u), "WAST line 2698: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 22u), trapUninitializedElement, "WAST line 2698: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 23u), "WAST line 2699: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E48Export4_test(&instance_48, 23u), trapUninitializedElement, "WAST line 2699: test(23u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E48Export4_test(&instance_48, 24u),
@@ -5493,70 +5493,70 @@ void test(void) {
     m13_tableX5FcopyX2E49Instantiate(&instance_49, resolveTestImports);
     printStart("table_copy.49.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export3_run(&instance_49, 21u, 21u, 16u), "WAST line 2735: run(21u, 21u, 16u)");
+    assertTrap(m13_tableX5FcopyX2E49Export3_run(&instance_49, 21u, 21u, 16u), trapTableOutOfBounds, "WAST line 2735: run(21u, 21u, 16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 0u), "WAST line 2737: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 0u), trapUninitializedElement, "WAST line 2737: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 1u), "WAST line 2738: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 1u), trapUninitializedElement, "WAST line 2738: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 2u), "WAST line 2739: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 2u), trapUninitializedElement, "WAST line 2739: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 3u), "WAST line 2740: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 3u), trapUninitializedElement, "WAST line 2740: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 4u), "WAST line 2741: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 4u), trapUninitializedElement, "WAST line 2741: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 5u), "WAST line 2742: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 5u), trapUninitializedElement, "WAST line 2742: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 6u), "WAST line 2743: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 6u), trapUninitializedElement, "WAST line 2743: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 7u), "WAST line 2744: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 7u), trapUninitializedElement, "WAST line 2744: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 8u), "WAST line 2745: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 8u), trapUninitializedElement, "WAST line 2745: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 9u), "WAST line 2746: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 9u), trapUninitializedElement, "WAST line 2746: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 10u), "WAST line 2747: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 10u), trapUninitializedElement, "WAST line 2747: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 11u), "WAST line 2748: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 11u), trapUninitializedElement, "WAST line 2748: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 12u), "WAST line 2749: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 12u), trapUninitializedElement, "WAST line 2749: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 13u), "WAST line 2750: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 13u), trapUninitializedElement, "WAST line 2750: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 14u), "WAST line 2751: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 14u), trapUninitializedElement, "WAST line 2751: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 15u), "WAST line 2752: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 15u), trapUninitializedElement, "WAST line 2752: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 16u), "WAST line 2753: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 16u), trapUninitializedElement, "WAST line 2753: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 17u), "WAST line 2754: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 17u), trapUninitializedElement, "WAST line 2754: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 18u), "WAST line 2755: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 18u), trapUninitializedElement, "WAST line 2755: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 19u), "WAST line 2756: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 19u), trapUninitializedElement, "WAST line 2756: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 20u), "WAST line 2757: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E49Export4_test(&instance_49, 20u), trapUninitializedElement, "WAST line 2757: test(20u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E49Export4_test(&instance_49, 21u),
@@ -5616,343 +5616,343 @@ void test(void) {
     m13_tableX5FcopyX2E50Instantiate(&instance_50, resolveTestImports);
     printStart("table_copy.50.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export3_run(&instance_50, 0u, 112u, 4294967264u), "WAST line 2796: run(0u, 112u, 4294967264u)");
+    assertTrap(m13_tableX5FcopyX2E50Export3_run(&instance_50, 0u, 112u, 4294967264u), trapTableOutOfBounds, "WAST line 2796: run(0u, 112u, 4294967264u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 0u), "WAST line 2798: test(0u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 0u), trapUninitializedElement, "WAST line 2798: test(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 1u), "WAST line 2799: test(1u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 1u), trapUninitializedElement, "WAST line 2799: test(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 2u), "WAST line 2800: test(2u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 2u), trapUninitializedElement, "WAST line 2800: test(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 3u), "WAST line 2801: test(3u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 3u), trapUninitializedElement, "WAST line 2801: test(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 4u), "WAST line 2802: test(4u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 4u), trapUninitializedElement, "WAST line 2802: test(4u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 5u), "WAST line 2803: test(5u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 5u), trapUninitializedElement, "WAST line 2803: test(5u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 6u), "WAST line 2804: test(6u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 6u), trapUninitializedElement, "WAST line 2804: test(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 7u), "WAST line 2805: test(7u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 7u), trapUninitializedElement, "WAST line 2805: test(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 8u), "WAST line 2806: test(8u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 8u), trapUninitializedElement, "WAST line 2806: test(8u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 9u), "WAST line 2807: test(9u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 9u), trapUninitializedElement, "WAST line 2807: test(9u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 10u), "WAST line 2808: test(10u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 10u), trapUninitializedElement, "WAST line 2808: test(10u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 11u), "WAST line 2809: test(11u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 11u), trapUninitializedElement, "WAST line 2809: test(11u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 12u), "WAST line 2810: test(12u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 12u), trapUninitializedElement, "WAST line 2810: test(12u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 13u), "WAST line 2811: test(13u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 13u), trapUninitializedElement, "WAST line 2811: test(13u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 14u), "WAST line 2812: test(14u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 14u), trapUninitializedElement, "WAST line 2812: test(14u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 15u), "WAST line 2813: test(15u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 15u), trapUninitializedElement, "WAST line 2813: test(15u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 16u), "WAST line 2814: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 16u), trapUninitializedElement, "WAST line 2814: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 17u), "WAST line 2815: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 17u), trapUninitializedElement, "WAST line 2815: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 18u), "WAST line 2816: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 18u), trapUninitializedElement, "WAST line 2816: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 19u), "WAST line 2817: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 19u), trapUninitializedElement, "WAST line 2817: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 20u), "WAST line 2818: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 20u), trapUninitializedElement, "WAST line 2818: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 21u), "WAST line 2819: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 21u), trapUninitializedElement, "WAST line 2819: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 22u), "WAST line 2820: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 22u), trapUninitializedElement, "WAST line 2820: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 23u), "WAST line 2821: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 23u), trapUninitializedElement, "WAST line 2821: test(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 24u), "WAST line 2822: test(24u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 24u), trapUninitializedElement, "WAST line 2822: test(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 25u), "WAST line 2823: test(25u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 25u), trapUninitializedElement, "WAST line 2823: test(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 26u), "WAST line 2824: test(26u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 26u), trapUninitializedElement, "WAST line 2824: test(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 27u), "WAST line 2825: test(27u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 27u), trapUninitializedElement, "WAST line 2825: test(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 28u), "WAST line 2826: test(28u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 28u), trapUninitializedElement, "WAST line 2826: test(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 29u), "WAST line 2827: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 29u), trapUninitializedElement, "WAST line 2827: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 30u), "WAST line 2828: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 30u), trapUninitializedElement, "WAST line 2828: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 31u), "WAST line 2829: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 31u), trapUninitializedElement, "WAST line 2829: test(31u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 32u), "WAST line 2830: test(32u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 32u), trapUninitializedElement, "WAST line 2830: test(32u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 33u), "WAST line 2831: test(33u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 33u), trapUninitializedElement, "WAST line 2831: test(33u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 34u), "WAST line 2832: test(34u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 34u), trapUninitializedElement, "WAST line 2832: test(34u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 35u), "WAST line 2833: test(35u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 35u), trapUninitializedElement, "WAST line 2833: test(35u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 36u), "WAST line 2834: test(36u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 36u), trapUninitializedElement, "WAST line 2834: test(36u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 37u), "WAST line 2835: test(37u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 37u), trapUninitializedElement, "WAST line 2835: test(37u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 38u), "WAST line 2836: test(38u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 38u), trapUninitializedElement, "WAST line 2836: test(38u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 39u), "WAST line 2837: test(39u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 39u), trapUninitializedElement, "WAST line 2837: test(39u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 40u), "WAST line 2838: test(40u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 40u), trapUninitializedElement, "WAST line 2838: test(40u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 41u), "WAST line 2839: test(41u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 41u), trapUninitializedElement, "WAST line 2839: test(41u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 42u), "WAST line 2840: test(42u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 42u), trapUninitializedElement, "WAST line 2840: test(42u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 43u), "WAST line 2841: test(43u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 43u), trapUninitializedElement, "WAST line 2841: test(43u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 44u), "WAST line 2842: test(44u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 44u), trapUninitializedElement, "WAST line 2842: test(44u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 45u), "WAST line 2843: test(45u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 45u), trapUninitializedElement, "WAST line 2843: test(45u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 46u), "WAST line 2844: test(46u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 46u), trapUninitializedElement, "WAST line 2844: test(46u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 47u), "WAST line 2845: test(47u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 47u), trapUninitializedElement, "WAST line 2845: test(47u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 48u), "WAST line 2846: test(48u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 48u), trapUninitializedElement, "WAST line 2846: test(48u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 49u), "WAST line 2847: test(49u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 49u), trapUninitializedElement, "WAST line 2847: test(49u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 50u), "WAST line 2848: test(50u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 50u), trapUninitializedElement, "WAST line 2848: test(50u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 51u), "WAST line 2849: test(51u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 51u), trapUninitializedElement, "WAST line 2849: test(51u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 52u), "WAST line 2850: test(52u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 52u), trapUninitializedElement, "WAST line 2850: test(52u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 53u), "WAST line 2851: test(53u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 53u), trapUninitializedElement, "WAST line 2851: test(53u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 54u), "WAST line 2852: test(54u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 54u), trapUninitializedElement, "WAST line 2852: test(54u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 55u), "WAST line 2853: test(55u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 55u), trapUninitializedElement, "WAST line 2853: test(55u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 56u), "WAST line 2854: test(56u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 56u), trapUninitializedElement, "WAST line 2854: test(56u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 57u), "WAST line 2855: test(57u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 57u), trapUninitializedElement, "WAST line 2855: test(57u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 58u), "WAST line 2856: test(58u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 58u), trapUninitializedElement, "WAST line 2856: test(58u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 59u), "WAST line 2857: test(59u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 59u), trapUninitializedElement, "WAST line 2857: test(59u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 60u), "WAST line 2858: test(60u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 60u), trapUninitializedElement, "WAST line 2858: test(60u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 61u), "WAST line 2859: test(61u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 61u), trapUninitializedElement, "WAST line 2859: test(61u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 62u), "WAST line 2860: test(62u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 62u), trapUninitializedElement, "WAST line 2860: test(62u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 63u), "WAST line 2861: test(63u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 63u), trapUninitializedElement, "WAST line 2861: test(63u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 64u), "WAST line 2862: test(64u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 64u), trapUninitializedElement, "WAST line 2862: test(64u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 65u), "WAST line 2863: test(65u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 65u), trapUninitializedElement, "WAST line 2863: test(65u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 66u), "WAST line 2864: test(66u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 66u), trapUninitializedElement, "WAST line 2864: test(66u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 67u), "WAST line 2865: test(67u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 67u), trapUninitializedElement, "WAST line 2865: test(67u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 68u), "WAST line 2866: test(68u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 68u), trapUninitializedElement, "WAST line 2866: test(68u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 69u), "WAST line 2867: test(69u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 69u), trapUninitializedElement, "WAST line 2867: test(69u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 70u), "WAST line 2868: test(70u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 70u), trapUninitializedElement, "WAST line 2868: test(70u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 71u), "WAST line 2869: test(71u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 71u), trapUninitializedElement, "WAST line 2869: test(71u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 72u), "WAST line 2870: test(72u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 72u), trapUninitializedElement, "WAST line 2870: test(72u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 73u), "WAST line 2871: test(73u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 73u), trapUninitializedElement, "WAST line 2871: test(73u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 74u), "WAST line 2872: test(74u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 74u), trapUninitializedElement, "WAST line 2872: test(74u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 75u), "WAST line 2873: test(75u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 75u), trapUninitializedElement, "WAST line 2873: test(75u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 76u), "WAST line 2874: test(76u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 76u), trapUninitializedElement, "WAST line 2874: test(76u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 77u), "WAST line 2875: test(77u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 77u), trapUninitializedElement, "WAST line 2875: test(77u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 78u), "WAST line 2876: test(78u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 78u), trapUninitializedElement, "WAST line 2876: test(78u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 79u), "WAST line 2877: test(79u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 79u), trapUninitializedElement, "WAST line 2877: test(79u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 80u), "WAST line 2878: test(80u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 80u), trapUninitializedElement, "WAST line 2878: test(80u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 81u), "WAST line 2879: test(81u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 81u), trapUninitializedElement, "WAST line 2879: test(81u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 82u), "WAST line 2880: test(82u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 82u), trapUninitializedElement, "WAST line 2880: test(82u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 83u), "WAST line 2881: test(83u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 83u), trapUninitializedElement, "WAST line 2881: test(83u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 84u), "WAST line 2882: test(84u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 84u), trapUninitializedElement, "WAST line 2882: test(84u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 85u), "WAST line 2883: test(85u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 85u), trapUninitializedElement, "WAST line 2883: test(85u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 86u), "WAST line 2884: test(86u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 86u), trapUninitializedElement, "WAST line 2884: test(86u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 87u), "WAST line 2885: test(87u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 87u), trapUninitializedElement, "WAST line 2885: test(87u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 88u), "WAST line 2886: test(88u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 88u), trapUninitializedElement, "WAST line 2886: test(88u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 89u), "WAST line 2887: test(89u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 89u), trapUninitializedElement, "WAST line 2887: test(89u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 90u), "WAST line 2888: test(90u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 90u), trapUninitializedElement, "WAST line 2888: test(90u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 91u), "WAST line 2889: test(91u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 91u), trapUninitializedElement, "WAST line 2889: test(91u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 92u), "WAST line 2890: test(92u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 92u), trapUninitializedElement, "WAST line 2890: test(92u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 93u), "WAST line 2891: test(93u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 93u), trapUninitializedElement, "WAST line 2891: test(93u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 94u), "WAST line 2892: test(94u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 94u), trapUninitializedElement, "WAST line 2892: test(94u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 95u), "WAST line 2893: test(95u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 95u), trapUninitializedElement, "WAST line 2893: test(95u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 96u), "WAST line 2894: test(96u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 96u), trapUninitializedElement, "WAST line 2894: test(96u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 97u), "WAST line 2895: test(97u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 97u), trapUninitializedElement, "WAST line 2895: test(97u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 98u), "WAST line 2896: test(98u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 98u), trapUninitializedElement, "WAST line 2896: test(98u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 99u), "WAST line 2897: test(99u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 99u), trapUninitializedElement, "WAST line 2897: test(99u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 100u), "WAST line 2898: test(100u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 100u), trapUninitializedElement, "WAST line 2898: test(100u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 101u), "WAST line 2899: test(101u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 101u), trapUninitializedElement, "WAST line 2899: test(101u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 102u), "WAST line 2900: test(102u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 102u), trapUninitializedElement, "WAST line 2900: test(102u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 103u), "WAST line 2901: test(103u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 103u), trapUninitializedElement, "WAST line 2901: test(103u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 104u), "WAST line 2902: test(104u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 104u), trapUninitializedElement, "WAST line 2902: test(104u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 105u), "WAST line 2903: test(105u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 105u), trapUninitializedElement, "WAST line 2903: test(105u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 106u), "WAST line 2904: test(106u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 106u), trapUninitializedElement, "WAST line 2904: test(106u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 107u), "WAST line 2905: test(107u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 107u), trapUninitializedElement, "WAST line 2905: test(107u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 108u), "WAST line 2906: test(108u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 108u), trapUninitializedElement, "WAST line 2906: test(108u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 109u), "WAST line 2907: test(109u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 109u), trapUninitializedElement, "WAST line 2907: test(109u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 110u), "WAST line 2908: test(110u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 110u), trapUninitializedElement, "WAST line 2908: test(110u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 111u), "WAST line 2909: test(111u)");
+    assertTrap(m13_tableX5FcopyX2E50Export4_test(&instance_50, 111u), trapUninitializedElement, "WAST line 2909: test(111u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E50Export4_test(&instance_50, 112u),
@@ -6037,7 +6037,7 @@ void test(void) {
     m13_tableX5FcopyX2E51Instantiate(&instance_51, resolveTestImports);
     printStart("table_copy.51.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export3_run(&instance_51, 112u, 0u, 4294967264u), "WAST line 2953: run(112u, 0u, 4294967264u)");
+    assertTrap(m13_tableX5FcopyX2E51Export3_run(&instance_51, 112u, 0u, 4294967264u), trapTableOutOfBounds, "WAST line 2953: run(112u, 0u, 4294967264u)");
 #endif
     assertEqualU32(
         m13_tableX5FcopyX2E51Export4_test(&instance_51, 0u),
@@ -6120,340 +6120,340 @@ void test(void) {
         "WAST line 2970: test(15u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 16u), "WAST line 2971: test(16u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 16u), trapUninitializedElement, "WAST line 2971: test(16u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 17u), "WAST line 2972: test(17u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 17u), trapUninitializedElement, "WAST line 2972: test(17u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 18u), "WAST line 2973: test(18u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 18u), trapUninitializedElement, "WAST line 2973: test(18u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 19u), "WAST line 2974: test(19u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 19u), trapUninitializedElement, "WAST line 2974: test(19u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 20u), "WAST line 2975: test(20u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 20u), trapUninitializedElement, "WAST line 2975: test(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 21u), "WAST line 2976: test(21u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 21u), trapUninitializedElement, "WAST line 2976: test(21u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 22u), "WAST line 2977: test(22u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 22u), trapUninitializedElement, "WAST line 2977: test(22u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 23u), "WAST line 2978: test(23u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 23u), trapUninitializedElement, "WAST line 2978: test(23u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 24u), "WAST line 2979: test(24u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 24u), trapUninitializedElement, "WAST line 2979: test(24u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 25u), "WAST line 2980: test(25u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 25u), trapUninitializedElement, "WAST line 2980: test(25u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 26u), "WAST line 2981: test(26u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 26u), trapUninitializedElement, "WAST line 2981: test(26u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 27u), "WAST line 2982: test(27u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 27u), trapUninitializedElement, "WAST line 2982: test(27u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 28u), "WAST line 2983: test(28u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 28u), trapUninitializedElement, "WAST line 2983: test(28u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 29u), "WAST line 2984: test(29u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 29u), trapUninitializedElement, "WAST line 2984: test(29u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 30u), "WAST line 2985: test(30u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 30u), trapUninitializedElement, "WAST line 2985: test(30u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 31u), "WAST line 2986: test(31u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 31u), trapUninitializedElement, "WAST line 2986: test(31u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 32u), "WAST line 2987: test(32u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 32u), trapUninitializedElement, "WAST line 2987: test(32u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 33u), "WAST line 2988: test(33u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 33u), trapUninitializedElement, "WAST line 2988: test(33u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 34u), "WAST line 2989: test(34u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 34u), trapUninitializedElement, "WAST line 2989: test(34u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 35u), "WAST line 2990: test(35u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 35u), trapUninitializedElement, "WAST line 2990: test(35u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 36u), "WAST line 2991: test(36u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 36u), trapUninitializedElement, "WAST line 2991: test(36u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 37u), "WAST line 2992: test(37u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 37u), trapUninitializedElement, "WAST line 2992: test(37u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 38u), "WAST line 2993: test(38u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 38u), trapUninitializedElement, "WAST line 2993: test(38u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 39u), "WAST line 2994: test(39u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 39u), trapUninitializedElement, "WAST line 2994: test(39u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 40u), "WAST line 2995: test(40u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 40u), trapUninitializedElement, "WAST line 2995: test(40u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 41u), "WAST line 2996: test(41u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 41u), trapUninitializedElement, "WAST line 2996: test(41u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 42u), "WAST line 2997: test(42u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 42u), trapUninitializedElement, "WAST line 2997: test(42u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 43u), "WAST line 2998: test(43u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 43u), trapUninitializedElement, "WAST line 2998: test(43u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 44u), "WAST line 2999: test(44u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 44u), trapUninitializedElement, "WAST line 2999: test(44u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 45u), "WAST line 3000: test(45u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 45u), trapUninitializedElement, "WAST line 3000: test(45u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 46u), "WAST line 3001: test(46u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 46u), trapUninitializedElement, "WAST line 3001: test(46u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 47u), "WAST line 3002: test(47u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 47u), trapUninitializedElement, "WAST line 3002: test(47u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 48u), "WAST line 3003: test(48u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 48u), trapUninitializedElement, "WAST line 3003: test(48u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 49u), "WAST line 3004: test(49u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 49u), trapUninitializedElement, "WAST line 3004: test(49u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 50u), "WAST line 3005: test(50u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 50u), trapUninitializedElement, "WAST line 3005: test(50u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 51u), "WAST line 3006: test(51u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 51u), trapUninitializedElement, "WAST line 3006: test(51u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 52u), "WAST line 3007: test(52u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 52u), trapUninitializedElement, "WAST line 3007: test(52u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 53u), "WAST line 3008: test(53u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 53u), trapUninitializedElement, "WAST line 3008: test(53u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 54u), "WAST line 3009: test(54u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 54u), trapUninitializedElement, "WAST line 3009: test(54u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 55u), "WAST line 3010: test(55u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 55u), trapUninitializedElement, "WAST line 3010: test(55u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 56u), "WAST line 3011: test(56u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 56u), trapUninitializedElement, "WAST line 3011: test(56u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 57u), "WAST line 3012: test(57u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 57u), trapUninitializedElement, "WAST line 3012: test(57u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 58u), "WAST line 3013: test(58u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 58u), trapUninitializedElement, "WAST line 3013: test(58u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 59u), "WAST line 3014: test(59u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 59u), trapUninitializedElement, "WAST line 3014: test(59u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 60u), "WAST line 3015: test(60u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 60u), trapUninitializedElement, "WAST line 3015: test(60u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 61u), "WAST line 3016: test(61u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 61u), trapUninitializedElement, "WAST line 3016: test(61u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 62u), "WAST line 3017: test(62u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 62u), trapUninitializedElement, "WAST line 3017: test(62u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 63u), "WAST line 3018: test(63u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 63u), trapUninitializedElement, "WAST line 3018: test(63u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 64u), "WAST line 3019: test(64u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 64u), trapUninitializedElement, "WAST line 3019: test(64u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 65u), "WAST line 3020: test(65u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 65u), trapUninitializedElement, "WAST line 3020: test(65u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 66u), "WAST line 3021: test(66u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 66u), trapUninitializedElement, "WAST line 3021: test(66u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 67u), "WAST line 3022: test(67u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 67u), trapUninitializedElement, "WAST line 3022: test(67u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 68u), "WAST line 3023: test(68u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 68u), trapUninitializedElement, "WAST line 3023: test(68u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 69u), "WAST line 3024: test(69u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 69u), trapUninitializedElement, "WAST line 3024: test(69u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 70u), "WAST line 3025: test(70u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 70u), trapUninitializedElement, "WAST line 3025: test(70u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 71u), "WAST line 3026: test(71u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 71u), trapUninitializedElement, "WAST line 3026: test(71u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 72u), "WAST line 3027: test(72u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 72u), trapUninitializedElement, "WAST line 3027: test(72u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 73u), "WAST line 3028: test(73u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 73u), trapUninitializedElement, "WAST line 3028: test(73u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 74u), "WAST line 3029: test(74u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 74u), trapUninitializedElement, "WAST line 3029: test(74u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 75u), "WAST line 3030: test(75u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 75u), trapUninitializedElement, "WAST line 3030: test(75u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 76u), "WAST line 3031: test(76u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 76u), trapUninitializedElement, "WAST line 3031: test(76u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 77u), "WAST line 3032: test(77u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 77u), trapUninitializedElement, "WAST line 3032: test(77u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 78u), "WAST line 3033: test(78u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 78u), trapUninitializedElement, "WAST line 3033: test(78u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 79u), "WAST line 3034: test(79u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 79u), trapUninitializedElement, "WAST line 3034: test(79u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 80u), "WAST line 3035: test(80u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 80u), trapUninitializedElement, "WAST line 3035: test(80u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 81u), "WAST line 3036: test(81u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 81u), trapUninitializedElement, "WAST line 3036: test(81u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 82u), "WAST line 3037: test(82u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 82u), trapUninitializedElement, "WAST line 3037: test(82u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 83u), "WAST line 3038: test(83u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 83u), trapUninitializedElement, "WAST line 3038: test(83u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 84u), "WAST line 3039: test(84u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 84u), trapUninitializedElement, "WAST line 3039: test(84u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 85u), "WAST line 3040: test(85u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 85u), trapUninitializedElement, "WAST line 3040: test(85u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 86u), "WAST line 3041: test(86u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 86u), trapUninitializedElement, "WAST line 3041: test(86u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 87u), "WAST line 3042: test(87u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 87u), trapUninitializedElement, "WAST line 3042: test(87u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 88u), "WAST line 3043: test(88u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 88u), trapUninitializedElement, "WAST line 3043: test(88u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 89u), "WAST line 3044: test(89u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 89u), trapUninitializedElement, "WAST line 3044: test(89u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 90u), "WAST line 3045: test(90u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 90u), trapUninitializedElement, "WAST line 3045: test(90u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 91u), "WAST line 3046: test(91u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 91u), trapUninitializedElement, "WAST line 3046: test(91u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 92u), "WAST line 3047: test(92u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 92u), trapUninitializedElement, "WAST line 3047: test(92u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 93u), "WAST line 3048: test(93u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 93u), trapUninitializedElement, "WAST line 3048: test(93u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 94u), "WAST line 3049: test(94u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 94u), trapUninitializedElement, "WAST line 3049: test(94u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 95u), "WAST line 3050: test(95u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 95u), trapUninitializedElement, "WAST line 3050: test(95u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 96u), "WAST line 3051: test(96u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 96u), trapUninitializedElement, "WAST line 3051: test(96u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 97u), "WAST line 3052: test(97u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 97u), trapUninitializedElement, "WAST line 3052: test(97u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 98u), "WAST line 3053: test(98u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 98u), trapUninitializedElement, "WAST line 3053: test(98u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 99u), "WAST line 3054: test(99u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 99u), trapUninitializedElement, "WAST line 3054: test(99u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 100u), "WAST line 3055: test(100u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 100u), trapUninitializedElement, "WAST line 3055: test(100u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 101u), "WAST line 3056: test(101u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 101u), trapUninitializedElement, "WAST line 3056: test(101u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 102u), "WAST line 3057: test(102u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 102u), trapUninitializedElement, "WAST line 3057: test(102u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 103u), "WAST line 3058: test(103u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 103u), trapUninitializedElement, "WAST line 3058: test(103u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 104u), "WAST line 3059: test(104u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 104u), trapUninitializedElement, "WAST line 3059: test(104u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 105u), "WAST line 3060: test(105u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 105u), trapUninitializedElement, "WAST line 3060: test(105u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 106u), "WAST line 3061: test(106u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 106u), trapUninitializedElement, "WAST line 3061: test(106u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 107u), "WAST line 3062: test(107u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 107u), trapUninitializedElement, "WAST line 3062: test(107u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 108u), "WAST line 3063: test(108u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 108u), trapUninitializedElement, "WAST line 3063: test(108u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 109u), "WAST line 3064: test(109u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 109u), trapUninitializedElement, "WAST line 3064: test(109u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 110u), "WAST line 3065: test(110u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 110u), trapUninitializedElement, "WAST line 3065: test(110u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 111u), "WAST line 3066: test(111u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 111u), trapUninitializedElement, "WAST line 3066: test(111u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 112u), "WAST line 3067: test(112u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 112u), trapUninitializedElement, "WAST line 3067: test(112u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 113u), "WAST line 3068: test(113u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 113u), trapUninitializedElement, "WAST line 3068: test(113u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 114u), "WAST line 3069: test(114u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 114u), trapUninitializedElement, "WAST line 3069: test(114u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 115u), "WAST line 3070: test(115u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 115u), trapUninitializedElement, "WAST line 3070: test(115u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 116u), "WAST line 3071: test(116u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 116u), trapUninitializedElement, "WAST line 3071: test(116u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 117u), "WAST line 3072: test(117u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 117u), trapUninitializedElement, "WAST line 3072: test(117u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 118u), "WAST line 3073: test(118u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 118u), trapUninitializedElement, "WAST line 3073: test(118u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 119u), "WAST line 3074: test(119u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 119u), trapUninitializedElement, "WAST line 3074: test(119u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 120u), "WAST line 3075: test(120u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 120u), trapUninitializedElement, "WAST line 3075: test(120u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 121u), "WAST line 3076: test(121u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 121u), trapUninitializedElement, "WAST line 3076: test(121u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 122u), "WAST line 3077: test(122u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 122u), trapUninitializedElement, "WAST line 3077: test(122u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 123u), "WAST line 3078: test(123u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 123u), trapUninitializedElement, "WAST line 3078: test(123u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 124u), "WAST line 3079: test(124u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 124u), trapUninitializedElement, "WAST line 3079: test(124u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 125u), "WAST line 3080: test(125u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 125u), trapUninitializedElement, "WAST line 3080: test(125u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 126u), "WAST line 3081: test(126u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 126u), trapUninitializedElement, "WAST line 3081: test(126u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 127u), "WAST line 3082: test(127u)");
+    assertTrap(m13_tableX5FcopyX2E51Export4_test(&instance_51, 127u), trapUninitializedElement, "WAST line 3082: test(127u)");
 #endif
     m13_tableX5FcopyX2E51FreeInstance(&instance_51);
     m13_tableX5FcopyX2E50FreeInstance(&instance_50);

@@ -296,7 +296,7 @@ void test(void) {
     m10_importsX2E64Instantiate(&instance_19, resolveTestImports);
     printStart("imports.64.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E64Export4_call(&instance_19, 0u), "WAST line 397: call(0u)");
+    assertTrap(m10_importsX2E64Export4_call(&instance_19, 0u), trapUninitializedElement, "WAST line 397: call(0u)");
 #endif
     assertEqualU32(
         m10_importsX2E64Export4_call(&instance_19, 1u),
@@ -309,15 +309,15 @@ void test(void) {
         "WAST line 399: call(2u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E64Export4_call(&instance_19, 3u), "WAST line 400: call(3u)");
+    assertTrap(m10_importsX2E64Export4_call(&instance_19, 3u), trapUninitializedElement, "WAST line 400: call(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E64Export4_call(&instance_19, 100u), "WAST line 401: call(100u)");
+    assertTrap(m10_importsX2E64Export4_call(&instance_19, 100u), trapTableOutOfBounds, "WAST line 401: call(100u)");
 #endif
     m10_importsX2E65Instantiate(&instance_20, resolveTestImports);
     printStart("imports.65.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E65Export4_call(&instance_20, 0u), "WAST line 414: call(0u)");
+    assertTrap(m10_importsX2E65Export4_call(&instance_20, 0u), trapUninitializedElement, "WAST line 414: call(0u)");
 #endif
     assertEqualU32(
         m10_importsX2E65Export4_call(&instance_20, 1u),
@@ -330,10 +330,10 @@ void test(void) {
         "WAST line 416: call(2u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E65Export4_call(&instance_20, 3u), "WAST line 417: call(3u)");
+    assertTrap(m10_importsX2E65Export4_call(&instance_20, 3u), trapUninitializedElement, "WAST line 417: call(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_importsX2E65Export4_call(&instance_20, 100u), "WAST line 418: call(100u)");
+    assertTrap(m10_importsX2E65Export4_call(&instance_20, 100u), trapTableOutOfBounds, "WAST line 418: call(100u)");
 #endif
     m10_importsX2E66Instantiate(&instance_21, resolveTestImports);
     printStart("imports.66.wasm");
@@ -401,7 +401,7 @@ void test(void) {
         "WAST line 507: load(8u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m11_importsX2E102Export4_load(&instance_45, 1000000u), "WAST line 508: load(1000000u)");
+    assertTrap(m11_importsX2E102Export4_load(&instance_45, 1000000u), trapMemoryOutOfBounds, "WAST line 508: load(1000000u)");
 #endif
     m11_importsX2E103Instantiate(&instance_46, resolveTestImports);
     printStart("imports.103.wasm");
@@ -423,7 +423,7 @@ void test(void) {
         "WAST line 519: load(8u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m11_importsX2E104Export4_load(&instance_47, 1000000u), "WAST line 520: load(1000000u)");
+    assertTrap(m11_importsX2E104Export4_load(&instance_47, 1000000u), trapMemoryOutOfBounds, "WAST line 520: load(1000000u)");
 #endif
     m11_importsX2E105Instantiate(&instance_48, resolveTestImports);
     printStart("imports.105.wasm");

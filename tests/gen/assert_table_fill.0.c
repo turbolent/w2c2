@@ -34,8 +34,17 @@ void test(void) {
     assertEqualU32((m12_tableX5FfillX2E0Export3_get(&instance, 9u)) == wasmNullExternRef, 1u, "get(9u)");
     (void)(m12_tableX5FfillX2E0Export4_fill(&instance, 10u, testExternRef(5u), 0u));
     assertEqualU32((m12_tableX5FfillX2E0Export3_get(&instance, 9u)) == wasmNullExternRef, 1u, "get(9u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m12_tableX5FfillX2E0Export4_fill(&instance, 8u, testExternRef(6u), 3u), trapTableOutOfBounds, "fill(8u, testExternRef(6u), 3u)");
+#endif
     assertEqualU32((m12_tableX5FfillX2E0Export3_get(&instance, 7u)) == wasmNullExternRef, 1u, "get(7u)");
     assertEqualU32((m12_tableX5FfillX2E0Export3_get(&instance, 8u)) == testExternRef(4u), 1u, "get(8u)");
     assertEqualU32((m12_tableX5FfillX2E0Export3_get(&instance, 9u)) == wasmNullExternRef, 1u, "get(9u)");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m12_tableX5FfillX2E0Export4_fill(&instance, 11u, wasmNullExternRef, 0u), trapTableOutOfBounds, "fill(11u, wasmNullExternRef, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m12_tableX5FfillX2E0Export4_fill(&instance, 11u, wasmNullExternRef, 10u), trapTableOutOfBounds, "fill(11u, wasmNullExternRef, 10u)");
+#endif
     m12_tableX5FfillX2E0FreeInstance(&instance);
 }

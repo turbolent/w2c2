@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_conversions.0.h"
 
-void test() {
-    m13_conversionsX2E0Instance instance;
+void test(void) {
+    static m13_conversionsX2E0Instance instance;
     m13_conversionsX2E0Instantiate(&instance, resolveTestImports);
     printStart("conversions.0.wasm");
     assertEqualU64(
@@ -129,590 +126,791 @@ void test() {
         "i32.wrap_i64(4294967297ull)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000000u)),
         0u,
         "i32.trunc_f32_s(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000000u)),
         0u,
         "i32.trunc_f32_s(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000001u)),
         0u,
         "i32.trunc_f32_s(1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000001u)),
         0u,
         "i32.trunc_f32_s(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f800000u)),
         1u,
         "i32.trunc_f32_s(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1u,
         "i32.trunc_f32_s(1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1u,
         "i32.trunc_f32_s(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf800000u)),
         4294967295u,
         "i32.trunc_f32_s(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -1.100000023841858),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf8ccccdu)),
         4294967295u,
         "i32.trunc_f32_s(-1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbfc00000u)),
         4294967295u,
         "i32.trunc_f32_s(-1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -1.899999976158142),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbff33333u)),
         4294967295u,
         "i32.trunc_f32_s(-1.899999976158142)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xc0000000u)),
         4294967294u,
         "i32.trunc_f32_s(-2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, 2147483520.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4effffffu)),
         2147483520u,
         "i32.trunc_f32_s(2147483520.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, -2147483648.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf000000u)),
         2147483648u,
         "i32.trunc_f32_s(-2147483648.0)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4f000000u)), trapIntOverflow, "i32.trunc_f32_s(2147483648.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf000001u)), trapIntOverflow, "i32.trunc_f32_s(-2147483904.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7f800000u)), trapIntOverflow, "i32.trunc_f32_s(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xff800000u)), trapIntOverflow, "i32.trunc_f32_s(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7fc00000u)), trapInvalidConversion, "i32.trunc_f32_s(f32_reinterpret_i32(0x7fc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7fa00000u)), trapInvalidConversion, "i32.trunc_f32_s(f32_reinterpret_i32(0x7fa00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xffc00000u)), trapInvalidConversion, "i32.trunc_f32_s(f32_reinterpret_i32(0xffc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xffa00000u)), trapInvalidConversion, "i32.trunc_f32_s(f32_reinterpret_i32(0xffa00000u))");
+#endif
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000000u)),
         0u,
         "i32.trunc_f32_u(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000000u)),
         0u,
         "i32.trunc_f32_u(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000001u)),
         0u,
         "i32.trunc_f32_u(1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000001u)),
         0u,
         "i32.trunc_f32_u(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f800000u)),
         1u,
         "i32.trunc_f32_u(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1u,
         "i32.trunc_f32_u(1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1u,
         "i32.trunc_f32_u(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 1.899999976158142),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3ff33333u)),
         1u,
         "i32.trunc_f32_u(1.899999976158142)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 2.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x40000000u)),
         2u,
         "i32.trunc_f32_u(2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 2147483648.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f000000u)),
         2147483648u,
         "i32.trunc_f32_u(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, 4294967040.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f7fffffu)),
         4294967040u,
         "i32.trunc_f32_u(4294967040.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, -0.8999999761581421),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf666666u)),
         0u,
         "i32.trunc_f32_u(-0.8999999761581421)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, -0.9999999403953552),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf7fffffu)),
         0u,
         "i32.trunc_f32_u(-0.9999999403953552)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f800000u)), trapIntOverflow, "i32.trunc_f32_u(4294967296.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf800000u)), trapIntOverflow, "i32.trunc_f32_u(-1.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7f800000u)), trapIntOverflow, "i32.trunc_f32_u(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xff800000u)), trapIntOverflow, "i32.trunc_f32_u(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7fc00000u)), trapInvalidConversion, "i32.trunc_f32_u(f32_reinterpret_i32(0x7fc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7fa00000u)), trapInvalidConversion, "i32.trunc_f32_u(f32_reinterpret_i32(0x7fa00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xffc00000u)), trapInvalidConversion, "i32.trunc_f32_u(f32_reinterpret_i32(0xffc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xffa00000u)), trapInvalidConversion, "i32.trunc_f32_u(f32_reinterpret_i32(0xffa00000u))");
+#endif
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0u,
         "i32.trunc_f64_s(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0u,
         "i32.trunc_f64_s(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 5e-324),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0u,
         "i32.trunc_f64_s(5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -5e-324),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0u,
         "i32.trunc_f64_s(-5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1u,
         "i32.trunc_f64_s(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 1.1),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1u,
         "i32.trunc_f64_s(1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1u,
         "i32.trunc_f64_s(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         4294967295u,
         "i32.trunc_f64_s(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -1.1),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff199999999999aull)),
         4294967295u,
         "i32.trunc_f64_s(-1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff8000000000000ull)),
         4294967295u,
         "i32.trunc_f64_s(-1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -1.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbffe666666666666ull)),
         4294967295u,
         "i32.trunc_f64_s(-1.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc000000000000000ull)),
         4294967294u,
         "i32.trunc_f64_s(-2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 2147483647.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41dfffffffc00000ull)),
         2147483647u,
         "i32.trunc_f64_s(2147483647.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -2147483648.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1e0000000000000ull)),
         2147483648u,
         "i32.trunc_f64_s(-2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, -2147483648.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1e00000001ccccdull)),
         2147483648u,
         "i32.trunc_f64_s(-2147483648.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, 2147483647.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41dffffffff9999aull)),
         2147483647u,
         "i32.trunc_f64_s(2147483647.9)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41e0000000000000ull)), trapIntOverflow, "i32.trunc_f64_s(2147483648.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1e0000000200000ull)), trapIntOverflow, "i32.trunc_f64_s(-2147483649.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)), trapIntOverflow, "i32.trunc_f64_s(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff0000000000000ull)), trapIntOverflow, "i32.trunc_f64_s(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff8000000000000ull)), trapInvalidConversion, "i32.trunc_f64_s(f64_reinterpret_i64(0x7ff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff4000000000000ull)), trapInvalidConversion, "i32.trunc_f64_s(f64_reinterpret_i64(0x7ff4000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff8000000000000ull)), trapInvalidConversion, "i32.trunc_f64_s(f64_reinterpret_i64(0xfff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff4000000000000ull)), trapInvalidConversion, "i32.trunc_f64_s(f64_reinterpret_i64(0xfff4000000000000ull))");
+#endif
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0u,
         "i32.trunc_f64_u(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0u,
         "i32.trunc_f64_u(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 5e-324),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0u,
         "i32.trunc_f64_u(5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, -5e-324),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0u,
         "i32.trunc_f64_u(-5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1u,
         "i32.trunc_f64_u(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 1.1),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1u,
         "i32.trunc_f64_u(1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1u,
         "i32.trunc_f64_u(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 1.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ffe666666666666ull)),
         1u,
         "i32.trunc_f64_u(1.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 2.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4000000000000000ull)),
         2u,
         "i32.trunc_f64_u(2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 2147483648.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41e0000000000000ull)),
         2147483648u,
         "i32.trunc_f64_u(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 4294967295.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41efffffffe00000ull)),
         4294967295u,
         "i32.trunc_f64_u(4294967295.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, -0.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfeccccccccccccdull)),
         0u,
         "i32.trunc_f64_u(-0.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, -0.9999999999999999),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfefffffffffffffull)),
         0u,
         "i32.trunc_f64_u(-0.9999999999999999)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 100000000.0),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4197d78400000000ull)),
         100000000u,
         "i32.trunc_f64_u(100000000.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, -0.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfeccccccccccccdull)),
         0u,
         "i32.trunc_f64_u(-0.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, 4294967295.9),
+        m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41effffffffccccdull)),
         4294967295u,
         "i32.trunc_f64_u(4294967295.9)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41f0000000000000ull)), trapIntOverflow, "i32.trunc_f64_u(4294967296.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbff0000000000000ull)), trapIntOverflow, "i32.trunc_f64_u(-1.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4341c37937e08000ull)), trapIntOverflow, "i32.trunc_f64_u(1e+16)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x46293e5939a08ceaull)), trapIntOverflow, "i32.trunc_f64_u(1e+30)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43e0000000000000ull)), trapIntOverflow, "i32.trunc_f64_u(9.223372036854776e+18)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)), trapIntOverflow, "i32.trunc_f64_u(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff0000000000000ull)), trapIntOverflow, "i32.trunc_f64_u(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff8000000000000ull)), trapInvalidConversion, "i32.trunc_f64_u(f64_reinterpret_i64(0x7ff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff4000000000000ull)), trapInvalidConversion, "i32.trunc_f64_u(f64_reinterpret_i64(0x7ff4000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff8000000000000ull)), trapInvalidConversion, "i32.trunc_f64_u(f64_reinterpret_i64(0xfff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i32X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff4000000000000ull)), trapInvalidConversion, "i32.trunc_f64_u(f64_reinterpret_i64(0xfff4000000000000ull))");
+#endif
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000000u)),
         0ull,
         "i64.trunc_f32_s(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000000u)),
         0ull,
         "i64.trunc_f32_s(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000001u)),
         0ull,
         "i64.trunc_f32_s(1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000001u)),
         0ull,
         "i64.trunc_f32_s(-1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f800000u)),
         1ull,
         "i64.trunc_f32_s(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1ull,
         "i64.trunc_f32_s(1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1ull,
         "i64.trunc_f32_s(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf800000u)),
         18446744073709551615ull,
         "i64.trunc_f32_s(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -1.100000023841858),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf8ccccdu)),
         18446744073709551615ull,
         "i64.trunc_f32_s(-1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbfc00000u)),
         18446744073709551615ull,
         "i64.trunc_f32_s(-1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -1.899999976158142),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbff33333u)),
         18446744073709551615ull,
         "i64.trunc_f32_s(-1.899999976158142)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xc0000000u)),
         18446744073709551614ull,
         "i64.trunc_f32_s(-2.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4f800000u)),
         4294967296ull,
         "i64.trunc_f32_s(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf800000u)),
         18446744069414584320ull,
         "i64.trunc_f32_s(-4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, 9.223371487098962e+18),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x5effffffu)),
         9223371487098961920ull,
         "i64.trunc_f32_s(9.223371487098962e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, -9.223372036854776e+18),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xdf000000u)),
         9223372036854775808ull,
         "i64.trunc_f32_s(-9.223372036854776e+18)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x5f000000u)), trapIntOverflow, "i64.trunc_f32_s(9.223372036854776e+18)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xdf000001u)), trapIntOverflow, "i64.trunc_f32_s(-9.223373136366404e+18)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7f800000u)), trapIntOverflow, "i64.trunc_f32_s(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xff800000u)), trapIntOverflow, "i64.trunc_f32_s(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7fc00000u)), trapInvalidConversion, "i64.trunc_f32_s(f32_reinterpret_i32(0x7fc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7fa00000u)), trapInvalidConversion, "i64.trunc_f32_s(f32_reinterpret_i32(0x7fa00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xffc00000u)), trapInvalidConversion, "i64.trunc_f32_s(f32_reinterpret_i32(0xffc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xffa00000u)), trapInvalidConversion, "i64.trunc_f32_s(f32_reinterpret_i32(0xffa00000u))");
+#endif
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000000u)),
         0ull,
         "i64.trunc_f32_u(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000000u)),
         0ull,
         "i64.trunc_f32_u(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000001u)),
         0ull,
         "i64.trunc_f32_u(1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000001u)),
         0ull,
         "i64.trunc_f32_u(-1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f800000u)),
         1ull,
         "i64.trunc_f32_u(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1ull,
         "i64.trunc_f32_u(1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1ull,
         "i64.trunc_f32_u(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f800000u)),
         4294967296ull,
         "i64.trunc_f32_u(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, 1.8446742974197924e+19),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x5f7fffffu)),
         18446742974197923840ull,
         "i64.trunc_f32_u(1.8446742974197924e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, -0.8999999761581421),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf666666u)),
         0ull,
         "i64.trunc_f32_u(-0.8999999761581421)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, -0.9999999403953552),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf7fffffu)),
         0ull,
         "i64.trunc_f32_u(-0.9999999403953552)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x5f800000u)), trapIntOverflow, "i64.trunc_f32_u(1.8446744073709552e+19)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf800000u)), trapIntOverflow, "i64.trunc_f32_u(-1.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7f800000u)), trapIntOverflow, "i64.trunc_f32_u(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xff800000u)), trapIntOverflow, "i64.trunc_f32_u(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7fc00000u)), trapInvalidConversion, "i64.trunc_f32_u(f32_reinterpret_i32(0x7fc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7fa00000u)), trapInvalidConversion, "i64.trunc_f32_u(f32_reinterpret_i32(0x7fa00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xffc00000u)), trapInvalidConversion, "i64.trunc_f32_u(f32_reinterpret_i32(0xffc00000u))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xffa00000u)), trapInvalidConversion, "i64.trunc_f32_u(f32_reinterpret_i32(0xffa00000u))");
+#endif
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0ull,
         "i64.trunc_f64_s(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0ull,
         "i64.trunc_f64_s(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 5e-324),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0ull,
         "i64.trunc_f64_s(5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -5e-324),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0ull,
         "i64.trunc_f64_s(-5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1ull,
         "i64.trunc_f64_s(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 1.1),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1ull,
         "i64.trunc_f64_s(1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1ull,
         "i64.trunc_f64_s(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_f64_s(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -1.1),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff199999999999aull)),
         18446744073709551615ull,
         "i64.trunc_f64_s(-1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff8000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_f64_s(-1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -1.9),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbffe666666666666ull)),
         18446744073709551615ull,
         "i64.trunc_f64_s(-1.9)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc000000000000000ull)),
         18446744073709551614ull,
         "i64.trunc_f64_s(-2.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41f0000000000000ull)),
         4294967296ull,
         "i64.trunc_f64_s(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1f0000000000000ull)),
         18446744069414584320ull,
         "i64.trunc_f64_s(-4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, 9.223372036854775e+18),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x43dfffffffffffffull)),
         9223372036854774784ull,
         "i64.trunc_f64_s(9.223372036854775e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, -9.223372036854776e+18),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc3e0000000000000ull)),
         9223372036854775808ull,
         "i64.trunc_f64_s(-9.223372036854776e+18)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x43e0000000000000ull)), trapIntOverflow, "i64.trunc_f64_s(9.223372036854776e+18)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc3e0000000000001ull)), trapIntOverflow, "i64.trunc_f64_s(-9.223372036854778e+18)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)), trapIntOverflow, "i64.trunc_f64_s(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff0000000000000ull)), trapIntOverflow, "i64.trunc_f64_s(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff8000000000000ull)), trapInvalidConversion, "i64.trunc_f64_s(f64_reinterpret_i64(0x7ff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff4000000000000ull)), trapInvalidConversion, "i64.trunc_f64_s(f64_reinterpret_i64(0x7ff4000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff8000000000000ull)), trapInvalidConversion, "i64.trunc_f64_s(f64_reinterpret_i64(0xfff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff4000000000000ull)), trapInvalidConversion, "i64.trunc_f64_s(f64_reinterpret_i64(0xfff4000000000000ull))");
+#endif
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0ull,
         "i64.trunc_f64_u(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0ull,
         "i64.trunc_f64_u(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 5e-324),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0ull,
         "i64.trunc_f64_u(5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, -5e-324),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0ull,
         "i64.trunc_f64_u(-5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1ull,
         "i64.trunc_f64_u(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 1.1),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1ull,
         "i64.trunc_f64_u(1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1ull,
         "i64.trunc_f64_u(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 4294967295.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41efffffffe00000ull)),
         4294967295ull,
         "i64.trunc_f64_u(4294967295.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41f0000000000000ull)),
         4294967296ull,
         "i64.trunc_f64_u(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 1.844674407370955e+19),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43efffffffffffffull)),
         18446744073709549568ull,
         "i64.trunc_f64_u(1.844674407370955e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, -0.9),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfeccccccccccccdull)),
         0ull,
         "i64.trunc_f64_u(-0.9)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, -0.9999999999999999),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfefffffffffffffull)),
         0ull,
         "i64.trunc_f64_u(-0.9999999999999999)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 100000000.0),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4197d78400000000ull)),
         100000000ull,
         "i64.trunc_f64_u(100000000.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 1e+16),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4341c37937e08000ull)),
         10000000000000000ull,
         "i64.trunc_f64_u(1e+16)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, 9.223372036854776e+18),
+        m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43e0000000000000ull)),
         9223372036854775808ull,
         "i64.trunc_f64_u(9.223372036854776e+18)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43f0000000000000ull)), trapIntOverflow, "i64.trunc_f64_u(1.8446744073709552e+19)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbff0000000000000ull)), trapIntOverflow, "i64.trunc_f64_u(-1.0)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)), trapIntOverflow, "i64.trunc_f64_u(INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff0000000000000ull)), trapIntOverflow, "i64.trunc_f64_u(-INFINITY)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff8000000000000ull)), trapInvalidConversion, "i64.trunc_f64_u(f64_reinterpret_i64(0x7ff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff4000000000000ull)), trapInvalidConversion, "i64.trunc_f64_u(f64_reinterpret_i64(0x7ff4000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff8000000000000ull)), trapInvalidConversion, "i64.trunc_f64_u(f64_reinterpret_i64(0xfff8000000000000ull))");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_conversionsX2E0Export15_i64X2EtruncX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff4000000000000ull)), trapInvalidConversion, "i64.trunc_f64_u(f64_reinterpret_i64(0xfff4000000000000ull))");
+#endif
     assertEqualU32(
         i32_reinterpret_f32(m13_conversionsX2E0Export17_f32X2EconvertX5Fi32X5Fs(&instance, 1u)),
         1065353216u,
@@ -744,92 +942,92 @@ void test() {
         "f32.convert_i32_s(1234567890u)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000000u)),
         0u,
         "i32.trunc_sat_f32_s(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000000u)),
         0u,
         "i32.trunc_sat_f32_s(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000001u)),
         0u,
         "i32.trunc_sat_f32_s(1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000001u)),
         0u,
         "i32.trunc_sat_f32_s(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f800000u)),
         1u,
         "i32.trunc_sat_f32_s(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1u,
         "i32.trunc_sat_f32_s(1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1u,
         "i32.trunc_sat_f32_s(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf800000u)),
         4294967295u,
         "i32.trunc_sat_f32_s(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.100000023841858),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf8ccccdu)),
         4294967295u,
         "i32.trunc_sat_f32_s(-1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbfc00000u)),
         4294967295u,
         "i32.trunc_sat_f32_s(-1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.899999976158142),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbff33333u)),
         4294967295u,
         "i32.trunc_sat_f32_s(-1.899999976158142)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xc0000000u)),
         4294967294u,
         "i32.trunc_sat_f32_s(-2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 2147483520.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4effffffu)),
         2147483520u,
         "i32.trunc_sat_f32_s(2147483520.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf000000u)),
         2147483648u,
         "i32.trunc_sat_f32_s(-2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, 2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4f000000u)),
         2147483647u,
         "i32.trunc_sat_f32_s(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -2147483904.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf000001u)),
         2147483648u,
         "i32.trunc_sat_f32_s(-2147483904.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7f800000u)),
         2147483647u,
         "i32.trunc_sat_f32_s(INFINITY)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xff800000u)),
         2147483648u,
         "i32.trunc_sat_f32_s(-INFINITY)"
     );
@@ -854,87 +1052,87 @@ void test() {
         "i32.trunc_sat_f32_s(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000000u)),
         0u,
         "i32.trunc_sat_f32_u(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000000u)),
         0u,
         "i32.trunc_sat_f32_u(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000001u)),
         0u,
         "i32.trunc_sat_f32_u(1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000001u)),
         0u,
         "i32.trunc_sat_f32_u(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f800000u)),
         1u,
         "i32.trunc_sat_f32_u(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1u,
         "i32.trunc_sat_f32_u(1.100000023841858)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1u,
         "i32.trunc_sat_f32_u(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.899999976158142),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3ff33333u)),
         1u,
         "i32.trunc_sat_f32_u(1.899999976158142)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 2.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x40000000u)),
         2u,
         "i32.trunc_sat_f32_u(2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f000000u)),
         2147483648u,
         "i32.trunc_sat_f32_u(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967040.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f7fffffu)),
         4294967040u,
         "i32.trunc_sat_f32_u(4294967040.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.8999999761581421),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf666666u)),
         0u,
         "i32.trunc_sat_f32_u(-0.8999999761581421)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.9999999403953552),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf7fffffu)),
         0u,
         "i32.trunc_sat_f32_u(-0.9999999403953552)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f800000u)),
         4294967295u,
         "i32.trunc_sat_f32_u(4294967296.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf800000u)),
         0u,
         "i32.trunc_sat_f32_u(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7f800000u)),
         4294967295u,
         "i32.trunc_sat_f32_u(INFINITY)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xff800000u)),
         0u,
         "i32.trunc_sat_f32_u(-INFINITY)"
     );
@@ -959,92 +1157,92 @@ void test() {
         "i32.trunc_sat_f32_u(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0u,
         "i32.trunc_sat_f64_s(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0u,
         "i32.trunc_sat_f64_s(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 5e-324),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0u,
         "i32.trunc_sat_f64_s(5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -5e-324),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0u,
         "i32.trunc_sat_f64_s(-5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1u,
         "i32.trunc_sat_f64_s(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.1),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1u,
         "i32.trunc_sat_f64_s(1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1u,
         "i32.trunc_sat_f64_s(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         4294967295u,
         "i32.trunc_sat_f64_s(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.1),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff199999999999aull)),
         4294967295u,
         "i32.trunc_sat_f64_s(-1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff8000000000000ull)),
         4294967295u,
         "i32.trunc_sat_f64_s(-1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.9),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbffe666666666666ull)),
         4294967295u,
         "i32.trunc_sat_f64_s(-1.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc000000000000000ull)),
         4294967294u,
         "i32.trunc_sat_f64_s(-2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 2147483647.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41dfffffffc00000ull)),
         2147483647u,
         "i32.trunc_sat_f64_s(2147483647.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1e0000000000000ull)),
         2147483648u,
         "i32.trunc_sat_f64_s(-2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, 2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41e0000000000000ull)),
         2147483647u,
         "i32.trunc_sat_f64_s(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -2147483649.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1e0000000200000ull)),
         2147483648u,
         "i32.trunc_sat_f64_s(-2147483649.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)),
         2147483647u,
         "i32.trunc_sat_f64_s(INFINITY)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff0000000000000ull)),
         2147483648u,
         "i32.trunc_sat_f64_s(-INFINITY)"
     );
@@ -1069,107 +1267,107 @@ void test() {
         "i32.trunc_sat_f64_s(f64_reinterpret_i64(0xfff4000000000000ull))"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0u,
         "i32.trunc_sat_f64_u(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0u,
         "i32.trunc_sat_f64_u(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 5e-324),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0u,
         "i32.trunc_sat_f64_u(5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -5e-324),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0u,
         "i32.trunc_sat_f64_u(-5e-324)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1u,
         "i32.trunc_sat_f64_u(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.1),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1u,
         "i32.trunc_sat_f64_u(1.1)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1u,
         "i32.trunc_sat_f64_u(1.5)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.9),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ffe666666666666ull)),
         1u,
         "i32.trunc_sat_f64_u(1.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 2.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4000000000000000ull)),
         2u,
         "i32.trunc_sat_f64_u(2.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 2147483648.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41e0000000000000ull)),
         2147483648u,
         "i32.trunc_sat_f64_u(2147483648.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967295.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41efffffffe00000ull)),
         4294967295u,
         "i32.trunc_sat_f64_u(4294967295.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfeccccccccccccdull)),
         0u,
         "i32.trunc_sat_f64_u(-0.9)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9999999999999999),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfefffffffffffffull)),
         0u,
         "i32.trunc_sat_f64_u(-0.9999999999999999)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 100000000.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4197d78400000000ull)),
         100000000u,
         "i32.trunc_sat_f64_u(100000000.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41f0000000000000ull)),
         4294967295u,
         "i32.trunc_sat_f64_u(4294967296.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -1.0),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         0u,
         "i32.trunc_sat_f64_u(-1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+16),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4341c37937e08000ull)),
         4294967295u,
         "i32.trunc_sat_f64_u(1e+16)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+30),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x46293e5939a08ceaull)),
         4294967295u,
         "i32.trunc_sat_f64_u(1e+30)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, 9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43e0000000000000ull)),
         4294967295u,
         "i32.trunc_sat_f64_u(9.223372036854776e+18)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)),
         4294967295u,
         "i32.trunc_sat_f64_u(INFINITY)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i32X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff0000000000000ull)),
         0u,
         "i32.trunc_sat_f64_u(-INFINITY)"
     );
@@ -1194,102 +1392,102 @@ void test() {
         "i32.trunc_sat_f64_u(f64_reinterpret_i64(0xfff4000000000000ull))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000000u)),
         0ull,
         "i64.trunc_sat_f32_s(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000000u)),
         0ull,
         "i64.trunc_sat_f32_s(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x00000001u)),
         0ull,
         "i64.trunc_sat_f32_s(1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x80000001u)),
         0ull,
         "i64.trunc_sat_f32_s(-1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f800000u)),
         1ull,
         "i64.trunc_sat_f32_s(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1ull,
         "i64.trunc_sat_f32_s(1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1ull,
         "i64.trunc_sat_f32_s(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf800000u)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_s(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.100000023841858),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbf8ccccdu)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_s(-1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbfc00000u)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_s(-1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -1.899999976158142),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xbff33333u)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_s(-1.899999976158142)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xc0000000u)),
         18446744073709551614ull,
         "i64.trunc_sat_f32_s(-2.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x4f800000u)),
         4294967296ull,
         "i64.trunc_sat_f32_s(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xcf800000u)),
         18446744069414584320ull,
         "i64.trunc_sat_f32_s(-4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 9.223371487098962e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x5effffffu)),
         9223371487098961920ull,
         "i64.trunc_sat_f32_s(9.223371487098962e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xdf000000u)),
         9223372036854775808ull,
         "i64.trunc_sat_f32_s(-9.223372036854776e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, 9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x5f000000u)),
         9223372036854775807ull,
         "i64.trunc_sat_f32_s(9.223372036854776e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -9.223373136366404e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xdf000001u)),
         9223372036854775808ull,
         "i64.trunc_sat_f32_s(-9.223373136366404e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0x7f800000u)),
         9223372036854775807ull,
         "i64.trunc_sat_f32_s(INFINITY)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fs(&instance, f32_reinterpret_i32(0xff800000u)),
         9223372036854775808ull,
         "i64.trunc_sat_f32_s(-INFINITY)"
     );
@@ -1314,77 +1512,77 @@ void test() {
         "i64.trunc_sat_f32_s(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000000u)),
         0ull,
         "i64.trunc_sat_f32_u(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000000u)),
         0ull,
         "i64.trunc_sat_f32_u(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x00000001u)),
         0ull,
         "i64.trunc_sat_f32_u(1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x80000001u)),
         0ull,
         "i64.trunc_sat_f32_u(-1.401298464324817e-45)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f800000u)),
         1ull,
         "i64.trunc_sat_f32_u(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.100000023841858),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3f8ccccdu)),
         1ull,
         "i64.trunc_sat_f32_u(1.100000023841858)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x3fc00000u)),
         1ull,
         "i64.trunc_sat_f32_u(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x4f800000u)),
         4294967296ull,
         "i64.trunc_sat_f32_u(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.8446742974197924e+19),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x5f7fffffu)),
         18446742974197923840ull,
         "i64.trunc_sat_f32_u(1.8446742974197924e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.8999999761581421),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf666666u)),
         0ull,
         "i64.trunc_sat_f32_u(-0.8999999761581421)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -0.9999999403953552),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf7fffffu)),
         0ull,
         "i64.trunc_sat_f32_u(-0.9999999403953552)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, 1.8446744073709552e+19),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x5f800000u)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_u(1.8446744073709552e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xbf800000u)),
         0ull,
         "i64.trunc_sat_f32_u(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0x7f800000u)),
         18446744073709551615ull,
         "i64.trunc_sat_f32_u(INFINITY)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff32X5Fu(&instance, f32_reinterpret_i32(0xff800000u)),
         0ull,
         "i64.trunc_sat_f32_u(-INFINITY)"
     );
@@ -1409,102 +1607,102 @@ void test() {
         "i64.trunc_sat_f32_u(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_s(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_s(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 5e-324),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0ull,
         "i64.trunc_sat_f64_s(5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -5e-324),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0ull,
         "i64.trunc_sat_f64_s(-5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1ull,
         "i64.trunc_sat_f64_s(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.1),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1ull,
         "i64.trunc_sat_f64_s(1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1ull,
         "i64.trunc_sat_f64_s(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_s(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.1),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff199999999999aull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_s(-1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbff8000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_s(-1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -1.9),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xbffe666666666666ull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_s(-1.9)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -2.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc000000000000000ull)),
         18446744073709551614ull,
         "i64.trunc_sat_f64_s(-2.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x41f0000000000000ull)),
         4294967296ull,
         "i64.trunc_sat_f64_s(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc1f0000000000000ull)),
         18446744069414584320ull,
         "i64.trunc_sat_f64_s(-4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 9.223372036854775e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x43dfffffffffffffull)),
         9223372036854774784ull,
         "i64.trunc_sat_f64_s(9.223372036854775e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc3e0000000000000ull)),
         9223372036854775808ull,
         "i64.trunc_sat_f64_s(-9.223372036854776e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, 9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x43e0000000000000ull)),
         9223372036854775807ull,
         "i64.trunc_sat_f64_s(9.223372036854776e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -9.223372036854778e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xc3e0000000000001ull)),
         9223372036854775808ull,
         "i64.trunc_sat_f64_s(-9.223372036854778e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)),
         9223372036854775807ull,
         "i64.trunc_sat_f64_s(INFINITY)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fs(&instance, f64_reinterpret_i64(0xfff0000000000000ull)),
         9223372036854775808ull,
         "i64.trunc_sat_f64_s(-INFINITY)"
     );
@@ -1529,97 +1727,97 @@ void test() {
         "i64.trunc_sat_f64_s(f64_reinterpret_i64(0xfff4000000000000ull))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_u(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_u(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 5e-324),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         0ull,
         "i64.trunc_sat_f64_u(5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -5e-324),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         0ull,
         "i64.trunc_sat_f64_u(-5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         1ull,
         "i64.trunc_sat_f64_u(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.1),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff199999999999aull)),
         1ull,
         "i64.trunc_sat_f64_u(1.1)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.5),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x3ff8000000000000ull)),
         1ull,
         "i64.trunc_sat_f64_u(1.5)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967295.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41efffffffe00000ull)),
         4294967295ull,
         "i64.trunc_sat_f64_u(4294967295.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 4294967296.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x41f0000000000000ull)),
         4294967296ull,
         "i64.trunc_sat_f64_u(4294967296.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.844674407370955e+19),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43efffffffffffffull)),
         18446744073709549568ull,
         "i64.trunc_sat_f64_u(1.844674407370955e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfeccccccccccccdull)),
         0ull,
         "i64.trunc_sat_f64_u(-0.9)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -0.9999999999999999),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbfefffffffffffffull)),
         0ull,
         "i64.trunc_sat_f64_u(-0.9999999999999999)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 100000000.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4197d78400000000ull)),
         100000000ull,
         "i64.trunc_sat_f64_u(100000000.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1e+16),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x4341c37937e08000ull)),
         10000000000000000ull,
         "i64.trunc_sat_f64_u(1e+16)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 9.223372036854776e+18),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43e0000000000000ull)),
         9223372036854775808ull,
         "i64.trunc_sat_f64_u(9.223372036854776e+18)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, 1.8446744073709552e+19),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x43f0000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_u(1.8446744073709552e+19)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -1.0),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xbff0000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_u(-1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)),
         18446744073709551615ull,
         "i64.trunc_sat_f64_u(INFINITY)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i64X2EtruncX5FsatX5Ff64X5Fu(&instance, f64_reinterpret_i64(0xfff0000000000000ull)),
         0ull,
         "i64.trunc_sat_f64_u(-INFINITY)"
     );
@@ -2029,62 +2227,62 @@ void test() {
         "f64.convert_i64_u(9007199254740995ull)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 0.0)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x00000000u))),
         0ull,
         "f64.promote_f32(0.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, -0.0)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x80000000u))),
         9223372036854775808ull,
         "f64.promote_f32(-0.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 1.401298464324817e-45)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x00000001u))),
         3936146074321813504ull,
         "f64.promote_f32(1.401298464324817e-45)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, -1.401298464324817e-45)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x80000001u))),
         13159518111176589312ull,
         "f64.promote_f32(-1.401298464324817e-45)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 1.0)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x3f800000u))),
         4607182418800017408ull,
         "f64.promote_f32(1.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, -1.0)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0xbf800000u))),
         13830554455654793216ull,
         "f64.promote_f32(-1.0)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, -3.4028234663852886e+38)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0xff7fffffu))),
         14407015207421345792ull,
         "f64.promote_f32(-3.4028234663852886e+38)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 3.4028234663852886e+38)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x7f7fffffu))),
         5183643170566569984ull,
         "f64.promote_f32(3.4028234663852886e+38)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 1.504632769052528e-36)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x04000000u))),
         4071254063142928384ull,
         "f64.promote_f32(1.504632769052528e-36)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, 6.6382536710104395e+37)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x7e47c33fu))),
         5172657297058430976ull,
         "f64.promote_f32(6.6382536710104395e+37)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, INFINITY)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0x7f800000u))),
         9218868437227405312ull,
         "f64.promote_f32(INFINITY)"
     );
     assertEqualU64(
-        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, -INFINITY)),
+        i64_reinterpret_f64(m13_conversionsX2E0Export15_f64X2EpromoteX5Ff32(&instance, f32_reinterpret_i32(0xff800000u))),
         18442240474082181120ull,
         "f64.promote_f32(-INFINITY)"
     );
@@ -2109,212 +2307,212 @@ void test() {
         "f64.promote_f32(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 0.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x0000000000000000ull))),
         0u,
         "f32.demote_f64(0.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -0.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x8000000000000000ull))),
         2147483648u,
         "f32.demote_f64(-0.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 5e-324)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x0000000000000001ull))),
         0u,
         "f32.demote_f64(5e-324)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -5e-324)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x8000000000000001ull))),
         2147483648u,
         "f32.demote_f64(-5e-324)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000000000000ull))),
         1065353216u,
         "f32.demote_f64(1.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -1.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xbff0000000000000ull))),
         3212836864u,
         "f32.demote_f64(-1.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.1754942807573643e-38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x380fffffe0000000ull))),
         8388608u,
         "f32.demote_f64(1.1754942807573643e-38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -1.1754942807573643e-38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xb80fffffe0000000ull))),
         2155872256u,
         "f32.demote_f64(-1.1754942807573643e-38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.1754942807573642e-38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x380fffffdfffffffull))),
         8388607u,
         "f32.demote_f64(1.1754942807573642e-38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -1.1754942807573642e-38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xb80fffffdfffffffull))),
         2155872255u,
         "f32.demote_f64(-1.1754942807573642e-38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.401298464324817e-45)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x36a0000000000000ull))),
         1u,
         "f32.demote_f64(1.401298464324817e-45)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -1.401298464324817e-45)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xb6a0000000000000ull))),
         2147483649u,
         "f32.demote_f64(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 3.4028233649732406e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47efffffd0000000ull))),
         2139095038u,
         "f32.demote_f64(3.4028233649732406e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -3.4028233649732406e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc7efffffd0000000ull))),
         4286578686u,
         "f32.demote_f64(-3.4028233649732406e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 3.402823364973241e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47efffffd0000001ull))),
         2139095039u,
         "f32.demote_f64(3.402823364973241e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -3.402823364973241e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc7efffffd0000001ull))),
         4286578687u,
         "f32.demote_f64(-3.402823364973241e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 3.4028234663852886e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47efffffe0000000ull))),
         2139095039u,
         "f32.demote_f64(3.4028234663852886e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -3.4028234663852886e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc7efffffe0000000ull))),
         4286578687u,
         "f32.demote_f64(-3.4028234663852886e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 3.4028235677973362e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47efffffefffffffull))),
         2139095039u,
         "f32.demote_f64(3.4028235677973362e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -3.4028235677973362e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc7efffffefffffffull))),
         4286578687u,
         "f32.demote_f64(-3.4028235677973362e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 3.4028235677973366e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47effffff0000000ull))),
         2139095040u,
         "f32.demote_f64(3.4028235677973366e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -3.4028235677973366e+38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc7effffff0000000ull))),
         4286578688u,
         "f32.demote_f64(-3.4028235677973366e+38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.504632769052528e-36)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3880000000000000ull))),
         67108864u,
         "f32.demote_f64(1.504632769052528e-36)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 6.6382536710104395e+37)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x47c8f867e0000000ull))),
         2118632255u,
         "f32.demote_f64(6.6382536710104395e+37)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, INFINITY)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x7ff0000000000000ull))),
         2139095040u,
         "f32.demote_f64(INFINITY)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -INFINITY)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xfff0000000000000ull))),
         4286578688u,
         "f32.demote_f64(-INFINITY)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0000000000000002)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000000000001ull))),
         1065353216u,
         "f32.demote_f64(1.0000000000000002)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 0.9999999999999999)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3fefffffffffffffull))),
         1065353216u,
         "f32.demote_f64(0.9999999999999999)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0000000596046448)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000010000000ull))),
         1065353216u,
         "f32.demote_f64(1.0000000596046448)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.000000059604645)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000010000001ull))),
         1065353217u,
         "f32.demote_f64(1.000000059604645)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.000000178813934)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff000002fffffffull))),
         1065353217u,
         "f32.demote_f64(1.000000178813934)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0000001788139343)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000030000000ull))),
         1065353218u,
         "f32.demote_f64(1.0000001788139343)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0000002980232239)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000050000000ull))),
         1065353218u,
         "f32.demote_f64(1.0000002980232239)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 16777217.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x4170000010000000ull))),
         1266679808u,
         "f32.demote_f64(16777217.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 16777217.000000004)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x4170000010000001ull))),
         1266679809u,
         "f32.demote_f64(16777217.000000004)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 16777218.999999996)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x417000002fffffffull))),
         1266679809u,
         "f32.demote_f64(16777218.999999996)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 16777219.0)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x4170000030000000ull))),
         1266679810u,
         "f32.demote_f64(16777219.0)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 4.242584432991427e+32)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x46b4eae4f7024c70ull))),
         1973901096u,
         "f32.demote_f64(4.242584432991427e+32)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.569262107843488e-34)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x38ea12e71e358685ull))),
         122722105u,
         "f32.demote_f64(1.569262107843488e-34)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 1.0551773688605172e-38)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x380cb98354d521ffull))),
         7529997u,
         "f32.demote_f64(1.0551773688605172e-38)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -2.8238128484141933)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc006972b30cfb562ull))),
         3224680794u,
         "f32.demote_f64(-2.8238128484141933)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -9.063376370095757e+33)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xc6fbedbe4819d4c4ull))),
         4158615026u,
         "f32.demote_f64(-9.063376370095757e+33)"
     );
@@ -2339,32 +2537,32 @@ void test() {
         "f32.demote_f64(f64_reinterpret_i64(0xfff4000000000000ull))"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 2.2250738585072014e-308)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x0010000000000000ull))),
         0u,
         "f32.demote_f64(2.2250738585072014e-308)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -2.2250738585072014e-308)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x8010000000000000ull))),
         2147483648u,
         "f32.demote_f64(-2.2250738585072014e-308)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 7.006492321624085e-46)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3690000000000000ull))),
         0u,
         "f32.demote_f64(7.006492321624085e-46)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -7.006492321624085e-46)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xb690000000000000ull))),
         2147483648u,
         "f32.demote_f64(-7.006492321624085e-46)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, 7.006492321624087e-46)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0x3690000000000001ull))),
         1u,
         "f32.demote_f64(7.006492321624087e-46)"
     );
     assertEqualU32(
-        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, -7.006492321624087e-46)),
+        i32_reinterpret_f32(m13_conversionsX2E0Export14_f32X2EdemoteX5Ff64(&instance, f64_reinterpret_i64(0xb690000000000001ull))),
         2147483649u,
         "f32.demote_f64(-7.006492321624087e-46)"
     );
@@ -2489,17 +2687,17 @@ void test() {
         "f64.reinterpret_i64(18443366373989023744ull)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, 0.0),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x00000000u)),
         0u,
         "i32.reinterpret_f32(0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, -0.0),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x80000000u)),
         2147483648u,
         "i32.reinterpret_f32(-0.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, 1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x00000001u)),
         1u,
         "i32.reinterpret_f32(1.401298464324817e-45)"
     );
@@ -2509,37 +2707,37 @@ void test() {
         "i32.reinterpret_f32(f32_reinterpret_i32(0xffffffffu))"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, -1.401298464324817e-45),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x80000001u)),
         2147483649u,
         "i32.reinterpret_f32(-1.401298464324817e-45)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, 1.0),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x3f800000u)),
         1065353216u,
         "i32.reinterpret_f32(1.0)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, 3.141592502593994),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x40490fdau)),
         1078530010u,
         "i32.reinterpret_f32(3.141592502593994)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, 3.4028234663852886e+38),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x7f7fffffu)),
         2139095039u,
         "i32.reinterpret_f32(3.4028234663852886e+38)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, -3.4028234663852886e+38),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0xff7fffffu)),
         4286578687u,
         "i32.reinterpret_f32(-3.4028234663852886e+38)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0x7f800000u)),
         2139095040u,
         "i32.reinterpret_f32(INFINITY)"
     );
     assertEqualU32(
-        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i32X2EreinterpretX5Ff32(&instance, f32_reinterpret_i32(0xff800000u)),
         4286578688u,
         "i32.reinterpret_f32(-INFINITY)"
     );
@@ -2564,17 +2762,17 @@ void test() {
         "i32.reinterpret_f32(f32_reinterpret_i32(0xffa00000u))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, 0.0),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x0000000000000000ull)),
         0ull,
         "i64.reinterpret_f64(0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, -0.0),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x8000000000000000ull)),
         9223372036854775808ull,
         "i64.reinterpret_f64(-0.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, 5e-324),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x0000000000000001ull)),
         1ull,
         "i64.reinterpret_f64(5e-324)"
     );
@@ -2584,37 +2782,37 @@ void test() {
         "i64.reinterpret_f64(f64_reinterpret_i64(0xffffffffffffffffull))"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, -5e-324),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x8000000000000001ull)),
         9223372036854775809ull,
         "i64.reinterpret_f64(-5e-324)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, 1.0),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x3ff0000000000000ull)),
         4607182418800017408ull,
         "i64.reinterpret_f64(1.0)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, 3.14159265358979),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x400921fb54442d11ull)),
         4614256656552045841ull,
         "i64.reinterpret_f64(3.14159265358979)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, 1.7976931348623157e+308),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x7fefffffffffffffull)),
         9218868437227405311ull,
         "i64.reinterpret_f64(1.7976931348623157e+308)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, -1.7976931348623157e+308),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0xffefffffffffffffull)),
         18442240474082181119ull,
         "i64.reinterpret_f64(-1.7976931348623157e+308)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, INFINITY),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0x7ff0000000000000ull)),
         9218868437227405312ull,
         "i64.reinterpret_f64(INFINITY)"
     );
     assertEqualU64(
-        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, -INFINITY),
+        m13_conversionsX2E0Export19_i64X2EreinterpretX5Ff64(&instance, f64_reinterpret_i64(0xfff0000000000000ull)),
         18442240474082181120ull,
         "i64.reinterpret_f64(-INFINITY)"
     );
@@ -2638,4 +2836,5 @@ void test() {
         18443366373989023744ull,
         "i64.reinterpret_f64(f64_reinterpret_i64(0xfff4000000000000ull))"
     );
+    m13_conversionsX2E0FreeInstance(&instance);
 }

@@ -3,6 +3,7 @@
 
 jmp_buf testTrapTarget;
 int testTrapExpected;
+Trap testTrapReason;
 
 typedef struct TestImport {
     const char* module;
@@ -171,10 +172,24 @@ trap(
     Trap trap
 ) {
     if (testTrapExpected) {
+        testTrapReason = trap;
         longjmp(testTrapTarget, 1);
     }
     fprintf(stderr, "TRAP: %s\n", trapDescription(trap));
     abort();
+}
+
+void assertEqualTrap(
+    Trap actual,
+    Trap expected,
+    const char* description
+) {
+    if (actual != expected) {
+        fprintf(stderr, "FAIL: %s: expected trap %s, got %s\n", description,
+            trapDescription(expected), trapDescription(actual));
+    } else {
+        printOK(description);
+    }
 }
 
 void assertEqualU32(

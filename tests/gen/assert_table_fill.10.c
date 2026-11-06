@@ -19,6 +19,12 @@ void test(void) {
     );
     assertEqualU32((m13_tableX5FfillX2E10Export3_get(&instance, 3u)).func == NULL, 1u, "get(3u)");
     (void)(m13_tableX5FfillX2E10Export4_fill(&instance, 4u, 0u));
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_tableX5FfillX2E10Export4_fill(&instance, 4u, 1u), trapTableOutOfBounds, "fill(4u, 1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m13_tableX5FfillX2E10Export4_fill(&instance, 5u, 0u), trapTableOutOfBounds, "fill(5u, 0u)");
+#endif
     (void)(m13_tableX5FfillX2E10Export5_clear(&instance, 1u, 2u));
     assertEqualU32((m13_tableX5FfillX2E10Export3_get(&instance, 1u)).func == NULL, 1u, "get(1u)");
     m13_tableX5FfillX2E10FreeInstance(&instance);

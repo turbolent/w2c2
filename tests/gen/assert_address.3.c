@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_address.3.h"
 
-void test() {
-    m9_addressX2E3Instance instance;
+void test(void) {
+    static m9_addressX2E3Instance instance;
     m9_addressX2E3Instantiate(&instance, resolveTestImports);
     printStart("address.3.wasm");
     assertEqualU32(
@@ -78,4 +75,20 @@ void test() {
         0u,
         "32_good4(65525u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E3Export8_32X5Fgood5(&instance, 65525u), trapMemoryOutOfBounds, "32_good5(65525u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E3Export8_32X5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "32_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E3Export8_32X5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "32_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E3Export6_32X5Fbad(&instance, 0u), trapMemoryOutOfBounds, "32_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E3Export6_32X5Fbad(&instance, 1u), trapMemoryOutOfBounds, "32_bad(1u)");
+#endif
+    m9_addressX2E3FreeInstance(&instance);
 }

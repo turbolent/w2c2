@@ -237,12 +237,12 @@ void test(void) {
     m7_elemX2E57Instantiate(&instance_45, resolveTestImports);
     printStart("elem.57.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E57Export4_init(&instance_45), "WAST line 702: init()");
+    assertTrap(m7_elemX2E57Export4_init(&instance_45), trapTableOutOfBounds, "WAST line 702: init()");
 #endif
     m7_elemX2E58Instantiate(&instance_46, resolveTestImports);
     printStart("elem.58.wasm");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E58Export4_init(&instance_46), "WAST line 711: init()");
+    assertTrap(m7_elemX2E58Export4_init(&instance_46), trapTableOutOfBounds, "WAST line 711: init()");
 #endif
     m7_elemX2E79Instantiate(&instance_47, resolveTestImports);
     printStart("elem.79.wasm");
@@ -262,7 +262,7 @@ void test(void) {
     printStart("elem.81.wasm");
     bindTestImport("module1", "shared-table", (void*)m7_elemX2E81Export12_sharedX2Dtable(&instance_49));
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E81Export6_callX2D7(&instance_49), "WAST line 933: call-7()");
+    assertTrap(m7_elemX2E81Export6_callX2D7(&instance_49), trapUninitializedElement, "WAST line 933: call-7()");
 #endif
     assertEqualU32(
         m7_elemX2E81Export6_callX2D8(&instance_49),
@@ -341,7 +341,7 @@ void test(void) {
         "WAST line 1053: call_in_table(3u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E92Export13_callX5FinX5Ftable(&instance_56, 0u), "WAST line 1054: call_in_table(0u)");
+    assertTrap(m7_elemX2E92Export13_callX5FinX5Ftable(&instance_56, 0u), trapUninitializedElement, "WAST line 1054: call_in_table(0u)");
 #endif
     m7_elemX2E93Instantiate(&instance_57, resolveTestImports);
     printStart("elem.93.wasm");
@@ -351,7 +351,7 @@ void test(void) {
         "WAST line 1064: call_in_table(1u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E93Export13_callX5FinX5Ftable(&instance_57, 0u), "WAST line 1065: call_in_table(0u)");
+    assertTrap(m7_elemX2E93Export13_callX5FinX5Ftable(&instance_57, 0u), trapUninitializedElement, "WAST line 1065: call_in_table(0u)");
 #endif
     m7_elemX2E94Instantiate(&instance_58, resolveTestImports);
     printStart("elem.94.wasm");
@@ -361,7 +361,7 @@ void test(void) {
         "WAST line 1075: call_in_table(4u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E94Export13_callX5FinX5Ftable(&instance_58, 0u), "WAST line 1076: call_in_table(0u)");
+    assertTrap(m7_elemX2E94Export13_callX5FinX5Ftable(&instance_58, 0u), trapUninitializedElement, "WAST line 1076: call_in_table(0u)");
 #endif
     m7_elemX2E95Instantiate(&instance_59, resolveTestImports);
     printStart("elem.95.wasm");
@@ -371,7 +371,7 @@ void test(void) {
         "WAST line 1097: call_in_table(6u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m7_elemX2E95Export13_callX5FinX5Ftable(&instance_59, 0u), "WAST line 1098: call_in_table(0u)");
+    assertTrap(m7_elemX2E95Export13_callX5FinX5Ftable(&instance_59, 0u), trapUninitializedElement, "WAST line 1098: call_in_table(0u)");
 #endif
     m7_elemX2E96Instantiate(&instance_60, resolveTestImports);
     printStart("elem.96.wasm");

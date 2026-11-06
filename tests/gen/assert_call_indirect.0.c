@@ -151,6 +151,21 @@ void test(void) {
         2ull,
         "dispatch(20u, 2ull)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export8_dispatch(&instance, 0u, 2ull), trapIndirectCallTypeMismatch, "dispatch(0u, 2ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export8_dispatch(&instance, 15u, 2ull), trapIndirectCallTypeMismatch, "dispatch(15u, 2ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export8_dispatch(&instance, 32u, 2ull), trapTableOutOfBounds, "dispatch(32u, 2ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export8_dispatch(&instance, 4294967295u, 2ull), trapTableOutOfBounds, "dispatch(4294967295u, 2ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export8_dispatch(&instance, 1213432423u, 2ull), trapTableOutOfBounds, "dispatch(1213432423u, 2ull)");
+#endif
     assertEqualU64(
         m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di64(&instance, 5u),
         9ull,
@@ -171,6 +186,12 @@ void test(void) {
         9ull,
         "dispatch-structural-i64(20u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di64(&instance, 11u), trapIndirectCallTypeMismatch, "dispatch-structural-i64(11u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di64(&instance, 22u), trapIndirectCallTypeMismatch, "dispatch-structural-i64(22u)");
+#endif
     assertEqualU32(
         m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di32(&instance, 4u),
         9u,
@@ -191,6 +212,12 @@ void test(void) {
         9u,
         "dispatch-structural-i32(19u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di32(&instance, 9u), trapIndirectCallTypeMismatch, "dispatch-structural-i32(9u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Di32(&instance, 21u), trapIndirectCallTypeMismatch, "dispatch-structural-i32(21u)");
+#endif
     assertEqualU32(
         i32_reinterpret_f32(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df32(&instance, 6u)),
         1091567616u,
@@ -211,6 +238,12 @@ void test(void) {
         1091567616u,
         "dispatch-structural-f32(21u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df32(&instance, 8u), trapIndirectCallTypeMismatch, "dispatch-structural-f32(8u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df32(&instance, 19u), trapIndirectCallTypeMismatch, "dispatch-structural-f32(19u)");
+#endif
     assertEqualU64(
         i64_reinterpret_f64(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df64(&instance, 7u)),
         4621256167635550208ull,
@@ -231,6 +264,12 @@ void test(void) {
         4621256167635550208ull,
         "dispatch-structural-f64(22u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df64(&instance, 10u), trapIndirectCallTypeMismatch, "dispatch-structural-f64(10u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m15_callX5FindirectX2E0Export23_dispatchX2DstructuralX2Df64(&instance, 18u), trapIndirectCallTypeMismatch, "dispatch-structural-f64(18u)");
+#endif
     assertEqualU64(
         m15_callX5FindirectX2E0Export7_facX2Di64(&instance, 0ull),
         1ull,

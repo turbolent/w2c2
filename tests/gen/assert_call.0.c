@@ -314,6 +314,9 @@ void test(void) {
         2u,
         "as-call_indirect-mid()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m6_callX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance), trapTableOutOfBounds, "as-call_indirect-last()");
+#endif
     (void)(m6_callX2E0Export14_asX2DstoreX2Dfirst(&instance));
     (void)(m6_callX2E0Export13_asX2DstoreX2Dlast(&instance));
     assertEqualU32(
