@@ -54,22 +54,22 @@ void test(void) {
     );
     assertEqualU32((m18_tableX5FoperationsX2E0Export3_get(&instance_0, 2u)).func == NULL, 1u, "WAST line 79: get(2u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 2u), "WAST line 80: call(2u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 2u), trapUninitializedElement, "WAST line 80: call(2u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 3u), "WAST line 81: call(3u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 3u), trapIndirectCallTypeMismatch, "WAST line 81: call(3u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export3_get(&instance_0, 6u), "WAST line 82: get(6u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export3_get(&instance_0, 6u), trapTableOutOfBounds, "WAST line 82: get(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export3_get(&instance_0, 4294967295u), "WAST line 83: get(4294967295u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export3_get(&instance_0, 4294967295u), trapTableOutOfBounds, "WAST line 83: get(4294967295u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export3_set(&instance_0, 6u, wasmNullFuncRef), "WAST line 84: set(6u, wasmNullFuncRef)");
+    assertTrap(m18_tableX5FoperationsX2E0Export3_set(&instance_0, 6u, wasmNullFuncRef), trapTableOutOfBounds, "WAST line 84: set(6u, wasmNullFuncRef)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export3_set(&instance_0, 4294967295u, wasmNullFuncRef), "WAST line 85: set(4294967295u, wasmNullFuncRef)");
+    assertTrap(m18_tableX5FoperationsX2E0Export3_set(&instance_0, 4294967295u, wasmNullFuncRef), trapTableOutOfBounds, "WAST line 85: set(4294967295u, wasmNullFuncRef)");
 #endif
     assertEqualU32(
         m18_tableX5FoperationsX2E0Export4_call(&instance_0, 0u),
@@ -95,7 +95,7 @@ void test(void) {
     );
     assertEqualU32((m18_tableX5FoperationsX2E0Export3_get(&instance_0, 3u)).func == NULL, 1u, "WAST line 91: get(3u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 4u), "WAST line 92: call(4u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_call(&instance_0, 4u), trapIndirectCallTypeMismatch, "WAST line 92: call(4u)");
 #endif
     (void)(m18_tableX5FoperationsX2E0Export4_copy(&instance_0, 0u, 1u, 4u));
     printOK("WAST line 93: copy(0u, 1u, 4u)");
@@ -122,7 +122,7 @@ void test(void) {
         "WAST line 98: call(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_fill(&instance_0, 5u, 2u), "WAST line 99: fill(5u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_fill(&instance_0, 5u, 2u), trapTableOutOfBounds, "WAST line 99: fill(5u, 2u)");
 #endif
     assertEqualU32(
         m18_tableX5FoperationsX2E0Export4_call(&instance_0, 5u),
@@ -130,7 +130,7 @@ void test(void) {
         "WAST line 100: call(5u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_copy(&instance_0, 0u, 5u, 2u), "WAST line 101: copy(0u, 5u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_copy(&instance_0, 0u, 5u, 2u), trapTableOutOfBounds, "WAST line 101: copy(0u, 5u, 2u)");
 #endif
     assertEqualU32(
         m18_tableX5FoperationsX2E0Export4_call(&instance_0, 0u),
@@ -138,7 +138,7 @@ void test(void) {
         "WAST line 102: call(0u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 1u, 2u), "WAST line 103: init(0u, 1u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 1u, 2u), trapTableOutOfBounds, "WAST line 103: init(0u, 1u, 2u)");
 #endif
     assertEqualU32(
         m18_tableX5FoperationsX2E0Export4_call(&instance_0, 0u),
@@ -152,23 +152,23 @@ void test(void) {
     (void)(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 6u, 0u, 0u));
     printOK("WAST line 107: init(6u, 0u, 0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 0u, 1u), "WAST line 108: init(0u, 0u, 1u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 0u, 1u), trapTableOutOfBounds, "WAST line 108: init(0u, 0u, 1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 1u, 0u), "WAST line 109: init(0u, 1u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 0u, 1u, 0u), trapTableOutOfBounds, "WAST line 109: init(0u, 1u, 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 7u, 0u, 0u), "WAST line 110: init(7u, 0u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export4_init(&instance_0, 7u, 0u, 0u), trapTableOutOfBounds, "WAST line 110: init(7u, 0u, 0u)");
 #endif
     (void)(m18_tableX5FoperationsX2E0Export6_active(&instance_0, 0u));
     printOK("WAST line 111: active(0u)");
     (void)(m18_tableX5FoperationsX2E0Export8_declared(&instance_0, 0u));
     printOK("WAST line 112: declared(0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export6_active(&instance_0, 1u), "WAST line 113: active(1u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export6_active(&instance_0, 1u), trapTableOutOfBounds, "WAST line 113: active(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export8_declared(&instance_0, 1u), "WAST line 114: declared(1u)");
+    assertTrap(m18_tableX5FoperationsX2E0Export8_declared(&instance_0, 1u), trapTableOutOfBounds, "WAST line 114: declared(1u)");
 #endif
     assertEqualU32(
         m18_tableX5FoperationsX2E0Export4_grow(&instance_0, 0u),
@@ -210,10 +210,10 @@ void test(void) {
     );
     assertEqualU32((m18_tableX5FoperationsX2E0Export10_nullX2Dlocal(&instance_0)).func == NULL, 1u, "WAST line 124: null-local()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export8_trapX2Dref(&instance_0), "WAST line 125: trap-ref()");
+    assertTrap(m18_tableX5FoperationsX2E0Export8_trapX2Dref(&instance_0), trapUnreachable, "WAST line 125: trap-ref()");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E0Export9_trapX2Dpair(&instance_0), "WAST line 126: trap-pair()");
+    assertTrap(m18_tableX5FoperationsX2E0Export9_trapX2Dpair(&instance_0), trapUnreachable, "WAST line 126: trap-pair()");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E0Export6_select(&instance_0, 0u)).func == NULL, 1u, "WAST line 127: select(0u)");
     assertEqualU32((m18_tableX5FoperationsX2E0Export6_select(&instance_0, 1u)).func != NULL, 1u, "WAST line 128: select(1u)");
@@ -353,7 +353,7 @@ void test(void) {
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 1u)) == testExternRef(0u), 1u, "WAST line 293: get(1u)");
     assertEqualU32((m18_tableX5FoperationsX2E7Export10_nullX2Dlocal(&instance_7)) == wasmNullExternRef, 1u, "WAST line 294: null-local()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export8_trapX2Dref(&instance_7), "WAST line 295: trap-ref()");
+    assertTrap(m18_tableX5FoperationsX2E7Export8_trapX2Dref(&instance_7), trapUnreachable, "WAST line 295: trap-ref()");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export10_getX2Dglobal(&instance_7)) == wasmNullExternRef, 1u, "WAST line 296: get-global()");
     (void)(m18_tableX5FoperationsX2E7Export10_setX2Dglobal(&instance_7, testExternRef(4294967295u)));
@@ -392,10 +392,10 @@ void test(void) {
         "WAST line 304: calls()"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export15_wrongX2Dparameter(&instance_7), "WAST line 305: wrong-parameter()");
+    assertTrap(m18_tableX5FoperationsX2E7Export15_wrongX2Dparameter(&instance_7), trapIndirectCallTypeMismatch, "WAST line 305: wrong-parameter()");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export12_wrongX2Dresult(&instance_7), "WAST line 306: wrong-result()");
+    assertTrap(m18_tableX5FoperationsX2E7Export12_wrongX2Dresult(&instance_7), trapIndirectCallTypeMismatch, "WAST line 306: wrong-result()");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export6_select(&instance_7, testExternRef(0u), testExternRef(1u), 1u)) == testExternRef(0u), 1u, "WAST line 307: select(testExternRef(0u), testExternRef(1u), 1u)");
     assertEqualU32((m18_tableX5FoperationsX2E7Export6_select(&instance_7, testExternRef(0u), wasmNullExternRef, 0u)) == wasmNullExternRef, 1u, "WAST line 308: select(testExternRef(0u), wasmNullExternRef, 0u)");
@@ -496,7 +496,7 @@ void test(void) {
     assertEqualU32((m18_tableX5FoperationsX2E7Export4_loop(&instance_7, testExternRef(6u))) == testExternRef(6u), 1u, "WAST line 320: loop(testExternRef(6u))");
     assertEqualU32((m18_tableX5FoperationsX2E7Export14_functionX2Dlabel(&instance_7, testExternRef(7u))) == testExternRef(7u), 1u, "WAST line 321: function-label(testExternRef(7u))");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_dead(&instance_7), "WAST line 322: dead()");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_dead(&instance_7), trapUnreachable, "WAST line 322: dead()");
 #endif
     (void)(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 0u, testExternRef(1u)));
     printOK("WAST line 325: set(0u, testExternRef(1u))");
@@ -519,39 +519,39 @@ void test(void) {
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4u)) == testExternRef(0u), 1u, "WAST line 337: get(4u)");
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 338: get(5u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 6u), "WAST line 339: get(6u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 6u), trapTableOutOfBounds, "WAST line 339: get(6u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4294967295u), "WAST line 340: get(4294967295u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export3_get(&instance_7, 4294967295u), trapTableOutOfBounds, "WAST line 340: get(4294967295u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 6u, testExternRef(9u)), "WAST line 341: set(6u, testExternRef(9u))");
+    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 6u, testExternRef(9u)), trapTableOutOfBounds, "WAST line 341: set(6u, testExternRef(9u))");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 4294967295u, testExternRef(9u)), "WAST line 342: set(4294967295u, testExternRef(9u))");
+    assertTrap(m18_tableX5FoperationsX2E7Export3_set(&instance_7, 4294967295u, testExternRef(9u)), trapTableOutOfBounds, "WAST line 342: set(4294967295u, testExternRef(9u))");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 5u, testExternRef(9u), 2u), "WAST line 343: fill(5u, testExternRef(9u), 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 5u, testExternRef(9u), 2u), trapTableOutOfBounds, "WAST line 343: fill(5u, testExternRef(9u), 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 344: get(5u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 5u, 0u, 2u), "WAST line 345: copy(5u, 0u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 5u, 0u, 2u), trapTableOutOfBounds, "WAST line 345: copy(5u, 0u, 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 346: get(5u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 0u, 5u, 2u), "WAST line 347: copy(0u, 5u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 0u, 5u, 2u), trapTableOutOfBounds, "WAST line 347: copy(0u, 5u, 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 348: get(0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export11_copyX2Dsource(&instance_7, 0u, 2u, 2u), "WAST line 349: copy-source(0u, 2u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export11_copyX2Dsource(&instance_7, 0u, 2u, 2u), trapTableOutOfBounds, "WAST line 349: copy-source(0u, 2u, 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 350: get(0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 5u, 0u, 2u), "WAST line 351: init(5u, 0u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 5u, 0u, 2u), trapTableOutOfBounds, "WAST line 351: init(5u, 0u, 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 5u)) == wasmNullExternRef, 1u, "WAST line 352: get(5u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 2u, 2u), "WAST line 353: init(0u, 2u, 2u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 2u, 2u), trapTableOutOfBounds, "WAST line 353: init(0u, 2u, 2u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 354: get(0u)");
     (void)(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 6u, 6u, 0u));
@@ -563,29 +563,29 @@ void test(void) {
     (void)(m18_tableX5FoperationsX2E7Export5_empty(&instance_7));
     printOK("WAST line 358: empty()");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 7u, testExternRef(9u), 0u), "WAST line 359: fill(7u, testExternRef(9u), 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_fill(&instance_7, 7u, testExternRef(9u), 0u), trapTableOutOfBounds, "WAST line 359: fill(7u, testExternRef(9u), 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 7u, 6u, 0u), "WAST line 360: copy(7u, 6u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 7u, 6u, 0u), trapTableOutOfBounds, "WAST line 360: copy(7u, 6u, 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 6u, 7u, 0u), "WAST line 361: copy(6u, 7u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_copy(&instance_7, 6u, 7u, 0u), trapTableOutOfBounds, "WAST line 361: copy(6u, 7u, 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 7u, 3u, 0u), "WAST line 362: init(7u, 3u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 7u, 3u, 0u), trapTableOutOfBounds, "WAST line 362: init(7u, 3u, 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 4u, 0u), "WAST line 363: init(6u, 4u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 4u, 0u), trapTableOutOfBounds, "WAST line 363: init(6u, 4u, 0u)");
 #endif
     (void)(m18_tableX5FoperationsX2E7Export6_active(&instance_7, 0u));
     printOK("WAST line 364: active(0u)");
     (void)(m18_tableX5FoperationsX2E7Export8_declared(&instance_7, 0u));
     printOK("WAST line 365: declared(0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export6_active(&instance_7, 1u), "WAST line 366: active(1u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export6_active(&instance_7, 1u), trapTableOutOfBounds, "WAST line 366: active(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export8_declared(&instance_7, 1u), "WAST line 367: declared(1u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export8_declared(&instance_7, 1u), trapTableOutOfBounds, "WAST line 367: declared(1u)");
 #endif
     (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 1u, 0u, 3u));
     printOK("WAST line 368: init(1u, 0u, 3u)");
@@ -603,10 +603,10 @@ void test(void) {
     (void)(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 0u, 0u));
     printOK("WAST line 377: init(6u, 0u, 0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 1u, 0u), "WAST line 378: init(6u, 1u, 0u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 6u, 1u, 0u), trapTableOutOfBounds, "WAST line 378: init(6u, 1u, 0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 0u, 1u), "WAST line 379: init(0u, 0u, 1u)");
+    assertTrap(m18_tableX5FoperationsX2E7Export4_init(&instance_7, 0u, 0u, 1u), trapTableOutOfBounds, "WAST line 379: init(0u, 0u, 1u)");
 #endif
     assertEqualU32((m18_tableX5FoperationsX2E7Export3_get(&instance_7, 0u)) == testExternRef(1u), 1u, "WAST line 380: get(0u)");
     assertEqualU32(

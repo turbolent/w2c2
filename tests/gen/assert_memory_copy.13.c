@@ -1,13 +1,13 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_memory_copy.13.h"
 
-void test() {
-    m14_memoryX5FcopyX2E13Instance instance;
+void test(void) {
+    static m14_memoryX5FcopyX2E13Instance instance;
     m14_memoryX5FcopyX2E13Instantiate(&instance, resolveTestImports);
     printStart("memory_copy.13.wasm");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m14_memoryX5FcopyX2E13Export3_run(&instance, 65486u, 65516u, 40u), trapMemoryOutOfBounds, "run(65486u, 65516u, 40u)");
+#endif
     assertEqualU32(
         m14_memoryX5FcopyX2E13Export7_load8X5Fu(&instance, 198u),
         0u,
@@ -1753,4 +1753,5 @@ void test() {
         19u,
         "load8_u(65535u)"
     );
+    m14_memoryX5FcopyX2E13FreeInstance(&instance);
 }

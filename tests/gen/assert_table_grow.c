@@ -28,10 +28,10 @@ void test(void) {
         "WAST line 17: size()"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 0u, testExternRef(2u)), "WAST line 18: set(0u, testExternRef(2u))");
+    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 0u, testExternRef(2u)), trapTableOutOfBounds, "WAST line 18: set(0u, testExternRef(2u))");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 0u), "WAST line 19: get(0u)");
+    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 0u), trapTableOutOfBounds, "WAST line 19: get(0u)");
 #endif
     assertEqualU32(
         m12_tableX5FgrowX2E0Export4_grow(&instance_0, 1u, wasmNullExternRef),
@@ -48,10 +48,10 @@ void test(void) {
     printOK("WAST line 24: set(0u, testExternRef(2u))");
     assertEqualU32((m12_tableX5FgrowX2E0Export3_get(&instance_0, 0u)) == testExternRef(2u), 1u, "WAST line 25: get(0u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 1u, testExternRef(2u)), "WAST line 26: set(1u, testExternRef(2u))");
+    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 1u, testExternRef(2u)), trapTableOutOfBounds, "WAST line 26: set(1u, testExternRef(2u))");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 1u), "WAST line 27: get(1u)");
+    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 1u), trapTableOutOfBounds, "WAST line 27: get(1u)");
 #endif
     assertEqualU32(
         m12_tableX5FgrowX2E0Export11_growX2Dabbrev(&instance_0, 4u, testExternRef(3u)),
@@ -73,10 +73,10 @@ void test(void) {
     printOK("WAST line 36: set(4u, testExternRef(4u))");
     assertEqualU32((m12_tableX5FgrowX2E0Export3_get(&instance_0, 4u)) == testExternRef(4u), 1u, "WAST line 37: get(4u)");
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 5u, testExternRef(2u)), "WAST line 38: set(5u, testExternRef(2u))");
+    assertTrap(m12_tableX5FgrowX2E0Export3_set(&instance_0, 5u, testExternRef(2u)), trapTableOutOfBounds, "WAST line 38: set(5u, testExternRef(2u))");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 5u), "WAST line 39: get(5u)");
+    assertTrap(m12_tableX5FgrowX2E0Export3_get(&instance_0, 5u), trapTableOutOfBounds, "WAST line 39: get(5u)");
 #endif
     m12_tableX5FgrowX2E1Instantiate(&instance_1, resolveTestImports);
     printStart("table_grow.1.wasm");

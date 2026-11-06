@@ -225,7 +225,7 @@ void test(void) {
         "WAST line 262: as-call_indirect-mid()"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m8_globalX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance_0), "WAST line 263: as-call_indirect-last()");
+    assertTrap(m8_globalX2E0Export21_asX2DcallX5FindirectX2Dlast(&instance_0), trapTableOutOfBounds, "WAST line 263: as-call_indirect-last()");
 #endif
     (void)(m8_globalX2E0Export14_asX2DstoreX2Dfirst(&instance_0));
     printOK("WAST line 265: as-store-first()");

@@ -239,4 +239,16 @@
   {"type": "module", "line": 930, "filename": "memory_init.89.wasm"}, 
   {"type": "assert_trap", "line": 948, "action": {"type": "invoke", "field": "run", "args": [{"type": "i32", "value": "0"}, {"type": "i32", "value": "4294967292"}]}, "text": "out of bounds memory access", "expected": []}, 
   {"type": "assert_return", "line": 951, "action": {"type": "invoke", "field": "checkRange", "args": [{"type": "i32", "value": "0"}, {"type": "i32", "value": "1"}, {"type": "i32", "value": "0"}]}, "expected": [{"type": "i32", "value": "4294967295"}]}, 
-  {"type": "module", "line": 954, "filename": "memory_init.90.wasm"}]}
+  {"type": "module", "line": 954, "filename": "memory_init.90.wasm"},
+  {"type": "module", "line": 969, "filename": "memory_init.91.wasm"},
+  {"type": "action", "line": 974, "action": {"type": "invoke", "field": "test", "args": []}, "expected": []},
+  {"type": "module", "line": 976, "filename": "memory_init.92.wasm"},
+  {"type": "assert_trap", "line": 982, "action": {"type": "invoke", "field": "test", "args": []}, "text": "out of bounds memory access", "expected": []},
+  {"type": "module", "line": 984, "filename": "memory_init.93.wasm"},
+  {"type": "action", "line": 990, "action": {"type": "invoke", "field": "test", "args": []}, "expected": []},
+  {"type": "module", "line": 992, "filename": "memory_init.94.wasm"},
+  {"type": "assert_trap", "line": 998, "action": {"type": "invoke", "field": "test", "args": []}, "text": "out of bounds memory access", "expected": []},
+  {"type": "module", "line": 1000, "filename": "memory_init.95.wasm"},
+  {"type": "action", "line": 1006, "action": {"type": "invoke", "field": "test", "args": []}, "expected": []},
+  {"type": "module", "line": 1008, "filename": "memory_init.96.wasm"},
+  {"type": "assert_trap", "line": 1014, "action": {"type": "invoke", "field": "test", "args": []}, "text": "out of bounds memory access", "expected": []}]}

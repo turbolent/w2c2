@@ -5,5 +5,8 @@ void test(void) {
     static m17_unreachedX2DvalidX2E1Instance instance;
     m17_unreachedX2DvalidX2E1Instantiate(&instance, resolveTestImports);
     printStart("unreached-valid.1.wasm");
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m17_unreachedX2DvalidX2E1Export11_meetX2Dbottom(&instance), trapUnreachable, "meet-bottom()");
+#endif
     m17_unreachedX2DvalidX2E1FreeInstance(&instance);
 }

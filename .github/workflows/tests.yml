@@ -12,25 +12,33 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
+env:
+  UBUNTU_RUNNER: &ubuntu_runner ubuntu-24.04
+  # Anchors also expose these versions to matrices,
+  # where the env context is unavailable.
+  GCC_VERSION: &gcc_version '14'
+  CLANG_VERSION: &clang_version '18'
+
 jobs:
   simd:
-    runs-on: ubuntu-24.04
-    name: "SIMD, ${{ matrix.compiler.name }}, ${{ matrix.backend.name }}"
+    runs-on: *ubuntu_runner
+    name: "SIMD, ${{ matrix.compiler.name }} ${{ matrix.compiler.version }}, ${{ matrix.backend.name }}, ${{ matrix.optimization }}"
     strategy:
       fail-fast: false
       matrix:
+        optimization: [-O2, -O3]
         compiler:
-          - { name: gcc13, cc: gcc-13, cxx: g++-13 }
-          - { name: clang, cc: clang, cxx: clang++ }
+          - { name: gcc, cc: gcc, cxx: g++, version: *gcc_version }
+          - { name: clang, cc: clang, cxx: clang++, version: *clang_version }
         backend:
           - { name: sse2, flags: '-march=x86-64 -msse2 -mno-avx' }
           - { name: avx2, flags: '-march=x86-64 -mavx2' }
           - { name: portable, flags: '-DSIMDE_NO_NATIVE' }
           - { name: scalar, flags: '-DSIMDE_NO_NATIVE -DSIMDE_NO_VECTOR' }
     env:
-      CC: ${{ matrix.compiler.cc }}
-      CXX: ${{ matrix.compiler.cxx }}
-      SIMD_CFLAGS: -O2 -Werror=conversion -Werror=float-conversion ${{ matrix.backend.flags }}
+      CC: ${{ format('{0}-{1}', matrix.compiler.cc, matrix.compiler.version) }}
+      CXX: ${{ format('{0}-{1}', matrix.compiler.cxx, matrix.compiler.version) }}
+      SIMD_CFLAGS: ${{ matrix.optimization }} -Werror=conversion -Werror=float-conversion ${{ matrix.backend.flags }}
       SIMDE_HEADER: ${{ github.workspace }}/build/simde/simde/wasm/simd128.h
     steps:
       - uses: actions/checkout@v4
@@ -43,14 +51,38 @@ jobs:
       - name: Install compilers and WABT
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-13 g++-13 clang wabt
+          sudo apt-get install -y "gcc-${GCC_VERSION}" "g++-${GCC_VERSION}" "clang-${CLANG_VERSION}" wabt
       - name: Build w2c2
         run: make -C w2c2 -j2
       - name: Test SIMD compilation and execution
         run: make -C tests simd-test
 
+  checked:
+    runs-on: *ubuntu_runner
+    name: "Checked execution, ${{ matrix.compiler.name }} ${{ matrix.compiler.version }}, ${{ matrix.optimization }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        optimization: [-O2, -O3]
+        compiler:
+          - { name: gcc, cc: gcc, version: *gcc_version, flags: '-fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }
+          - { name: clang, cc: clang, version: *clang_version, flags: '-ffp-model=strict' }
+    env:
+      CC: ${{ format('{0}-{1}', matrix.compiler.cc, matrix.compiler.version) }}
+      CFLAGS: -Werror ${{ matrix.compiler.flags }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compilers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y "gcc-${GCC_VERSION}" "clang-${CLANG_VERSION}"
+      - name: Build w2c2
+        run: make -C w2c2 -j2
+      - name: Run WebAssembly tests with runtime checks
+        run: make -C tests -j2 run-tests OPT=${{ matrix.optimization }}
+
   linux:
-    runs-on: ubuntu-latest
+    runs-on: *ubuntu_runner
     name: "Linux, ${{ matrix.system.target }} (build=${{ matrix.build }}, threads=${{ matrix.threads }})"
 
     strategy:
@@ -58,6 +90,8 @@ jobs:
       matrix:
         build: [release, debug]
         threads: [true, false]
+        gcc_version: [*gcc_version]
+        clang_version: [*clang_version]
         system:
           - { target: gcc,                                              cc: gcc                                                                         }
           - { target: clang,                                            cc: clang                                                                       }
@@ -71,7 +105,7 @@ jobs:
           - { target: alpha,    toolchain: gcc-alpha-linux-gnu,         cc: alpha-linux-gnu-gcc,         qemu: qemu-alpha-static                        }
 
           # Architectures with expected failures (mostly due to FP issues, e.g. NaN representation, conversion, arithemtic)
-          - { target: i386,     toolchain: gcc-multilib,                cc: clang -m32,                  qemu: qemu-i386-static,       linkAtomic: true, cflags: -Wno-atomic-alignment }
+          - { target: i386,     toolchain: gcc-multilib,                cc: clang,                       qemu: qemu-i386-static,       linkAtomic: true, cflags: '-m32 -Wno-atomic-alignment' }
           # The expanded floating-point tests require long calls on HPPA.
           - { target: hppa,     toolchain: gcc-hppa-linux-gnu,          cc: hppa-linux-gnu-gcc,          qemu: qemu-hppa-static, cflags: -mlong-calls    }
           - { target: mips,     toolchain: gcc-mips-linux-gnu,          cc: mips-linux-gnu-gcc,          qemu: qemu-mips-static,       linkAtomic: true }
@@ -88,13 +122,13 @@ jobs:
           # - { target: m68k,     toolchain: gcc-m68k-linux-gnu,          cc: m68k-linux-gnu-gcc,          qemu: qemu-m68k-static                         }
 
     env:
-      CC: ${{ matrix.system.cc }}
+      CC: ${{ format('{0}-{1}', matrix.system.cc, startsWith(matrix.system.cc, 'clang') && matrix.clang_version || matrix.gcc_version) }}
       # -fno-fp-int-builtin-inexact avoids GCC's x86 rounding expansions
       # that preserve signaling NaNs.
-      CFLAGS: -Werror ${{ matrix.system.cflags }} ${{ startsWith(matrix.system.cc, 'clang') && '-ffp-model=strict' || '-fno-fast-math -fno-rounding-math -fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }}
+      CFLAGS: -Werror ${{ matrix.system.cflags }} ${{ startsWith(matrix.system.cc, 'clang') && '-ffp-model=strict' || '-fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install QEMU
         if: ${{ matrix.system.qemu }}
@@ -102,12 +136,22 @@ jobs:
           sudo apt update
           sudo apt install qemu-user-static
 
-      - name: Install ${{ matrix.system.toolchain }}
-        if: ${{ matrix.system.toolchain }}
+      - name: Install compiler
+        env:
+          TOOLCHAIN: ${{ matrix.system.toolchain }}
         run: |
-          sudo apt install ${{ matrix.system.toolchain }}
+          sudo apt-get update
+          if [ -n "$TOOLCHAIN" ]; then
+            sudo apt-get install -y "gcc-${GCC_VERSION}-${TOOLCHAIN#gcc-}"
+          fi
+          if [[ "$CC" == clang-* ]]; then
+            sudo apt-get install -y "clang-${CLANG_VERSION}"
+          elif [ -z "$TOOLCHAIN" ]; then
+            sudo apt-get install -y "gcc-${GCC_VERSION}"
+          fi
+          "$CC" --version
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -223,12 +267,14 @@ jobs:
         threads: [true, false]
 
     env:
+      CC: /usr/bin/clang
+      CXX: /usr/bin/clang++
       CFLAGS: -Werror -ffp-model=strict
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -287,10 +333,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [*ubuntu_runner, macos-latest]
         shared: ["OFF", "ON"]
+        gcc_version: [*gcc_version]
+    env:
+      CC: ${{ startsWith(matrix.os, 'ubuntu-') && format('gcc-{0}', matrix.gcc_version) || '/usr/bin/clang' }}
+      CXX: ${{ startsWith(matrix.os, 'ubuntu-') && format('g++-{0}', matrix.gcc_version) || '/usr/bin/clang++' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Install GCC
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y "gcc-${GCC_VERSION}" "g++-${GCC_VERSION}"
       - name: Build and test library
         run: |
           cmake -S w2c2 -B build -DSHARED_LIB=${{ matrix.shared }}
@@ -320,8 +375,8 @@ jobs:
       CL: /fp:strict
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v2
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |

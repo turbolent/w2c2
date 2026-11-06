@@ -13,7 +13,11 @@ else
 	LDFLAGS += -lm
 endif
 
-LDFLAGS := -lw2c2futex -L../futex $(LDFLAGS)
+FUTEX_LDFLAGS = -L../futex -lw2c2futex
+CHECKED_FUTEX_OBJECTS = futex_checked.o list_checked.o map_checked.o
+TEST_HEADERS = test.h ../w2c2/w2c2_base.h
+SCRIPT_TESTS = $(patsubst gen/%.mk,%,$(wildcard gen/*.mk))
+SPEC_TESTS = $(filter-out $(SCRIPT_TESTS),$(patsubst gen/assert_%.c,%,$(wildcard gen/assert_*.c))) $(addsuffix _checked,$(SCRIPT_TESTS))
 
 ifneq (,$(findstring address,$(SANITIZERS)))
 CFLAGS += -fsanitize=address -fno-omit-frame-pointer
@@ -52,10 +56,10 @@ RUNTIME_CHECK_SOURCES = test_runtime_checks.c test_check_segments.c test_check_e
 runtime-checks-test: run-test-runtime_checks run-test-runtime_checks_checked
 
 test_runtime_checks$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_runtime_checks_checked$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES)
-	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(LDFLAGS)
 
 $(RUNTIME_CHECK_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
@@ -73,15 +77,14 @@ RUNTIME_LIFECYCLE_SOURCES = \
 	test_runtime_lifecycle_owned.c \
 	test_runtime_lifecycle_shared.c \
 	test_runtime_lifecycle_imports.c
-RUNTIME_LIFECYCLE_LDFLAGS = $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
 
 runtime-lifecycle-test: run-test-runtime_lifecycle run-test-runtime_lifecycle_checked
 
 test_runtime_lifecycle$(EXE): runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@ $(RUNTIME_LIFECYCLE_LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_runtime_lifecycle_checked$(EXE): runtime_lifecycle_test.c $(RUNTIME_LIFECYCLE_SOURCES)
-	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(RUNTIME_LIFECYCLE_LDFLAGS)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(LDFLAGS)
 
 test_runtime_lifecycle_owned.c: gen/runtime_lifecycle.0.wasm
 	$(W2C2) -m $< $@
@@ -97,10 +100,10 @@ table-instances-test: run-test-table_instances run-test-table_instances_checked
 test_table_instances$(EXE) test_table_instances_checked$(EXE): CFLAGS += -std=c89
 
 test_table_instances$(EXE): table_instances_test.c test_table_owner.c test_table_caller.c
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_table_instances_checked$(EXE): table_instances_test.c test_table_owner.c test_table_caller.c
-	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(LDFLAGS)
 
 test_table_owner.c: gen/table_owner.wasm
 	$(W2C2) -m $< $@
@@ -111,7 +114,7 @@ test_table_caller.c: gen/table_caller.wasm
 atomic-offsets-test: run-test-atomic_offsets
 
 test_atomic_offsets$(EXE): atomic_offsets_test.c test_atomic_offsets.c
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_atomic_offsets.c: gen/atomic_offsets.wasm
 	$(W2C2) $< $@
@@ -120,7 +123,7 @@ c-strings-test: run-test-c_strings
 
 test_c_strings$(EXE): CFLAGS += -std=c89
 test_c_strings$(EXE): c_strings_test.c test_c_strings.c
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_c_strings.c: gen/c_strings.wasm
 	$(W2C2) -g $< $@
@@ -129,7 +132,7 @@ binary-names-test: run-test-binary_names
 
 test_binary_names$(EXE): CFLAGS += -std=c89
 test_binary_names$(EXE): binary_names_test.c test_binary_names.c
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_binary_names.c: gen/binary_names.wasm
 	$(W2C2) $< $@
@@ -137,41 +140,48 @@ test_binary_names.c: gen/binary_names.wasm
 generator-test:
 	$(PYTHON3) -m unittest gen_test
 
+.PHONY: trap-harness-test
+trap-harness-test:
+	CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" EXECUTE="$(EXECUTE)" $(PYTHON3) trap_test.py
+
 MULTIVALUE_SOURCES = test_multivalue_owner.c test_multivalue_caller.c
 
 test_multivalue$(EXE) test_multivalue_checked$(EXE): CFLAGS += -std=c89
 
 test_multivalue$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_multivalue_checked$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
-	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(filter-out -lw2c2futex -L../futex,$(LDFLAGS))
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(LDFLAGS)
 
 $(MULTIVALUE_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
-run-tests: generator-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-lifecycle-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_*.c))
+run-tests: generator-test trap-harness-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-lifecycle-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(addprefix run-test-,$(SPEC_TESTS))
 
 -include $(wildcard gen/*.mk)
 
 run-tests-%:
-	$(MAKE) $(patsubst gen/assert_%.c,run-test-%,$(wildcard gen/assert_$**.c))
+	$(MAKE) $(addprefix run-test-,$(filter $*%,$(SPEC_TESTS)))
 
 run-test-%: test_%$(EXE)
 	echo ">>>" $<
 	$(PYTHON3) run.py $(if $(EXECUTE),-e "$(EXECUTE)",) $(if $(ARCH),-a $(ARCH),) $<
 	echo
 
-test_%$(EXE): test_%.o main.o
-	$(CC) $(CFLAGS) $< main.o -o $@ $(LDFLAGS)
+test_%$(EXE): test_%.o main.o $(CHECKED_FUTEX_OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-test_%.c: gen/%.wasm
+test_%.c: gen/%.wasm gen/assert_%.c
 	echo "#include \"test.h\"" > $@
 	$(W2C2) $< $@
 	cat $(patsubst test_%.c,gen/assert_%.c,$@) >> $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.c $(TEST_HEADERS)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -c $< -o $@
+
+%_checked.o: ../futex/%.c $(wildcard ../futex/*.h) ../w2c2/w2c2_base.h
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -c $< -o $@
 
 gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks gen-multivalue
 	$(PYTHON3) gen.py $(filter-out simd_%.wast,$(wildcard *.wast))
@@ -203,7 +213,7 @@ gen-%:
 	$(PYTHON3) gen.py $*
 
 clean:
-	-rm -f main.o test_*.o test_*.h
+	-rm -f main.o test_*.o test_*.h $(CHECKED_FUTEX_OBJECTS)
 	-rm -f test_atomic_offsets$(EXE) test_atomic_offsets.c
 	-rm -f test_c_strings$(EXE) test_c_strings.c
 	-rm -f test_binary_names$(EXE) test_binary_names.c

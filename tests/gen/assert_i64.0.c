@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_i64.0.h"
 
-void test() {
-    m5_i64X2E0Instance instance;
+void test(void) {
+    static m5_i64X2E0Instance instance;
     m5_i64X2E0Instantiate(&instance, resolveTestImports);
     printStart("i64.0.wasm");
     assertEqualU64(
@@ -128,6 +125,18 @@ void test() {
         1ull,
         "mul(9223372036854775807ull, 9223372036854775807ull)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fs(&instance, 1ull, 0ull), trapDivByZero, "div_s(1ull, 0ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fs(&instance, 0ull, 0ull), trapDivByZero, "div_s(0ull, 0ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fs(&instance, 9223372036854775808ull, 18446744073709551615ull), trapIntOverflow, "div_s(9223372036854775808ull, 18446744073709551615ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fs(&instance, 9223372036854775808ull, 0ull), trapDivByZero, "div_s(9223372036854775808ull, 0ull)");
+#endif
     assertEqualU64(
         m5_i64X2E0Export5_divX5Fs(&instance, 1ull, 1ull),
         1ull,
@@ -208,6 +217,12 @@ void test() {
         2ull,
         "div_s(17ull, 7ull)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fu(&instance, 1ull, 0ull), trapDivByZero, "div_u(1ull, 0ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_divX5Fu(&instance, 0ull, 0ull), trapDivByZero, "div_u(0ull, 0ull)");
+#endif
     assertEqualU64(
         m5_i64X2E0Export5_divX5Fu(&instance, 1ull, 1ull),
         1ull,
@@ -278,6 +293,12 @@ void test() {
         2ull,
         "div_u(17ull, 7ull)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_remX5Fs(&instance, 1ull, 0ull), trapDivByZero, "rem_s(1ull, 0ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_remX5Fs(&instance, 0ull, 0ull), trapDivByZero, "rem_s(0ull, 0ull)");
+#endif
     assertEqualU64(
         m5_i64X2E0Export5_remX5Fs(&instance, 9223372036854775807ull, 18446744073709551615ull),
         0ull,
@@ -368,6 +389,12 @@ void test() {
         3ull,
         "rem_s(17ull, 7ull)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_remX5Fu(&instance, 1ull, 0ull), trapDivByZero, "rem_u(1ull, 0ull)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i64X2E0Export5_remX5Fu(&instance, 0ull, 0ull), trapDivByZero, "rem_u(0ull, 0ull)");
+#endif
     assertEqualU64(
         m5_i64X2E0Export5_remX5Fu(&instance, 1ull, 1ull),
         0ull,
@@ -1878,4 +1905,5 @@ void test() {
         0u,
         "ge_u(9223372036854775807ull, 9223372036854775808ull)"
     );
+    m5_i64X2E0FreeInstance(&instance);
 }

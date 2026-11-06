@@ -2263,19 +2263,26 @@ DEFINE_ATOMIC_RMW_CMPXCHG(i64_atomic_rmw_cmpxchg, 64, U64)
 #endif /* WASM_ATOMICS_MSVC || WASM_ATOMICS_GCC */
 
 #if W2C2_RUNTIME_CHECKS
+/* Segments are either intact or dropped.
+ * Use the static size to keep source bounds visible to the C optimizer.
+ * This lets GCC prove that nonempty copies from empty segments trap before memcpy,
+ * avoiding -Wstringop-overread in optimized builds.
+ */
 #if defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC)
 #define WASM_DATA_SEGMENT_SIZE(instance, index, size) \
-    atomic_load_U32(&(instance)->dataSegmentSizes[index])
+    (atomic_load_U32(&(instance)->dataSegmentSizes[index]) != 0 ? (U32)(size) : 0U)
 #define WASM_DATA_DROP(instance, index) \
     ((void)atomic_store_U32(&(instance)->dataSegmentSizes[index], 0))
 #define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) \
-    atomic_load_U32(&(instance)->elementSegmentSizes[index])
+    (atomic_load_U32(&(instance)->elementSegmentSizes[index]) != 0 ? (U32)(size) : 0U)
 #define WASM_ELEM_DROP(instance, index) \
     ((void)atomic_store_U32(&(instance)->elementSegmentSizes[index], 0))
 #else
-#define WASM_DATA_SEGMENT_SIZE(instance, index, size) ((instance)->dataSegmentSizes[index])
+#define WASM_DATA_SEGMENT_SIZE(instance, index, size) \
+    ((instance)->dataSegmentSizes[index] != 0 ? (U32)(size) : 0U)
 #define WASM_DATA_DROP(instance, index) ((void)((instance)->dataSegmentSizes[index] = 0))
-#define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) ((instance)->elementSegmentSizes[index])
+#define WASM_ELEMENT_SEGMENT_SIZE(instance, index, size) \
+    ((instance)->elementSegmentSizes[index] != 0 ? (U32)(size) : 0U)
 #define WASM_ELEM_DROP(instance, index) ((void)((instance)->elementSegmentSizes[index] = 0))
 #endif
 #else

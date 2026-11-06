@@ -216,10 +216,10 @@ void test(void) {
         "WAST line 319: call Mt.call(2u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 1u), "WAST line 321: call(1u)");
+    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 1u), trapUninitializedElement, "WAST line 321: call(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 1u), "WAST line 322: Mt.call(1u)");
+    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 1u), trapUninitializedElement, "WAST line 322: Mt.call(1u)");
 #endif
     assertEqualU32(
         m10_linkingX2E12Export4_call(&instance_8, 1u),
@@ -227,13 +227,13 @@ void test(void) {
         "WAST line 323: call(1u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 1u), "WAST line 324: call Mt.call(1u)");
+    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 1u), trapUninitializedElement, "WAST line 324: call Mt.call(1u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 0u), "WAST line 326: call(0u)");
+    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 0u), trapUninitializedElement, "WAST line 326: call(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 0u), "WAST line 327: Mt.call(0u)");
+    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 0u), trapUninitializedElement, "WAST line 327: Mt.call(0u)");
 #endif
     assertEqualU32(
         m10_linkingX2E12Export4_call(&instance_8, 0u),
@@ -241,19 +241,19 @@ void test(void) {
         "WAST line 328: call(0u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 0u), "WAST line 329: call Mt.call(0u)");
+    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 0u), trapUninitializedElement, "WAST line 329: call Mt.call(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 20u), "WAST line 331: call(20u)");
+    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 20u), trapTableOutOfBounds, "WAST line 331: call(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 20u), "WAST line 332: Mt.call(20u)");
+    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 20u), trapTableOutOfBounds, "WAST line 332: Mt.call(20u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export4_call(&instance_8, 7u), "WAST line 333: call(7u)");
+    assertTrap(m10_linkingX2E12Export4_call(&instance_8, 7u), trapTableOutOfBounds, "WAST line 333: call(7u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 20u), "WAST line 334: call Mt.call(20u)");
+    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 20u), trapTableOutOfBounds, "WAST line 334: call Mt.call(20u)");
 #endif
     assertEqualU32(
         m10_linkingX2E12Export4_call(&instance_8, 3u),
@@ -261,7 +261,7 @@ void test(void) {
         "WAST line 336: call(3u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export4_call(&instance_8, 4u), "WAST line 337: call(4u)");
+    assertTrap(m10_linkingX2E12Export4_call(&instance_8, 4u), trapIndirectCallTypeMismatch, "WAST line 337: call(4u)");
 #endif
     m10_linkingX2E13Instantiate(&instance_9, resolveTestImports);
     printStart("linking.13.wasm");
@@ -336,10 +336,10 @@ void test(void) {
         "WAST line 367: call(1u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 0u), "WAST line 369: call(0u)");
+    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 0u), trapUninitializedElement, "WAST line 369: call(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 0u), "WAST line 370: Mt.call(0u)");
+    assertTrap(m10_linkingX2E12Export7_MtX2Ecall(&instance_8, 0u), trapUninitializedElement, "WAST line 370: Mt.call(0u)");
 #endif
     assertEqualU32(
         m10_linkingX2E12Export4_call(&instance_8, 0u),
@@ -347,13 +347,13 @@ void test(void) {
         "WAST line 371: call(0u)"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 0u), "WAST line 372: call Mt.call(0u)");
+    assertTrap(m10_linkingX2E12Export12_callX20MtX2Ecall(&instance_8, 0u), trapUninitializedElement, "WAST line 372: call Mt.call(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E13Export4_call(&instance_9, 0u), "WAST line 373: call(0u)");
+    assertTrap(m10_linkingX2E13Export4_call(&instance_9, 0u), trapUninitializedElement, "WAST line 373: call(0u)");
 #endif
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E13Export4_call(&instance_9, 20u), "WAST line 375: call(20u)");
+    assertTrap(m10_linkingX2E13Export4_call(&instance_9, 20u), trapTableOutOfBounds, "WAST line 375: call(20u)");
 #endif
     m10_linkingX2E14Instantiate(&instance_10, resolveTestImports);
     printStart("linking.14.wasm");
@@ -368,7 +368,7 @@ void test(void) {
         "WAST line 389: get g"
     );
 #if W2C2_RUNTIME_CHECKS
-    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 7u), "WAST line 411: call(7u)");
+    assertTrap(m10_linkingX2E11Export4_call(&instance_7, 7u), trapUninitializedElement, "WAST line 411: call(7u)");
 #endif
     m10_linkingX2E18Instantiate(&instance_13, resolveTestImports);
     printStart("linking.18.wasm");

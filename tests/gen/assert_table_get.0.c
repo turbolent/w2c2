@@ -20,5 +20,17 @@ void test(void) {
         0u,
         "is_null-funcref(2u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_tableX5FgetX2E0Export13_getX2Dexternref(&instance, 2u), trapTableOutOfBounds, "get-externref(2u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_tableX5FgetX2E0Export11_getX2Dfuncref(&instance, 3u), trapTableOutOfBounds, "get-funcref(3u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_tableX5FgetX2E0Export13_getX2Dexternref(&instance, 4294967295u), trapTableOutOfBounds, "get-externref(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_tableX5FgetX2E0Export11_getX2Dfuncref(&instance, 4294967295u), trapTableOutOfBounds, "get-funcref(4294967295u)");
+#endif
     m11_tableX5FgetX2E0FreeInstance(&instance);
 }

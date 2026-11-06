@@ -1,26 +1,26 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_unwind.0.h"
 
-void test() {
-    m8_unwindX2E0Instance instance;
+void test(void) {
+    static m8_unwindX2E0Instance instance;
     m8_unwindX2E0Instantiate(&instance, resolveTestImports);
     printStart("unwind.0.wasm");
-    m8_unwindX2E0Export17_funcX2DunwindX2DbyX2Dbr(&instance);
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export26_funcX2DunwindX2DbyX2Dunreachable(&instance), trapUnreachable, "func-unwind-by-unreachable()");
+#endif
+    (void)(m8_unwindX2E0Export17_funcX2DunwindX2DbyX2Dbr(&instance));
     assertEqualU32(
         m8_unwindX2E0Export23_funcX2DunwindX2DbyX2DbrX2Dvalue(&instance),
         9u,
         "func-unwind-by-br-value()"
     );
-    m8_unwindX2E0Export20_funcX2DunwindX2DbyX2DbrX5Fif(&instance);
+    (void)(m8_unwindX2E0Export20_funcX2DunwindX2DbyX2DbrX5Fif(&instance));
     assertEqualU32(
         m8_unwindX2E0Export26_funcX2DunwindX2DbyX2DbrX5FifX2Dvalue(&instance),
         9u,
         "func-unwind-by-br_if-value()"
     );
-    m8_unwindX2E0Export23_funcX2DunwindX2DbyX2DbrX5Ftable(&instance);
+    (void)(m8_unwindX2E0Export23_funcX2DunwindX2DbyX2DbrX5Ftable(&instance));
     assertEqualU32(
         m8_unwindX2E0Export29_funcX2DunwindX2DbyX2DbrX5FtableX2Dvalue(&instance),
         9u,
@@ -31,6 +31,9 @@ void test() {
         9u,
         "func-unwind-by-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export27_blockX2DunwindX2DbyX2Dunreachable(&instance), trapUnreachable, "block-unwind-by-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export18_blockX2DunwindX2DbyX2Dbr(&instance),
         9u,
@@ -66,6 +69,9 @@ void test() {
         9u,
         "block-unwind-by-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export34_blockX2DnestedX2DunwindX2DbyX2Dunreachable(&instance), trapUnreachable, "block-nested-unwind-by-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export25_blockX2DnestedX2DunwindX2DbyX2Dbr(&instance),
         9u,
@@ -101,6 +107,9 @@ void test() {
         9u,
         "block-nested-unwind-by-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export23_unaryX2DafterX2Dunreachable(&instance), trapUnreachable, "unary-after-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export14_unaryX2DafterX2Dbr(&instance),
         9u,
@@ -121,6 +130,9 @@ void test() {
         9u,
         "unary-after-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export24_binaryX2DafterX2Dunreachable(&instance), trapUnreachable, "binary-after-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export15_binaryX2DafterX2Dbr(&instance),
         9u,
@@ -141,6 +153,9 @@ void test() {
         9u,
         "binary-after-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export24_selectX2DafterX2Dunreachable(&instance), trapUnreachable, "select-after-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export15_selectX2DafterX2Dbr(&instance),
         9u,
@@ -161,6 +176,9 @@ void test() {
         9u,
         "select-after-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export29_blockX2DvalueX2DafterX2Dunreachable(&instance), trapUnreachable, "block-value-after-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export20_blockX2DvalueX2DafterX2Dbr(&instance),
         9u,
@@ -181,6 +199,9 @@ void test() {
         9u,
         "block-value-after-return()"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m8_unwindX2E0Export28_loopX2DvalueX2DafterX2Dunreachable(&instance), trapUnreachable, "loop-value-after-unreachable()");
+#endif
     assertEqualU32(
         m8_unwindX2E0Export19_loopX2DvalueX2DafterX2Dbr(&instance),
         9u,
@@ -201,4 +222,5 @@ void test() {
         9u,
         "loop-value-after-return()"
     );
+    m8_unwindX2E0FreeInstance(&instance);
 }

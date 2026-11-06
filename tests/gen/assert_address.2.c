@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_address.2.h"
 
-void test() {
-    m9_addressX2E2Instance instance;
+void test(void) {
+    static m9_addressX2E2Instance instance;
     m9_addressX2E2Instantiate(&instance, resolveTestImports);
     printStart("address.2.wasm");
     assertEqualU64(
@@ -528,4 +525,71 @@ void test() {
         0ull,
         "64_good4(65504u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export8_64X5Fgood5(&instance, 65504u), trapMemoryOutOfBounds, "64_good5(65504u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export8_8uX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "8u_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export8_8sX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "8s_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export9_16uX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "16u_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export9_16sX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "16s_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export9_32uX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "32u_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export9_32sX5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "32s_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export8_64X5Fgood3(&instance, 4294967295u), trapMemoryOutOfBounds, "64_good3(4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_8uX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "8u_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_8sX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "8s_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_16uX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "16u_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_16sX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "16s_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_32uX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "32u_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_32sX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "32s_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_64X5Fbad(&instance, 0u), trapMemoryOutOfBounds, "64_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_8uX5Fbad(&instance, 1u), trapMemoryOutOfBounds, "8u_bad(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_8sX5Fbad(&instance, 1u), trapMemoryOutOfBounds, "8s_bad(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_16uX5Fbad(&instance, 1u), trapMemoryOutOfBounds, "16u_bad(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_16sX5Fbad(&instance, 1u), trapMemoryOutOfBounds, "16s_bad(1u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_32uX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "32u_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export7_32sX5Fbad(&instance, 0u), trapMemoryOutOfBounds, "32s_bad(0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m9_addressX2E2Export6_64X5Fbad(&instance, 1u), trapMemoryOutOfBounds, "64_bad(1u)");
+#endif
+    m9_addressX2E2FreeInstance(&instance);
 }

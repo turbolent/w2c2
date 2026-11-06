@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_i32.0.h"
 
-void test() {
-    m5_i32X2E0Instance instance;
+void test(void) {
+    static m5_i32X2E0Instance instance;
     m5_i32X2E0Instantiate(&instance, resolveTestImports);
     printStart("i32.0.wasm");
     assertEqualU32(
@@ -128,6 +125,18 @@ void test() {
         1u,
         "mul(2147483647u, 2147483647u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fs(&instance, 1u, 0u), trapDivByZero, "div_s(1u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fs(&instance, 0u, 0u), trapDivByZero, "div_s(0u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fs(&instance, 2147483648u, 4294967295u), trapIntOverflow, "div_s(2147483648u, 4294967295u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fs(&instance, 2147483648u, 0u), trapDivByZero, "div_s(2147483648u, 0u)");
+#endif
     assertEqualU32(
         m5_i32X2E0Export5_divX5Fs(&instance, 1u, 1u),
         1u,
@@ -208,6 +217,12 @@ void test() {
         2u,
         "div_s(17u, 7u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fu(&instance, 1u, 0u), trapDivByZero, "div_u(1u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_divX5Fu(&instance, 0u, 0u), trapDivByZero, "div_u(0u, 0u)");
+#endif
     assertEqualU32(
         m5_i32X2E0Export5_divX5Fu(&instance, 1u, 1u),
         1u,
@@ -278,6 +293,12 @@ void test() {
         2u,
         "div_u(17u, 7u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_remX5Fs(&instance, 1u, 0u), trapDivByZero, "rem_s(1u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_remX5Fs(&instance, 0u, 0u), trapDivByZero, "rem_s(0u, 0u)");
+#endif
     assertEqualU32(
         m5_i32X2E0Export5_remX5Fs(&instance, 2147483647u, 4294967295u),
         0u,
@@ -368,6 +389,12 @@ void test() {
         3u,
         "rem_s(17u, 7u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_remX5Fu(&instance, 1u, 0u), trapDivByZero, "rem_u(1u, 0u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m5_i32X2E0Export5_remX5Fu(&instance, 0u, 0u), trapDivByZero, "rem_u(0u, 0u)");
+#endif
     assertEqualU32(
         m5_i32X2E0Export5_remX5Fu(&instance, 1u, 1u),
         0u,
@@ -1828,4 +1855,5 @@ void test() {
         0u,
         "ge_u(2147483647u, 2147483648u)"
     );
+    m5_i32X2E0FreeInstance(&instance);
 }

@@ -1,11 +1,8 @@
-
-#include <stdio.h>
-#include "w2c2_base.h"
 #include "test.h"
 #include "test_func_ptrs.8.h"
 
-void test() {
-    m11_funcX5FptrsX2E8Instance instance;
+void test(void) {
+    static m11_funcX5FptrsX2E8Instance instance;
     m11_funcX5FptrsX2E8Instantiate(&instance, resolveTestImports);
     printStart("func_ptrs.8.wasm");
     assertEqualU32(
@@ -43,6 +40,15 @@ void test() {
         3u,
         "callt(6u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callt(&instance, 7u), trapTableOutOfBounds, "callt(7u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callt(&instance, 100u), trapTableOutOfBounds, "callt(100u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callt(&instance, 4294967295u), trapTableOutOfBounds, "callt(4294967295u)");
+#endif
     assertEqualU32(
         m11_funcX5FptrsX2E8Export5_callu(&instance, 0u),
         1u,
@@ -78,4 +84,14 @@ void test() {
         3u,
         "callu(6u)"
     );
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callu(&instance, 7u), trapTableOutOfBounds, "callu(7u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callu(&instance, 100u), trapTableOutOfBounds, "callu(100u)");
+#endif
+#if W2C2_RUNTIME_CHECKS
+    assertTrap(m11_funcX5FptrsX2E8Export5_callu(&instance, 4294967295u), trapTableOutOfBounds, "callu(4294967295u)");
+#endif
+    m11_funcX5FptrsX2E8FreeInstance(&instance);
 }
