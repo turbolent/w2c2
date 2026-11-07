@@ -11,6 +11,18 @@ extern char** environ;
 
 extern
 U32
+i22_wasiX5FsnapshotX5Fpreview111_schedX5Fyield(
+    wasmModuleInstance* instance
+);
+
+extern
+U32
+i13_wasiX5Funstable11_schedX5Fyield(
+    wasmModuleInstance* instance
+);
+
+extern
+U32
 i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
     wasmModuleInstance* instance,
     U32 inPointer,
@@ -110,6 +122,23 @@ testPosixToMacPath(
 wasmMemory* wasiMemory(wasmModuleInstance* instance) {
     UNUSED_PARAMETER(instance);
     return &testMemory;
+}
+
+static void testSchedYield(void) {
+    U32 expected = WASI_ERRNO_SUCCESS;
+#if !defined(_WIN32) && !HAS_SCHED_YIELD && defined(WASM_THREAD_TYPE)
+    expected = WASI_ERRNO_NOSYS;
+#endif
+
+    if (i22_wasiX5FsnapshotX5Fpreview111_schedX5Fyield(NULL) != expected) {
+        fprintf(stderr, "FAIL sched_yield: unexpected preview1 result\n");
+        exit(1);
+    }
+    if (i13_wasiX5Funstable11_schedX5Fyield(NULL) != expected) {
+        fprintf(stderr, "FAIL sched_yield: unexpected unstable result\n");
+        exit(1);
+    }
+    fprintf(stderr, "OK sched_yield\n");
 }
 
 #if HAS_UNISTD
@@ -814,6 +843,8 @@ main(int argc, char* argv[]) {
         fprintf(stderr, "failed to initialize WASI\n");
         exit(1);
     }
+
+    testSchedYield();
 
 #if HAS_UNISTD
     testPositionalIO();

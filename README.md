@@ -225,7 +225,7 @@ make run-tests
 - [x] `poll_oneoff`
 - [x] `proc_exit`
 - [x] `random_get`
-- [ ] `sched_yield`
+- [x] `sched_yield`
 - [ ] `sock_recv`
 - [ ] `sock_send`
 - [ ] `sock_shutdown`

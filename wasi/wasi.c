@@ -61,6 +61,10 @@ struct timespec {
 #include <poll.h>
 #endif /* HAS_POLL */
 
+#if HAS_SCHED_YIELD
+#include <sched.h>
+#endif /* HAS_SCHED_YIELD */
+
 #if HAS_GETENTROPY && defined(__APPLE__)
 #include <AvailabilityMacros.h>
 #ifndef MAC_OS_X_VERSION_10_12
@@ -4662,14 +4666,34 @@ WASI_IMPORT(U32, 10_randomX5Fget, (
     );
 })
 
+static
+W2C2_INLINE
+U32
+wasiSchedYield(void) {
+    WASI_TRACE(("sched_yield()"));
+
+#ifdef _WIN32
+    Sleep(0);
+#elif HAS_SCHED_YIELD
+    if (sched_yield() != 0) {
+        return wasiErrno();
+    }
+#elif defined(WASM_THREAD_TYPE)
+    /* TODO: */
+    WASI_TRACE(("sched_yield: not supported on this host"));
+    return WASI_ERRNO_NOSYS;
+#else
+    /* A build without thread support can treat yielding as a no-op. */
+#endif
+
+    return WASI_ERRNO_SUCCESS;
+}
+
 WASI_IMPORT(U32, 11_schedX5Fyield, (
     wasmModuleInstance* instance
 ), {
     UNUSED_PARAMETER(instance);
-
-    /* TODO: */
-    WASI_TRACE(("sched_yield: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiSchedYield();
 })
 
 WASI_IMPORT(U32, 11_fdX5Fallocate, (

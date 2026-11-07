@@ -32,10 +32,11 @@ endif
 # - lstat
 # - getentropy
 # - poll
+# - sched_yield (except on Windows)
 # - threads
 DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
 ifneq ($(UNAME),Windows)
-DEFAULT_FEATURES += poll
+DEFAULT_FEATURES += poll sched_yield
 endif
 FEATURES ?= $(DEFAULT_FEATURES)
 
@@ -81,6 +82,10 @@ endif
 
 ifneq (,$(findstring poll,$(FEATURES)))
 	CFLAGS += -DHAS_POLL=1
+endif
+
+ifneq (,$(findstring sched_yield,$(FEATURES)))
+	CFLAGS += -DHAS_SCHED_YIELD=1
 endif
 
 ifneq (,$(findstring threads,$(FEATURES)))
