@@ -1,5 +1,12 @@
 #define _DEFAULT_SOURCE 1
 
+#ifdef _WIN32
+#include <winsock2.h>
+#elif HAS_SOCKETS
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
+
 #include "../w2c2/w2c2_base.h"
 #include "wasi.h"
 #include <stdio.h>
@@ -2345,7 +2352,7 @@ static void testFileRights(
         path,
         0,
         base | WASI_RIGHTS_PATH_OPEN,
-        WASI_RIGHTS_ALL
+        WASI_RIGHTS_DIRECTORY_INHERITING
     );
     testFdRights(file, base, 0);
     CHECK_IO(wasiFileDescriptorClose(file));
@@ -2557,7 +2564,7 @@ static void testPlan9DirectoryCookies(void) {
 
 #endif
 
-#if HAS_POLL
+#if HAS_POLL || defined(_WIN32)
 
 void
 failPollTest(
@@ -3043,7 +3050,7 @@ testPollOneoff(void) {
 #endif /* HAS_UNISTD */
 }
 
-#endif /* HAS_POLL */
+#endif /* HAS_POLL || _WIN32 */
 
 #if defined(WASM_THREAD_TYPE) && (defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC))
 
@@ -3964,6 +3971,355 @@ static void testSetRightsConcurrent(TestFdSetRights setRights) {
 
 #endif
 
+typedef U32 (*TestSockAccept)(wasmModuleInstance*, U32, U32, U32);
+typedef U32 (*TestSockRecv)(
+    wasmModuleInstance*, U32, U32, U32, U32, U32, U32
+);
+typedef U32 (*TestSockSend)(wasmModuleInstance*, U32, U32, U32, U32, U32);
+typedef U32 (*TestSockShutdown)(wasmModuleInstance*, U32, U32);
+
+#define DECLARE_SOCKET_IMPORTS(prefix) \
+    extern U32 prefix ## 11_sockX5Faccept(wasmModuleInstance*, U32, U32, U32); \
+    extern U32 prefix ## 9_sockX5Frecv( \
+        wasmModuleInstance*, U32, U32, U32, U32, U32, U32 \
+    ); \
+    extern U32 prefix ## 9_sockX5Fsend( \
+        wasmModuleInstance*, U32, U32, U32, U32, U32 \
+    ); \
+    extern U32 prefix ## 13_sockX5Fshutdown(wasmModuleInstance*, U32, U32)
+DECLARE_SOCKET_IMPORTS(i22_wasiX5FsnapshotX5Fpreview1);
+DECLARE_SOCKET_IMPORTS(i13_wasiX5Funstable);
+#undef DECLARE_SOCKET_IMPORTS
+
+#if HAS_SOCKETS || defined(_WIN32)
+
+#ifdef _WIN32
+typedef int TestSocketLength;
+#else
+typedef socklen_t TestSocketLength;
+#endif
+
+static void testSocketTimeout(WasiNativeSocket fd) {
+#ifdef _WIN32
+    DWORD timeout = 2000;
+#else
+    struct timeval timeout;
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+#endif
+    CHECK_IO(setsockopt(
+        fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout)
+    ) == 0);
+    CHECK_IO(setsockopt(
+        fd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout)
+    ) == 0);
+}
+
+static void testSocketReady(WasiNativeSocket fd) {
+    fd_set reads;
+    struct timeval timeout;
+    FD_ZERO(&reads);
+    FD_SET(fd, &reads);
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+#ifdef _WIN32
+    CHECK_IO(select(0, &reads, NULL, NULL, &timeout) == 1);
+#else
+    CHECK_IO(select(fd + 1, &reads, NULL, NULL, &timeout) == 1);
+#endif
+}
+
+static WasiNativeSocket testSocketBound(int type, struct sockaddr_in* address) {
+    WasiNativeSocket fd = socket(AF_INET, type, 0);
+    TestSocketLength length = sizeof(*address);
+    CHECK_IO(fd != WASI_INVALID_SOCKET);
+    testSocketTimeout(fd);
+    memset(address, 0, sizeof(*address));
+    address->sin_family = AF_INET;
+    address->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    CHECK_IO(bind(fd, (struct sockaddr*)address, sizeof(*address)) == 0);
+    CHECK_IO(getsockname(fd, (struct sockaddr*)address, &length) == 0);
+    return fd;
+}
+
+static void testSocketVectors(U32 length) {
+    i32_store(&testMemory, 0, 128);
+    i32_store(&testMemory, 4, length);
+    i32_store(&testMemory, 8, 256);
+    i32_store(&testMemory, 12, length);
+}
+
+static void testSocketPoll(U32 fd, WasiEventType type, U16 error) {
+#if HAS_POLL || defined(_WIN32)
+    resetPollMemory();
+    setPollClockSubscription(0, 11, WASI_CLOCK_MONOTONIC, 2000000000, 0);
+    setPollFDSubscription(1, 22, type, fd);
+    CHECK_IO(callPollOneoff(2) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, TEST_EVENT_COUNT_POINTER) == 1);
+    CHECK_IO(i64_load(&testMemory, TEST_OUT_POINTER) == 22);
+    CHECK_IO(i32_load16_u(&testMemory, TEST_OUT_POINTER + 8) == error);
+#else
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(type);
+    UNUSED_PARAMETER(error);
+#endif
+}
+
+static void testSocketStream(
+    TestSockAccept sockAccept,
+    TestSockRecv sockRecv,
+    TestSockSend sockSend,
+    TestSockShutdown sockShutdown
+) {
+    struct sockaddr_in address;
+    WasiNativeSocket listener = testSocketBound(SOCK_STREAM, &address);
+    WasiNativeSocket client = socket(AF_INET, SOCK_STREAM, 0);
+    WasiNativeSocket target;
+    WasiFileDescriptor descriptor;
+    WasiRights inherited = WASI_RIGHTS_SOCKET_BASE & ~WASI_RIGHTS_SOCK_ACCEPT;
+    U32 listenerFD, clientFD, serverFD, targetFD;
+    int type;
+    TestSocketLength length = sizeof(type);
+    CHECK_IO(client != WASI_INVALID_SOCKET);
+    testSocketTimeout(client);
+    CHECK_IO(listen(listener, 1) == 0);
+    CHECK_IO(wasiSocketAdd(listener, WASI_FDFLAGS_NONBLOCK, &listenerFD));
+    CHECK_IO(sockAccept(NULL, listenerFD, 0, 512) == WASI_ERRNO_AGAIN);
+    CHECK_IO(sockAccept(NULL, listenerFD, 256, 512) == WASI_ERRNO_INVAL);
+    CHECK_IO(sockAccept(NULL, listenerFD, WASI_FDFLAGS_APPEND, 512)
+        == WASI_ERRNO_NOTSUP);
+    CHECK_IO(sockAccept(NULL, listenerFD, 0, UINT32_MAX) == WASI_ERRNO_FAULT);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview120_fdX5FfdstatX5FsetX5Frights(
+        NULL, listenerFD, WASI_RIGHTS_SOCKET_BASE, inherited
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(connect(client, (struct sockaddr*)&address, sizeof(address)) == 0);
+    CHECK_IO(wasiSocketAdd(client, WASI_FDFLAGS_NONBLOCK, &clientFD));
+    testSocketPoll(listenerFD, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_SUCCESS);
+    CHECK_IO(sockAccept(NULL, listenerFD, WASI_FDFLAGS_NONBLOCK, 512)
+        == WASI_ERRNO_SUCCESS);
+    serverFD = i32_load(&testMemory, 512);
+    CHECK_IO(wasiFileDescriptorGet(serverFD, &descriptor));
+    CHECK_IO(descriptor.rightsBase == inherited);
+    CHECK_IO(descriptor.rightsInheriting == inherited);
+    CHECK_IO(descriptor.socketFlags == WASI_FDFLAGS_NONBLOCK);
+    CHECK_IO(!wasiFileDescriptorSet(serverFD, -1));
+    testSocketTimeout(descriptor.socket);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
+        NULL, serverFD, 512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load8_u(&testMemory, 512) == WASI_FILE_TYPE_SOCKET_STREAM);
+    CHECK_IO(i32_load16_u(&testMemory, 514) == WASI_FDFLAGS_NONBLOCK);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview115_fdX5FfilestatX5Fget(
+        NULL, serverFD, 512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load8_u(&testMemory, 528) == WASI_FILE_TYPE_SOCKET_STREAM);
+
+#if HAS_POLL || defined(_WIN32)
+    resetPollMemory();
+    setPollClockSubscription(0, 33, WASI_CLOCK_MONOTONIC, 1000000, 0);
+    setPollFDSubscription(1, 44, WASI_EVENT_TYPE_FD_READ, serverFD);
+    CHECK_IO(callPollOneoff(2) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, TEST_EVENT_COUNT_POINTER) == 1);
+    CHECK_IO(i64_load(&testMemory, TEST_OUT_POINTER) == 33);
+#endif
+    testSocketVectors(2);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 0, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 0);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 0, 0, 512) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 0);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 2, 0, 512, 516) == WASI_ERRNO_AGAIN);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 2, 4, 512, 516) == WASI_ERRNO_INVAL);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 2, 0, 512, UINT32_MAX)
+        == WASI_ERRNO_FAULT);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 2, 1, 512) == WASI_ERRNO_INVAL);
+    CHECK_IO(sockSend(NULL, clientFD, UINT32_MAX, 2, 0, 512) == WASI_ERRNO_FAULT);
+    CHECK_IO(sockSend(NULL, clientFD, 0, UINT32_MAX, 0, 512) == WASI_ERRNO_FAULT);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 2, 0, TEST_MEMORY_SIZE - 1)
+        == WASI_ERRNO_FAULT);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 2, 0, TEST_MEMORY_SIZE - 1, 516)
+        == WASI_ERRNO_FAULT);
+    i32_store(&testMemory, 8, TEST_MEMORY_SIZE - 1);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 2, 0, 512) == WASI_ERRNO_FAULT);
+    testSocketVectors(2);
+    memcpy(testMemory.data + 128, "ab", 2);
+    memcpy(testMemory.data + 256, "cd", 2);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 2, 0, 512) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 4);
+    testSocketReady(descriptor.socket);
+    i32_store(&testMemory, 516, UINT32_MAX);
+    CHECK_IO(sockRecv(
+        NULL, serverFD, 0, 2, WASI_RIFLAGS_RECV_PEEK, 512, 516
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 4);
+    CHECK_IO(i32_load16_u(&testMemory, 516) == 0);
+    CHECK_IO(i32_load16_u(&testMemory, 518) == UINT16_MAX);
+    CHECK_IO(memcmp(testMemory.data + 128, "ab", 2) == 0);
+    CHECK_IO(memcmp(testMemory.data + 256, "cd", 2) == 0);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
+        NULL, serverFD, 0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
+        NULL, serverFD, 512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load16_u(&testMemory, 514) == 0);
+    CHECK_IO(sockRecv(
+        NULL, serverFD, 0, 2, WASI_RIFLAGS_RECV_WAITALL, 512, 516
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 4);
+
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview18_fdX5Fwrite(
+        NULL, clientFD, 0, 2, 512
+    ) == WASI_ERRNO_SUCCESS);
+    testSocketPoll(serverFD, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_SUCCESS);
+    testSocketVectors(2);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview17_fdX5Fread(
+        NULL, serverFD, 0, 2, 512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 4);
+    CHECK_IO(memcmp(testMemory.data + 128, "ab", 2) == 0);
+    CHECK_IO(memcmp(testMemory.data + 256, "cd", 2) == 0);
+    testSocketPoll(clientFD, WASI_EVENT_TYPE_FD_WRITE, WASI_ERRNO_SUCCESS);
+
+    target = socket(AF_INET, SOCK_DGRAM, 0);
+    CHECK_IO(target != WASI_INVALID_SOCKET);
+    CHECK_IO(wasiSocketAdd(target, 0, &targetFD));
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber(
+        NULL, serverFD, targetFD
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(!wasiFileDescriptorGet(serverFD, &descriptor));
+    CHECK_IO(getsockopt(target, SOL_SOCKET, SO_TYPE, (char*)&type, &length) != 0);
+    serverFD = targetFD;
+    CHECK_IO(wasiFileDescriptorGet(serverFD, &descriptor));
+    CHECK_IO(descriptor.rightsBase == inherited);
+    CHECK_IO(sockShutdown(NULL, clientFD, 0) == WASI_ERRNO_INVAL);
+    CHECK_IO(sockShutdown(NULL, clientFD, 256 | WASI_SDFLAGS_WR)
+        == WASI_ERRNO_INVAL);
+    CHECK_IO(sockShutdown(NULL, clientFD, WASI_SDFLAGS_WR) == WASI_ERRNO_SUCCESS);
+    testSocketVectors(2);
+    CHECK_IO(sockSend(NULL, clientFD, 0, 1, 0, 512) == WASI_ERRNO_PIPE);
+    testSocketPoll(serverFD, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_SUCCESS);
+    testSocketVectors(2);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 2, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 0);
+    memcpy(testMemory.data + 128, "ok", 2);
+    CHECK_IO(sockSend(NULL, serverFD, 0, 1, 0, 512) == WASI_ERRNO_SUCCESS);
+    testSocketReady(client);
+    CHECK_IO(sockRecv(NULL, clientFD, 0, 1, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 2);
+    CHECK_IO(memcmp(testMemory.data + 128, "ok", 2) == 0);
+
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview120_fdX5FfdstatX5FsetX5Frights(
+        NULL, serverFD, 0, 0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(sockRecv(NULL, serverFD, 0, 1, 0, 512, 516)
+        == WASI_ERRNO_NOTCAPABLE);
+    CHECK_IO(sockSend(NULL, serverFD, 0, 1, 0, 512) == WASI_ERRNO_NOTCAPABLE);
+    CHECK_IO(sockShutdown(NULL, serverFD, WASI_SDFLAGS_WR)
+        == WASI_ERRNO_NOTCAPABLE);
+    testSocketPoll(serverFD, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_NOTCAPABLE);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview120_fdX5FfdstatX5FsetX5Frights(
+        NULL, listenerFD, 0, 0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(sockAccept(NULL, listenerFD, 0, 512) == WASI_ERRNO_NOTCAPABLE);
+    CHECK_IO(wasiFileDescriptorClose(serverFD));
+    length = sizeof(type);
+    CHECK_IO(getsockopt(
+        descriptor.socket, SOL_SOCKET, SO_TYPE, (char*)&type, &length
+    ) != 0);
+    CHECK_IO(wasiFileDescriptorClose(clientFD));
+    CHECK_IO(wasiFileDescriptorClose(listenerFD));
+    fprintf(stderr, "OK sockets: streams, flags, rights, polling, and ownership\n");
+}
+
+static void testSocketDatagram(TestSockRecv sockRecv, TestSockSend sockSend) {
+    struct sockaddr_in address;
+    WasiNativeSocket receiver = testSocketBound(SOCK_DGRAM, &address);
+    WasiNativeSocket sender = socket(AF_INET, SOCK_DGRAM, 0);
+    U32 receiverFD, senderFD;
+    CHECK_IO(sender != WASI_INVALID_SOCKET);
+    CHECK_IO(connect(sender, (struct sockaddr*)&address, sizeof(address)) == 0);
+    CHECK_IO(wasiSocketAdd(receiver, WASI_FDFLAGS_NONBLOCK, &receiverFD));
+    CHECK_IO(wasiSocketAdd(sender, 0, &senderFD));
+    testSocketVectors(2);
+    memcpy(testMemory.data + 128, "ab", 2);
+    memcpy(testMemory.data + 256, "cd", 2);
+    CHECK_IO(sockSend(NULL, senderFD, 0, 2, 0, 512) == WASI_ERRNO_SUCCESS);
+    testSocketReady(receiver);
+    CHECK_IO(sockRecv(NULL, receiverFD, 0, 1, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 2);
+    CHECK_IO(i32_load16_u(&testMemory, 516) == WASI_ROFLAGS_RECV_DATA_TRUNCATED);
+    CHECK_IO(memcmp(testMemory.data + 128, "ab", 2) == 0);
+    CHECK_IO(sockRecv(NULL, receiverFD, 0, 2, 0, 512, 516) == WASI_ERRNO_AGAIN);
+    CHECK_IO(sockSend(NULL, senderFD, 0, 2, 0, 512) == WASI_ERRNO_SUCCESS);
+    testSocketReady(receiver);
+    CHECK_IO(sockRecv(NULL, receiverFD, 0, 2, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 4);
+    CHECK_IO(i32_load16_u(&testMemory, 516) == 0);
+    CHECK_IO(memcmp(testMemory.data + 256, "cd", 2) == 0);
+    CHECK_IO(sockSend(NULL, senderFD, 0, 0, 0, 512) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 0);
+    testSocketReady(receiver);
+    CHECK_IO(sockRecv(NULL, receiverFD, 0, 2, 0, 512, 516) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 512) == 0);
+    CHECK_IO(i32_load16_u(&testMemory, 516) == 0);
+    CHECK_IO(wasiFileDescriptorClose(receiverFD));
+    CHECK_IO(wasiFileDescriptorClose(senderFD));
+    fprintf(stderr, "OK sockets: datagram truncation and empty messages\n");
+}
+
+#endif
+
+static void testSockets(
+    TestSockAccept sockAccept,
+    TestSockRecv sockRecv,
+    TestSockSend sockSend,
+    TestSockShutdown sockShutdown
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    U32 file;
+#ifdef _WIN32
+    WSADATA data;
+    CHECK_IO(WSAStartup(MAKEWORD(2, 2), &data) == 0);
+#endif
+#ifdef _WIN32
+    {
+        FILE* stream = tmpfile();
+        int nativeFD;
+        CHECK_IO(stream != NULL);
+        nativeFD = _dup(_fileno(stream));
+        CHECK_IO(nativeFD >= 0);
+        CHECK_IO(wasiFileDescriptorAdd(nativeFD, NULL, &file));
+        testSocketPoll(file, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_NOTSUP);
+        CHECK_IO(wasiFileDescriptorClose(file));
+        CHECK_IO(fclose(stream) == 0);
+    }
+#endif
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &file));
+    CHECK_IO(sockAccept(NULL, UINT32_MAX, 0, 512) == WASI_ERRNO_BADF);
+    CHECK_IO(sockRecv(NULL, UINT32_MAX, 0, 0, 0, 512, 516) == WASI_ERRNO_BADF);
+    CHECK_IO(sockSend(NULL, UINT32_MAX, 0, 0, 0, 512) == WASI_ERRNO_BADF);
+    CHECK_IO(sockShutdown(NULL, UINT32_MAX, 1) == WASI_ERRNO_BADF);
+    CHECK_IO(sockAccept(NULL, file, 0, 512) == WASI_ERRNO_NOTSOCK);
+    CHECK_IO(sockRecv(NULL, file, 0, 0, 0, 512, 516) == WASI_ERRNO_NOTSOCK);
+    CHECK_IO(sockSend(NULL, file, 0, 0, 0, 512) == WASI_ERRNO_NOTSOCK);
+    CHECK_IO(sockShutdown(NULL, file, 1) == WASI_ERRNO_NOTSOCK);
+    CHECK_IO(wasiFileDescriptorClose(file));
+    CHECK_IO(!wasiSocketAdd(WASI_INVALID_SOCKET, 0, NULL));
+    testSocketStream(sockAccept, sockRecv, sockSend, sockShutdown);
+    testSocketDatagram(sockRecv, sockSend);
+#ifdef _WIN32
+    CHECK_IO(WSACleanup() == 0);
+#endif
+#else
+    CHECK_IO(sockAccept(NULL, 0, 0, 0) == WASI_ERRNO_NOSYS);
+    CHECK_IO(sockRecv(NULL, 0, 0, 0, 0, 0, 0) == WASI_ERRNO_NOSYS);
+    CHECK_IO(sockSend(NULL, 0, 0, 0, 0, 0) == WASI_ERRNO_NOSYS);
+    CHECK_IO(sockShutdown(NULL, 0, 0) == WASI_ERRNO_NOSYS);
+    CHECK_IO(!wasiSocketAdd(WASI_INVALID_SOCKET, 0, NULL));
+    fprintf(stderr, "OK sockets: unsupported host\n");
+#endif
+}
+
 int
 main(int argc, char* argv[]) {
 #ifdef _WIN32
@@ -3992,6 +4348,18 @@ main(int argc, char* argv[]) {
         exit(1);
     }
 
+    testSockets(
+        i22_wasiX5FsnapshotX5Fpreview111_sockX5Faccept,
+        i22_wasiX5FsnapshotX5Fpreview19_sockX5Frecv,
+        i22_wasiX5FsnapshotX5Fpreview19_sockX5Fsend,
+        i22_wasiX5FsnapshotX5Fpreview113_sockX5Fshutdown
+    );
+    testSockets(
+        i13_wasiX5Funstable11_sockX5Faccept,
+        i13_wasiX5Funstable9_sockX5Frecv,
+        i13_wasiX5Funstable9_sockX5Fsend,
+        i13_wasiX5Funstable13_sockX5Fshutdown
+    );
     testSchedYield();
     testProcRaise(i22_wasiX5FsnapshotX5Fpreview110_procX5Fraise);
     testProcRaise(i13_wasiX5Funstable10_procX5Fraise);
@@ -4124,7 +4492,7 @@ main(int argc, char* argv[]) {
         "/Volume/../../../foo/bar/../../more/yes/../last/../../"
     );
 
-#if HAS_POLL
+#if HAS_POLL || defined(_WIN32)
     testPollOneoff();
 #else
     if (i22_wasiX5FsnapshotX5Fpreview111_pollX5Foneoff(
@@ -4139,7 +4507,7 @@ main(int argc, char* argv[]) {
         exit(1);
     }
     fprintf(stderr, "OK poll_oneoff fallback\n");
-#endif /* HAS_POLL */
+#endif /* HAS_POLL || _WIN32 */
 
 #if defined(WASM_THREAD_TYPE) && (defined(WASM_ATOMICS_MSVC) || defined(WASM_ATOMICS_GCC))
     testThreadSpawnCleanup();

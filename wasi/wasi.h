@@ -31,15 +31,29 @@ extern "C" {
 /* File descriptor rights, determining which actions may be performed */
 typedef U64 WasiRights;
 
+/* Native socket handles have pointer width on Windows. */
+#ifdef _WIN32
+typedef size_t WasiNativeSocket;
+#else
+typedef int WasiNativeSocket;
+#endif
+
+#define WASI_INVALID_SOCKET ((WasiNativeSocket)-1)
+
 typedef struct WasiFileDescriptor {
     int fd;
     DIR* dir;
     char* path;
     WasiRights rightsBase;
     WasiRights rightsInheriting;
+    WasiNativeSocket socket;
+    U8 socketType;
+    U16 socketFlags;
 } WasiFileDescriptor;
 
-static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL, 0, 0};
+static const WasiFileDescriptor emptyWasiFileDescriptor = {
+    -1, NULL, NULL, 0, 0, WASI_INVALID_SOCKET, 0, 0
+};
 
 typedef struct WasiFileDescriptors {
     WasiFileDescriptor* fds;
@@ -70,6 +84,20 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
     int nativeFD,
     char* path,
+    U32* wasiFD
+);
+
+/* Register a host-created stream or datagram socket,
+ * setting its nonblocking mode from flags.
+ * Ownership transfers only on success.
+ * On Windows, the caller initializes Winsock and keeps it alive
+ * until all registered sockets are closed.
+ */
+bool
+WARN_UNUSED_RESULT
+wasiSocketAdd(
+    WasiNativeSocket nativeSocket,
+    U32 flags,
     U32* wasiFD
 );
 
@@ -115,6 +143,12 @@ typedef U8 WasiFileType;
 
 /* The file descriptor or file refers to a regular file inode */
 #define WASI_FILE_TYPE_REGULAR_FILE 4
+
+/* A datagram socket */
+#define WASI_FILE_TYPE_SOCKET_DGRAM 5
+
+/* A byte-stream socket */
+#define WASI_FILE_TYPE_SOCKET_STREAM 6
 
 /* The file refers to a symbolic link inode */
 #define WASI_FILE_TYPE_SYMBOLIC_LINK 7
@@ -178,6 +212,13 @@ typedef U16 WasiFstFlags;
 
 /* Set the modification time to the current time */
 #define WASI_FSTFLAGS_MTIM_NOW (1 << 3)
+
+/* Socket receive flags and shutdown channels */
+#define WASI_RIFLAGS_RECV_PEEK (1 << 0)
+#define WASI_RIFLAGS_RECV_WAITALL (1 << 1)
+#define WASI_ROFLAGS_RECV_DATA_TRUNCATED (1 << 0)
+#define WASI_SDFLAGS_RD (1 << 0)
+#define WASI_SDFLAGS_WR (1 << 1)
 
 /* Signal conditions passed to proc_raise */
 typedef U8 WasiSignal;
@@ -361,6 +402,22 @@ typedef U8 WasiAdvice;
 #define WASI_RIGHTS_POLL_FD_READWRITE (1 << 27)
 
 
+/* The right to invoke sock_shutdown */
+#define WASI_RIGHTS_SOCK_SHUTDOWN (1 << 28)
+
+/* The right to invoke sock_accept */
+#define WASI_RIGHTS_SOCK_ACCEPT (1 << 29)
+
+#define WASI_RIGHTS_SOCKET_BASE (       \
+    WASI_RIGHTS_FD_READ                 \
+    | WASI_RIGHTS_FD_WRITE              \
+    | WASI_RIGHTS_FD_FDSTAT_SET_FLAGS   \
+    | WASI_RIGHTS_FD_FILESTAT_GET       \
+    | WASI_RIGHTS_POLL_FD_READWRITE     \
+    | WASI_RIGHTS_SOCK_SHUTDOWN         \
+    | WASI_RIGHTS_SOCK_ACCEPT           \
+)
+
 #define WASI_RIGHTS_ALL (                  \
     WASI_RIGHTS_FD_DATASYNC                \
     | WASI_RIGHTS_FD_READ                  \
@@ -390,6 +447,8 @@ typedef U8 WasiAdvice;
     | WASI_RIGHTS_PATH_REMOVE_DIRECTORY    \
     | WASI_RIGHTS_PATH_UNLINK_FILE         \
     | WASI_RIGHTS_POLL_FD_READWRITE        \
+    | WASI_RIGHTS_SOCK_SHUTDOWN            \
+    | WASI_RIGHTS_SOCK_ACCEPT              \
 )
 
 #define WASI_RIGHTS_REGULAR_FILE_BASE (  \

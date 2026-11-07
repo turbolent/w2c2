@@ -1,5 +1,11 @@
 #define _DEFAULT_SOURCE 1
 
+#ifdef _WIN32
+#include <winsock2.h>
+#elif HAS_SOCKETS
+#include <sys/socket.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -431,6 +437,9 @@ tracePrintf(const char* fmt, ...) {
 
 static WASI wasi;
 
+static U32 wasiSocketError(void);
+static int wasiSocketClose(WasiNativeSocket nativeSocket);
+
 #ifdef WASM_MUTEX_TYPE
 static WASM_MUTEX_TYPE wasiFileDescriptorsMutex;
 static bool wasiFileDescriptorsMutexInitialized;
@@ -489,6 +498,13 @@ wasiFileDescriptorsEnsureCapacity(
     if (length > descriptors->capacity) {
         size_t newCapacity = length + (descriptors->capacity >> 1U);
         void* newFileDescriptors = NULL;
+        size_t maximum = (size_t)-1 / sizeof(WasiFileDescriptor);
+        if (length > maximum) {
+            return false;
+        }
+        if (newCapacity < length || newCapacity > maximum) {
+            newCapacity = length;
+        }
         if (descriptors->fds == NULL) {
             newFileDescriptors = calloc(newCapacity, sizeof(WasiFileDescriptor));
         } else {
@@ -568,12 +584,12 @@ wasiFileDescriptorsAdd(
     wasiFileDescriptorDefaultRights(&descriptor);
     descriptor.rightsBase &= rightsBase;
     descriptor.rightsInheriting &= rightsInheriting;
-    descriptors->length++;
-    if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
+    if (descriptors->length == (size_t)-1
+        || !wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length + 1)) {
         free(path);
         return false;
     }
-    descriptors->fds[descriptors->length - 1] = descriptor;
+    descriptors->fds[descriptors->length++] = descriptor;
     return true;
 }
 
@@ -628,7 +644,8 @@ wasiFileDescriptorSet(
 ) {
     bool valid;
     wasiFileDescriptorsLock();
-    valid = wasiFD < wasi.fds.length;
+    valid = wasiFD < wasi.fds.length
+            && wasi.fds.fds[wasiFD].socket == WASI_INVALID_SOCKET;
     if (valid) {
         wasi.fds.fds[wasiFD].fd = nativeFD;
     }
@@ -645,7 +662,8 @@ wasiFileDescriptorGetLocked(
 ) {
     MUST (wasiFD < wasi.fds.length)
     *result = wasi.fds.fds[wasiFD];
-    return result->fd >= 0 || result->path != NULL;
+    return result->fd >= 0 || result->path != NULL
+           || result->socket != WASI_INVALID_SOCKET;
 }
 
 bool
@@ -699,6 +717,10 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorRelease(
     WasiFileDescriptor* descriptor
 ) {
+    if (descriptor->socket != WASI_INVALID_SOCKET) {
+        MUST (wasiSocketClose(descriptor->socket) == 0)
+        descriptor->socket = WASI_INVALID_SOCKET;
+    }
     if (descriptor->dir != NULL) {
         int error = closedir(descriptor->dir);
         descriptor->dir = NULL;
@@ -861,6 +883,98 @@ wasiErrno(void) {
 #if defined(EOPNOTSUPP) && (!defined(ENOTSUP) || EOPNOTSUPP != ENOTSUP)
     case EOPNOTSUPP:
         return WASI_ERRNO_NOTSUP;
+#endif
+#if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
+    case EWOULDBLOCK:
+        return WASI_ERRNO_AGAIN;
+#endif
+#if defined(EINPROGRESS)
+    case EINPROGRESS:
+        return WASI_ERRNO_INPROGRESS;
+#endif
+#if defined(EALREADY)
+    case EALREADY:
+        return WASI_ERRNO_ALREADY;
+#endif
+#if defined(ENOTSOCK)
+    case ENOTSOCK:
+        return WASI_ERRNO_NOTSOCK;
+#endif
+#if defined(EDESTADDRREQ)
+    case EDESTADDRREQ:
+        return WASI_ERRNO_DESTADDRREQ;
+#endif
+#if defined(EMSGSIZE)
+    case EMSGSIZE:
+        return WASI_ERRNO_MSGSIZE;
+#endif
+#if defined(EPROTOTYPE)
+    case EPROTOTYPE:
+        return WASI_ERRNO_PROTOTYPE;
+#endif
+#if defined(ENOPROTOOPT)
+    case ENOPROTOOPT:
+        return WASI_ERRNO_NOPROTOOPT;
+#endif
+#if defined(EPROTONOSUPPORT)
+    case EPROTONOSUPPORT:
+        return WASI_ERRNO_PROTONOSUPPORT;
+#endif
+#if defined(EAFNOSUPPORT)
+    case EAFNOSUPPORT:
+        return WASI_ERRNO_AFNOSUPPORT;
+#endif
+#if defined(EADDRINUSE)
+    case EADDRINUSE:
+        return WASI_ERRNO_ADDRINUSE;
+#endif
+#if defined(EADDRNOTAVAIL)
+    case EADDRNOTAVAIL:
+        return WASI_ERRNO_ADDRNOTAVAIL;
+#endif
+#if defined(ENETDOWN)
+    case ENETDOWN:
+        return WASI_ERRNO_NETDOWN;
+#endif
+#if defined(ENETUNREACH)
+    case ENETUNREACH:
+        return WASI_ERRNO_NETUNREACH;
+#endif
+#if defined(ENETRESET)
+    case ENETRESET:
+        return WASI_ERRNO_NETRESET;
+#endif
+#if defined(ECONNABORTED)
+    case ECONNABORTED:
+        return WASI_ERRNO_CONNABORTED;
+#endif
+#if defined(ECONNRESET)
+    case ECONNRESET:
+        return WASI_ERRNO_CONNRESET;
+#endif
+#if defined(ENOBUFS)
+    case ENOBUFS:
+        return WASI_ERRNO_NOBUFS;
+#endif
+#if defined(EISCONN)
+    case EISCONN:
+        return WASI_ERRNO_ISCONN;
+#endif
+#if defined(ENOTCONN)
+    case ENOTCONN:
+        return WASI_ERRNO_NOTCONN;
+#endif
+#if defined(ETIMEDOUT)
+    case ETIMEDOUT:
+        return WASI_ERRNO_TIMEDOUT;
+#endif
+#if defined(ECONNREFUSED)
+    case ECONNREFUSED:
+        return WASI_ERRNO_CONNREFUSED;
+#endif
+#if defined(EHOSTUNREACH)
+    case EHOSTUNREACH:
+        return WASI_ERRNO_HOSTUNREACH;
 #endif
 #if defined(__MSL__) && defined(macintosh)
     case EMACOSERR:
@@ -1050,6 +1164,375 @@ WASI_IMPORT(U32, 10_procX5Fraise, (
     return wasiProcRaise(signal);
 })
 
+static
+W2C2_INLINE
+bool
+wasiMemoryRangeIsValid(
+    wasmMemory* memory,
+    U32 pointer,
+    U32 count,
+    U32 size
+) {
+    U64 length = (U64)count * size;
+    U64 end = (U64)pointer + length;
+
+    return memory != NULL
+           && length <= UINT32_MAX
+           && end <= (U64)wasmMemorySize(memory) * WASM_PAGE_SIZE;
+}
+
+static
+U32
+wasiSocketError(void) {
+#ifdef _WIN32
+    switch (WSAGetLastError()) {
+        case WSAEWOULDBLOCK: return WASI_ERRNO_AGAIN;
+        case WSAEINTR: return WASI_ERRNO_INTR;
+        case WSAEBADF: return WASI_ERRNO_BADF;
+        case WSAEACCES: return WASI_ERRNO_ACCES;
+        case WSAEFAULT: return WASI_ERRNO_FAULT;
+        case WSAEINVAL: return WASI_ERRNO_INVAL;
+        case WSAEMFILE: return WASI_ERRNO_MFILE;
+        case WSAEINPROGRESS: return WASI_ERRNO_INPROGRESS;
+        case WSAEALREADY: return WASI_ERRNO_ALREADY;
+        case WSAENOTSOCK: return WASI_ERRNO_NOTSOCK;
+        case WSAEDESTADDRREQ: return WASI_ERRNO_DESTADDRREQ;
+        case WSAEMSGSIZE: return WASI_ERRNO_MSGSIZE;
+        case WSAEPROTOTYPE: return WASI_ERRNO_PROTOTYPE;
+        case WSAENOPROTOOPT: return WASI_ERRNO_NOPROTOOPT;
+        case WSAEPROTONOSUPPORT: return WASI_ERRNO_PROTONOSUPPORT;
+        case WSAEOPNOTSUPP: return WASI_ERRNO_NOTSUP;
+        case WSAEAFNOSUPPORT: return WASI_ERRNO_AFNOSUPPORT;
+        case WSAEADDRINUSE: return WASI_ERRNO_ADDRINUSE;
+        case WSAEADDRNOTAVAIL: return WASI_ERRNO_ADDRNOTAVAIL;
+        case WSAENETDOWN: return WASI_ERRNO_NETDOWN;
+        case WSAENETUNREACH: return WASI_ERRNO_NETUNREACH;
+        case WSAENETRESET: return WASI_ERRNO_NETRESET;
+        case WSAECONNABORTED: return WASI_ERRNO_CONNABORTED;
+        case WSAECONNRESET: return WASI_ERRNO_CONNRESET;
+        case WSAENOBUFS: return WASI_ERRNO_NOBUFS;
+        case WSAEISCONN: return WASI_ERRNO_ISCONN;
+        case WSAENOTCONN: return WASI_ERRNO_NOTCONN;
+        case WSAESHUTDOWN: return WASI_ERRNO_PIPE;
+        case WSAETIMEDOUT: return WASI_ERRNO_TIMEDOUT;
+        case WSAECONNREFUSED: return WASI_ERRNO_CONNREFUSED;
+        case WSAEHOSTUNREACH: return WASI_ERRNO_HOSTUNREACH;
+        case WSANOTINITIALISED: return WASI_ERRNO_NOSYS;
+        default: return WASI_ERRNO_IO;
+    }
+#else
+    return wasiErrno();
+#endif
+}
+
+static
+int
+wasiSocketClose(WasiNativeSocket nativeSocket) {
+#ifdef _WIN32
+    return closesocket(nativeSocket);
+#elif HAS_SOCKETS
+    return close(nativeSocket);
+#else
+    UNUSED_PARAMETER(nativeSocket);
+    return -1;
+#endif
+}
+
+static
+U32
+wasiSocketSetFlags(WasiNativeSocket nativeSocket, U32 flags) {
+    if (flags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
+                      WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
+                      WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (flags & ~(U32)WASI_FDFLAGS_NONBLOCK) {
+        return WASI_ERRNO_NOTSUP;
+    }
+#ifdef _WIN32
+    {
+        u_long nonblocking = (flags & WASI_FDFLAGS_NONBLOCK) != 0;
+        if (ioctlsocket(nativeSocket, FIONBIO, &nonblocking) != 0) {
+            return wasiSocketError();
+        }
+    }
+#elif HAS_SOCKETS && HAS_FCNTL
+    {
+        int nativeFlags = fcntl(nativeSocket, F_GETFL);
+        if (nativeFlags < 0) {
+            return wasiErrno();
+        }
+        nativeFlags &= ~O_NONBLOCK;
+        if (flags & WASI_FDFLAGS_NONBLOCK) {
+            nativeFlags |= O_NONBLOCK;
+        }
+        if (fcntl(nativeSocket, F_SETFL, nativeFlags) != 0) {
+            return wasiErrno();
+        }
+    }
+#else
+    UNUSED_PARAMETER(nativeSocket);
+    return WASI_ERRNO_NOSYS;
+#endif
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+U32
+wasiSocketAddWithRights(
+    WasiNativeSocket nativeSocket,
+    U32 flags,
+    WasiRights base,
+    WasiRights inheriting,
+    U32* wasiFD
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    int type = 0;
+#ifdef _WIN32
+    int length = sizeof(type);
+#else
+    socklen_t length = sizeof(type);
+#endif
+    U32 error;
+    if (getsockopt(
+        nativeSocket, SOL_SOCKET, SO_TYPE, (char*)&type, &length
+    ) != 0) {
+        return wasiSocketError();
+    }
+    if (type != SOCK_STREAM && type != SOCK_DGRAM) {
+        return WASI_ERRNO_NOTSUP;
+    }
+    error = wasiSocketSetFlags(nativeSocket, flags);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+#ifdef SO_NOSIGPIPE
+    {
+        int enabled = 1;
+        if (setsockopt(
+            nativeSocket, SOL_SOCKET, SO_NOSIGPIPE,
+            (const char*)&enabled, sizeof(enabled)
+        ) != 0) {
+            return wasiSocketError();
+        }
+    }
+#endif
+    descriptor.socket = nativeSocket;
+    descriptor.socketType = type == SOCK_STREAM
+        ? WASI_FILE_TYPE_SOCKET_STREAM : WASI_FILE_TYPE_SOCKET_DGRAM;
+    descriptor.socketFlags = (U16)flags;
+    descriptor.rightsBase = base & WASI_RIGHTS_SOCKET_BASE;
+    descriptor.rightsInheriting = inheriting & WASI_RIGHTS_SOCKET_BASE;
+
+    wasiFileDescriptorsLock();
+    if ((U64)wasi.fds.length > (U64)UINT32_MAX
+        || wasi.fds.length == (size_t)-1
+        || !wasiFileDescriptorsEnsureCapacity(&wasi.fds, wasi.fds.length + 1)) {
+        error = WASI_ERRNO_NOMEM;
+    } else {
+        if (wasiFD != NULL) {
+            *wasiFD = (U32)wasi.fds.length;
+        }
+        wasi.fds.fds[wasi.fds.length++] = descriptor;
+    }
+    wasiFileDescriptorsUnlock();
+    return error;
+#else
+    UNUSED_PARAMETER(nativeSocket);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(base);
+    UNUSED_PARAMETER(inheriting);
+    UNUSED_PARAMETER(wasiFD);
+    return WASI_ERRNO_NOSYS;
+#endif
+}
+
+bool
+WARN_UNUSED_RESULT
+wasiSocketAdd(
+    WasiNativeSocket nativeSocket,
+    U32 flags,
+    U32* wasiFD
+) {
+    return wasiSocketAddWithRights(
+        nativeSocket,
+        flags,
+        WASI_RIGHTS_SOCKET_BASE,
+        WASI_RIGHTS_SOCKET_BASE,
+        wasiFD
+    ) == WASI_ERRNO_SUCCESS;
+}
+
+static
+U32
+wasiSocketGet(
+    U32 wasiFD,
+    WasiRights rights,
+    WasiFileDescriptor* descriptor
+) {
+    if (!wasiFileDescriptorGet(wasiFD, descriptor)) {
+        return WASI_ERRNO_BADF;
+    }
+    if (descriptor->socket == WASI_INVALID_SOCKET) {
+        return WASI_ERRNO_NOTSOCK;
+    }
+    if (!wasiFileDescriptorHasRights(descriptor, rights)) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
+    return WASI_ERRNO_SUCCESS;
+}
+
+static
+U32
+wasiSocketTransfer(
+    wasmMemory* memory,
+    const WasiFileDescriptor* descriptor,
+    U32 vectorsPointer,
+    U32 vectorsCount,
+    U32 flags,
+    U32 sizePointer,
+    U16* flagsResult,
+    bool receive
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+#ifdef _WIN32
+    WSABUF* vectors;
+    DWORD transferred = 0;
+    DWORD nativeFlags = 0;
+    int result;
+#else
+    struct iovec* vectors;
+    struct msghdr message;
+    int nativeFlags = 0;
+    ssize_t transferred;
+#endif
+    U32 i, count = vectorsCount == 0 ? 1 : vectorsCount;
+    U64 capacity = 0;
+    U16 resultFlags = 0;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    if (receive) {
+        if (flags & ~(U32)(WASI_RIFLAGS_RECV_PEEK | WASI_RIFLAGS_RECV_WAITALL)) {
+            return WASI_ERRNO_INVAL;
+        }
+        if (flags & WASI_RIFLAGS_RECV_PEEK) {
+            nativeFlags |= MSG_PEEK;
+        }
+        if (flags & WASI_RIFLAGS_RECV_WAITALL) {
+#ifdef MSG_WAITALL
+            nativeFlags |= MSG_WAITALL;
+#else
+            return WASI_ERRNO_NOTSUP;
+#endif
+        }
+    } else if (flags != 0) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!wasiMemoryRangeIsValid(memory, vectorsPointer, vectorsCount, 8)
+        || !wasiMemoryRangeIsValid(memory, sizePointer, 1, 4)) {
+        return WASI_ERRNO_FAULT;
+    }
+    if (count > INT_MAX || (U64)count * sizeof(*vectors) > (size_t)-1) {
+        return WASI_ERRNO_INVAL;
+    }
+    vectors = calloc(count, sizeof(*vectors));
+    if (vectors == NULL) {
+        return WASI_ERRNO_NOMEM;
+    }
+    for (i = 0; i < vectorsCount; i++) {
+        U32 pointer = i32_load(memory, vectorsPointer + i * 8);
+        U32 length = i32_load(memory, vectorsPointer + i * 8 + 4);
+        if (!wasiMemoryRangeIsValid(memory, pointer, length, 1)) {
+            error = WASI_ERRNO_FAULT;
+            goto done;
+        }
+        capacity += length;
+        if (capacity > INT_MAX) {
+            error = WASI_ERRNO_INVAL;
+            goto done;
+        }
+#ifdef _WIN32
+        vectors[i].buf = (char*)memory->data + pointer;
+        vectors[i].len = length;
+#else
+        vectors[i].iov_base = memory->data + pointer;
+        vectors[i].iov_len = length;
+#endif
+    }
+    if (capacity == 0 && descriptor->socketType == WASI_FILE_TYPE_SOCKET_STREAM) {
+        i32_store(memory, sizePointer, 0);
+        if (flagsResult != NULL) {
+            *flagsResult = 0;
+        }
+        goto done;
+    }
+
+#ifdef _WIN32
+    if (receive) {
+        result = WSARecv(
+            descriptor->socket, vectors, count, &transferred,
+            &nativeFlags, NULL, NULL
+        );
+    } else {
+        result = WSASend(
+            descriptor->socket, vectors, count, &transferred,
+            0, NULL, NULL
+        );
+    }
+    if (result != 0) {
+        if (receive && descriptor->socketType == WASI_FILE_TYPE_SOCKET_DGRAM
+            && WSAGetLastError() == WSAEMSGSIZE) {
+            transferred = (DWORD)capacity;
+            resultFlags = WASI_ROFLAGS_RECV_DATA_TRUNCATED;
+        } else {
+            error = wasiSocketError();
+            goto done;
+        }
+    }
+    if (receive && (nativeFlags & MSG_PARTIAL)) {
+        resultFlags = WASI_ROFLAGS_RECV_DATA_TRUNCATED;
+    }
+#else
+    memset(&message, 0, sizeof(message));
+    message.msg_iov = vectors;
+    message.msg_iovlen = count;
+    if (receive) {
+        transferred = recvmsg(descriptor->socket, &message, nativeFlags);
+    } else {
+#ifdef MSG_NOSIGNAL
+        nativeFlags |= MSG_NOSIGNAL;
+#endif
+        transferred = sendmsg(descriptor->socket, &message, nativeFlags);
+    }
+    if (transferred < 0) {
+        error = wasiSocketError();
+        goto done;
+    }
+    if (receive && (message.msg_flags & MSG_TRUNC)) {
+        resultFlags = WASI_ROFLAGS_RECV_DATA_TRUNCATED;
+    }
+#endif
+    i32_store(memory, sizePointer, (U32)transferred);
+    if (flagsResult != NULL) {
+        *flagsResult = resultFlags;
+    }
+done:
+    free(vectors);
+    return error;
+#else
+    UNUSED_PARAMETER(memory);
+    UNUSED_PARAMETER(descriptor);
+    UNUSED_PARAMETER(vectorsPointer);
+    UNUSED_PARAMETER(vectorsCount);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(sizePointer);
+    UNUSED_PARAMETER(flagsResult);
+    UNUSED_PARAMETER(receive);
+    return WASI_ERRNO_NOSYS;
+#endif
+}
+
 static const U32 ciovecSize = 8;
 
 static
@@ -1090,6 +1573,13 @@ wasiFDWrite(
     }
     if (!wasiFileDescriptorHasRights(&descriptor, requiredRights)) {
         return WASI_ERRNO_NOTCAPABLE;
+    }
+
+    if (descriptor.socket != WASI_INVALID_SOCKET) {
+        return wasiSocketTransfer(
+            memory, &descriptor, ciovecsPointer, ciovecsCount,
+            0, resultPointer, NULL, false
+        );
     }
 
     if (descriptor.fd < 0) {
@@ -1285,6 +1775,13 @@ wasiFDRead(
     }
     if (!wasiFileDescriptorHasRights(&descriptor, requiredRights)) {
         return WASI_ERRNO_NOTCAPABLE;
+    }
+
+    if (descriptor.socket != WASI_INVALID_SOCKET) {
+        return wasiSocketTransfer(
+            memory, &descriptor, iovecsPointer, iovecsCount,
+            0, resultPointer, NULL, true
+        );
     }
 
     if (descriptor.fd < 0) {
@@ -2062,6 +2559,7 @@ WASI_IMPORT(U32, 8_fdX5Fclose, (
     wasmModuleInstance* instance,
     U32 wasiFD
 ), {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     UNUSED_PARAMETER(instance);
 
     WASI_TRACE((
@@ -2071,9 +2569,13 @@ WASI_IMPORT(U32, 8_fdX5Fclose, (
         wasiFD
     ));
 
-    if (!wasiFileDescriptorClose(wasiFD)) {
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_close: bad FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorClose(wasiFD)) {
+        return descriptor.socket != WASI_INVALID_SOCKET
+            ? wasiSocketError() : wasiErrno();
     }
     return WASI_ERRNO_SUCCESS;
 })
@@ -2092,7 +2594,8 @@ wasiFdRenumber(U32 from, U32 to) {
         result = WASI_ERRNO_BADF;
     } else if (from != to) {
         if (!wasiFileDescriptorRelease(&wasi.fds.fds[to])) {
-            result = wasiErrno();
+            result = target.socket != WASI_INVALID_SOCKET
+                ? wasiSocketError() : wasiErrno();
         } else {
             /* Move the complete descriptor,
              * including its path and directory stream.
@@ -2654,50 +3157,68 @@ wasiFdFdstatGet(
         resultPointer
     ));
 
+    if (!wasiMemoryRangeIsValid(memory, resultPointer, 1, WASI_FDSTAT_SIZE)) {
+        return WASI_ERRNO_FAULT;
+    }
+
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_fdstat_get: bad FD"));
         return WASI_ERRNO_BADF;
     }
 
-    /* Get fileType */
-    if (descriptor.fd >= 0) {
-        if (fstat(descriptor.fd, &st) != 0) {
-            WASI_TRACE(("fd_fdstat_get: fstat failed: %s", strerror(errno)));
-            return wasiErrno();
+    if (descriptor.socket != WASI_INVALID_SOCKET) {
+        fileType = descriptor.socketType;
+        wasiFlags = descriptor.socketFlags;
+#if HAS_SOCKETS && HAS_FCNTL && !defined(_WIN32)
+        {
+            int flags = fcntl(descriptor.socket, F_GETFL);
+            if (flags < 0) {
+                return wasiErrno();
+            }
+            wasiFlags = wasiFdFlagsFromNative(flags);
         }
-    } else {
-        char nativePath[PATH_MAX];
-        strcpy(nativePath, descriptor.path);
-#if HAS_NONPOSIXPATH
-        wasiToNativePath(nativePath);
 #endif
-        WASI_TRACE((
-            "fd_fdstat_get: "
-            "stat(%s)",
-            nativePath
-        ));
+    } else {
+        /* Get fileType */
+        if (descriptor.fd >= 0) {
+            if (fstat(descriptor.fd, &st) != 0) {
+                WASI_TRACE(("fd_fdstat_get: fstat failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
+        } else {
+            char nativePath[PATH_MAX];
+            strcpy(nativePath, descriptor.path);
+#if HAS_NONPOSIXPATH
+            wasiToNativePath(nativePath);
+#endif
+            WASI_TRACE((
+                "fd_fdstat_get: "
+                "stat(%s)",
+                nativePath
+            ));
 
-        if (stat(nativePath, &st) != 0) {
-            WASI_TRACE(("fd_fdstat_get: stat failed: %s", strerror(errno)));
-            return wasiErrno();
+            if (stat(nativePath, &st) != 0) {
+                WASI_TRACE(("fd_fdstat_get: stat failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
         }
-    }
 
-    fileType = wasiFileTypeFromMode(st.st_mode);
+        fileType = wasiFileTypeFromMode(st.st_mode);
 
-    if (descriptor.fd >= 0) {
+        if (descriptor.fd >= 0) {
 #if HAS_FCNTL
-        int nativeFlags = 0;
+            int nativeFlags = 0;
 
-        /* Get flags */
-        nativeFlags = fcntl(descriptor.fd, F_GETFL);
-        if (nativeFlags < 0) {
-            WASI_TRACE(("fd_fdstat_get: fcntl failed: %s", strerror(errno)));
-            return wasiErrno();
-        }
+            /* Get flags */
+            nativeFlags = fcntl(descriptor.fd, F_GETFL);
+            if (nativeFlags < 0) {
+                WASI_TRACE(("fd_fdstat_get: fcntl failed: %s", strerror(errno)));
+                return wasiErrno();
+            }
 
-        wasiFlags = wasiFdFlagsFromNative(nativeFlags);
+            wasiFlags = wasiFdFlagsFromNative(nativeFlags);
 #endif /* HAS_FCNTL */
+        }
     }
 
     /* Store result */
@@ -3327,7 +3848,8 @@ static
 U32
 wasiFDFilestatGet(
     U32 wasiFD,
-    struct stat* st
+    struct stat* st,
+    WasiFileType* socketType
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
@@ -3339,6 +3861,18 @@ wasiFDFilestatGet(
         WASI_RIGHTS_FD_FILESTAT_GET
     )) {
         return WASI_ERRNO_NOTCAPABLE;
+    }
+
+    *socketType = descriptor.socketType;
+    if (descriptor.socket != WASI_INVALID_SOCKET) {
+#if HAS_SOCKETS && !defined(_WIN32)
+        if (fstat(descriptor.socket, st) != 0) {
+            return wasiErrno();
+        }
+#else
+        memset(st, 0, sizeof(*st));
+#endif
+        return WASI_ERRNO_SUCCESS;
     }
 
     if (descriptor.fd >= 0) {
@@ -3382,6 +3916,7 @@ WASI_PREVIEW1_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
     wasmMemory* memory = wasiMemory(instance);
 
     struct stat st;
+    WasiFileType socketType;
     U32 res = WASI_ERRNO_INVAL;
 
     WASI_TRACE((
@@ -3393,12 +3928,15 @@ WASI_PREVIEW1_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
         statPointer
     ));
 
-    res = wasiFDFilestatGet(wasiFD, &st);
+    res = wasiFDFilestatGet(wasiFD, &st, &socketType);
     if (res != WASI_ERRNO_SUCCESS) {
         return res;
     }
 
     storePreview1Filestat(memory, statPointer, &st);
+    if (socketType != WASI_FILE_TYPE_UNKNOWN) {
+        i32_store8(memory, statPointer + 16, socketType);
+    }
 
     return WASI_ERRNO_SUCCESS;
 })
@@ -3475,6 +4013,7 @@ WASI_UNSTABLE_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
     wasmMemory* memory = wasiMemory(instance);
 
     struct stat st;
+    WasiFileType socketType;
     U32 res = WASI_ERRNO_INVAL;
 
     WASI_TRACE((
@@ -3486,13 +4025,16 @@ WASI_UNSTABLE_IMPORT(U32, 15_fdX5FfilestatX5Fget, (
         statPointer
     ));
 
-    res = wasiFDFilestatGet(wasiFD, &st);
+    res = wasiFDFilestatGet(wasiFD, &st, &socketType);
 
     if (res != WASI_ERRNO_SUCCESS) {
         return res;
     }
 
     storeUnstableFilestat(memory, statPointer, &st);
+    if (socketType != WASI_FILE_TYPE_UNKNOWN) {
+        i32_store8(memory, statPointer + 16, socketType);
+    }
 
     return WASI_ERRNO_SUCCESS;
 })
@@ -5167,6 +5709,27 @@ wasiFdFdstatSetFlags(
         return WASI_ERRNO_NOTCAPABLE;
     }
 
+    if (descriptor.socket != WASI_INVALID_SOCKET) {
+        U32 error;
+        wasiFileDescriptorsLock();
+        if (!wasiFileDescriptorGetLocked(wasiFD, &descriptor)) {
+            error = WASI_ERRNO_BADF;
+        } else if (!wasiFileDescriptorHasRights(
+            &descriptor, WASI_RIGHTS_FD_FDSTAT_SET_FLAGS
+        )) {
+            error = WASI_ERRNO_NOTCAPABLE;
+        } else if (descriptor.socket == WASI_INVALID_SOCKET) {
+            error = WASI_ERRNO_NOTSOCK;
+        } else {
+            error = wasiSocketSetFlags(descriptor.socket, flags);
+            if (error == WASI_ERRNO_SUCCESS) {
+                wasi.fds.fds[wasiFD].socketFlags = (U16)flags;
+            }
+        }
+        wasiFileDescriptorsUnlock();
+        return error;
+    }
+
     if (flags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
                       WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
                       WASI_FDFLAGS_SYNC)) {
@@ -5267,7 +5830,105 @@ WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
     return wasiFdFdstatSetFlags(fd, flags);
 })
 
-#if HAS_POLL
+#if HAS_POLL || defined(_WIN32)
+
+#ifdef _WIN32
+
+typedef struct WasiPollFD {
+    WasiNativeSocket fd;
+    short events;
+    short revents;
+} WasiPollFD;
+
+#define WASI_POLLIN 1
+#define WASI_POLLOUT 2
+#define WASI_POLLERR 4
+#define WASI_POLLHUP 8
+#define WASI_POLLNVAL 16
+
+static
+U32
+wasiPollWait(WasiPollFD* descriptors, U32 count, int timeout) {
+    fd_set reads, writes, errors;
+    struct timeval time;
+    struct timeval* timePointer = NULL;
+    U32 i;
+    bool hasSocket = false;
+    FD_ZERO(&reads);
+    FD_ZERO(&writes);
+    FD_ZERO(&errors);
+    for (i = 0; i < count; i++) {
+        WasiPollFD* descriptor = &descriptors[i];
+        fd_set* set = descriptor->events == WASI_POLLIN ? &reads : &writes;
+        int type;
+        int length = sizeof(type);
+        descriptor->revents = 0;
+        if (descriptor->fd == WASI_INVALID_SOCKET) {
+            continue;
+        }
+        if (getsockopt(
+            descriptor->fd, SOL_SOCKET, SO_TYPE, (char*)&type, &length
+        ) != 0) {
+            descriptor->revents = WASI_POLLNVAL;
+            timeout = 0;
+            continue;
+        }
+        if (!FD_ISSET(descriptor->fd, &errors)) {
+            if (errors.fd_count == FD_SETSIZE) {
+                return WASI_ERRNO_INVAL;
+            }
+            FD_SET(descriptor->fd, &errors);
+        }
+        FD_SET(descriptor->fd, set);
+        hasSocket = true;
+    }
+    if (!hasSocket) {
+        Sleep(timeout < 0 ? INFINITE : (DWORD)timeout);
+        return WASI_ERRNO_SUCCESS;
+    }
+    if (timeout >= 0) {
+        time.tv_sec = timeout / 1000;
+        time.tv_usec = (timeout % 1000) * 1000;
+        timePointer = &time;
+    }
+    if (select(0, &reads, &writes, &errors, timePointer) == SOCKET_ERROR) {
+        return wasiSocketError();
+    }
+    for (i = 0; i < count; i++) {
+        WasiPollFD* descriptor = &descriptors[i];
+        if (descriptor->fd == WASI_INVALID_SOCKET) {
+            continue;
+        }
+        if (FD_ISSET(descriptor->fd, &reads)) {
+            descriptor->revents |= WASI_POLLIN;
+        }
+        if (FD_ISSET(descriptor->fd, &writes)) {
+            descriptor->revents |= WASI_POLLOUT;
+        }
+        if (FD_ISSET(descriptor->fd, &errors)) {
+            descriptor->revents |= WASI_POLLERR;
+        }
+    }
+    return WASI_ERRNO_SUCCESS;
+}
+
+#else
+
+typedef struct pollfd WasiPollFD;
+#define WASI_POLLIN POLLIN
+#define WASI_POLLOUT POLLOUT
+#define WASI_POLLERR POLLERR
+#define WASI_POLLHUP POLLHUP
+#define WASI_POLLNVAL POLLNVAL
+
+static
+U32
+wasiPollWait(WasiPollFD* descriptors, U32 count, int timeout) {
+    return poll(descriptors, count, timeout) < 0
+        ? wasiErrno() : WASI_ERRNO_SUCCESS;
+}
+
+#endif
 
 static const U32 wasiSubscriptionSize = 48;
 static const U32 wasiSubscriptionUserdataOffset = 0;
@@ -5294,24 +5955,8 @@ typedef struct WasiPollSubscription {
     U32 clockID;
     U16 error;
     WasiEventType type;
+    bool socket;
 } WasiPollSubscription;
-
-static
-W2C2_INLINE
-bool
-wasiMemoryRangeIsValid(
-    wasmMemory* memory,
-    U32 pointer,
-    U32 count,
-    U32 size
-) {
-    U64 length = (U64)count * size;
-    U64 end = (U64)pointer + length;
-
-    return memory != NULL
-           && length <= UINT32_MAX
-           && end <= (U64)wasmMemorySize(memory) * WASM_PAGE_SIZE;
-}
 
 static
 W2C2_INLINE
@@ -5431,7 +6076,7 @@ wasiPollWriteEvent(
     );
 }
 
-#endif /* HAS_POLL */
+#endif /* HAS_POLL || _WIN32 */
 
 static
 W2C2_INLINE
@@ -5443,10 +6088,10 @@ wasiPollOneoff(
     U32 subscriptionCount,
     U32 eventCountPointer
 ) {
-#if HAS_POLL
+#if HAS_POLL || defined(_WIN32)
     wasmMemory* memory = wasiMemory(instance);
     WasiPollSubscription* subscriptions = NULL;
-    struct pollfd* pollFDs = NULL;
+    WasiPollFD* pollFDs = NULL;
     U32 result = WASI_ERRNO_SUCCESS;
     U32 i = 0;
     U32 eventCount = 0;
@@ -5491,9 +6136,9 @@ wasiPollOneoff(
         subscriptionCount,
         sizeof(WasiPollSubscription)
     );
-    pollFDs = (struct pollfd*)calloc(
+    pollFDs = (WasiPollFD*)calloc(
         subscriptionCount,
-        sizeof(struct pollfd)
+        sizeof(WasiPollFD)
     );
     if (subscriptions == NULL || pollFDs == NULL) {
         result = WASI_ERRNO_NOMEM;
@@ -5503,7 +6148,7 @@ wasiPollOneoff(
     for (i = 0; i < subscriptionCount; i++) {
         U32 subscriptionPointer = inPointer + i * wasiSubscriptionSize;
         WasiPollSubscription* subscription = &subscriptions[i];
-        struct pollfd* pollFD = &pollFDs[i];
+        WasiPollFD* pollFD = &pollFDs[i];
 
         subscription->userdata = i64_load(
             memory,
@@ -5513,7 +6158,7 @@ wasiPollOneoff(
             memory,
             subscriptionPointer + wasiSubscriptionTypeOffset
         );
-        pollFD->fd = -1;
+        pollFD->fd = WASI_INVALID_SOCKET;
 
         switch (subscription->type) {
             case WASI_EVENT_TYPE_CLOCK: {
@@ -5574,20 +6219,32 @@ wasiPollOneoff(
                 );
 
                 if (!wasiFileDescriptorGet(wasiFD, &descriptor)
-                    || descriptor.fd < 0) {
+                    || (descriptor.fd < 0
+                        && descriptor.socket == WASI_INVALID_SOCKET)) {
                     subscription->error = WASI_ERRNO_BADF;
                     hasImmediateEvent = true;
                 } else if (!wasiFileDescriptorHasRights(&descriptor, required)) {
                     subscription->error = WASI_ERRNO_NOTCAPABLE;
                     hasImmediateEvent = true;
                 } else {
-                    pollFD->fd = descriptor.fd;
+                    subscription->socket = descriptor.socket != WASI_INVALID_SOCKET;
+#ifdef _WIN32
+                    if (descriptor.socket == WASI_INVALID_SOCKET) {
+                        subscription->error = WASI_ERRNO_NOTSUP;
+                        hasImmediateEvent = true;
+                    } else {
+                        pollFD->fd = descriptor.socket;
+                    }
+#else
+                    pollFD->fd = descriptor.socket != WASI_INVALID_SOCKET
+                        ? descriptor.socket : descriptor.fd;
+#endif
                 }
 
                 if (subscription->type == WASI_EVENT_TYPE_FD_READ) {
-                    pollFD->events = POLLIN;
+                    pollFD->events = WASI_POLLIN;
                 } else {
-                    pollFD->events = POLLOUT;
+                    pollFD->events = WASI_POLLOUT;
                 }
                 break;
             }
@@ -5600,7 +6257,6 @@ wasiPollOneoff(
 
     for (;;) {
         int timeout = -1;
-        int pollResult = 0;
 
         result = wasiPollTimeout(
             subscriptions,
@@ -5612,16 +6268,15 @@ wasiPollOneoff(
             goto done;
         }
 
-        pollResult = poll(pollFDs, subscriptionCount, timeout);
-        if (pollResult < 0) {
-            result = wasiErrno();
+        result = wasiPollWait(pollFDs, subscriptionCount, timeout);
+        if (result != WASI_ERRNO_SUCCESS) {
             goto done;
         }
 
         eventCount = 0;
         for (i = 0; i < subscriptionCount; i++) {
             WasiPollSubscription* subscription = &subscriptions[i];
-            struct pollfd* pollFD = &pollFDs[i];
+            WasiPollFD* pollFD = &pollFDs[i];
 
             if (subscription->type == WASI_EVENT_TYPE_CLOCK) {
                 U64 now = 0;
@@ -5666,14 +6321,16 @@ wasiPollOneoff(
                 U16 error = WASI_ERRNO_SUCCESS;
                 WasiEventRwFlags flags = 0;
 
-                if ((pollFD->revents & POLLNVAL) != 0) {
+                if ((pollFD->revents & WASI_POLLNVAL) != 0) {
                     error = WASI_ERRNO_BADF;
-                } else if ((pollFD->revents & POLLHUP) != 0) {
+                } else if ((pollFD->revents & WASI_POLLHUP) != 0
+                           && !subscription->socket) {
                     error = WASI_ERRNO_PIPE;
-                } else if ((pollFD->revents & POLLERR) != 0) {
+                } else if ((pollFD->revents & WASI_POLLERR) != 0
+                           && !subscription->socket) {
                     error = WASI_ERRNO_IO;
                 }
-                if ((pollFD->revents & POLLHUP) != 0) {
+                if ((pollFD->revents & WASI_POLLHUP) != 0) {
                     flags |= WASI_EVENT_RW_FLAGS_HANGUP;
                 }
 
@@ -5708,7 +6365,7 @@ done:
     UNUSED_PARAMETER(eventCountPointer);
     WASI_TRACE(("poll_oneoff: not supported on this host"));
     return WASI_ERRNO_NOSYS;
-#endif /* HAS_POLL */
+#endif /* HAS_POLL || _WIN32 */
 }
 
 WASI_IMPORT(U32, 11_pollX5Foneoff, (
@@ -6246,43 +6903,154 @@ WASI_IMPORT(U32, 9_fdX5Fadvise, (
     );
 })
 
+static
+U32
+wasiSockAccept(
+    wasmMemory* memory,
+    U32 wasiFD,
+    U32 flags,
+    U32 resultPointer
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    WasiNativeSocket accepted;
+    U32 newFD;
+    U32 error = wasiSocketGet(wasiFD, WASI_RIGHTS_SOCK_ACCEPT, &descriptor);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    if (!wasiMemoryRangeIsValid(memory, resultPointer, 1, 4)) {
+        return WASI_ERRNO_FAULT;
+    }
+    if (flags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
+                      WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
+                      WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (flags & ~(U32)WASI_FDFLAGS_NONBLOCK) {
+        return WASI_ERRNO_NOTSUP;
+    }
+    accepted = accept(descriptor.socket, NULL, NULL);
+    if (accepted == WASI_INVALID_SOCKET) {
+        return wasiSocketError();
+    }
+    error = wasiSocketAddWithRights(
+        accepted,
+        flags,
+        descriptor.rightsInheriting,
+        descriptor.rightsInheriting,
+        &newFD
+    );
+    if (error != WASI_ERRNO_SUCCESS) {
+        wasiSocketClose(accepted);
+        return error;
+    }
+    i32_store(memory, resultPointer, newFD);
+    return WASI_ERRNO_SUCCESS;
+#else
+    UNUSED_PARAMETER(memory);
+    UNUSED_PARAMETER(wasiFD);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(resultPointer);
+    return WASI_ERRNO_NOSYS;
+#endif
+}
+
 WASI_IMPORT(U32, 11_sockX5Faccept, (
     wasmModuleInstance* instance,
     U32 fd,
     U32 flags,
     U32 resultPointer
 ), {
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(flags);
-    UNUSED_PARAMETER(resultPointer);
-
-    /* TODO: */
-    WASI_TRACE(("sock_accept: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiSockAccept(wasiMemory(instance), fd, flags, resultPointer);
 })
+
+static
+U32
+wasiSockRecv(
+    wasmMemory* memory,
+    U32 fd,
+    U32 iovecsPointer,
+    U32 iovecsCount,
+    U32 flags,
+    U32 sizeResultPointer,
+    U32 flagsResultPointer
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U16 resultFlags;
+    U32 error = wasiSocketGet(fd, WASI_RIGHTS_FD_READ, &descriptor);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    if (!wasiMemoryRangeIsValid(memory, flagsResultPointer, 1, 2)) {
+        return WASI_ERRNO_FAULT;
+    }
+    error = wasiSocketTransfer(
+        memory, &descriptor, iovecsPointer, iovecsCount,
+        flags, sizeResultPointer, &resultFlags, true
+    );
+    if (error == WASI_ERRNO_SUCCESS) {
+        i32_store16(memory, flagsResultPointer, resultFlags);
+    }
+    return error;
+#else
+    UNUSED_PARAMETER(memory);
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(iovecsPointer);
+    UNUSED_PARAMETER(iovecsCount);
+    UNUSED_PARAMETER(flags);
+    UNUSED_PARAMETER(sizeResultPointer);
+    UNUSED_PARAMETER(flagsResultPointer);
+    return WASI_ERRNO_NOSYS;
+#endif
+}
 
 WASI_IMPORT(U32, 9_sockX5Frecv, (
     wasmModuleInstance* instance,
     U32 fd,
-    U32 ciovecsPointer,
-    U32 ciovecsCount,
+    U32 iovecsPointer,
+    U32 iovecsCount,
     U32 flags,
     U32 sizeResultPointer,
     U32 flagsResultPointer
 ), {
-    UNUSED_PARAMETER(instance);
+    return wasiSockRecv(
+        wasiMemory(instance), fd, iovecsPointer, iovecsCount,
+        flags, sizeResultPointer, flagsResultPointer
+    );
+})
+
+static
+U32
+wasiSockSend(
+    wasmMemory* memory,
+    U32 fd,
+    U32 ciovecsPointer,
+    U32 ciovecsCount,
+    U32 flags,
+    U32 resultPointer
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 error = wasiSocketGet(fd, WASI_RIGHTS_FD_WRITE, &descriptor);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    return wasiSocketTransfer(
+        memory, &descriptor, ciovecsPointer, ciovecsCount,
+        flags, resultPointer, NULL, false
+    );
+#else
+    UNUSED_PARAMETER(memory);
     UNUSED_PARAMETER(fd);
     UNUSED_PARAMETER(ciovecsPointer);
     UNUSED_PARAMETER(ciovecsCount);
     UNUSED_PARAMETER(flags);
-    UNUSED_PARAMETER(sizeResultPointer);
-    UNUSED_PARAMETER(flagsResultPointer);
-
-    /* TODO: */
-    WASI_TRACE(("sock_recv: unimplemented function"));
+    UNUSED_PARAMETER(resultPointer);
     return WASI_ERRNO_NOSYS;
-})
+#endif
+}
 
 WASI_IMPORT(U32, 9_sockX5Fsend, (
     wasmModuleInstance* instance,
@@ -6292,17 +7060,42 @@ WASI_IMPORT(U32, 9_sockX5Fsend, (
     U32 flags,
     U32 resultPointer
 ), {
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(ciovecsPointer);
-    UNUSED_PARAMETER(ciovecsCount);
-    UNUSED_PARAMETER(flags);
-    UNUSED_PARAMETER(resultPointer);
-
-    /* TODO: */
-    WASI_TRACE(("sock_send: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiSockSend(
+        wasiMemory(instance), fd, ciovecsPointer, ciovecsCount,
+        flags, resultPointer
+    );
 })
+
+static
+U32
+wasiSockShutdown(U32 fd, U32 how) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    int nativeHow;
+    U32 error = wasiSocketGet(fd, WASI_RIGHTS_SOCK_SHUTDOWN, &descriptor);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
+    if (how == 0 || (how & ~(U32)(WASI_SDFLAGS_RD | WASI_SDFLAGS_WR))) {
+        return WASI_ERRNO_INVAL;
+    }
+#ifdef _WIN32
+    nativeHow = how == WASI_SDFLAGS_RD ? SD_RECEIVE
+        : how == WASI_SDFLAGS_WR ? SD_SEND : SD_BOTH;
+#else
+    nativeHow = how == WASI_SDFLAGS_RD ? SHUT_RD
+        : how == WASI_SDFLAGS_WR ? SHUT_WR : SHUT_RDWR;
+#endif
+    if (shutdown(descriptor.socket, nativeHow) != 0) {
+        return wasiSocketError();
+    }
+    return WASI_ERRNO_SUCCESS;
+#else
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(how);
+    return WASI_ERRNO_NOSYS;
+#endif
+}
 
 WASI_IMPORT(U32, 13_sockX5Fshutdown, (
     wasmModuleInstance* instance,
@@ -6310,12 +7103,7 @@ WASI_IMPORT(U32, 13_sockX5Fshutdown, (
     U32 how
 ), {
     UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(how);
-
-    /* TODO: */
-    WASI_TRACE(("sock_shutdown: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiSockShutdown(fd, how);
 })
 
 typedef void (*wasiThreadStartFunc)(wasmModuleInstance* instance, U32 threadID, U32 startArg);

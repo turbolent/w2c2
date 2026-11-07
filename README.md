@@ -185,12 +185,9 @@ make run-tests
 
 ## WASI Status
 
-w2c2 implements all [WASI Preview 1](https://wasi.dev/releases/wasi-p1) functions except:
+w2c2 implements all [WASI Preview 1](https://wasi.dev/releases/wasi-p1) functions.
+Support depends on the host's available APIs.
 
-- `sock_accept`
-- `sock_recv`
-- `sock_send`
-- `sock_shutdown`
 
 ## Development
 

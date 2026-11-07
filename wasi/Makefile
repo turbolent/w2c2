@@ -32,6 +32,7 @@ endif
 # - lstat
 # - getentropy
 # - poll
+# - sockets (except on Windows, which uses Winsock)
 # - sched_yield (except on Windows)
 # - futimens, utimensat, futimes, utimes, lutimes, utime (except on Windows)
 # - linkat, link, realpath (except on Windows)
@@ -40,7 +41,7 @@ endif
 # - threads
 DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
 ifneq ($(UNAME),Windows)
-DEFAULT_FEATURES += poll sched_yield futimens utimensat futimes utimes lutimes utime
+DEFAULT_FEATURES += sockets poll sched_yield futimens utimensat futimes utimes lutimes utime
 DEFAULT_FEATURES += linkat link realpath
 endif
 ifeq ($(UNAME),Linux)
@@ -89,6 +90,14 @@ endif
 
 ifneq (,$(findstring getentropy,$(FEATURES)))
 	CFLAGS += -DHAS_GETENTROPY=1
+endif
+
+ifeq ($(UNAME),Windows)
+LDFLAGS += -lws2_32
+endif
+
+ifneq (,$(filter sockets,$(FEATURES)))
+	CFLAGS += -DHAS_SOCKETS=1
 endif
 
 ifneq (,$(findstring poll,$(FEATURES)))

@@ -14,6 +14,7 @@ find_package(Threads)
 
 include(CheckIncludeFile)
 check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(sys/socket.h HAVE_SYS_SOCKET_H)
 check_include_file(sys/uio.h HAVE_SYSUIO_H)
 check_include_file(sys/time.h HAVE_SYSTIME_H)
 check_include_file(sys/resource.h HAVE_SYSRESOURCE_H)
@@ -108,6 +109,12 @@ foreach(TARGET w2c2wasi w2c2wasi_test)
 
     if(HAVE_GETENTROPY)
         target_compile_definitions(${TARGET} PUBLIC HAS_GETENTROPY=1)
+    endif()
+
+    if(WIN32)
+        target_link_libraries(${TARGET} PUBLIC ws2_32)
+    elseif(HAVE_SYS_SOCKET_H)
+        target_compile_definitions(${TARGET} PUBLIC HAS_SOCKETS=1)
     endif()
 
     if(HAVE_POLL)

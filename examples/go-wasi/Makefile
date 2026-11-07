@@ -1,5 +1,8 @@
 CFLAGS += -I../../w2c2 -O0 -g
 LDFLAGS += -lm -L../../wasi -lw2c2wasi
+ifeq ($(OS),Windows_NT)
+LDFLAGS += -lws2_32
+endif
 W2C2 ?= ../../w2c2/w2c2
 
 MODE ?= gnu-ld
