@@ -1300,6 +1300,349 @@ static void testPathLink(TestPathLinkFunction link) {
 #endif
 }
 
+typedef U32 (*TestFdAllocate)(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64
+);
+typedef U32 (*TestFdAdvise)(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview111_fdX5Fallocate(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64
+);
+extern U32 i13_wasiX5Funstable11_fdX5Fallocate(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64
+);
+extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fadvise(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+extern U32 i13_wasiX5Funstable9_fdX5Fadvise(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+
+static void testFdStorageValidation(
+    TestFdAllocate allocate,
+    TestFdAdvise advise
+) {
+    U32 wasiFD;
+    CHECK_IO(allocate(
+        NULL,
+        UINT32_MAX,
+        0,
+        1
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(advise(
+        NULL,
+        UINT32_MAX,
+        0,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        0,
+        1
+    ) == WASI_ERRNO_ISDIR);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        0,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_ISDIR);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        0,
+        1
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        0,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_BADF);
+    fprintf(stderr, "OK fd_allocate and fd_advise validation\n");
+}
+
+#if HAS_UNISTD || defined(_WIN32)
+
+#ifdef _WIN32
+#define testNativeDup _dup
+#define testNativeFileno _fileno
+#define testNativeRead _read
+#define testNativeWrite _write
+#define testNativeSeek _lseek
+#define testNativeStat _fstat
+#define testNativeStatType _stat
+#else
+#define testNativeDup dup
+#define testNativeFileno fileno
+#define testNativeRead read
+#define testNativeWrite write
+#define testNativeSeek lseek
+#define testNativeStat fstat
+#define testNativeStatType stat
+#endif
+
+static void testFdStorage(
+    TestFdAllocate allocate,
+    TestFdAdvise advise
+) {
+    FILE* file = tmpfile();
+    U32 wasiFD;
+    U32 advice;
+    U32 allocationError;
+    int fd;
+    struct testNativeStatType st;
+    char bytes[6];
+    size_t i;
+#if HAS_F_PREALLOCATE && !defined(_WIN32)
+    U64 blocks;
+#endif
+    CHECK_IO(file != NULL);
+    fd = testNativeDup(testNativeFileno(file));
+    CHECK_IO(fd >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+    CHECK_IO(testNativeWrite(fd, "abcdef", 6) == 6);
+    CHECK_IO(testNativeSeek(fd, 2, SEEK_SET) == 2);
+
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        0,
+        0
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        UINT64_MAX,
+        1
+    ) == WASI_ERRNO_OVERFLOW);
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        (U64)INT64_MAX,
+        1
+    ) == WASI_ERRNO_OVERFLOW);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        0,
+        1,
+        6
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        0,
+        1,
+        0x100
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        UINT64_MAX,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_OVERFLOW);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        (U64)INT64_MAX,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_OVERFLOW);
+    for (advice = WASI_ADVICE_NORMAL; advice <= WASI_ADVICE_NOREUSE; advice++) {
+        CHECK_IO(advise(
+            NULL,
+            wasiFD,
+            0,
+            0,
+            advice
+        ) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(advise(
+            NULL,
+            wasiFD,
+            4096,
+            4096,
+            advice
+        ) == WASI_ERRNO_SUCCESS);
+    }
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 2);
+    CHECK_IO(testNativeStat(fd, &st) == 0 && st.st_size == 6);
+
+    allocationError = allocate(
+        NULL,
+        wasiFD,
+        8192,
+        8192
+    );
+#if HAS_POSIX_FALLOCATE || HAS_F_PREALLOCATE || defined(_WIN32)
+#ifdef _WIN32
+    if (allocationError == WASI_ERRNO_NOSYS || allocationError == WASI_ERRNO_NOTSUP) {
+        CHECK_IO(testNativeStat(fd, &st) == 0 && st.st_size == 6);
+        CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 2);
+        fprintf(
+            stderr,
+            "SKIP fd_allocate growth: native allocation unavailable (%u)\n",
+            allocationError
+        );
+    } else
+#endif
+    {
+        CHECK_IO(allocationError == WASI_ERRNO_SUCCESS);
+        CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 2);
+        CHECK_IO(testNativeStat(fd, &st) == 0 && st.st_size == 16384);
+#if HAS_F_PREALLOCATE && !defined(_WIN32)
+        blocks = (U64)st.st_blocks;
+        CHECK_IO(blocks * 512 >= 16384);
+#endif
+        CHECK_IO(allocate(
+            NULL,
+            wasiFD,
+            8192,
+            8192
+        ) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(allocate(
+            NULL,
+            wasiFD,
+            0,
+            3
+        ) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(testNativeStat(fd, &st) == 0 && st.st_size == 16384);
+#if HAS_F_PREALLOCATE && !defined(_WIN32)
+        CHECK_IO((U64)st.st_blocks == blocks);
+#endif
+        CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 2);
+        CHECK_IO(testNativeSeek(fd, 8192, SEEK_SET) == 8192);
+        CHECK_IO(testNativeRead(fd, bytes, sizeof(bytes)) == (int)sizeof(bytes));
+        for (i = 0; i < sizeof(bytes); i++) {
+            CHECK_IO(bytes[i] == 0);
+        }
+        CHECK_IO(testNativeSeek(fd, 16383, SEEK_SET) == 16383);
+        CHECK_IO(testNativeRead(fd, bytes, 1) == 1 && bytes[0] == 0);
+    }
+#else
+    UNUSED_PARAMETER(i);
+    CHECK_IO(allocationError == WASI_ERRNO_NOSYS);
+    CHECK_IO(testNativeStat(fd, &st) == 0 && st.st_size == 6);
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 2);
+#endif
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_SET) == 0);
+    CHECK_IO(testNativeRead(fd, bytes, sizeof(bytes)) == (int)sizeof(bytes));
+    CHECK_IO(memcmp(bytes, "abcdef", sizeof(bytes)) == 0);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(fclose(file) == 0);
+    fprintf(stderr, "OK fd_allocate and fd_advise file contents and offsets\n");
+}
+
+#undef testNativeDup
+#undef testNativeFileno
+#undef testNativeRead
+#undef testNativeWrite
+#undef testNativeSeek
+#undef testNativeStat
+#undef testNativeStatType
+
+#endif /* HAS_UNISTD || _WIN32 */
+
+#if HAS_UNISTD && !defined(_WIN32)
+
+static void testFdStorageErrors(
+    TestFdAllocate allocate,
+    TestFdAdvise advise
+) {
+    int pipeFDs[2];
+    U32 wasiFD;
+    CHECK_IO(pipe(pipeFDs) == 0);
+    CHECK_IO(wasiFileDescriptorAdd(pipeFDs[0], NULL, &wasiFD));
+    CHECK_IO(allocate(
+        NULL,
+        wasiFD,
+        0,
+        1
+    ) == WASI_ERRNO_NODEV);
+    CHECK_IO(advise(
+        NULL,
+        wasiFD,
+        0,
+        1,
+        WASI_ADVICE_NORMAL
+    ) == WASI_ERRNO_SPIPE);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(close(pipeFDs[1]) == 0);
+#if HAS_POSIX_FALLOCATE || HAS_F_PREALLOCATE
+    {
+        char path[] = "wasi-allocate-XXXXXX";
+        int fd = mkstemp(path);
+        struct stat st;
+        CHECK_IO(fd >= 0);
+        CHECK_IO(close(fd) == 0);
+        fd = open(path, O_RDONLY);
+        CHECK_IO(unlink(path) == 0);
+        CHECK_IO(fd >= 0);
+        CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+        CHECK_IO(allocate(
+            NULL,
+            wasiFD,
+            0,
+            4096
+        ) == WASI_ERRNO_BADF);
+        CHECK_IO(fstat(fd, &st) == 0 && st.st_size == 0);
+        CHECK_IO(advise(
+            NULL,
+            wasiFD,
+            0,
+            0,
+            WASI_ADVICE_NORMAL
+        ) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    }
+#endif
+    fprintf(stderr, "OK fd_allocate and fd_advise native errors\n");
+}
+
+#endif /* HAS_UNISTD && !_WIN32 */
+
+static void testFdAllocateAndAdvise(
+    TestFdAllocate allocate,
+    TestFdAdvise advise
+) {
+    testFdStorageValidation(allocate, advise);
+#if HAS_UNISTD || defined(_WIN32)
+    testFdStorage(allocate, advise);
+#endif
+#if HAS_UNISTD && !defined(_WIN32)
+    testFdStorageErrors(allocate, advise);
+#endif
+}
+
 static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     U32 wasiFD;
 
@@ -2131,6 +2474,14 @@ main(int argc, char* argv[]) {
     testSchedYield();
     testFileDescriptorGet();
     testFileDescriptorClose();
+    testFdAllocateAndAdvise(
+        i22_wasiX5FsnapshotX5Fpreview111_fdX5Fallocate,
+        i22_wasiX5FsnapshotX5Fpreview19_fdX5Fadvise
+    );
+    testFdAllocateAndAdvise(
+        i13_wasiX5Funstable11_fdX5Fallocate,
+        i13_wasiX5Funstable9_fdX5Fadvise
+    );
     testPathLink(i22_wasiX5FsnapshotX5Fpreview19_pathX5Flink);
     testPathLink(i13_wasiX5Funstable9_pathX5Flink);
     testFilestatSetTimes(

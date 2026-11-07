@@ -34,6 +34,9 @@ check_symbol_exists(utime "utime.h" HAVE_UTIME)
 check_symbol_exists(linkat "unistd.h;fcntl.h" HAVE_LINKAT)
 check_symbol_exists(link "unistd.h" HAVE_LINK)
 check_symbol_exists(realpath "stdlib.h" HAVE_REALPATH)
+check_symbol_exists(posix_fallocate "fcntl.h" HAVE_POSIX_FALLOCATE)
+check_symbol_exists(posix_fadvise "fcntl.h" HAVE_POSIX_FADVISE)
+check_symbol_exists(F_PREALLOCATE "fcntl.h" HAVE_F_PREALLOCATE)
 
 include(CheckStructHasMember)
 check_struct_has_member("struct timespec" tv_sec time.h HAVE_TIMESPEC)
@@ -119,7 +122,10 @@ foreach(TARGET w2c2wasi w2c2wasi_test)
         target_compile_definitions(${TARGET} PUBLIC HAS_TIMESPEC=1)
     endif()
 
-    foreach(FEATURE FUTIMENS UTIMENSAT FUTIMES UTIMES LUTIMES UTIME LINKAT LINK REALPATH)
+    foreach(FEATURE
+        FUTIMENS UTIMENSAT FUTIMES UTIMES LUTIMES UTIME LINKAT LINK REALPATH
+        POSIX_FALLOCATE POSIX_FADVISE F_PREALLOCATE
+    )
         if(HAVE_${FEATURE})
             target_compile_definitions(${TARGET} PUBLIC HAS_${FEATURE}=1)
         endif()

@@ -5408,6 +5408,225 @@ WASI_IMPORT(U32, 11_schedX5Fyield, (
     return wasiSchedYield();
 })
 
+static
+W2C2_INLINE
+bool
+wasiFileRangeFitsNative(U64 offset, U64 length) {
+    U64 end;
+    if (length > UINT64_MAX - offset) {
+        return false;
+    }
+    end = offset + length;
+#ifdef _WIN32
+    return end <= (U64)INT64_MAX;
+#else
+    return (off_t)end >= 0 && (U64)(off_t)end == end;
+#endif
+}
+
+#ifdef _WIN32
+
+static
+U32
+wasiWindowsAllocate(int fd, U64 end) {
+    typedef BOOL (WINAPI *FileInformationFunction)(
+        HANDLE,
+        int,
+        LPVOID,
+        DWORD
+    );
+    /* FILE_STANDARD_INFO layout and information classes for older SDKs. */
+    struct {
+        LARGE_INTEGER allocationSize;
+        LARGE_INTEGER endOfFile;
+        DWORD numberOfLinks;
+        BYTE deletePending;
+        BYTE directory;
+    } standard;
+    enum {
+        wasiFileStandardInfo = 1,
+        wasiFileAllocationInfo = 5,
+        wasiFileEndOfFileInfo = 6
+    };
+    HMODULE kernel = GetModuleHandleA("kernel32.dll");
+    HANDLE handle = (HANDLE)_get_osfhandle(fd);
+    FileInformationFunction getInfo;
+    FileInformationFunction setInfo;
+    BY_HANDLE_FILE_INFORMATION info;
+    LARGE_INTEGER size;
+    DWORD error;
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        return WASI_ERRNO_BADF;
+    }
+    getInfo = (FileInformationFunction)GetProcAddress(
+        kernel,
+        "GetFileInformationByHandleEx"
+    );
+    setInfo = (FileInformationFunction)GetProcAddress(
+        kernel,
+        "SetFileInformationByHandle"
+    );
+    if (getInfo == NULL || setInfo == NULL) {
+        return WASI_ERRNO_NOSYS;
+    }
+    if (!GetFileInformationByHandle(handle, &info)) {
+        goto failed;
+    }
+    if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        return WASI_ERRNO_ISDIR;
+    }
+    /* Allocation size does not reserve storage for sparse or compressed files. */
+    if (info.dwFileAttributes & (FILE_ATTRIBUTE_SPARSE_FILE | FILE_ATTRIBUTE_COMPRESSED)) {
+        return WASI_ERRNO_NOTSUP;
+    }
+    if (!getInfo(
+        handle,
+        wasiFileStandardInfo,
+        &standard,
+        sizeof(standard)
+    )) {
+        goto failed;
+    }
+    size.QuadPart = (I64)end;
+    if (size.QuadPart < standard.allocationSize.QuadPart) {
+        size = standard.allocationSize;
+    }
+    if (size.QuadPart < standard.endOfFile.QuadPart) {
+        size = standard.endOfFile;
+    }
+    if (!setInfo(
+        handle,
+        wasiFileAllocationInfo,
+        &size,
+        sizeof(size)
+    )) {
+        goto failed;
+    }
+    /* Allocation and size extension are separate operations,
+     * so concurrent file size changes are not atomic with this sequence.
+     */
+    if ((U64)standard.endOfFile.QuadPart < end) {
+        size.QuadPart = (I64)end;
+        if (!setInfo(
+            handle,
+            wasiFileEndOfFileInfo,
+            &size,
+            sizeof(size)
+        )) {
+            goto failed;
+        }
+    }
+    return WASI_ERRNO_SUCCESS;
+
+failed:
+    error = GetLastError();
+    if (error == ERROR_CALL_NOT_IMPLEMENTED) {
+        return WASI_ERRNO_NOSYS;
+    }
+    if (error == ERROR_NOT_SUPPORTED || error == ERROR_INVALID_FUNCTION) {
+        return WASI_ERRNO_NOTSUP;
+    }
+    wasiSetErrno(error);
+    return wasiErrno();
+}
+
+#endif /* _WIN32 */
+
+static
+U32
+wasiFdAllocate(
+    U32 wasiFD,
+    U64 offset,
+    U64 length
+) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+#ifndef _WIN32
+    struct stat st;
+#endif
+    WASI_TRACE((
+        "fd_allocate(wasiFD=%u, offset=%llu, length=%llu)",
+        wasiFD,
+        offset,
+        length
+    ));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        return WASI_ERRNO_BADF;
+    }
+    if (descriptor.fd < 0) {
+        return WASI_ERRNO_ISDIR;
+    }
+    if (length == 0) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!wasiFileRangeFitsNative(offset, length)) {
+        return WASI_ERRNO_OVERFLOW;
+    }
+#ifdef _WIN32
+    return wasiWindowsAllocate(descriptor.fd, offset + length);
+#else
+    if (fstat(descriptor.fd, &st) != 0) {
+        return wasiErrno();
+    }
+    if (S_ISDIR(st.st_mode)) {
+        return WASI_ERRNO_ISDIR;
+    }
+    if (!S_ISREG(st.st_mode)) {
+        return WASI_ERRNO_NODEV;
+    }
+#if HAS_POSIX_FALLOCATE
+    {
+        int error = posix_fallocate(
+            descriptor.fd,
+            (off_t)offset,
+            (off_t)length
+        );
+        if (error != 0) {
+            /* posix_fallocate returns an error number without setting errno. */
+            errno = error;
+            return wasiErrno();
+        }
+    }
+#elif HAS_F_PREALLOCATE
+    {
+        U64 end = offset + length;
+        U64 required = end > (U64)st.st_size ? end : (U64)st.st_size;
+        U64 allocated = (U64)st.st_blocks * 512;
+        int flags = fcntl(descriptor.fd, F_GETFL);
+        if (flags < 0) {
+            return wasiErrno();
+        }
+        if ((flags & O_ACCMODE) == O_RDONLY) {
+            return WASI_ERRNO_BADF;
+        }
+        if (allocated < required) {
+            fstore_t store;
+            memset(&store, 0, sizeof(store));
+            store.fst_flags = F_ALLOCATEALL;
+            store.fst_posmode = F_PEOFPOSMODE;
+            /* F_PEOFPOSMODE adds space to the physical end of the file.
+             * Reserve only the missing storage to avoid repeated over-allocation.
+             */
+            store.fst_length = (off_t)(required - allocated);
+            if (fcntl(descriptor.fd, F_PREALLOCATE, &store) != 0) {
+                return wasiErrno();
+            }
+        }
+        /* Allocation and size extension are separate operations,
+         * so concurrent file size changes are not atomic with this sequence.
+         */
+        if ((U64)st.st_size < end && ftruncate(descriptor.fd, (off_t)end) != 0) {
+            return wasiErrno();
+        }
+    }
+#else
+    return WASI_ERRNO_NOSYS;
+#endif
+    return WASI_ERRNO_SUCCESS;
+#endif /* _WIN32 */
+}
+
 WASI_IMPORT(U32, 11_fdX5Fallocate, (
     wasmModuleInstance* instance,
     U32 fd,
@@ -5415,14 +5634,109 @@ WASI_IMPORT(U32, 11_fdX5Fallocate, (
     U64 len
 ), {
     UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(offset);
-    UNUSED_PARAMETER(len);
-
-    /* TODO: */
-    WASI_TRACE(("fd_allocate: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiFdAllocate(fd, offset, len);
 })
+
+static
+U32
+wasiFdAdvise(
+    U32 wasiFD,
+    U64 offset,
+    U64 length,
+    U32 advice
+) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+#ifndef _WIN32
+    struct stat st;
+#endif
+    WASI_TRACE((
+        "fd_advise(wasiFD=%u, offset=%llu, length=%llu, advice=%u)",
+        wasiFD,
+        offset,
+        length,
+        advice
+    ));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        return WASI_ERRNO_BADF;
+    }
+    if (descriptor.fd < 0) {
+        return WASI_ERRNO_ISDIR;
+    }
+    if (advice > WASI_ADVICE_NOREUSE) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!wasiFileRangeFitsNative(offset, length)) {
+        return WASI_ERRNO_OVERFLOW;
+    }
+#ifdef _WIN32
+    {
+        HANDLE handle = (HANDLE)_get_osfhandle(descriptor.fd);
+        DWORD type;
+        if (handle == INVALID_HANDLE_VALUE) {
+            return WASI_ERRNO_BADF;
+        }
+        type = GetFileType(handle);
+        if (type == FILE_TYPE_UNKNOWN) {
+            wasiSetErrno(GetLastError());
+            return wasiErrno();
+        }
+        if (type == FILE_TYPE_PIPE) {
+            return WASI_ERRNO_SPIPE;
+        }
+    }
+#else
+    if (fstat(descriptor.fd, &st) != 0) {
+        return wasiErrno();
+    }
+#ifdef S_ISFIFO
+    if (S_ISFIFO(st.st_mode)) {
+        return WASI_ERRNO_SPIPE;
+    }
+#endif
+#if HAS_POSIX_FADVISE
+    {
+        int nativeAdvice;
+        int error;
+        switch (advice) {
+            case WASI_ADVICE_NORMAL:
+                nativeAdvice = POSIX_FADV_NORMAL;
+                break;
+            case WASI_ADVICE_SEQUENTIAL:
+                nativeAdvice = POSIX_FADV_SEQUENTIAL;
+                break;
+            case WASI_ADVICE_RANDOM:
+                nativeAdvice = POSIX_FADV_RANDOM;
+                break;
+            case WASI_ADVICE_WILLNEED:
+                nativeAdvice = POSIX_FADV_WILLNEED;
+                break;
+            case WASI_ADVICE_DONTNEED:
+                nativeAdvice = POSIX_FADV_DONTNEED;
+                break;
+            case WASI_ADVICE_NOREUSE:
+                nativeAdvice = POSIX_FADV_NOREUSE;
+                break;
+            default:
+                return WASI_ERRNO_INVAL;
+        }
+        error = posix_fadvise(
+            descriptor.fd,
+            (off_t)offset,
+            (off_t)length,
+            nativeAdvice
+        );
+        if (error != 0) {
+            /* posix_fadvise returns an error number without setting errno. */
+            errno = error;
+            return wasiErrno();
+        }
+    }
+#endif
+#endif /* _WIN32 */
+    /* Advice is optional on hosts without a corresponding native API. */
+    return WASI_ERRNO_SUCCESS;
+}
 
 WASI_IMPORT(U32, 9_fdX5Fadvise, (
     wasmModuleInstance* instance,
@@ -5432,14 +5746,12 @@ WASI_IMPORT(U32, 9_fdX5Fadvise, (
     U32 advise
 ), {
     UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(offset);
-    UNUSED_PARAMETER(len);
-    UNUSED_PARAMETER(advise);
-
-    /* TODO: */
-    WASI_TRACE(("fd_advise: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiFdAdvise(
+        fd,
+        offset,
+        len,
+        advise
+    );
 })
 
 WASI_IMPORT(U32, 11_sockX5Faccept, (

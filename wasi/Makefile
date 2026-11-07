@@ -35,11 +35,19 @@ endif
 # - sched_yield (except on Windows)
 # - futimens, utimensat, futimes, utimes, lutimes, utime (except on Windows)
 # - linkat, link, realpath (except on Windows)
+# - posix_fallocate, posix_fadvise (on Linux)
+# - F_PREALLOCATE (on Darwin)
 # - threads
 DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
 ifneq ($(UNAME),Windows)
 DEFAULT_FEATURES += poll sched_yield futimens utimensat futimes utimes lutimes utime
 DEFAULT_FEATURES += linkat link realpath
+endif
+ifeq ($(UNAME),Linux)
+DEFAULT_FEATURES += posix_fallocate posix_fadvise
+endif
+ifeq ($(UNAME),Darwin)
+DEFAULT_FEATURES += f_preallocate
 endif
 FEATURES ?= $(DEFAULT_FEATURES)
 
@@ -125,6 +133,18 @@ endif
 
 ifneq (,$(filter realpath,$(FEATURES)))
 	CFLAGS += -DHAS_REALPATH=1
+endif
+
+ifneq (,$(filter posix_fallocate,$(FEATURES)))
+	CFLAGS += -DHAS_POSIX_FALLOCATE=1
+endif
+
+ifneq (,$(filter posix_fadvise,$(FEATURES)))
+	CFLAGS += -DHAS_POSIX_FADVISE=1
+endif
+
+ifneq (,$(filter f_preallocate,$(FEATURES)))
+	CFLAGS += -DHAS_F_PREALLOCATE=1
 endif
 
 ifneq (,$(findstring threads,$(FEATURES)))

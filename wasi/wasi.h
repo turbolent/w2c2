@@ -174,6 +174,27 @@ typedef U16 WasiFstFlags;
 /* Set the modification time to the current time */
 #define WASI_FSTFLAGS_MTIM_NOW (1 << 3)
 
+/* Expected file access patterns */
+typedef U8 WasiAdvice;
+
+/* No particular access pattern */
+#define WASI_ADVICE_NORMAL 0
+
+/* Access data sequentially */
+#define WASI_ADVICE_SEQUENTIAL 1
+
+/* Access data in random order */
+#define WASI_ADVICE_RANDOM 2
+
+/* Access data in the near future */
+#define WASI_ADVICE_WILLNEED 3
+
+/* Do not access data in the near future */
+#define WASI_ADVICE_DONTNEED 4
+
+/* Access data only once */
+#define WASI_ADVICE_NOREUSE 5
+
 /* File descriptor rights, determining which actions may be performed */
 typedef U64 WasiRights;
 

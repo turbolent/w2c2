@@ -191,8 +191,8 @@ make run-tests
 - [x] `clock_time_get`
 - [x] `environ_get`
 - [x] `environ_sizes_get`
-- [ ] `fd_advise`
-- [ ] `fd_allocate`
+- [x] `fd_advise`
+- [x] `fd_allocate`
 - [x] `fd_close`
 - [x] `fd_datasync`
 - [x] `fd_fdstat_get`
