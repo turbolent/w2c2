@@ -185,51 +185,14 @@ make run-tests
 
 ## WASI Status
 
-- [x] `args_get`
-- [x] `args_sizes_get`
-- [x] `clock_res_get`
-- [x] `clock_time_get`
-- [x] `environ_get`
-- [x] `environ_sizes_get`
-- [x] `fd_advise`
-- [x] `fd_allocate`
-- [x] `fd_close`
-- [x] `fd_datasync`
-- [x] `fd_fdstat_get`
-- [x] `fd_fdstat_set_flags`
-- [ ] `fd_fdstat_set_rights`
-- [x] `fd_filestat_get`
-- [x] `fd_filestat_set_size`
-- [x] `fd_filestat_set_times`
-- [x] `fd_pread`
-- [x] `fd_prestat_get`
-- [x] `fd_prestat_dir_name`
-- [x] `fd_pwrite`
-- [x] `fd_read`
-- [x] `fd_readdir`
-- [x] `fd_renumber`
-- [x] `fd_seek`
-- [x] `fd_sync`
-- [x] `fd_tell`
-- [x] `fd_write`
-- [x] `path_create_directory`
-- [x] `path_filestat_get`
-- [x] `path_filestat_set_times`
-- [x] `path_link`
-- [x] `path_open`
-- [x] `path_readlink`
-- [x] `path_remove_directory`
-- [x] `path_rename`
-- [x] `path_symlink`
-- [x] `path_unlink_file`
-- [x] `poll_oneoff`
-- [x] `proc_exit`
-- [x] `random_get`
-- [x] `sched_yield`
-- [ ] `sock_recv`
-- [ ] `sock_send`
-- [ ] `sock_shutdown`
-- [x] `thread-spawn` (from the [threads proposal](https://github.com/webAssembly/wasi-threads))
+w2c2 implements all [WASI Preview 1](https://wasi.dev/releases/wasi-p1) functions except:
+
+- `fd_fdstat_set_rights`
+- `proc_raise`
+- `sock_accept`
+- `sock_recv`
+- `sock_send`
+- `sock_shutdown`
 
 ## Development
 
