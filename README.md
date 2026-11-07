@@ -207,7 +207,7 @@ make run-tests
 - [x] `fd_pwrite`
 - [x] `fd_read`
 - [x] `fd_readdir`
-- [ ] `fd_renumber`
+- [x] `fd_renumber`
 - [x] `fd_seek`
 - [x] `fd_sync`
 - [x] `fd_tell`

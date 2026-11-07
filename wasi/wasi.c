@@ -1844,6 +1844,42 @@ WASI_IMPORT(U32, 8_fdX5Fclose, (
     return WASI_ERRNO_SUCCESS;
 })
 
+static
+U32
+wasiFdRenumber(U32 from, U32 to) {
+    WasiFileDescriptor source = emptyWasiFileDescriptor;
+    WasiFileDescriptor target = emptyWasiFileDescriptor;
+    U32 result = WASI_ERRNO_SUCCESS;
+    WASI_TRACE(("fd_renumber(from=%u, to=%u)", from, to));
+
+    wasiFileDescriptorsLock();
+    if (!wasiFileDescriptorGetLocked(from, &source)
+        || !wasiFileDescriptorGetLocked(to, &target)) {
+        result = WASI_ERRNO_BADF;
+    } else if (from != to) {
+        if (!wasiFileDescriptorRelease(&wasi.fds.fds[to])) {
+            result = wasiErrno();
+        } else {
+            /* Move the complete descriptor,
+             * including its path and directory stream.
+             */
+            wasi.fds.fds[to] = source;
+            wasi.fds.fds[from] = emptyWasiFileDescriptor;
+        }
+    }
+    wasiFileDescriptorsUnlock();
+    return result;
+}
+
+WASI_IMPORT(U32, 11_fdX5Frenumber, (
+    wasmModuleInstance* instance,
+    U32 from,
+    U32 to
+), {
+    UNUSED_PARAMETER(instance);
+    return wasiFdRenumber(from, to);
+})
+
 #ifndef NSEC_PER_SEC
 #define NSEC_PER_SEC W2C2_LL(1000000000)
 #endif

@@ -294,6 +294,221 @@ static void testFileDescriptorsConcurrent(void) {
 
 #endif
 
+typedef U32 (*TestFdRenumber)(
+    wasmModuleInstance*,
+    U32,
+    U32
+);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber(
+    wasmModuleInstance*,
+    U32,
+    U32
+);
+extern U32 i13_wasiX5Funstable11_fdX5Frenumber(
+    wasmModuleInstance*,
+    U32,
+    U32
+);
+
+static void testFdRenumberValidation(TestFdRenumber renumber) {
+    U32 from, to, closed, added;
+    WasiFileDescriptor source, target, descriptor;
+
+    CHECK_IO(renumber(NULL, UINT32_MAX, UINT32_MAX) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &from));
+    CHECK_IO(wasiFileDescriptorAdd(-1, "..", &to));
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &closed));
+    CHECK_IO(wasiFileDescriptorClose(closed));
+    CHECK_IO(wasiFileDescriptorGet(from, &source));
+    CHECK_IO(wasiFileDescriptorGet(to, &target));
+    CHECK_IO(renumber(NULL, UINT32_MAX, to) == WASI_ERRNO_BADF);
+    CHECK_IO(renumber(NULL, from, UINT32_MAX) == WASI_ERRNO_BADF);
+    CHECK_IO(renumber(NULL, closed, to) == WASI_ERRNO_BADF);
+    CHECK_IO(renumber(NULL, from, closed) == WASI_ERRNO_BADF);
+    CHECK_IO(renumber(NULL, closed, closed) == WASI_ERRNO_BADF);
+    CHECK_IO(renumber(NULL, from, from) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(wasiFileDescriptorGet(from, &descriptor));
+    CHECK_IO(descriptor.path == source.path);
+    CHECK_IO(wasiFileDescriptorGet(to, &descriptor));
+    CHECK_IO(descriptor.path == target.path);
+
+    CHECK_IO(renumber(NULL, from, to) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(!wasiFileDescriptorGet(from, &descriptor));
+    CHECK_IO(!wasiFileDescriptorClose(from));
+    CHECK_IO(wasiFileDescriptorGet(to, &descriptor));
+    CHECK_IO(descriptor.path == source.path && strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL);
+    CHECK_IO(wasiFileDescriptorAdd(-1, "..", &added));
+    CHECK_IO(added > closed);
+    CHECK_IO(wasiFileDescriptorGet(to, &descriptor));
+    CHECK_IO(descriptor.path == source.path);
+    CHECK_IO(wasiFileDescriptorClose(added));
+    CHECK_IO(wasiFileDescriptorClose(to));
+    fprintf(stderr, "OK fd_renumber validation and preopens\n");
+}
+
+static void testFdRenumberDirectory(TestFdRenumber renumber) {
+    U32 from, to;
+    WasiFileDescriptor source, descriptor;
+#if HAS_UNISTD && !defined(_WIN32)
+    int fromFD = open(".", O_RDONLY);
+    int toFD = open(".", O_RDONLY);
+    CHECK_IO(fromFD >= 0 && toFD >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fromFD, ".", &from));
+    CHECK_IO(wasiFileDescriptorAdd(toFD, ".", &to));
+#else
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &from));
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &to));
+#endif
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+        NULL,
+        from,
+        128,
+        1,
+        0,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+        NULL,
+        to,
+        128,
+        1,
+        0,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(wasiFileDescriptorGet(from, &source));
+    CHECK_IO(source.dir != NULL);
+    CHECK_IO(renumber(NULL, from, from) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(renumber(NULL, from, to) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(!wasiFileDescriptorGet(from, &descriptor));
+    CHECK_IO(wasiFileDescriptorGet(to, &descriptor));
+    CHECK_IO(descriptor.fd == source.fd);
+    CHECK_IO(descriptor.dir == source.dir && descriptor.path == source.path);
+    CHECK_IO(readdir(descriptor.dir) != NULL);
+#if HAS_UNISTD && !defined(_WIN32)
+    CHECK_IO(fcntl(toFD, F_GETFD) == -1 && errno == EBADF);
+    CHECK_IO(fcntl(fromFD, F_GETFD) >= 0);
+#endif
+    CHECK_IO(wasiFileDescriptorClose(to));
+#if HAS_UNISTD && !defined(_WIN32)
+    CHECK_IO(fcntl(fromFD, F_GETFD) == -1 && errno == EBADF);
+#endif
+    fprintf(stderr, "OK fd_renumber directory ownership\n");
+}
+
+#if HAS_UNISTD && !defined(_WIN32)
+
+static void testFdRenumberFile(TestFdRenumber renumber) {
+    FILE* source = tmpfile();
+    FILE* target = tmpfile();
+    U32 from, to;
+    int fromFD, toFD;
+    WasiFileDescriptor descriptor;
+    char bytes[3];
+    CHECK_IO(source != NULL && target != NULL);
+    fromFD = dup(fileno(source));
+    toFD = dup(fileno(target));
+    CHECK_IO(fromFD >= 0 && toFD >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fromFD, NULL, &from));
+    CHECK_IO(wasiFileDescriptorAdd(toFD, NULL, &to));
+    CHECK_IO(write(fromFD, "abcdef", 6) == 6);
+    CHECK_IO(lseek(fromFD, 2, SEEK_SET) == 2);
+    CHECK_IO(renumber(NULL, from, from) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(renumber(NULL, from, to) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(!wasiFileDescriptorGet(from, &descriptor));
+    CHECK_IO(wasiFileDescriptorGet(to, &descriptor));
+    CHECK_IO(descriptor.fd == fromFD);
+    CHECK_IO(lseek(descriptor.fd, 0, SEEK_CUR) == 2);
+    CHECK_IO(read(descriptor.fd, bytes, sizeof(bytes)) == sizeof(bytes));
+    CHECK_IO(memcmp(bytes, "cde", sizeof(bytes)) == 0);
+    CHECK_IO(fcntl(toFD, F_GETFD) == -1 && errno == EBADF);
+    CHECK_IO(wasiFileDescriptorClose(to));
+    CHECK_IO(fcntl(fromFD, F_GETFD) == -1 && errno == EBADF);
+    CHECK_IO(fclose(source) == 0 && fclose(target) == 0);
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &from));
+    CHECK_IO(wasiFileDescriptorAdd(INT_MAX, "..", &to));
+    CHECK_IO(renumber(NULL, from, to) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorGet(from, &descriptor));
+    CHECK_IO(strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(wasiFileDescriptorSet(to, -1));
+    CHECK_IO(wasiFileDescriptorClose(from));
+    CHECK_IO(wasiFileDescriptorClose(to));
+    fprintf(stderr, "OK fd_renumber file offset and close errors\n");
+}
+
+#endif
+
+#ifdef WASM_THREAD_TYPE
+
+typedef struct TestRenumberThread {
+    TestFdRenumber renumber;
+    U32 from;
+    U32 to;
+    U32 result;
+} TestRenumberThread;
+
+static void* testRenumberThread(void* argument) {
+    TestRenumberThread* test = (TestRenumberThread*)argument;
+    U32 added;
+    WasiFileDescriptor descriptor;
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &added));
+    CHECK_IO(wasiFileDescriptorGet(added, &descriptor));
+    CHECK_IO(strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(wasiFileDescriptorSet(added, -1));
+    test->result = test->renumber(NULL, test->from, test->to);
+    CHECK_IO(wasiFileDescriptorClose(added));
+    return NULL;
+}
+
+static void testFdRenumberConcurrent(TestFdRenumber renumber) {
+    unsigned int i;
+    for (i = 0; i < 32; i++) {
+        TestRenumberThread first, second;
+        WASM_THREAD_TYPE firstThread, secondThread;
+        WasiFileDescriptor descriptor;
+        first.renumber = second.renumber = renumber;
+        CHECK_IO(wasiFileDescriptorAdd(-1, ".", &first.from));
+        second.from = first.from;
+        CHECK_IO(wasiFileDescriptorAdd(-1, ".", &first.to));
+        CHECK_IO(wasiFileDescriptorAdd(-1, ".", &second.to));
+        CHECK_IO(WASM_THREAD_CREATE(
+            &firstThread,
+            testRenumberThread,
+            &first
+        ));
+        CHECK_IO(WASM_THREAD_CREATE(
+            &secondThread,
+            testRenumberThread,
+            &second
+        ));
+        WASM_THREAD_JOIN(firstThread);
+        WASM_THREAD_JOIN(secondThread);
+        CHECK_IO(
+            (first.result == WASI_ERRNO_SUCCESS && second.result == WASI_ERRNO_BADF)
+            || (first.result == WASI_ERRNO_BADF && second.result == WASI_ERRNO_SUCCESS)
+        );
+        CHECK_IO(!wasiFileDescriptorGet(first.from, &descriptor));
+        CHECK_IO(wasiFileDescriptorClose(first.to));
+        CHECK_IO(wasiFileDescriptorClose(second.to));
+    }
+    fprintf(stderr, "OK fd_renumber concurrent moves\n");
+}
+
+#endif
+
+static void testFdRenumber(TestFdRenumber renumber) {
+    testFdRenumberValidation(renumber);
+    testFdRenumberDirectory(renumber);
+#if HAS_UNISTD && !defined(_WIN32)
+    testFdRenumberFile(renumber);
+#endif
+#ifdef WASM_THREAD_TYPE
+    testFdRenumberConcurrent(renumber);
+#endif
+}
+
 extern U32 i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
     wasmModuleInstance*, U32, U32
 );
@@ -2555,6 +2770,8 @@ main(int argc, char* argv[]) {
 #ifdef WASM_THREAD_TYPE
     testFileDescriptorsConcurrent();
 #endif
+    testFdRenumber(i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber);
+    testFdRenumber(i13_wasiX5Funstable11_fdX5Frenumber);
     testFdAllocateAndAdvise(
         i22_wasiX5FsnapshotX5Fpreview111_fdX5Fallocate,
         i22_wasiX5FsnapshotX5Fpreview19_fdX5Fadvise
