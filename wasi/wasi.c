@@ -3212,11 +3212,13 @@ WASI_IMPORT(U32, 20_fdX5FfilestatX5FsetX5Fsize, (
 
 WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
     wasmModuleInstance* instance,
+    U32 fd,
     U64 atime,
     U64 mtime,
     U32 fstFlags
 ), {
     UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
     UNUSED_PARAMETER(atime);
     UNUSED_PARAMETER(mtime);
     UNUSED_PARAMETER(fstFlags);
@@ -4672,10 +4674,12 @@ WASI_IMPORT(U32, 11_schedX5Fyield, (
 
 WASI_IMPORT(U32, 11_fdX5Fallocate, (
     wasmModuleInstance* instance,
+    U32 fd,
     U64 offset,
     U64 len
 ), {
     UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
     UNUSED_PARAMETER(offset);
     UNUSED_PARAMETER(len);
 
@@ -4686,11 +4690,13 @@ WASI_IMPORT(U32, 11_fdX5Fallocate, (
 
 WASI_IMPORT(U32, 9_fdX5Fadvise, (
     wasmModuleInstance* instance,
+    U32 fd,
     U64 offset,
     U64 len,
     U32 advise
 ), {
     UNUSED_PARAMETER(instance);
+    UNUSED_PARAMETER(fd);
     UNUSED_PARAMETER(offset);
     UNUSED_PARAMETER(len);
     UNUSED_PARAMETER(advise);
