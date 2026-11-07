@@ -151,6 +151,61 @@ static void testSchedYield(void) {
         } \
     } while (0)
 
+static void testFileDescriptorGet(void) {
+    U32 wasiFD;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+
+    CHECK_IO(!wasiFileDescriptorGet(UINT32_MAX, &descriptor));
+    CHECK_IO(wasiFileDescriptorGet(0, &descriptor));
+    CHECK_IO(descriptor.fd == 0 && descriptor.dir == NULL && descriptor.path == NULL);
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    CHECK_IO(!wasiFileDescriptorGet(wasiFD + 1, &descriptor));
+    CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL);
+    CHECK_IO(descriptor.path != NULL && strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+
+    fprintf(stderr, "OK wasiFileDescriptorGet\n");
+}
+
+static void testFileDescriptorClose(void) {
+    U32 wasiFD;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+
+    CHECK_IO(!wasiFileDescriptorClose(UINT32_MAX));
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
+    CHECK_IO(!wasiFileDescriptorClose(wasiFD));
+
+#if HAS_UNISTD
+    {
+        FILE* file = tmpfile();
+        int fd;
+        char byte;
+
+        CHECK_IO(file != NULL);
+        fd = dup(fileno(file));
+        CHECK_IO(fd >= 0);
+        CHECK_IO(wasiFileDescriptorAdd(fd, ".", &wasiFD));
+        CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+        CHECK_IO(wasiFileDescriptorClose(wasiFD));
+        CHECK_IO(read(fd, &byte, 1) == -1);
+        CHECK_IO(errno == EBADF);
+        CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+        CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
+        CHECK_IO(!wasiFileDescriptorClose(wasiFD));
+        CHECK_IO(fclose(file) == 0);
+    }
+#endif
+
+    fprintf(stderr, "OK wasiFileDescriptorClose\n");
+}
+
 extern U32 i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
     wasmModuleInstance*, U32, U32
 );
@@ -163,7 +218,6 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
 
 static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     U32 wasiFD;
-    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     CHECK_IO(setFlags(NULL, UINT32_MAX, 0) == WASI_ERRNO_BADF);
     CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
@@ -171,9 +225,6 @@ static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_APPEND) == WASI_ERRNO_NOTSUP);
     CHECK_IO(setFlags(NULL, wasiFD, 0x10000) == WASI_ERRNO_INVAL);
     CHECK_IO(wasiFileDescriptorClose(wasiFD));
-    CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
-    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
-    CHECK_IO(!wasiFileDescriptorClose(wasiFD));
     CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_BADF);
     CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
         == WASI_ERRNO_BADF);
@@ -994,6 +1045,8 @@ main(int argc, char* argv[]) {
     }
 
     testSchedYield();
+    testFileDescriptorGet();
+    testFileDescriptorClose();
     testFdFlags(i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags);
     testFdFlags(i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags);
 #if HAS_UNISTD && HAS_FCNTL && defined(O_DSYNC) && defined(O_SYNC)
