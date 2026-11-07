@@ -28,13 +28,18 @@ typedef long ssize_t;
 extern "C" {
 #endif
 
+/* File descriptor rights, determining which actions may be performed */
+typedef U64 WasiRights;
+
 typedef struct WasiFileDescriptor {
     int fd;
     DIR* dir;
     char* path;
+    WasiRights rightsBase;
+    WasiRights rightsInheriting;
 } WasiFileDescriptor;
 
-static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL};
+static const WasiFileDescriptor emptyWasiFileDescriptor = {-1, NULL, NULL, 0, 0};
 
 typedef struct WasiFileDescriptors {
     WasiFileDescriptor* fds;
@@ -194,9 +199,6 @@ typedef U8 WasiAdvice;
 
 /* Access data only once */
 #define WASI_ADVICE_NOREUSE 5
-
-/* File descriptor rights, determining which actions may be performed */
-typedef U64 WasiRights;
 
 /*
  * The right to invoke `fd_datasync`.

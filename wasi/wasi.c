@@ -504,13 +504,56 @@ wasiFileDescriptorsEnsureCapacity(
 }
 
 static
+void
+wasiFileDescriptorDefaultRights(
+    WasiFileDescriptor* descriptor
+) {
+    struct stat st;
+
+    descriptor->rightsBase = WASI_RIGHTS_ALL;
+    descriptor->rightsInheriting = WASI_RIGHTS_ALL;
+
+    /* Registration also accepts paths and native descriptors
+     * that are not yet usable. */
+    if (descriptor->fd >= 0) {
+        if (fstat(descriptor->fd, &st) != 0) {
+            return;
+        }
+    } else if (descriptor->path != NULL) {
+        char nativePath[PATH_MAX];
+        strcpy(nativePath, descriptor->path);
+#if HAS_NONPOSIXPATH
+        wasiToNativePath(nativePath);
+#endif
+        if (stat(nativePath, &st) != 0) {
+            return;
+        }
+    } else {
+        return;
+    }
+
+    if (S_ISCHR(st.st_mode) && descriptor->fd >= 0 && isatty(descriptor->fd)) {
+        descriptor->rightsBase = WASI_RIGHTS_TTY_BASE;
+        descriptor->rightsInheriting = WASI_RIGHTS_TTY_INHERITING;
+    } else if (S_ISDIR(st.st_mode)) {
+        descriptor->rightsBase = WASI_RIGHTS_DIRECTORY_BASE;
+        descriptor->rightsInheriting = WASI_RIGHTS_DIRECTORY_INHERITING;
+    } else if (S_ISREG(st.st_mode)) {
+        descriptor->rightsBase = WASI_RIGHTS_REGULAR_FILE_BASE;
+        descriptor->rightsInheriting = WASI_RIGHTS_REGULAR_FILE_INHERITING;
+    }
+}
+
+static
 W2C2_INLINE
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorsAdd(
     WasiFileDescriptors* descriptors,
     int fd,
-    char* path
+    char* path,
+    WasiRights rightsBase,
+    WasiRights rightsInheriting
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     descriptor.fd = fd;
@@ -521,6 +564,9 @@ wasiFileDescriptorsAdd(
         MUST (path != NULL)
     }
     descriptor.path = path;
+    wasiFileDescriptorDefaultRights(&descriptor);
+    descriptor.rightsBase &= rightsBase;
+    descriptor.rightsInheriting &= rightsInheriting;
     descriptors->length++;
     if (!wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length)) {
         free(path);
@@ -530,6 +576,33 @@ wasiFileDescriptorsAdd(
     return true;
 }
 
+static
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorAddWithRights(
+    int nativeFD,
+    char* path,
+    WasiRights rightsBase,
+    WasiRights rightsInheriting,
+    U32* wasiFD
+) {
+    bool added;
+    wasiFileDescriptorsLock();
+    added = (U64)wasi.fds.length <= (U64)UINT32_MAX
+            && wasiFileDescriptorsAdd(
+                &wasi.fds,
+                nativeFD,
+                path,
+                rightsBase,
+                rightsInheriting
+            );
+    if (added && wasiFD != NULL) {
+        *wasiFD = (U32)(wasi.fds.length - 1);
+    }
+    wasiFileDescriptorsUnlock();
+    return added;
+}
+
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
@@ -537,15 +610,13 @@ wasiFileDescriptorAdd(
     char* path,
     U32* wasiFD
 ) {
-    bool added;
-    wasiFileDescriptorsLock();
-    added = (U64)wasi.fds.length <= (U64)UINT32_MAX
-            && wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path);
-    if (added && wasiFD != NULL) {
-        *wasiFD = (U32)(wasi.fds.length - 1);
-    }
-    wasiFileDescriptorsUnlock();
-    return added;
+    return wasiFileDescriptorAddWithRights(
+        nativeFD,
+        path,
+        WASI_RIGHTS_ALL,
+        WASI_RIGHTS_ALL,
+        wasiFD
+    );
 }
 
 bool
@@ -2410,8 +2481,6 @@ wasiFdFdstatGet(
     U16 wasiFlags = 0;
     struct stat st;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
-    WasiRights baseRights = 0;
-    WasiRights inheritingRights = 0;
 
     WASI_TRACE((
         "fd_fdstat_get("
@@ -2453,34 +2522,6 @@ wasiFdFdstatGet(
 
     fileType = wasiFileTypeFromMode(st.st_mode);
 
-    switch (fileType) {
-        case WASI_FILE_TYPE_CHARACTER_DEVICE: {
-            if (descriptor.fd >= 0 && isatty(descriptor.fd)) {
-                baseRights = WASI_RIGHTS_TTY_BASE;
-                inheritingRights = WASI_RIGHTS_TTY_INHERITING;
-            } else {
-                baseRights = WASI_RIGHTS_ALL;
-                inheritingRights = WASI_RIGHTS_ALL;
-            }
-            break;
-        }
-        case WASI_FILE_TYPE_DIRECTORY: {
-            baseRights = WASI_RIGHTS_DIRECTORY_BASE;
-            inheritingRights = WASI_RIGHTS_DIRECTORY_INHERITING;
-            break;
-        }
-        case WASI_FILE_TYPE_REGULAR_FILE: {
-            baseRights = WASI_RIGHTS_REGULAR_FILE_BASE;
-            inheritingRights = WASI_RIGHTS_REGULAR_FILE_INHERITING;
-            break;
-        }
-        default: {
-            baseRights = WASI_RIGHTS_ALL;
-            inheritingRights = WASI_RIGHTS_ALL;
-            break;
-        }
-    }
-
     if (descriptor.fd >= 0) {
 #if HAS_FCNTL
         int nativeFlags = 0;
@@ -2511,14 +2552,14 @@ wasiFdFdstatGet(
         "inheritingRights=%llu",
         fileType,
         wasiFlags,
-        baseRights,
-        inheritingRights
+        descriptor.rightsBase,
+        descriptor.rightsInheriting
     ));
 
     i32_store8(memory, resultPointer, fileType);
     i32_store16(memory, resultPointer + 2, wasiFlags);
-    i64_store(memory, resultPointer + 8, baseRights);
-    i64_store(memory, resultPointer + 16, inheritingRights);
+    i64_store(memory, resultPointer + 8, descriptor.rightsBase);
+    i64_store(memory, resultPointer + 16, descriptor.rightsInheriting);
 
     return WASI_ERRNO_SUCCESS;
 }
@@ -2778,7 +2819,6 @@ wasiPathOpen(
                                    | WASI_RIGHTS_FD_ALLOCATE
                                    | WASI_RIGHTS_FD_FILESTAT_SET_SIZE);
     UNUSED_PARAMETER(dirFlags);
-    UNUSED_PARAMETER(fsRightsInheriting);
 
     WASI_TRACE((
         "path_open("
@@ -2943,7 +2983,13 @@ wasiPathOpen(
     }
 
     /* Register the WASI file descriptor */
-    if (!wasiFileDescriptorAdd(nativeFD, resolvedPath, &wasiFD)) {
+    if (!wasiFileDescriptorAddWithRights(
+        nativeFD,
+        resolvedPath,
+        fsRightsBase,
+        fsRightsInheriting,
+        &wasiFD
+    )) {
         WASI_TRACE(("path_open: adding FD failed"));
         return WASI_ERRNO_BADF;
     }

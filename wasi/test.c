@@ -196,6 +196,7 @@ static void testFileDescriptorClose(void) {
     CHECK_IO(wasiFileDescriptorClose(wasiFD));
     CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
     CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
+    CHECK_IO(descriptor.rightsBase == 0 && descriptor.rightsInheriting == 0);
     CHECK_IO(!wasiFileDescriptorClose(wasiFD));
 
 #if HAS_UNISTD
@@ -264,6 +265,8 @@ static void* testFileDescriptorsThread(void* argument) {
         CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
         CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
         CHECK_IO(strcmp(descriptor.path, ".") == 0);
+        CHECK_IO(descriptor.rightsBase == WASI_RIGHTS_DIRECTORY_BASE);
+        CHECK_IO(descriptor.rightsInheriting == WASI_RIGHTS_DIRECTORY_INHERITING);
         CHECK_IO(wasiFileDescriptorSet(wasiFD, -1));
         CHECK_IO(wasiFileDescriptorClose(wasiFD));
         CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
@@ -518,6 +521,135 @@ extern U32 i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags(
 extern U32 i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
     wasmModuleInstance*, U32, U32
 );
+extern U32 i13_wasiX5Funstable13_fdX5FfdstatX5Fget(
+    wasmModuleInstance*, U32, U32
+);
+
+typedef U32 (*TestPathOpen)(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32,
+    U32
+);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview19_pathX5Fopen(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32,
+    U32
+);
+extern U32 i13_wasiX5Funstable9_pathX5Fopen(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32,
+    U32
+);
+
+static void testFdRights(
+    U32 wasiFD,
+    WasiRights base,
+    WasiRights inheriting
+) {
+    WasiFileDescriptor descriptor;
+    CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.rightsBase == base);
+    CHECK_IO(descriptor.rightsInheriting == inheriting);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
+        NULL,
+        wasiFD,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i64_load(&testMemory, 520) == base);
+    CHECK_IO(i64_load(&testMemory, 528) == inheriting);
+    CHECK_IO(i13_wasiX5Funstable13_fdX5FfdstatX5Fget(
+        NULL,
+        wasiFD,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i64_load(&testMemory, 520) == base);
+    CHECK_IO(i64_load(&testMemory, 528) == inheriting);
+}
+
+static U32 testOpenWithRights(
+    TestPathOpen openPath,
+    U32 directory,
+    const char* path,
+    U32 flags,
+    WasiRights base,
+    WasiRights inheriting
+) {
+    size_t length = strlen(path);
+    memcpy(testMemory.data + 1024, path, length);
+    CHECK_IO(openPath(
+        NULL,
+        directory,
+        WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW,
+        1024,
+        (U32)length,
+        flags,
+        base,
+        inheriting,
+        0,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    return i32_load(&testMemory, 512);
+}
+
+static void testDirectoryRights(
+    TestPathOpen openPath,
+    TestFdRenumber renumber
+) {
+    U32 parent, child, target;
+    WasiFileDescriptor descriptor;
+    WasiRights base = WASI_RIGHTS_PATH_OPEN | WASI_RIGHTS_FD_READDIR;
+    WasiRights inheriting = WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_FILESTAT_GET;
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &parent));
+    testFdRights(
+        parent,
+        WASI_RIGHTS_DIRECTORY_BASE,
+        WASI_RIGHTS_DIRECTORY_INHERITING
+    );
+    child = testOpenWithRights(
+        openPath,
+        parent,
+        ".",
+        WASI_OFLAGS_DIRECTORY,
+        base | WASI_RIGHTS_FD_READ,
+        inheriting
+    );
+    testFdRights(child, base, inheriting);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &target));
+    CHECK_IO(renumber(NULL, child, child) == WASI_ERRNO_SUCCESS);
+    testFdRights(child, base, inheriting);
+    CHECK_IO(renumber(NULL, child, target) == WASI_ERRNO_SUCCESS);
+    testFdRights(target, base, inheriting);
+    CHECK_IO(!wasiFileDescriptorGet(child, &descriptor));
+    CHECK_IO(descriptor.rightsBase == 0 && descriptor.rightsInheriting == 0);
+    CHECK_IO(wasiFileDescriptorClose(target));
+    CHECK_IO(!wasiFileDescriptorGet(target, &descriptor));
+    CHECK_IO(descriptor.rightsBase == 0 && descriptor.rightsInheriting == 0);
+    CHECK_IO(wasiFileDescriptorClose(parent));
+    fprintf(stderr, "OK directory rights and renumbering\n");
+}
 
 typedef U32 (*TestFdSetTimes)(
     wasmModuleInstance*,
@@ -1939,6 +2071,102 @@ static void testFdAllocateAndAdvise(
 #endif
 }
 
+#if HAS_UNISTD || defined(_WIN32)
+
+static void testFileRights(
+    TestPathOpen openPath,
+    TestFdRenumber renumber
+) {
+    U32 parent, directory, file, target;
+    WasiFileDescriptor descriptor;
+    WasiRights base = WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_FILESTAT_GET;
+    int fd, replacement;
+#ifdef _WIN32
+    char path[MAX_PATH];
+    char* separator;
+    CHECK_IO(GetTempFileNameA(".", "w2c", 0, path) != 0);
+    for (separator = path; *separator != '\0'; separator++) {
+        if (*separator == '\\') {
+            *separator = '/';
+        }
+    }
+    fd = _open(path, _O_RDWR | _O_BINARY);
+#else
+    char path[] = "wasi-rights-XXXXXX";
+    fd = mkstemp(path);
+#endif
+    CHECK_IO(fd >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, ".", &file));
+    testFdRights(
+        file,
+        WASI_RIGHTS_REGULAR_FILE_BASE,
+        WASI_RIGHTS_REGULAR_FILE_INHERITING
+    );
+    CHECK_IO(wasiFileDescriptorClose(file));
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, path, &file));
+    testFdRights(
+        file,
+        WASI_RIGHTS_REGULAR_FILE_BASE,
+        WASI_RIGHTS_REGULAR_FILE_INHERITING
+    );
+    CHECK_IO(wasiFileDescriptorClose(file));
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &parent));
+    directory = testOpenWithRights(
+        openPath,
+        parent,
+        ".",
+        WASI_OFLAGS_DIRECTORY,
+        WASI_RIGHTS_PATH_OPEN,
+        base
+    );
+    testFdRights(directory, WASI_RIGHTS_PATH_OPEN, base);
+    file = testOpenWithRights(openPath, directory, path, 0, base, 0);
+    testFdRights(file, base, 0);
+
+    CHECK_IO(wasiFileDescriptorGet(file, &descriptor));
+#ifdef _WIN32
+    replacement = _dup(descriptor.fd);
+#else
+    replacement = dup(descriptor.fd);
+#endif
+    CHECK_IO(replacement >= 0);
+    CHECK_IO(wasiFileDescriptorSet(file, replacement));
+#ifdef _WIN32
+    CHECK_IO(_close(descriptor.fd) == 0);
+#else
+    CHECK_IO(close(descriptor.fd) == 0);
+#endif
+    testFdRights(file, base, 0);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &target));
+    CHECK_IO(renumber(NULL, file, target) == WASI_ERRNO_SUCCESS);
+    testFdRights(target, base, 0);
+    CHECK_IO(!wasiFileDescriptorGet(file, &descriptor));
+    CHECK_IO(descriptor.rightsBase == 0 && descriptor.rightsInheriting == 0);
+    CHECK_IO(wasiFileDescriptorClose(target));
+    CHECK_IO(wasiFileDescriptorClose(directory));
+
+    file = testOpenWithRights(
+        openPath,
+        parent,
+        path,
+        0,
+        base | WASI_RIGHTS_PATH_OPEN,
+        WASI_RIGHTS_ALL
+    );
+    testFdRights(file, base, 0);
+    CHECK_IO(wasiFileDescriptorClose(file));
+    file = testOpenWithRights(openPath, parent, path, 0, 0, 0);
+    testFdRights(file, 0, 0);
+    CHECK_IO(wasiFileDescriptorClose(file));
+    CHECK_IO(wasiFileDescriptorClose(parent));
+    CHECK_IO(remove(path) == 0);
+    fprintf(stderr, "OK file rights, inheritance, and handle replacement\n");
+}
+
+#endif
+
 static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     U32 wasiFD;
 
@@ -2772,6 +3000,24 @@ main(int argc, char* argv[]) {
 #endif
     testFdRenumber(i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber);
     testFdRenumber(i13_wasiX5Funstable11_fdX5Frenumber);
+    testDirectoryRights(
+        i22_wasiX5FsnapshotX5Fpreview19_pathX5Fopen,
+        i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber
+    );
+    testDirectoryRights(
+        i13_wasiX5Funstable9_pathX5Fopen,
+        i13_wasiX5Funstable11_fdX5Frenumber
+    );
+#if HAS_UNISTD || defined(_WIN32)
+    testFileRights(
+        i22_wasiX5FsnapshotX5Fpreview19_pathX5Fopen,
+        i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber
+    );
+    testFileRights(
+        i13_wasiX5Funstable9_pathX5Fopen,
+        i13_wasiX5Funstable11_fdX5Frenumber
+    );
+#endif
     testFdAllocateAndAdvise(
         i22_wasiX5FsnapshotX5Fpreview111_fdX5Fallocate,
         i22_wasiX5FsnapshotX5Fpreview19_fdX5Fadvise
