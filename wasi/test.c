@@ -2502,10 +2502,10 @@ static void testFdSyncFlags(int syncFlag) {
 #if HAS_UNISTD
 
 extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
-    wasmModuleInstance*, U32, U32, U32, U32, U32
+    wasmModuleInstance*, U32, U32, U32, U64, U32
 );
 extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
-    wasmModuleInstance*, U32, U32, U32, U32, U32
+    wasmModuleInstance*, U32, U32, U32, U64, U32
 );
 
 static void testPositionalIO(void) {
@@ -3220,7 +3220,7 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
     U32,
     U32,
     U32,
-    U32,
+    U64,
     U32
 );
 
@@ -3229,7 +3229,7 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
     U32,
     U32,
     U32,
-    U32,
+    U64,
     U32
 );
 

@@ -1720,7 +1720,7 @@ WASI_IMPORT(U32, 9_fdX5Fpwrite, (
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
-    U32 offset,
+    U64 offset,
     U32 resultPointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
@@ -1879,7 +1879,7 @@ WASI_IMPORT(U32, 8_fdX5Fpread, (
     U32 wasiFD,
     U32 iovecsPointer,
     U32 iovecsCount,
-    U32 offset,
+    U64 offset,
     U32 resultPointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
