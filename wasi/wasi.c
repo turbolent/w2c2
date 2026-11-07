@@ -2217,6 +2217,43 @@ WASI_IMPORT(U32, 13_clockX5FresX5Fget, (
 
 #define WASI_FDSTAT_SIZE 24
 
+#if HAS_FCNTL
+
+static
+W2C2_INLINE
+U16
+wasiFdFlagsFromNative(int nativeFlags) {
+    U16 wasiFlags = 0;
+
+    if (nativeFlags & O_APPEND) {
+        wasiFlags |= WASI_FDFLAGS_APPEND;
+    }
+#ifdef O_DSYNC
+    if ((nativeFlags & O_DSYNC) == O_DSYNC) {
+        wasiFlags |= WASI_FDFLAGS_DSYNC;
+    }
+#endif
+#ifdef O_NONBLOCK
+    if (nativeFlags & O_NONBLOCK) {
+        wasiFlags |= WASI_FDFLAGS_NONBLOCK;
+    }
+#endif
+#ifdef O_RSYNC
+    if ((nativeFlags & O_RSYNC) == O_RSYNC) {
+        wasiFlags |= WASI_FDFLAGS_RSYNC;
+    }
+#endif
+#ifdef O_SYNC
+    if ((nativeFlags & O_SYNC) == O_SYNC) {
+        wasiFlags |= WASI_FDFLAGS_SYNC;
+    }
+#endif /* O_SYNC */
+
+    return wasiFlags;
+}
+
+#endif /* HAS_FCNTL */
+
 static
 W2C2_INLINE
 U32
@@ -2313,24 +2350,7 @@ wasiFdFdstatGet(
             return wasiErrno();
         }
 
-        if (nativeFlags & O_APPEND) {
-            wasiFlags |= WASI_FDFLAGS_APPEND;
-        }
-#ifdef O_DSYNC
-        if (nativeFlags & O_DSYNC) {
-            wasiFlags |= WASI_FDFLAGS_DSYNC;
-        }
-#endif
-#ifdef O_NONBLOCK
-        if (nativeFlags & O_NONBLOCK) {
-            wasiFlags |= WASI_FDFLAGS_NONBLOCK;
-        }
-#endif
-#ifdef O_SYNC
-        if (nativeFlags & O_SYNC) {
-            wasiFlags |= WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC;
-        }
-#endif /* O_SYNC */
+        wasiFlags = wasiFdFlagsFromNative(nativeFlags);
 #endif /* HAS_FCNTL */
     }
 
@@ -4067,18 +4087,82 @@ WASI_IMPORT(U32, 13_pathX5Freadlink, (
     );
 })
 
+static
+W2C2_INLINE
+U32
+wasiFdFdstatSetFlags(
+    U32 wasiFD,
+    U32 flags
+) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+#if HAS_FCNTL
+    int nativeFlags;
+    int newFlags;
+#endif
+
+    WASI_TRACE(("fd_fdstat_set_flags(wasiFD=%u, flags=%u)", wasiFD, flags));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        return WASI_ERRNO_BADF;
+    }
+
+    if (flags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
+                      WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
+                      WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_INVAL;
+    }
+
+    if (descriptor.fd < 0) {
+        return flags == 0 ? WASI_ERRNO_SUCCESS : WASI_ERRNO_NOTSUP;
+    }
+
+#if HAS_FCNTL
+    nativeFlags = fcntl(descriptor.fd, F_GETFL);
+    if (nativeFlags < 0) {
+        return wasiErrno();
+    }
+
+    /* F_SETFL cannot portably change synchronization flags,
+     * and some hosts silently ignore attempts to do so. */
+    if ((flags ^ wasiFdFlagsFromNative(nativeFlags)) &
+        (WASI_FDFLAGS_DSYNC | WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_NOTSUP;
+    }
+
+    newFlags = nativeFlags & ~O_APPEND;
+    if (flags & WASI_FDFLAGS_APPEND) {
+        newFlags |= O_APPEND;
+    }
+#ifdef O_NONBLOCK
+    newFlags &= ~O_NONBLOCK;
+    if (flags & WASI_FDFLAGS_NONBLOCK) {
+        newFlags |= O_NONBLOCK;
+    }
+#else
+    if (flags & WASI_FDFLAGS_NONBLOCK) {
+        return WASI_ERRNO_NOTSUP;
+    }
+#endif
+
+    if (newFlags != nativeFlags && fcntl(descriptor.fd, F_SETFL, newFlags) < 0) {
+        return wasiErrno();
+    }
+
+    return WASI_ERRNO_SUCCESS;
+#else
+    /* TODO: */
+    WASI_TRACE(("fd_fdstat_set_flags: not supported on this host"));
+    return WASI_ERRNO_NOSYS;
+#endif /* HAS_FCNTL */
+}
+
 WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
     wasmModuleInstance* instance,
     U32 fd,
     U32 flags
 ), {
     UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(flags);
-
-    /* TODO: */
-    WASI_TRACE(("fd_fdstat_set_flags: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiFdFdstatSetFlags(fd, flags);
 })
 
 #if HAS_POLL

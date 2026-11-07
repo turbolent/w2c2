@@ -2,6 +2,8 @@
 #include "wasi.h"
 #include <stdio.h>
 #include <limits.h>
+#include <errno.h>
+#include <fcntl.h>
 #include "mac.h"
 #if HAS_UNISTD
 #include <unistd.h>
@@ -141,6 +143,161 @@ static void testSchedYield(void) {
     fprintf(stderr, "OK sched_yield\n");
 }
 
+#define CHECK_IO(condition) \
+    do { \
+        if (!(condition)) { \
+            fprintf(stderr, "FAIL WASI I/O: line %d\n", __LINE__); \
+            exit(1); \
+        } \
+    } while (0)
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
+    wasmModuleInstance*, U32, U32
+);
+extern U32 i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags(
+    wasmModuleInstance*, U32, U32
+);
+extern U32 i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
+    wasmModuleInstance*, U32, U32
+);
+
+static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
+    U32 wasiFD;
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+
+    CHECK_IO(setFlags(NULL, UINT32_MAX, 0) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_APPEND) == WASI_ERRNO_NOTSUP);
+    CHECK_IO(setFlags(NULL, wasiFD, 0x10000) == WASI_ERRNO_INVAL);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
+    CHECK_IO(!wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_BADF);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
+        == WASI_ERRNO_BADF);
+
+#if HAS_UNISTD
+    {
+        FILE* file = tmpfile();
+        int fd;
+#if HAS_FCNTL
+        int originalFlags;
+        char bytes[2];
+        size_t i;
+        static const U32 syncFlags[] = {
+            WASI_FDFLAGS_DSYNC, WASI_FDFLAGS_RSYNC, WASI_FDFLAGS_SYNC
+        };
+#endif
+        CHECK_IO(file != NULL);
+        fd = dup(fileno(file));
+        CHECK_IO(fd >= 0);
+        CHECK_IO(wasiFileDescriptorAdd(fd, ".", &wasiFD));
+        CHECK_IO(setFlags(NULL, wasiFD, 0x20) == WASI_ERRNO_INVAL);
+#if HAS_FCNTL
+        CHECK_IO(write(fd, "a", 1) == 1);
+        originalFlags = fcntl(fd, F_GETFL);
+        CHECK_IO(originalFlags >= 0);
+        CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_APPEND) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(fcntl(fd, F_GETFL) == (originalFlags | O_APPEND));
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
+            == WASI_ERRNO_SUCCESS);
+        CHECK_IO(i32_load16_u(&testMemory, 514) == WASI_FDFLAGS_APPEND);
+        CHECK_IO(lseek(fd, 0, SEEK_SET) == 0);
+        CHECK_IO(write(fd, "b", 1) == 1);
+        CHECK_IO(lseek(fd, 0, SEEK_SET) == 0);
+        CHECK_IO(read(fd, bytes, sizeof(bytes)) == (ssize_t)sizeof(bytes));
+        CHECK_IO(memcmp(bytes, "ab", sizeof(bytes)) == 0);
+        CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(fcntl(fd, F_GETFL) == originalFlags);
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
+            == WASI_ERRNO_SUCCESS);
+        CHECK_IO(i32_load16_u(&testMemory, 514) == 0);
+        for (i = 0; i < sizeof(syncFlags) / sizeof(syncFlags[0]); i++) {
+            CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_APPEND | syncFlags[i])
+                == WASI_ERRNO_NOTSUP);
+            CHECK_IO(fcntl(fd, F_GETFL) == originalFlags);
+        }
+#else
+        CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_APPEND) == WASI_ERRNO_NOSYS);
+#endif
+        CHECK_IO(wasiFileDescriptorClose(wasiFD));
+        CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_BADF);
+        CHECK_IO(fclose(file) == 0);
+    }
+#endif
+
+#if HAS_UNISTD && HAS_FCNTL && defined(O_NONBLOCK)
+    {
+        int pipeFDs[2];
+        int originalFlags;
+        char byte;
+        CHECK_IO(pipe(pipeFDs) == 0);
+        originalFlags = fcntl(pipeFDs[0], F_GETFL);
+        CHECK_IO(originalFlags >= 0);
+        CHECK_IO(wasiFileDescriptorAdd(pipeFDs[0], NULL, &wasiFD));
+        CHECK_IO(setFlags(NULL, wasiFD, WASI_FDFLAGS_NONBLOCK) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(fcntl(pipeFDs[0], F_GETFL) == (originalFlags | O_NONBLOCK));
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
+            == WASI_ERRNO_SUCCESS);
+        CHECK_IO(i32_load16_u(&testMemory, 514) == WASI_FDFLAGS_NONBLOCK);
+        CHECK_IO(read(pipeFDs[0], &byte, 1) == -1);
+        CHECK_IO(errno == EAGAIN || errno == EWOULDBLOCK);
+        CHECK_IO(setFlags(NULL, wasiFD, 0) == WASI_ERRNO_SUCCESS);
+        CHECK_IO(fcntl(pipeFDs[0], F_GETFL) == originalFlags);
+        CHECK_IO(wasiFileDescriptorClose(wasiFD));
+        CHECK_IO(close(pipeFDs[1]) == 0);
+    }
+#endif
+
+    fprintf(stderr, "OK fd_fdstat_set_flags\n");
+}
+
+#if HAS_UNISTD && HAS_FCNTL && defined(O_DSYNC) && defined(O_SYNC)
+
+static void testFdSyncFlags(int syncFlag) {
+    char path[] = "wasi-flags-XXXXXX";
+    int fd = mkstemp(path);
+    int nativeFlags;
+    U32 wasiFD;
+    U32 flags;
+    CHECK_IO(fd >= 0);
+    CHECK_IO(close(fd) == 0);
+    fd = open(path, O_RDWR | syncFlag);
+    CHECK_IO(unlink(path) == 0);
+    CHECK_IO(fd >= 0);
+    nativeFlags = fcntl(fd, F_GETFL);
+    CHECK_IO(nativeFlags >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(NULL, wasiFD, 512)
+        == WASI_ERRNO_SUCCESS);
+    flags = i32_load16_u(&testMemory, 514);
+    if (syncFlag == O_DSYNC) {
+        CHECK_IO(flags & WASI_FDFLAGS_DSYNC);
+        if (O_DSYNC != O_SYNC) {
+            CHECK_IO(!(flags & WASI_FDFLAGS_SYNC));
+        }
+    }
+    if (syncFlag == O_SYNC) {
+        CHECK_IO(flags & WASI_FDFLAGS_SYNC);
+    }
+#ifndef O_RSYNC
+    CHECK_IO(!(flags & WASI_FDFLAGS_RSYNC));
+#endif
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
+        NULL, wasiFD, flags | WASI_FDFLAGS_APPEND
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fcntl(fd, F_GETFL) == (nativeFlags | O_APPEND));
+    CHECK_IO(i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags(NULL, wasiFD, flags)
+        == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fcntl(fd, F_GETFL) == nativeFlags);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    fprintf(stderr, "OK synchronization flags preserved\n");
+}
+
+#endif
+
 #if HAS_UNISTD
 
 extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
@@ -149,14 +306,6 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
 extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
     wasmModuleInstance*, U32, U32, U32, U32, U32
 );
-
-#define CHECK_IO(condition) \
-    do { \
-        if (!(condition)) { \
-            fprintf(stderr, "FAIL WASI I/O: line %d\n", __LINE__); \
-            exit(1); \
-        } \
-    } while (0)
 
 static void testPositionalIO(void) {
     FILE* file = tmpfile();
@@ -845,6 +994,12 @@ main(int argc, char* argv[]) {
     }
 
     testSchedYield();
+    testFdFlags(i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags);
+    testFdFlags(i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags);
+#if HAS_UNISTD && HAS_FCNTL && defined(O_DSYNC) && defined(O_SYNC)
+    testFdSyncFlags(O_DSYNC);
+    testFdSyncFlags(O_SYNC);
+#endif
 
 #if HAS_UNISTD
     testPositionalIO();
