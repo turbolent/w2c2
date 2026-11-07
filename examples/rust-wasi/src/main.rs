@@ -1,5 +1,5 @@
 use std::env;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use getrandom::getrandom;
 use std::process::exit;
 use std::fs::*;
@@ -7,6 +7,9 @@ use std::io::*;
 
 fn main() {
     println!("Hello from Rust!");
+
+    std::thread::yield_now();
+    println!("Yielded to the host scheduler");
 
     let args: Vec<String> = env::args().collect();
     println!("Arguments: {:?}", args);
@@ -35,10 +38,19 @@ fn main() {
     soft_link(path2, path3).unwrap();
     println!("Link: {:?}", read_link(path3).unwrap());
 
-    let mut path2_file = File::open(path2).unwrap();
+    let mut path2_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(path2)
+        .unwrap();
     println!("Opened {}", path2);
 
+    let modified = SystemTime::UNIX_EPOCH + Duration::from_secs(1700000000);
+    let times = FileTimes::new().set_accessed(modified).set_modified(modified);
+    path2_file.set_times(times).unwrap();
+
     let path2_metadata1 = path2_file.metadata().unwrap();
+    assert_eq!(path2_metadata1.modified().unwrap(), modified);
     println!("Metadata of {} (via FD): {:?}", path2, path2_metadata1);
 
     let path2_metadata2 = metadata(path2).unwrap();
