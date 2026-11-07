@@ -1,0 +1,7 @@
+haskell-wasi
+haskellwasi.wasm
+haskellwasi.h
+haskellwasi.c
+m11_haskellwasi.s*.c
+m11_haskellwasi.data
+*.hi
