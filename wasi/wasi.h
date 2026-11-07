@@ -159,6 +159,21 @@ typedef U32 WasiLookupFlags;
 /* As long as the resolved path corresponds to a symbolic link, it is expanded */
 #define WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW (1 << 0)
 
+/* File timestamp update flags */
+typedef U16 WasiFstFlags;
+
+/* Set the access time to the supplied timestamp */
+#define WASI_FSTFLAGS_ATIM (1 << 0)
+
+/* Set the access time to the current time */
+#define WASI_FSTFLAGS_ATIM_NOW (1 << 1)
+
+/* Set the modification time to the supplied timestamp */
+#define WASI_FSTFLAGS_MTIM (1 << 2)
+
+/* Set the modification time to the current time */
+#define WASI_FSTFLAGS_MTIM_NOW (1 << 3)
+
 /* File descriptor rights, determining which actions may be performed */
 typedef U64 WasiRights;
 

@@ -1,12 +1,19 @@
+#define _DEFAULT_SOURCE 1
+
 #include "../w2c2/w2c2_base.h"
 #include "wasi.h"
 #include <stdio.h>
 #include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <time.h>
 #include "mac.h"
 #if HAS_UNISTD
 #include <unistd.h>
+#endif
+#ifdef _WIN32
+#include <io.h>
 #endif
 
 extern char** environ;
@@ -215,6 +222,671 @@ extern U32 i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags(
 extern U32 i22_wasiX5FsnapshotX5Fpreview113_fdX5FfdstatX5Fget(
     wasmModuleInstance*, U32, U32
 );
+
+typedef U32 (*TestFdSetTimes)(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+typedef U32 (*TestPathSetTimes)(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32
+);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview121_fdX5FfilestatX5FsetX5Ftimes(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+extern U32 i13_wasiX5Funstable21_fdX5FfilestatX5FsetX5Ftimes(
+    wasmModuleInstance*,
+    U32,
+    U64,
+    U64,
+    U32
+);
+extern U32 i22_wasiX5FsnapshotX5Fpreview123_pathX5FfilestatX5FsetX5Ftimes(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32
+);
+extern U32 i13_wasiX5Funstable23_pathX5FfilestatX5FsetX5Ftimes(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U64,
+    U64,
+    U32
+);
+
+static void testFilestatSetTimesValidation(
+    TestFdSetTimes setFD,
+    TestPathSetTimes setPath
+) {
+    U32 wasiFD;
+    size_t i;
+    static const U32 invalidFlags[] = {
+        WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_ATIM_NOW,
+        WASI_FSTFLAGS_MTIM | WASI_FSTFLAGS_MTIM_NOW,
+        0x10, 0x10000
+    };
+
+    CHECK_IO(setFD(
+        NULL,
+        UINT32_MAX,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(setPath(
+        NULL,
+        UINT32_MAX,
+        0,
+        128,
+        1,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(setPath(
+        NULL,
+        0,
+        0,
+        128,
+        1,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+    testMemory.data[128] = '.';
+    for (i = 0; i < sizeof(invalidFlags) / sizeof(invalidFlags[0]); i++) {
+        CHECK_IO(setFD(
+            NULL,
+            wasiFD,
+            0,
+            0,
+            invalidFlags[i]
+        ) == WASI_ERRNO_INVAL);
+        CHECK_IO(setPath(
+            NULL,
+            wasiFD,
+            0,
+            128,
+            1,
+            0,
+            0,
+            invalidFlags[i]
+        ) == WASI_ERRNO_INVAL);
+    }
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        2,
+        128,
+        1,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        0,
+        128,
+        0,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        0,
+        UINT32_MAX,
+        1,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_FAULT);
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        0,
+        TEST_MEMORY_SIZE - 1,
+        2,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_FAULT);
+    testMemory.data[129] = '\0';
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        0,
+        128,
+        2,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(setFD(
+        NULL,
+        wasiFD,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(setPath(
+        NULL,
+        wasiFD,
+        0,
+        128,
+        1,
+        0,
+        0,
+        0
+    ) == WASI_ERRNO_BADF);
+    fprintf(stderr, "OK filestat_set_times validation\n");
+}
+
+#if HAS_UNISTD && !defined(_WIN32)
+
+static U64 testStatTime(struct stat* st, bool modification) {
+    U64 seconds;
+    long nanoseconds;
+#if defined(__APPLE__) && defined(__MACH__)
+    seconds = (U64)(modification ? st->st_mtimespec.tv_sec : st->st_atimespec.tv_sec);
+    nanoseconds = modification ? st->st_mtimespec.tv_nsec : st->st_atimespec.tv_nsec;
+#elif (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 700))
+    seconds = (U64)(modification ? st->st_mtim.tv_sec : st->st_atim.tv_sec);
+    nanoseconds = modification ? st->st_mtim.tv_nsec : st->st_atim.tv_nsec;
+#else
+    seconds = (U64)(modification ? st->st_mtime : st->st_atime);
+    nanoseconds = 0;
+#endif
+    return seconds * W2C2_LL(1000000000) + (U64)nanoseconds;
+}
+
+static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
+    FILE* file = tmpfile();
+    int fd;
+    U32 wasiFD;
+#if HAS_FUTIMENS || HAS_FUTIMES
+    struct stat st;
+    time_t before;
+    U64 atime = W2C2_LL(1000000000123456789);
+    U64 mtime = W2C2_LL(1000000000987654321);
+#endif
+    CHECK_IO(file != NULL);
+    fd = dup(fileno(file));
+    CHECK_IO(fd >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+#if HAS_FUTIMENS || HAS_FUTIMES
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        atime,
+        mtime,
+        WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM
+    ) == WASI_ERRNO_SUCCESS);
+#if !HAS_FUTIMENS
+    atime -= atime % 1000;
+    mtime -= mtime % 1000;
+#endif
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        0,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == mtime);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        0,
+        WASI_FSTFLAGS_MTIM
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        (U64)-1,
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        atime,
+        mtime,
+        WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_ATIM_NOW
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == 0);
+
+    before = time(NULL);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM_NOW
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(st.st_atime >= before && st.st_atime <= time(NULL));
+    CHECK_IO(testStatTime(&st, true) == 0);
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        atime,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM_NOW
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime);
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM_NOW | WASI_FSTFLAGS_MTIM_NOW
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(st.st_atime >= before && st.st_atime <= time(NULL));
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    if (sizeof(time_t) < sizeof(U64)) {
+        CHECK_IO(setTimes(
+            NULL,
+            wasiFD,
+            (U64)-1,
+            0,
+            WASI_FSTFLAGS_ATIM
+        ) == WASI_ERRNO_OVERFLOW);
+    }
+#else
+    CHECK_IO(setTimes(
+        NULL,
+        wasiFD,
+        0,
+        0,
+        WASI_FSTFLAGS_ATIM
+    ) == WASI_ERRNO_NOSYS);
+#endif
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(fclose(file) == 0);
+    fprintf(stderr, "OK fd_filestat_set_times\n");
+}
+
+static void testPathFilestatSetTimes(
+    TestFdSetTimes setFD,
+    TestPathSetTimes setPath
+) {
+    char directory[] = "wasi-times-XXXXXX";
+    char filePath[PATH_MAX];
+    char linkPath[PATH_MAX];
+    U32 dirFD, fileFD;
+    int fd;
+    U32 follow = WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW;
+    U32 both = WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM;
+    U64 atime = W2C2_LL(1000000000123456789);
+    U64 mtime = W2C2_LL(1000000000987654321);
+#if HAS_UTIMENSAT || HAS_UTIMES || HAS_UTIME || HAS_FUTIMENS || HAS_FUTIMES
+    struct stat st;
+#endif
+#if HAS_UTIMENSAT || HAS_UTIMES || HAS_UTIME
+    time_t before;
+#else
+    UNUSED_PARAMETER(setFD);
+#endif
+
+    CHECK_IO(mkdtemp(directory) != NULL);
+    strcpy(filePath, directory);
+    strcat(filePath, "/file");
+    strcpy(linkPath, directory);
+    strcat(linkPath, "/link");
+    fd = open(filePath, O_CREAT | O_EXCL | O_RDWR, 0600);
+    CHECK_IO(fd >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, filePath, &fileFD));
+    CHECK_IO(wasiFileDescriptorAdd(-1, directory, &dirFD));
+    memcpy(testMemory.data + 128, "file", 4);
+#if HAS_UTIMENSAT || HAS_UTIMES || HAS_UTIME
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        atime,
+        mtime,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+#if !HAS_UTIMENSAT
+#if HAS_UTIMES
+    atime -= atime % 1000;
+    mtime -= mtime % 1000;
+#else
+    atime -= atime % W2C2_LL(1000000000);
+    mtime -= mtime % W2C2_LL(1000000000);
+#endif
+#endif
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        (U64)-1,
+        (U64)-1,
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    before = time(NULL);
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        (U64)-1,
+        (U64)-1,
+        WASI_FSTFLAGS_MTIM_NOW
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime);
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    CHECK_IO(setFD(
+        NULL,
+        dirFD,
+        atime,
+        mtime,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(stat(directory, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+
+#if HAS_LSTAT
+    CHECK_IO(symlink("file", linkPath) == 0);
+    memcpy(testMemory.data + 128, "link", 4);
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        atime,
+        mtime,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+#if HAS_UTIMENSAT || HAS_LUTIMES
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        0,
+        128,
+        4,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(lstat(linkPath, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == 0);
+#else
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        0,
+        128,
+        4,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_NOTSUP);
+#endif
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(unlink(filePath) == 0);
+#if HAS_UTIMENSAT || HAS_LUTIMES
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        0,
+        128,
+        4,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+#endif
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_NOENT);
+    CHECK_IO(unlink(linkPath) == 0);
+#else
+    CHECK_IO(unlink(filePath) == 0);
+#endif
+    memcpy(testMemory.data + 128, "file", 4);
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_NOENT);
+#else
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        follow,
+        128,
+        4,
+        atime,
+        mtime,
+        both
+    ) == WASI_ERRNO_NOSYS);
+    CHECK_IO(unlink(filePath) == 0);
+#endif
+#if HAS_FUTIMENS || HAS_FUTIMES
+    CHECK_IO(setFD(
+        NULL,
+        fileFD,
+        0,
+        0,
+        both
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &st) == 0);
+    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == 0);
+#endif
+    CHECK_IO(wasiFileDescriptorClose(fileFD));
+    CHECK_IO(wasiFileDescriptorClose(dirFD));
+    CHECK_IO(rmdir(directory) == 0);
+    fprintf(stderr, "OK path_filestat_set_times\n");
+}
+
+#endif /* HAS_UNISTD && !_WIN32 */
+
+#ifdef _WIN32
+
+static U64 testWindowsFileTime(FILETIME value) {
+    return ((U64)value.dwHighDateTime << 32) | value.dwLowDateTime;
+}
+
+static void testWindowsFilestatSetTimes(
+    TestFdSetTimes setFD,
+    TestPathSetTimes setPath
+) {
+    char directory[MAX_PATH];
+    char path[MAX_PATH];
+    char* name;
+    int fd;
+    U32 wasiFD, dirFD;
+    HANDLE handle;
+    FILETIME creation, access, modification, before, after;
+    U64 atime = W2C2_LL(1000000000123456789);
+    U64 mtime = W2C2_LL(1000000000987654321);
+    U64 epoch = W2C2_LL(116444736000000000);
+
+    CHECK_IO(GetTempPathA(sizeof(directory), directory) != 0);
+    CHECK_IO(GetTempFileNameA(
+        directory,
+        "w2c",
+        0,
+        path
+    ) != 0);
+    fd = _open(path, _O_RDWR | _O_BINARY);
+    CHECK_IO(fd >= 0);
+    handle = (HANDLE)_get_osfhandle(fd);
+    CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
+    CHECK_IO(setFD(
+        NULL,
+        wasiFD,
+        atime,
+        mtime,
+        WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(GetFileTime(
+        handle,
+        &creation,
+        &access,
+        &modification
+    ));
+    CHECK_IO(testWindowsFileTime(access) == atime / 100 + epoch);
+    CHECK_IO(testWindowsFileTime(modification) == mtime / 100 + epoch);
+    CHECK_IO(setFD(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        (U64)-1,
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(setFD(
+        NULL,
+        wasiFD,
+        0,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(GetFileTime(
+        handle,
+        &creation,
+        &access,
+        &modification
+    ));
+    CHECK_IO(testWindowsFileTime(access) == epoch);
+    CHECK_IO(testWindowsFileTime(modification) == mtime / 100 + epoch);
+
+    CHECK_IO(wasiFileDescriptorAdd(-1, directory, &dirFD));
+    name = strrchr(path, '\\');
+    CHECK_IO(name != NULL);
+    name++;
+    memcpy(testMemory.data + 128, name, strlen(name));
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        0,
+        128,
+        (U32)strlen(name),
+        atime,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(GetFileTime(
+        handle,
+        &creation,
+        &access,
+        &modification
+    ));
+    CHECK_IO(testWindowsFileTime(access) == atime / 100 + epoch);
+    CHECK_IO(testWindowsFileTime(modification) == mtime / 100 + epoch);
+
+    GetSystemTimeAsFileTime(&before);
+    CHECK_IO(setFD(
+        NULL,
+        wasiFD,
+        (U64)-1,
+        (U64)-1,
+        WASI_FSTFLAGS_ATIM_NOW | WASI_FSTFLAGS_MTIM_NOW
+    ) == WASI_ERRNO_SUCCESS);
+    GetSystemTimeAsFileTime(&after);
+    CHECK_IO(GetFileTime(
+        handle,
+        &creation,
+        &access,
+        &modification
+    ));
+    CHECK_IO(testWindowsFileTime(access) >= testWindowsFileTime(before));
+    CHECK_IO(testWindowsFileTime(access) <= testWindowsFileTime(after));
+    CHECK_IO(testWindowsFileTime(access) == testWindowsFileTime(modification));
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(DeleteFileA(path));
+    CHECK_IO(setPath(
+        NULL,
+        dirFD,
+        0,
+        128,
+        (U32)strlen(name),
+        0,
+        0,
+        WASI_FSTFLAGS_ATIM
+    ) == WASI_ERRNO_NOENT);
+    CHECK_IO(wasiFileDescriptorClose(dirFD));
+    fprintf(stderr, "OK Windows filestat_set_times\n");
+}
+
+#endif /* _WIN32 */
+
+static void testFilestatSetTimes(
+    TestFdSetTimes setFD,
+    TestPathSetTimes setPath
+) {
+    testFilestatSetTimesValidation(setFD, setPath);
+#if HAS_UNISTD && !defined(_WIN32)
+    testFdFilestatSetTimes(setFD);
+    testPathFilestatSetTimes(setFD, setPath);
+#endif
+#ifdef _WIN32
+    testWindowsFilestatSetTimes(setFD, setPath);
+#endif
+}
 
 static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     U32 wasiFD;
@@ -1047,6 +1719,14 @@ main(int argc, char* argv[]) {
     testSchedYield();
     testFileDescriptorGet();
     testFileDescriptorClose();
+    testFilestatSetTimes(
+        i22_wasiX5FsnapshotX5Fpreview121_fdX5FfilestatX5FsetX5Ftimes,
+        i22_wasiX5FsnapshotX5Fpreview123_pathX5FfilestatX5FsetX5Ftimes
+    );
+    testFilestatSetTimes(
+        i13_wasiX5Funstable21_fdX5FfilestatX5FsetX5Ftimes,
+        i13_wasiX5Funstable23_pathX5FfilestatX5FsetX5Ftimes
+    );
     testFdFlags(i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags);
     testFdFlags(i13_wasiX5Funstable19_fdX5FfdstatX5FsetX5Fflags);
 #if HAS_UNISTD && HAS_FCNTL && defined(O_DSYNC) && defined(O_SYNC)

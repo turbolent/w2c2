@@ -39,6 +39,8 @@ struct dirent {
 
 typedef struct DIR DIR;
 
+void wasiSetErrno(unsigned long error);
+
 DIR* opendir(const char*);
 struct dirent* readdir(DIR*);
 int closedir(DIR*);

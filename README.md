@@ -200,7 +200,7 @@ make run-tests
 - [ ] `fd_fdstat_set_rights`
 - [x] `fd_filestat_get`
 - [x] `fd_filestat_set_size`
-- [ ] `fd_filestat_set_times`
+- [x] `fd_filestat_set_times`
 - [x] `fd_pread`
 - [x] `fd_prestat_get`
 - [x] `fd_prestat_dir_name`
@@ -214,7 +214,7 @@ make run-tests
 - [x] `fd_write`
 - [x] `path_create_directory`
 - [x] `path_filestat_get`
-- [ ] `path_filestat_set_times`
+- [x] `path_filestat_set_times`
 - [ ] `path_link`
 - [x] `path_open`
 - [x] `path_readlink`

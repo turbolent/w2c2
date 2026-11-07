@@ -160,9 +160,8 @@ static const struct {
     }
 };
 
-static
 void
-setErrno(
+wasiSetErrno(
    unsigned long e
 ) {
     int i;
@@ -252,7 +251,7 @@ readdir(
             if (e == ERROR_FILE_NOT_FOUND) {
                 errno = 0;
             } else {
-                setErrno(e);
+                wasiSetErrno(e);
             }
             return NULL;
         }
@@ -263,7 +262,7 @@ readdir(
             if (e == ERROR_NO_MORE_FILES)
                 errno = 0;
             else {
-                setErrno(e);
+                wasiSetErrno(e);
             }
             return NULL;
         }

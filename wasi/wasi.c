@@ -26,6 +26,9 @@ typedef long ssize_t;
 #endif /* _NEXT_SOURCE */
 
 #include <time.h>
+#if HAS_UTIME
+#include <utime.h>
+#endif
 #if !HAS_TIMESPEC
 #ifdef _NEXT_SOURCE
 struct timespec {
@@ -45,7 +48,7 @@ struct timespec {
 #include <string.h>
 #include <limits.h>
 
-#if HAS_SYSTIME
+#if HAS_SYSTIME || HAS_FUTIMES || HAS_UTIMES || HAS_LUTIMES
 #include <sys/time.h>
 #endif /* HAS_SYSTIME */
 
@@ -669,6 +672,30 @@ wasiErrno(void) {
         return WASI_ERRNO_DOM;
     case ERANGE:
         return WASI_ERRNO_RANGE;
+#ifdef ELOOP
+    case ELOOP:
+        return WASI_ERRNO_LOOP;
+#endif
+#ifdef ENAMETOOLONG
+    case ENAMETOOLONG:
+        return WASI_ERRNO_NAMETOOLONG;
+#endif
+#ifdef EOVERFLOW
+    case EOVERFLOW:
+        return WASI_ERRNO_OVERFLOW;
+#endif
+#ifdef ENOSYS
+    case ENOSYS:
+        return WASI_ERRNO_NOSYS;
+#endif
+#ifdef ENOTSUP
+    case ENOTSUP:
+        return WASI_ERRNO_NOTSUP;
+#endif
+#if defined(EOPNOTSUPP) && (!defined(ENOTSUP) || EOPNOTSUPP != ENOTSUP)
+    case EOPNOTSUPP:
+        return WASI_ERRNO_NOTSUP;
+#endif
 #if defined(__MSL__) && defined(macintosh)
     case EMACOSERR:
         /* TODO: add support for more error codes */
@@ -2853,7 +2880,11 @@ getStatTimes(
     struct timespec* modification,
     struct timespec* creation
 ) {
-#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)) || \
+#if defined(__APPLE__) && defined(__MACH__)
+    *access = st->st_atimespec;
+    *modification = st->st_mtimespec;
+    *creation = st->st_ctimespec;
+#elif (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)) || \
     (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 700))
 
     access->tv_sec = st->st_atim.tv_sec;
@@ -3233,6 +3264,342 @@ WASI_IMPORT(U32, 20_fdX5FfilestatX5FsetX5Fsize, (
     return wasiFdFilestatSetSize(wasiFD, size);
 })
 
+static
+W2C2_INLINE
+bool
+wasiFstFlagsValid(U32 flags) {
+    return !(flags & ~(U32)(WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_ATIM_NOW |
+                           WASI_FSTFLAGS_MTIM | WASI_FSTFLAGS_MTIM_NOW)) &&
+        (flags & (WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_ATIM_NOW)) !=
+            (WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_ATIM_NOW) &&
+        (flags & (WASI_FSTFLAGS_MTIM | WASI_FSTFLAGS_MTIM_NOW)) !=
+            (WASI_FSTFLAGS_MTIM | WASI_FSTFLAGS_MTIM_NOW);
+}
+
+#ifndef _WIN32
+
+static
+W2C2_INLINE
+bool
+wasiTimestampSeconds(U64 timestamp, time_t* seconds) {
+    U64 value = timestamp / NSEC_PER_SEC;
+    *seconds = (time_t)value;
+    return (U64)*seconds == value;
+}
+
+static
+U32
+wasiSetFileTimesLegacy(
+    int fd,
+    const char* path,
+    bool follow,
+    U64 atime,
+    U64 mtime,
+    U32 flags
+) {
+#if HAS_FUTIMES || HAS_UTIMES || HAS_LUTIMES || HAS_UTIME
+    struct stat st;
+    time_t seconds[2];
+    long microseconds[2];
+    struct timespec access, modification, creation;
+    U64 timestamps[2];
+    I64 now = 0;
+    bool bothNow = flags == (WASI_FSTFLAGS_ATIM_NOW | WASI_FSTFLAGS_MTIM_NOW);
+    U32 error;
+    int i;
+
+    if (fd >= 0) {
+#if !HAS_FUTIMES
+        return WASI_ERRNO_NOSYS;
+#endif
+        if (fstat(fd, &st) != 0) {
+            return wasiErrno();
+        }
+    } else if (!follow) {
+#if HAS_LUTIMES && HAS_LSTAT
+        if (lstat(path, &st) != 0) {
+            return wasiErrno();
+        }
+#else
+        return WASI_ERRNO_NOTSUP;
+#endif
+    } else if (stat(path, &st) != 0) {
+        return wasiErrno();
+    }
+
+    if (flags == 0) {
+        return WASI_ERRNO_SUCCESS;
+    }
+
+    /* Older APIs require reading the timestamps that must remain unchanged.
+     * Concurrent timestamp updates can race with this read-modify-write sequence.
+     */
+    getStatTimes(
+        &st,
+        &access,
+        &modification,
+        &creation
+    );
+#ifdef _NEXT_SOURCE
+    seconds[0] = access.ts_sec;
+    seconds[1] = modification.ts_sec;
+    microseconds[0] = access.ts_nsec / 1000;
+    microseconds[1] = modification.ts_nsec / 1000;
+#else
+    seconds[0] = access.tv_sec;
+    seconds[1] = modification.tv_sec;
+    microseconds[0] = access.tv_nsec / 1000;
+    microseconds[1] = modification.tv_nsec / 1000;
+#endif
+
+    if (!bothNow && (flags & (WASI_FSTFLAGS_ATIM_NOW | WASI_FSTFLAGS_MTIM_NOW))) {
+        error = wasiClockTime(WASI_CLOCK_REALTIME, &now);
+        if (error != WASI_ERRNO_SUCCESS) {
+            return error;
+        }
+    }
+    timestamps[0] = atime;
+    timestamps[1] = mtime;
+    for (i = 0; i < 2; i++) {
+        U32 mode = (flags >> (i * 2)) & 3;
+        if (mode == 0 || bothNow) {
+            continue;
+        }
+        if (mode == 2) {
+            timestamps[i] = (U64)now;
+        }
+        if (!wasiTimestampSeconds(timestamps[i], &seconds[i])) {
+            return WASI_ERRNO_OVERFLOW;
+        }
+        microseconds[i] = (long)((timestamps[i] % NSEC_PER_SEC) / 1000);
+    }
+
+#if HAS_FUTIMES || HAS_UTIMES || HAS_LUTIMES
+    {
+        struct timeval times[2];
+        /* NULL lets the host apply its current-time permission rules. */
+        const struct timeval* values = bothNow ? NULL : times;
+        times[0].tv_sec = seconds[0];
+        times[0].tv_usec = microseconds[0];
+        times[1].tv_sec = seconds[1];
+        times[1].tv_usec = microseconds[1];
+#if HAS_FUTIMES
+        if (fd >= 0) {
+            return futimes(fd, values) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+        }
+#endif
+#if HAS_LUTIMES
+        if (!follow) {
+            return lutimes(path, values) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+        }
+#endif
+#if HAS_UTIMES
+        return utimes(path, values) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+#endif
+    }
+#else
+    UNUSED_PARAMETER(microseconds);
+#endif
+#if HAS_UTIME
+    {
+        struct utimbuf times;
+        times.actime = seconds[0];
+        times.modtime = seconds[1];
+        /* NULL lets the host apply its current-time permission rules. */
+        return utime(path, bothNow ? NULL : &times) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+    }
+#endif
+#else
+    UNUSED_PARAMETER(fd);
+    UNUSED_PARAMETER(path);
+    UNUSED_PARAMETER(follow);
+    UNUSED_PARAMETER(atime);
+    UNUSED_PARAMETER(mtime);
+    UNUSED_PARAMETER(flags);
+#endif
+    return WASI_ERRNO_NOSYS;
+}
+
+#endif /* !_WIN32 */
+
+static
+U32
+wasiSetFileTimes(
+    int fd,
+    const char* path,
+    bool follow,
+    U64 atime,
+    U64 mtime,
+    U32 flags
+) {
+    if (!wasiFstFlagsValid(flags)) {
+        return WASI_ERRNO_INVAL;
+    }
+
+#ifdef _WIN32
+    {
+        HANDLE handle;
+        FILETIME times[2];
+        FILETIME now;
+        const FILETIME* pointers[2] = {NULL, NULL};
+        U64 timestamps[2];
+        U32 result = WASI_ERRNO_SUCCESS;
+        int i;
+
+        if (fd >= 0) {
+            handle = (HANDLE)_get_osfhandle(fd);
+            if (handle == INVALID_HANDLE_VALUE) {
+                return WASI_ERRNO_BADF;
+            }
+        } else {
+            DWORD attributes = FILE_FLAG_BACKUP_SEMANTICS;
+            if (!follow) {
+#ifdef FILE_FLAG_OPEN_REPARSE_POINT
+                attributes |= FILE_FLAG_OPEN_REPARSE_POINT;
+#else
+                return WASI_ERRNO_NOTSUP;
+#endif
+            }
+            handle = CreateFileA(
+                path,
+                FILE_WRITE_ATTRIBUTES,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                NULL,
+                OPEN_EXISTING,
+                attributes,
+                NULL
+            );
+            if (handle == INVALID_HANDLE_VALUE) {
+                wasiSetErrno(GetLastError());
+                return wasiErrno();
+            }
+        }
+
+        GetSystemTimeAsFileTime(&now);
+        timestamps[0] = atime;
+        timestamps[1] = mtime;
+        for (i = 0; i < 2; i++) {
+            U32 mode = (flags >> (i * 2)) & 3;
+            if (mode == 1) {
+                /* FILETIME counts 100 ns intervals since January 1, 1601. */
+                U64 ticks = timestamps[i] / 100 + W2C2_LL(116444736000000000);
+                times[i].dwLowDateTime = (DWORD)ticks;
+                times[i].dwHighDateTime = (DWORD)(ticks >> 32);
+                pointers[i] = &times[i];
+            } else if (mode == 2) {
+                pointers[i] = &now;
+            }
+        }
+        if (!SetFileTime(
+            handle,
+            NULL,
+            pointers[0],
+            pointers[1]
+        )) {
+            wasiSetErrno(GetLastError());
+            result = wasiErrno();
+        }
+        if (fd < 0) {
+            CloseHandle(handle);
+        }
+        return result;
+    }
+#else
+#if HAS_FUTIMENS || HAS_UTIMENSAT
+    {
+        struct timespec times[2];
+        U64 timestamps[2];
+        int i;
+
+        timestamps[0] = atime;
+        timestamps[1] = mtime;
+        for (i = 0; i < 2; i++) {
+            U32 mode = (flags >> (i * 2)) & 3;
+            times[i].tv_sec = 0;
+            if (mode == 1) {
+                if (!wasiTimestampSeconds(timestamps[i], &times[i].tv_sec)) {
+                    return WASI_ERRNO_OVERFLOW;
+                }
+                times[i].tv_nsec = (long)(timestamps[i] % NSEC_PER_SEC);
+            } else {
+                times[i].tv_nsec = mode == 2 ? UTIME_NOW : UTIME_OMIT;
+            }
+        }
+#if HAS_FUTIMENS
+        if (fd >= 0) {
+            return futimens(fd, times) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+        }
+#endif
+#if HAS_UTIMENSAT
+        if (fd < 0) {
+            return utimensat(
+                AT_FDCWD,
+                path,
+                times,
+                follow ? 0 : AT_SYMLINK_NOFOLLOW
+            ) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+        }
+#endif
+    }
+#endif
+    return wasiSetFileTimesLegacy(
+        fd,
+        path,
+        follow,
+        atime,
+        mtime,
+        flags
+    );
+#endif
+}
+
+static
+U32
+wasiFdFilestatSetTimes(
+    U32 wasiFD,
+    U64 atime,
+    U64 mtime,
+    U32 flags
+) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    char nativePath[PATH_MAX];
+
+    WASI_TRACE((
+        "fd_filestat_set_times(wasiFD=%u, atime=%llu, mtime=%llu, flags=%u)",
+        wasiFD,
+        atime,
+        mtime,
+        flags
+    ));
+
+    if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
+        return WASI_ERRNO_BADF;
+    }
+    if (descriptor.fd >= 0) {
+        return wasiSetFileTimes(
+            descriptor.fd,
+            NULL,
+            true,
+            atime,
+            mtime,
+            flags
+        );
+    }
+
+    strcpy(nativePath, descriptor.path);
+#if HAS_NONPOSIXPATH
+    wasiToNativePath(nativePath);
+#endif
+    return wasiSetFileTimes(
+        -1,
+        nativePath,
+        true,
+        atime,
+        mtime,
+        flags
+    );
+}
+
 WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
     wasmModuleInstance* instance,
     U32 fd,
@@ -3241,14 +3608,12 @@ WASI_IMPORT(U32, 21_fdX5FfilestatX5FsetX5Ftimes, (
     U32 fstFlags
 ), {
     UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(atime);
-    UNUSED_PARAMETER(mtime);
-    UNUSED_PARAMETER(fstFlags);
-
-    /* TODO: */
-    WASI_TRACE(("fd_filestat_set_times: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiFdFilestatSetTimes(
+        fd,
+        atime,
+        mtime,
+        fstFlags
+    );
 })
 
 WASI_PREVIEW1_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
@@ -3327,6 +3692,63 @@ WASI_UNSTABLE_IMPORT(U32, 17_pathX5FfilestatX5Fget, (
     return WASI_ERRNO_SUCCESS;
 })
 
+static
+U32
+wasiPathFilestatSetTimes(
+    wasmModuleInstance* instance,
+    U32 dirFD,
+    U32 lookupFlags,
+    U32 pathPointer,
+    U32 pathLength,
+    U64 atime,
+    U64 mtime,
+    U32 fstFlags
+) {
+    wasmMemory* memory = wasiMemory(instance);
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    char nativePath[PATH_MAX];
+    char* path;
+
+    WASI_TRACE((
+        "path_filestat_set_times(dirFD=%u, lookupFlags=%u, fstFlags=%u)",
+        dirFD,
+        lookupFlags,
+        fstFlags
+    ));
+
+    if (!wasiFileDescriptorGet(dirFD, &descriptor) || descriptor.path == NULL) {
+        return WASI_ERRNO_BADF;
+    }
+    if (lookupFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW ||
+        !wasiFstFlagsValid(fstFlags)) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (pathPointer > memory->size || pathLength > memory->size - pathPointer) {
+        return WASI_ERRNO_FAULT;
+    }
+    path = (char*)memory->data + pathPointer;
+    if (memchr(path, '\0', pathLength) != NULL ||
+        !resolvePath(
+            descriptor.path,
+            path,
+            pathLength,
+            nativePath
+        )) {
+        return WASI_ERRNO_INVAL;
+    }
+#if HAS_NONPOSIXPATH
+    wasiToNativePath(nativePath);
+#endif
+    return wasiSetFileTimes(
+        -1,
+        nativePath,
+        (lookupFlags & WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW) != 0,
+        atime,
+        mtime,
+        fstFlags
+    );
+}
+
 WASI_IMPORT(U32, 23_pathX5FfilestatX5FsetX5Ftimes, (
     wasmModuleInstance* instance,
     U32 fd,
@@ -3337,18 +3759,16 @@ WASI_IMPORT(U32, 23_pathX5FfilestatX5FsetX5Ftimes, (
     U64 mtime,
     U32 fstFlags
 ), {
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(fd);
-    UNUSED_PARAMETER(flags);
-    UNUSED_PARAMETER(path);
-    UNUSED_PARAMETER(pathLen);
-    UNUSED_PARAMETER(atime);
-    UNUSED_PARAMETER(mtime);
-    UNUSED_PARAMETER(fstFlags);
-
-    /* TODO: */
-    WASI_TRACE(("path_filestat_set_times: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiPathFilestatSetTimes(
+        instance,
+        fd,
+        flags,
+        path,
+        pathLen,
+        atime,
+        mtime,
+        fstFlags
+    );
 })
 
 static
