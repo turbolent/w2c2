@@ -1,0 +1,19 @@
+OBJCOPY ?= objcopy
+
+ifdef SIMDE_HEADER
+SIMD_FLAGS = -std=c99 '-DW2C2_SIMDE_HEADER="$(SIMDE_HEADER)"'
+endif
+
+OBJLIST=$(filter-out haskellwasi.o,$(patsubst %.c,%.o,$(wildcard *.c))) $(OBJS)
+
+haskell-wasi: haskellwasi.o $(OBJLIST)
+	$(CC) $(CFLAGS) $(OBJLIST) haskellwasi.o -o haskell-wasi $(LDFLAGS)
+
+m11_haskellwasi.data.o: haskellwasi.c
+	ld -r -b binary -o m11_haskellwasi.data.o m11_haskellwasi.data
+	$(OBJCOPY) --redefine-sym _binary_m11_haskellwasi_data_start=m11_haskellwasiData \
+		--redefine-sym _binary_m11_haskellwasi_data_end=m11_haskellwasiDataEnd \
+		--redefine-sym _binary_m11_haskellwasi_data_size=m11_haskellwasiDataSize m11_haskellwasi.data.o
+
+%.o: %.c haskellwasi.h
+	$(CC) $(CFLAGS) $(SIMD_FLAGS) -c $< -o $@
