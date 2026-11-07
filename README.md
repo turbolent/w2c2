@@ -215,7 +215,7 @@ make run-tests
 - [x] `path_create_directory`
 - [x] `path_filestat_get`
 - [x] `path_filestat_set_times`
-- [ ] `path_link`
+- [x] `path_link`
 - [x] `path_open`
 - [x] `path_readlink`
 - [x] `path_remove_directory`

@@ -4340,6 +4340,217 @@ WASI_IMPORT(U32, 12_pathX5Fsymlink, (
     );
 })
 
+static
+U32
+wasiNativePathLink(
+    const char* oldPath,
+    const char* newPath,
+    bool follow
+) {
+#ifdef _WIN32
+    typedef BOOL (WINAPI *CreateHardLinkFunction)(
+        LPCSTR,
+        LPCSTR,
+        LPSECURITY_ATTRIBUTES
+    );
+    typedef DWORD (WINAPI *GetFinalPathFunction)(
+        HANDLE,
+        LPSTR,
+        DWORD,
+        DWORD
+    );
+    HMODULE kernel = GetModuleHandleA("kernel32.dll");
+    CreateHardLinkFunction createHardLink;
+    char target[PATH_MAX];
+
+    /* Resolve these functions dynamically
+     * so older Windows versions still load.
+     */
+    createHardLink = (CreateHardLinkFunction)GetProcAddress(
+        kernel,
+        "CreateHardLinkA"
+    );
+    if (createHardLink == NULL) {
+        return WASI_ERRNO_NOSYS;
+    }
+    if (follow) {
+        DWORD attributes = GetFileAttributesA(oldPath);
+        if (attributes == INVALID_FILE_ATTRIBUTES) {
+            wasiSetErrno(GetLastError());
+            return wasiErrno();
+        }
+        if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+            HANDLE handle;
+            DWORD length;
+            DWORD error;
+            GetFinalPathFunction getFinalPath = (GetFinalPathFunction)GetProcAddress(
+                kernel,
+                "GetFinalPathNameByHandleA"
+            );
+            if (getFinalPath == NULL) {
+                return WASI_ERRNO_NOTSUP;
+            }
+            handle = CreateFileA(
+                oldPath,
+                0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                NULL,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS,
+                NULL
+            );
+            if (handle == INVALID_HANDLE_VALUE) {
+                wasiSetErrno(GetLastError());
+                return wasiErrno();
+            }
+            length = getFinalPath(
+                handle,
+                target,
+                sizeof(target),
+                0
+            );
+            error = GetLastError();
+            CloseHandle(handle);
+            if (length == 0) {
+                wasiSetErrno(error);
+                return wasiErrno();
+            }
+            if (length >= sizeof(target)) {
+                return WASI_ERRNO_NAMETOOLONG;
+            }
+            oldPath = target;
+        }
+    }
+    if (!createHardLink(newPath, oldPath, NULL)) {
+        DWORD error = GetLastError();
+        if (error == ERROR_NOT_SUPPORTED || error == ERROR_INVALID_FUNCTION) {
+            return WASI_ERRNO_NOTSUP;
+        }
+        wasiSetErrno(error);
+        return wasiErrno();
+    }
+    return WASI_ERRNO_SUCCESS;
+#elif HAS_LINKAT
+    if (linkat(
+        AT_FDCWD,
+        oldPath,
+        AT_FDCWD,
+        newPath,
+        follow ? AT_SYMLINK_FOLLOW : 0
+    ) != 0) {
+        return wasiErrno();
+    }
+    return WASI_ERRNO_SUCCESS;
+#elif HAS_LINK && HAS_LSTAT
+    struct stat st;
+#if HAS_REALPATH
+    char target[PATH_MAX];
+#endif
+    if (lstat(oldPath, &st) != 0) {
+        return wasiErrno();
+    }
+    if (S_ISLNK(st.st_mode)) {
+        /* link() differs across hosts in whether it follows symbolic links. */
+        if (!follow) {
+            return WASI_ERRNO_NOTSUP;
+        }
+#if HAS_REALPATH
+        if (realpath(oldPath, target) == NULL) {
+            return wasiErrno();
+        }
+        oldPath = target;
+        if (stat(oldPath, &st) != 0) {
+            return wasiErrno();
+        }
+#else
+        return WASI_ERRNO_NOTSUP;
+#endif
+    }
+    if (S_ISDIR(st.st_mode)) {
+        return WASI_ERRNO_PERM;
+    }
+    /* The source can change between inspection and link() on older hosts. */
+    return link(oldPath, newPath) == 0 ? WASI_ERRNO_SUCCESS : wasiErrno();
+#else
+    UNUSED_PARAMETER(oldPath);
+    UNUSED_PARAMETER(newPath);
+    UNUSED_PARAMETER(follow);
+#if HAS_LINK
+    return WASI_ERRNO_NOTSUP;
+#else
+    return WASI_ERRNO_NOSYS;
+#endif
+#endif
+}
+
+static
+U32
+wasiPathLink(
+    wasmModuleInstance* instance,
+    U32 oldFD,
+    U32 lookupFlags,
+    U32 oldPathPointer,
+    U32 oldPathLength,
+    U32 newFD,
+    U32 newPathPointer,
+    U32 newPathLength
+) {
+    wasmMemory* memory = wasiMemory(instance);
+    WasiFileDescriptor oldDescriptor = emptyWasiFileDescriptor;
+    WasiFileDescriptor newDescriptor = emptyWasiFileDescriptor;
+    char oldPath[PATH_MAX];
+    char newPath[PATH_MAX];
+    char* oldGuestPath;
+    char* newGuestPath;
+
+    WASI_TRACE((
+        "path_link(oldFD=%u, lookupFlags=%u, newFD=%u)",
+        oldFD,
+        lookupFlags,
+        newFD
+    ));
+
+    if (!wasiFileDescriptorGet(oldFD, &oldDescriptor) || oldDescriptor.path == NULL ||
+        !wasiFileDescriptorGet(newFD, &newDescriptor) || newDescriptor.path == NULL) {
+        return WASI_ERRNO_BADF;
+    }
+    if (lookupFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (oldPathPointer > memory->size || oldPathLength > memory->size - oldPathPointer ||
+        newPathPointer > memory->size || newPathLength > memory->size - newPathPointer) {
+        return WASI_ERRNO_FAULT;
+    }
+    oldGuestPath = (char*)memory->data + oldPathPointer;
+    newGuestPath = (char*)memory->data + newPathPointer;
+    if (memchr(oldGuestPath, '\0', oldPathLength) != NULL ||
+        memchr(newGuestPath, '\0', newPathLength) != NULL) {
+        return WASI_ERRNO_INVAL;
+    }
+    if (!resolvePath(
+        oldDescriptor.path,
+        oldGuestPath,
+        oldPathLength,
+        oldPath
+    ) || !resolvePath(
+        newDescriptor.path,
+        newGuestPath,
+        newPathLength,
+        newPath
+    )) {
+        return WASI_ERRNO_INVAL;
+    }
+#if HAS_NONPOSIXPATH
+    wasiToNativePath(oldPath);
+    wasiToNativePath(newPath);
+#endif
+    return wasiNativePathLink(
+        oldPath,
+        newPath,
+        (lookupFlags & WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW) != 0
+    );
+}
+
 WASI_IMPORT(U32, 9_pathX5Flink, (
     wasmModuleInstance* instance,
     U32 oldFD,
@@ -4350,18 +4561,16 @@ WASI_IMPORT(U32, 9_pathX5Flink, (
     U32 newPathPointer,
     U32 newPathLength
 ), {
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(oldFD);
-    UNUSED_PARAMETER(lookupFlags);
-    UNUSED_PARAMETER(oldPathPointer);
-    UNUSED_PARAMETER(oldPathLength);
-    UNUSED_PARAMETER(newFD);
-    UNUSED_PARAMETER(newPathPointer);
-    UNUSED_PARAMETER(newPathLength);
-
-    /* TODO: */
-    WASI_TRACE(("path_link: unimplemented function"));
-    return WASI_ERRNO_NOSYS;
+    return wasiPathLink(
+        instance,
+        oldFD,
+        lookupFlags,
+        oldPathPointer,
+        oldPathLength,
+        newFD,
+        newPathPointer,
+        newPathLength
+    );
 })
 
 static

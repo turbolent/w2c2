@@ -34,10 +34,12 @@ endif
 # - poll
 # - sched_yield (except on Windows)
 # - futimens, utimensat, futimes, utimes, lutimes, utime (except on Windows)
+# - linkat, link, realpath (except on Windows)
 # - threads
 DEFAULT_FEATURES := unistd sysuio systime sysresource strndup fcntl timespec lstat getentropy threads
 ifneq ($(UNAME),Windows)
 DEFAULT_FEATURES += poll sched_yield futimens utimensat futimes utimes lutimes utime
+DEFAULT_FEATURES += linkat link realpath
 endif
 FEATURES ?= $(DEFAULT_FEATURES)
 
@@ -111,6 +113,18 @@ endif
 
 ifneq (,$(filter utime,$(FEATURES)))
 	CFLAGS += -DHAS_UTIME=1
+endif
+
+ifneq (,$(filter linkat,$(FEATURES)))
+	CFLAGS += -DHAS_LINKAT=1
+endif
+
+ifneq (,$(filter link,$(FEATURES)))
+	CFLAGS += -DHAS_LINK=1
+endif
+
+ifneq (,$(filter realpath,$(FEATURES)))
+	CFLAGS += -DHAS_REALPATH=1
 endif
 
 ifneq (,$(findstring threads,$(FEATURES)))

@@ -888,6 +888,418 @@ static void testFilestatSetTimes(
 #endif
 }
 
+typedef U32 (*TestPathLinkFunction)(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32
+);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview19_pathX5Flink(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32
+);
+extern U32 i13_wasiX5Funstable9_pathX5Flink(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32,
+    U32
+);
+
+typedef struct TestPathLink {
+    TestPathLinkFunction call;
+    U32 oldFD;
+    U32 newFD;
+} TestPathLink;
+
+static U32 callTestPathLink(
+    TestPathLink* test,
+    const char* oldPath,
+    const char* newPath,
+    U32 flags
+) {
+    size_t oldLength = strlen(oldPath);
+    size_t newLength = strlen(newPath);
+    CHECK_IO(oldLength < PATH_MAX && newLength < PATH_MAX);
+    memcpy(testMemory.data, oldPath, oldLength);
+    memcpy(testMemory.data + PATH_MAX, newPath, newLength);
+    return test->call(
+        NULL,
+        test->oldFD,
+        flags,
+        0,
+        (U32)oldLength,
+        test->newFD,
+        PATH_MAX,
+        (U32)newLength
+    );
+}
+
+static void testPathLinkValidation(TestPathLinkFunction link) {
+    TestPathLink test;
+    U32 dirFD;
+    int i;
+    test.call = link;
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &dirFD));
+    test.oldFD = dirFD;
+    test.newFD = dirFD;
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "target",
+        2
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "",
+        "target",
+        0
+    ) == WASI_ERRNO_INVAL);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "",
+        0
+    ) == WASI_ERRNO_INVAL);
+    for (i = 0; i < 2; i++) {
+        test.oldFD = i == 0 ? UINT32_MAX : dirFD;
+        test.newFD = i == 1 ? UINT32_MAX : dirFD;
+        CHECK_IO(callTestPathLink(
+            &test,
+            "source",
+            "target",
+            0
+        ) == WASI_ERRNO_BADF);
+        test.oldFD = i == 0 ? 0 : dirFD;
+        test.newFD = i == 1 ? 0 : dirFD;
+        CHECK_IO(callTestPathLink(
+            &test,
+            "source",
+            "target",
+            0
+        ) == WASI_ERRNO_BADF);
+        CHECK_IO(link(
+            NULL,
+            dirFD,
+            0,
+            i == 0 ? UINT32_MAX : 0,
+            2,
+            dirFD,
+            i == 1 ? TEST_MEMORY_SIZE - 1 : PATH_MAX,
+            2
+        ) == WASI_ERRNO_FAULT);
+        testMemory.data[0] = 'a';
+        testMemory.data[1] = i == 0 ? '\0' : 'b';
+        testMemory.data[PATH_MAX] = 'a';
+        testMemory.data[PATH_MAX + 1] = i == 1 ? '\0' : 'b';
+        CHECK_IO(link(
+            NULL,
+            dirFD,
+            0,
+            0,
+            2,
+            dirFD,
+            PATH_MAX,
+            2
+        ) == WASI_ERRNO_INVAL);
+    }
+    CHECK_IO(wasiFileDescriptorClose(dirFD));
+    test.oldFD = dirFD;
+    test.newFD = dirFD;
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "target",
+        0
+    ) == WASI_ERRNO_BADF);
+    fprintf(stderr, "OK path_link validation\n");
+}
+
+#if HAS_UNISTD && !defined(_WIN32)
+
+static void testNativePathLink(TestPathLinkFunction link) {
+    char directory[] = "wasi-link-XXXXXX";
+    char destination[PATH_MAX];
+    char source[PATH_MAX];
+    char target[PATH_MAX];
+    char symlinkPath[PATH_MAX];
+    TestPathLink test;
+    int fd;
+#if HAS_LINKAT || (HAS_LINK && HAS_LSTAT)
+    struct stat original, linked;
+    char bytes[5];
+    int linkedFD;
+    U32 follow = WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW;
+#elif HAS_LINK
+    U32 expected = WASI_ERRNO_NOTSUP;
+#else
+    U32 expected = WASI_ERRNO_NOSYS;
+#endif
+    test.call = link;
+    CHECK_IO(mkdtemp(directory) != NULL);
+    strcpy(destination, directory);
+    strcat(destination, "/destination");
+    CHECK_IO(mkdir(destination, 0700) == 0);
+    strcpy(source, directory);
+    strcat(source, "/source");
+    strcpy(target, destination);
+    strcat(target, "/linked");
+    strcpy(symlinkPath, directory);
+    strcat(symlinkPath, "/symbolic");
+    fd = open(source, O_CREAT | O_EXCL | O_RDWR, 0600);
+    CHECK_IO(fd >= 0);
+    CHECK_IO(write(fd, "hello", 5) == 5);
+    CHECK_IO(wasiFileDescriptorAdd(-1, directory, &test.oldFD));
+    CHECK_IO(wasiFileDescriptorAdd(-1, destination, &test.newFD));
+#if HAS_LINKAT || (HAS_LINK && HAS_LSTAT)
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "linked",
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(fstat(fd, &original) == 0);
+    CHECK_IO(stat(target, &linked) == 0);
+    CHECK_IO(original.st_dev == linked.st_dev && original.st_ino == linked.st_ino);
+    CHECK_IO(original.st_nlink == 2 && linked.st_nlink == 2);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "linked",
+        follow
+    ) == WASI_ERRNO_EXIST);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "missing",
+        "missing",
+        0
+    ) == WASI_ERRNO_NOENT);
+    CHECK_IO(callTestPathLink(
+        &test,
+        ".",
+        "directory",
+        0
+    ) == WASI_ERRNO_PERM);
+    CHECK_IO(unlink(target) == 0);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "linked",
+        follow
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(stat(target, &linked) == 0);
+    CHECK_IO(original.st_dev == linked.st_dev && original.st_ino == linked.st_ino);
+
+#if HAS_LSTAT
+    CHECK_IO(symlink("source", symlinkPath) == 0);
+    CHECK_IO(unlink(target) == 0);
+#if HAS_LINKAT || HAS_REALPATH
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        follow
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(stat(target, &linked) == 0);
+    CHECK_IO(original.st_dev == linked.st_dev && original.st_ino == linked.st_ino);
+    CHECK_IO(unlink(target) == 0);
+#else
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        follow
+    ) == WASI_ERRNO_NOTSUP);
+#endif
+#if HAS_LINKAT
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(lstat(symlinkPath, &original) == 0);
+    CHECK_IO(lstat(target, &linked) == 0);
+    CHECK_IO(S_ISLNK(linked.st_mode));
+    CHECK_IO(original.st_dev == linked.st_dev && original.st_ino == linked.st_ino);
+    CHECK_IO(original.st_nlink == 2 && linked.st_nlink == 2);
+    CHECK_IO(unlink(target) == 0);
+#else
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        0
+    ) == WASI_ERRNO_NOTSUP);
+#endif
+    CHECK_IO(unlink(symlinkPath) == 0);
+    CHECK_IO(symlink("missing", symlinkPath) == 0);
+#if HAS_LINKAT || HAS_REALPATH
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        follow
+    ) == WASI_ERRNO_NOENT);
+#endif
+#if HAS_LINKAT
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(lstat(target, &linked) == 0 && S_ISLNK(linked.st_mode));
+    CHECK_IO(unlink(target) == 0);
+#endif
+    CHECK_IO(unlink(symlinkPath) == 0);
+    CHECK_IO(symlink("symbolic", symlinkPath) == 0);
+#if HAS_LINKAT || HAS_REALPATH
+    CHECK_IO(callTestPathLink(
+        &test,
+        "symbolic",
+        "linked",
+        follow
+    ) == WASI_ERRNO_LOOP);
+#endif
+    CHECK_IO(unlink(symlinkPath) == 0);
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "linked",
+        0
+    ) == WASI_ERRNO_SUCCESS);
+#endif
+
+    CHECK_IO(unlink(source) == 0);
+    linkedFD = open(target, O_RDONLY);
+    CHECK_IO(linkedFD >= 0);
+    CHECK_IO(read(linkedFD, bytes, sizeof(bytes)) == (ssize_t)sizeof(bytes));
+    CHECK_IO(memcmp(bytes, "hello", sizeof(bytes)) == 0);
+    CHECK_IO(fstat(linkedFD, &linked) == 0 && linked.st_nlink == 1);
+    CHECK_IO(close(linkedFD) == 0);
+    CHECK_IO(unlink(target) == 0);
+#else
+    CHECK_IO(callTestPathLink(
+        &test,
+        "source",
+        "linked",
+        0
+    ) == expected);
+    CHECK_IO(unlink(source) == 0);
+#endif
+    CHECK_IO(close(fd) == 0);
+    CHECK_IO(wasiFileDescriptorClose(test.oldFD));
+    CHECK_IO(wasiFileDescriptorClose(test.newFD));
+    CHECK_IO(rmdir(destination) == 0);
+    CHECK_IO(rmdir(directory) == 0);
+    fprintf(stderr, "OK path_link native\n");
+}
+
+#endif /* HAS_UNISTD && !_WIN32 */
+
+#ifdef _WIN32
+
+static void testWindowsPathLink(TestPathLinkFunction link) {
+    char directory[MAX_PATH];
+    char source[MAX_PATH];
+    char target[MAX_PATH];
+    char* name;
+    TestPathLink test;
+    int fd, linkedFD;
+    char bytes[5];
+    BY_HANDLE_FILE_INFORMATION original, linked;
+    test.call = link;
+    CHECK_IO(GetTempPathA(sizeof(directory), directory) != 0);
+    CHECK_IO(GetTempFileNameA(
+        directory,
+        "w2c",
+        0,
+        source
+    ) != 0);
+    CHECK_IO(strlen(source) + 5 < sizeof(target));
+    strcpy(target, source);
+    strcat(target, ".link");
+    fd = _open(source, _O_RDWR | _O_BINARY);
+    CHECK_IO(fd >= 0);
+    CHECK_IO(_write(fd, "hello", 5) == 5);
+    name = strrchr(source, '\\');
+    CHECK_IO(name != NULL);
+    name++;
+    CHECK_IO(wasiFileDescriptorAdd(-1, directory, &test.oldFD));
+    CHECK_IO(wasiFileDescriptorAdd(-1, directory, &test.newFD));
+    CHECK_IO(callTestPathLink(
+        &test,
+        name,
+        strrchr(target, '\\') + 1,
+        0
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(callTestPathLink(
+        &test,
+        name,
+        strrchr(target, '\\') + 1,
+        WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW
+    ) == WASI_ERRNO_EXIST);
+    linkedFD = _open(target, _O_RDONLY | _O_BINARY);
+    CHECK_IO(linkedFD >= 0);
+    CHECK_IO(GetFileInformationByHandle(
+        (HANDLE)_get_osfhandle(fd),
+        &original
+    ));
+    CHECK_IO(GetFileInformationByHandle(
+        (HANDLE)_get_osfhandle(linkedFD),
+        &linked
+    ));
+    CHECK_IO(original.dwVolumeSerialNumber == linked.dwVolumeSerialNumber);
+    CHECK_IO(original.nFileIndexHigh == linked.nFileIndexHigh);
+    CHECK_IO(original.nFileIndexLow == linked.nFileIndexLow);
+    CHECK_IO(original.nNumberOfLinks == 2 && linked.nNumberOfLinks == 2);
+    CHECK_IO(_close(fd) == 0);
+    CHECK_IO(_close(linkedFD) == 0);
+    CHECK_IO(DeleteFileA(source));
+    linkedFD = _open(target, _O_RDONLY | _O_BINARY);
+    CHECK_IO(linkedFD >= 0);
+    CHECK_IO(_read(linkedFD, bytes, sizeof(bytes)) == (int)sizeof(bytes));
+    CHECK_IO(memcmp(bytes, "hello", sizeof(bytes)) == 0);
+    CHECK_IO(_close(linkedFD) == 0);
+    CHECK_IO(DeleteFileA(target));
+    CHECK_IO(callTestPathLink(
+        &test,
+        name,
+        strrchr(target, '\\') + 1,
+        WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW
+    ) == WASI_ERRNO_NOENT);
+    CHECK_IO(wasiFileDescriptorClose(test.oldFD));
+    CHECK_IO(wasiFileDescriptorClose(test.newFD));
+    fprintf(stderr, "OK path_link Windows\n");
+}
+
+#endif /* _WIN32 */
+
+static void testPathLink(TestPathLinkFunction link) {
+    testPathLinkValidation(link);
+#if HAS_UNISTD && !defined(_WIN32)
+    testNativePathLink(link);
+#endif
+#ifdef _WIN32
+    testWindowsPathLink(link);
+#endif
+}
+
 static void testFdFlags(U32 (*setFlags)(wasmModuleInstance*, U32, U32)) {
     U32 wasiFD;
 
@@ -1719,6 +2131,8 @@ main(int argc, char* argv[]) {
     testSchedYield();
     testFileDescriptorGet();
     testFileDescriptorClose();
+    testPathLink(i22_wasiX5FsnapshotX5Fpreview19_pathX5Flink);
+    testPathLink(i13_wasiX5Funstable9_pathX5Flink);
     testFilestatSetTimes(
         i22_wasiX5FsnapshotX5Fpreview121_fdX5FfilestatX5FsetX5Ftimes,
         i22_wasiX5FsnapshotX5Fpreview123_pathX5FfilestatX5FsetX5Ftimes
