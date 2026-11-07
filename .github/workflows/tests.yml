@@ -320,12 +320,12 @@ jobs:
       - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Build wasi
         working-directory: ./wasi
-        run: make BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
+        run: make BUILD=${{ matrix.build }}
 
       - if: steps.changes.outputs.wasi == 'true' && matrix.threads
         name: Test wasi
         working-directory: ./wasi
-        run: make test BUILD=${{ matrix.build }} FEATURES="unistd sysuio systime sysresource strndup fcntl timespec lstat poll pthreads"
+        run: make test BUILD=${{ matrix.build }}
 
   library:
     runs-on: ${{ matrix.os }}
@@ -426,3 +426,8 @@ jobs:
         run: |
           cmake -Bbuild -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
+
+      - if: steps.changes.outputs.wasi == 'true'
+        name: Test wasi
+        working-directory: ./wasi
+        run: ./build/Debug/w2c2wasi_test.exe
