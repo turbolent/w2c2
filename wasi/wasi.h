@@ -179,6 +179,44 @@ typedef U16 WasiFstFlags;
 /* Set the modification time to the current time */
 #define WASI_FSTFLAGS_MTIM_NOW (1 << 3)
 
+/* Signal conditions passed to proc_raise */
+typedef U8 WasiSignal;
+
+/* Reserved;
+ * proc_raise does not accept signal zero.
+ */
+#define WASI_SIGNAL_NONE 0
+#define WASI_SIGNAL_HUP 1
+#define WASI_SIGNAL_INT 2
+#define WASI_SIGNAL_QUIT 3
+#define WASI_SIGNAL_ILL 4
+#define WASI_SIGNAL_TRAP 5
+#define WASI_SIGNAL_ABRT 6
+#define WASI_SIGNAL_BUS 7
+#define WASI_SIGNAL_FPE 8
+#define WASI_SIGNAL_KILL 9
+#define WASI_SIGNAL_USR1 10
+#define WASI_SIGNAL_SEGV 11
+#define WASI_SIGNAL_USR2 12
+#define WASI_SIGNAL_PIPE 13
+#define WASI_SIGNAL_ALRM 14
+#define WASI_SIGNAL_TERM 15
+#define WASI_SIGNAL_CHLD 16
+#define WASI_SIGNAL_CONT 17
+#define WASI_SIGNAL_STOP 18
+#define WASI_SIGNAL_TSTP 19
+#define WASI_SIGNAL_TTIN 20
+#define WASI_SIGNAL_TTOU 21
+#define WASI_SIGNAL_URG 22
+#define WASI_SIGNAL_XCPU 23
+#define WASI_SIGNAL_XFSZ 24
+#define WASI_SIGNAL_VTALRM 25
+#define WASI_SIGNAL_PROF 26
+#define WASI_SIGNAL_WINCH 27
+#define WASI_SIGNAL_POLL 28
+#define WASI_SIGNAL_PWR 29
+#define WASI_SIGNAL_SYS 30
+
 /* Expected file access patterns */
 typedef U8 WasiAdvice;
 

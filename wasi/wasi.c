@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #if HAS_UNISTD
 #include <unistd.h>
@@ -925,6 +926,128 @@ WASI_IMPORT(void, 9_procX5Fexit, (
     ));
 
     exit(code);
+})
+
+static
+int
+wasiSignalToNative(U32 signal) {
+    switch (signal) {
+        case WASI_SIGNAL_INT: return SIGINT;
+        case WASI_SIGNAL_ILL: return SIGILL;
+        case WASI_SIGNAL_ABRT: return SIGABRT;
+        case WASI_SIGNAL_FPE: return SIGFPE;
+        case WASI_SIGNAL_SEGV: return SIGSEGV;
+        case WASI_SIGNAL_TERM: return SIGTERM;
+        /* The Windows CRT only accepts the six standard C signals. */
+#ifndef _WIN32
+#ifdef SIGHUP
+        case WASI_SIGNAL_HUP: return SIGHUP;
+#endif
+#ifdef SIGQUIT
+        case WASI_SIGNAL_QUIT: return SIGQUIT;
+#endif
+#ifdef SIGTRAP
+        case WASI_SIGNAL_TRAP: return SIGTRAP;
+#endif
+#ifdef SIGBUS
+        case WASI_SIGNAL_BUS: return SIGBUS;
+#endif
+#ifdef SIGKILL
+        case WASI_SIGNAL_KILL: return SIGKILL;
+#endif
+#ifdef SIGUSR1
+        case WASI_SIGNAL_USR1: return SIGUSR1;
+#endif
+#ifdef SIGUSR2
+        case WASI_SIGNAL_USR2: return SIGUSR2;
+#endif
+#ifdef SIGPIPE
+        case WASI_SIGNAL_PIPE: return SIGPIPE;
+#endif
+#ifdef SIGALRM
+        case WASI_SIGNAL_ALRM: return SIGALRM;
+#endif
+#ifdef SIGCHLD
+        case WASI_SIGNAL_CHLD: return SIGCHLD;
+#endif
+#ifdef SIGCONT
+        case WASI_SIGNAL_CONT: return SIGCONT;
+#endif
+#ifdef SIGSTOP
+        case WASI_SIGNAL_STOP: return SIGSTOP;
+#endif
+#ifdef SIGTSTP
+        case WASI_SIGNAL_TSTP: return SIGTSTP;
+#endif
+#ifdef SIGTTIN
+        case WASI_SIGNAL_TTIN: return SIGTTIN;
+#endif
+#ifdef SIGTTOU
+        case WASI_SIGNAL_TTOU: return SIGTTOU;
+#endif
+#ifdef SIGURG
+        case WASI_SIGNAL_URG: return SIGURG;
+#endif
+#ifdef SIGXCPU
+        case WASI_SIGNAL_XCPU: return SIGXCPU;
+#endif
+#ifdef SIGXFSZ
+        case WASI_SIGNAL_XFSZ: return SIGXFSZ;
+#endif
+#ifdef SIGVTALRM
+        case WASI_SIGNAL_VTALRM: return SIGVTALRM;
+#endif
+#ifdef SIGPROF
+        case WASI_SIGNAL_PROF: return SIGPROF;
+#endif
+#ifdef SIGWINCH
+        case WASI_SIGNAL_WINCH: return SIGWINCH;
+#endif
+#if defined(SIGPOLL)
+        case WASI_SIGNAL_POLL: return SIGPOLL;
+#elif defined(SIGIO)
+        case WASI_SIGNAL_POLL: return SIGIO;
+#endif
+#ifdef SIGPWR
+        case WASI_SIGNAL_PWR: return SIGPWR;
+#endif
+#ifdef SIGSYS
+        case WASI_SIGNAL_SYS: return SIGSYS;
+#endif
+#endif /* !_WIN32 */
+        default: return 0;
+    }
+}
+
+static
+U32
+wasiProcRaise(U32 signal) {
+    int nativeSignal;
+
+    WASI_TRACE(("proc_raise(signal=%u)", signal));
+
+    if (signal == WASI_SIGNAL_NONE || signal > WASI_SIGNAL_SYS) {
+        return WASI_ERRNO_INVAL;
+    }
+    nativeSignal = wasiSignalToNative(signal);
+    if (nativeSignal == 0) {
+        return WASI_ERRNO_NOTSUP;
+    }
+
+    /* C does not require raise to set errno on failure. */
+    errno = 0;
+    if (raise(nativeSignal) != 0) {
+        return errno == 0 ? WASI_ERRNO_IO : wasiErrno();
+    }
+    return WASI_ERRNO_SUCCESS;
+}
+
+WASI_IMPORT(U32, 10_procX5Fraise, (
+    wasmModuleInstance* instance,
+    U32 signal
+), {
+    UNUSED_PARAMETER(instance);
+    return wasiProcRaise(signal);
 })
 
 static const U32 ciovecSize = 8;

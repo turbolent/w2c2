@@ -8,12 +8,17 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <signal.h>
 #include "mac.h"
 #if HAS_UNISTD
 #include <unistd.h>
 #endif
 #ifdef _WIN32
 #include <io.h>
+#endif
+#if HAS_UNISTD && !defined(_WIN32) && defined(_POSIX_VERSION)
+#define TEST_PROC_RAISE_POSIX 1
+#include <sys/wait.h>
 #endif
 
 extern char** environ;
@@ -157,6 +162,193 @@ static void testSchedYield(void) {
             exit(1); \
         } \
     } while (0)
+
+typedef U32 (*TestProcRaise)(wasmModuleInstance*, U32);
+
+extern U32 i22_wasiX5FsnapshotX5Fpreview110_procX5Fraise(
+    wasmModuleInstance*, U32
+);
+extern U32 i13_wasiX5Funstable10_procX5Fraise(
+    wasmModuleInstance*, U32
+);
+
+static volatile sig_atomic_t testRaisedSignal;
+
+static void testSignalHandler(int signal) {
+    testRaisedSignal = signal;
+}
+
+static void testProcRaiseDelivery(
+    TestProcRaise raiseSignal,
+    U32 wasiSignal,
+    int nativeSignal,
+    bool ignored
+) {
+#if TEST_PROC_RAISE_POSIX
+    struct sigaction action, previous;
+    memset(&action, 0, sizeof(action));
+    CHECK_IO(sigemptyset(&action.sa_mask) == 0);
+    action.sa_handler = ignored ? SIG_IGN : testSignalHandler;
+    CHECK_IO(sigaction(nativeSignal, &action, &previous) == 0);
+#else
+    void (*previous)(int) = signal(
+        nativeSignal,
+        ignored ? SIG_IGN : testSignalHandler
+    );
+    CHECK_IO(previous != SIG_ERR);
+#endif
+    testRaisedSignal = 0;
+    CHECK_IO(raiseSignal(NULL, wasiSignal) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(testRaisedSignal == (ignored ? 0 : nativeSignal));
+#if TEST_PROC_RAISE_POSIX
+    CHECK_IO(sigaction(nativeSignal, &previous, NULL) == 0);
+#else
+    CHECK_IO(signal(nativeSignal, previous) != SIG_ERR);
+#endif
+}
+
+static void testProcRaise(TestProcRaise raiseSignal) {
+    static const struct {
+        U32 wasi;
+        int native;
+    } signals[] = {
+        {WASI_SIGNAL_INT, SIGINT},
+        {WASI_SIGNAL_ILL, SIGILL},
+        {WASI_SIGNAL_ABRT, SIGABRT},
+        {WASI_SIGNAL_FPE, SIGFPE},
+        {WASI_SIGNAL_SEGV, SIGSEGV},
+        {WASI_SIGNAL_TERM, SIGTERM},
+#ifndef _WIN32
+#ifdef SIGUSR1
+        {WASI_SIGNAL_USR1, SIGUSR1},
+#endif
+#ifdef SIGUSR2
+        {WASI_SIGNAL_USR2, SIGUSR2},
+#endif
+#ifdef SIGCHLD
+        {WASI_SIGNAL_CHLD, SIGCHLD},
+#endif
+#if defined(SIGPOLL)
+        {WASI_SIGNAL_POLL, SIGPOLL},
+#elif defined(SIGIO)
+        {WASI_SIGNAL_POLL, SIGIO},
+#endif
+#endif
+    };
+    static const U32 invalid[] = {
+        WASI_SIGNAL_NONE, WASI_SIGNAL_SYS + 1, 255,
+        256 + WASI_SIGNAL_TERM, UINT32_MAX
+    };
+    size_t i;
+    for (i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+        CHECK_IO(raiseSignal(NULL, invalid[i]) == WASI_ERRNO_INVAL);
+    }
+    for (i = 0; i < sizeof(signals) / sizeof(signals[0]); i++) {
+        testProcRaiseDelivery(
+            raiseSignal,
+            signals[i].wasi,
+            signals[i].native,
+            false
+        );
+    }
+    testProcRaiseDelivery(raiseSignal, WASI_SIGNAL_TERM, SIGTERM, true);
+#ifdef _WIN32
+    for (i = WASI_SIGNAL_HUP; i <= WASI_SIGNAL_SYS; i++) {
+        if (i != WASI_SIGNAL_INT && i != WASI_SIGNAL_ILL &&
+            i != WASI_SIGNAL_ABRT && i != WASI_SIGNAL_FPE &&
+            i != WASI_SIGNAL_SEGV && i != WASI_SIGNAL_TERM) {
+            CHECK_IO(raiseSignal(NULL, (U32)i) == WASI_ERRNO_NOTSUP);
+        }
+    }
+#else
+#ifndef SIGPWR
+    CHECK_IO(raiseSignal(NULL, WASI_SIGNAL_PWR) == WASI_ERRNO_NOTSUP);
+#endif
+#if !defined(SIGPOLL) && !defined(SIGIO)
+    CHECK_IO(raiseSignal(NULL, WASI_SIGNAL_POLL) == WASI_ERRNO_NOTSUP);
+#endif
+#endif
+    fprintf(stderr, "OK proc_raise mappings, handlers, and invalid signals\n");
+}
+
+static void testProcRaiseTermination(
+    TestProcRaise raiseSignal,
+    const char* childArgument
+) {
+#if TEST_PROC_RAISE_POSIX
+    pid_t child = fork();
+    pid_t result = 0;
+    int status = 0;
+    unsigned int attempt;
+    UNUSED_PARAMETER(childArgument);
+    CHECK_IO(child >= 0);
+    if (child == 0) {
+        sigset_t mask;
+        CHECK_IO(sigemptyset(&mask) == 0);
+        CHECK_IO(sigprocmask(SIG_SETMASK, &mask, NULL) == 0);
+        CHECK_IO(signal(SIGTERM, SIG_DFL) != SIG_ERR);
+        raiseSignal(NULL, WASI_SIGNAL_TERM);
+        _exit(99);
+    }
+    for (attempt = 0; attempt < 5; attempt++) {
+        result = waitpid(child, &status, WNOHANG);
+        if (result == child) {
+            break;
+        }
+        CHECK_IO(result == 0 || (result == -1 && errno == EINTR));
+        sleep(1);
+    }
+    if (result != child) {
+        kill(child, SIGKILL);
+        while (waitpid(child, &status, 0) < 0 && errno == EINTR) {}
+    }
+    CHECK_IO(result == child);
+    CHECK_IO(WIFSIGNALED(status) && WTERMSIG(status) == SIGTERM);
+#elif defined(_WIN32)
+    char executable[MAX_PATH];
+    char command[MAX_PATH + 64];
+    STARTUPINFOA startup;
+    PROCESS_INFORMATION process;
+    DWORD length, result, code;
+    UNUSED_PARAMETER(raiseSignal);
+    length = GetModuleFileNameA(NULL, executable, sizeof(executable));
+    CHECK_IO(length > 0 && length < sizeof(executable));
+    strcpy(command, "\"");
+    strcat(command, executable);
+    strcat(command, "\" ");
+    strcat(command, childArgument);
+    memset(&startup, 0, sizeof(startup));
+    memset(&process, 0, sizeof(process));
+    startup.cb = sizeof(startup);
+    CHECK_IO(CreateProcessA(
+        executable,
+        command,
+        NULL,
+        NULL,
+        FALSE,
+        0,
+        NULL,
+        NULL,
+        &startup,
+        &process
+    ));
+    result = WaitForSingleObject(process.hProcess, 5000);
+    if (result != WAIT_OBJECT_0) {
+        CHECK_IO(TerminateProcess(process.hProcess, 99));
+        WaitForSingleObject(process.hProcess, 5000);
+    }
+    CHECK_IO(GetExitCodeProcess(process.hProcess, &code));
+    CHECK_IO(CloseHandle(process.hThread));
+    CHECK_IO(CloseHandle(process.hProcess));
+    CHECK_IO(result == WAIT_OBJECT_0 && code == 3);
+#else
+    UNUSED_PARAMETER(raiseSignal);
+    UNUSED_PARAMETER(childArgument);
+    fprintf(stderr, "SKIP proc_raise termination: child processes unavailable\n");
+    return;
+#endif
+    fprintf(stderr, "OK proc_raise default termination\n");
+}
 
 static void testFileDescriptorGet(void) {
     U32 wasiFD;
@@ -3774,6 +3966,21 @@ static void testSetRightsConcurrent(TestFdSetRights setRights) {
 
 int
 main(int argc, char* argv[]) {
+#ifdef _WIN32
+    if (argc == 2) {
+        TestProcRaise raiseSignal = NULL;
+        if (strcmp(argv[1], "--raise-preview1") == 0) {
+            raiseSignal = i22_wasiX5FsnapshotX5Fpreview110_procX5Fraise;
+        } else if (strcmp(argv[1], "--raise-unstable") == 0) {
+            raiseSignal = i13_wasiX5Funstable10_procX5Fraise;
+        }
+        if (raiseSignal != NULL) {
+            CHECK_IO(signal(SIGABRT, SIG_DFL) != SIG_ERR);
+            raiseSignal(NULL, WASI_SIGNAL_ABRT);
+            return 99;
+        }
+    }
+#endif
     memset(&testMemory, 0, sizeof(testMemory));
     testMemory.data = testMemoryData;
     testMemory.size = TEST_MEMORY_SIZE;
@@ -3786,6 +3993,16 @@ main(int argc, char* argv[]) {
     }
 
     testSchedYield();
+    testProcRaise(i22_wasiX5FsnapshotX5Fpreview110_procX5Fraise);
+    testProcRaise(i13_wasiX5Funstable10_procX5Fraise);
+    testProcRaiseTermination(
+        i22_wasiX5FsnapshotX5Fpreview110_procX5Fraise,
+        "--raise-preview1"
+    );
+    testProcRaiseTermination(
+        i13_wasiX5Funstable10_procX5Fraise,
+        "--raise-unstable"
+    );
     testSetRights(i22_wasiX5FsnapshotX5Fpreview120_fdX5FfdstatX5FsetX5Frights);
     testSetRights(i13_wasiX5Funstable20_fdX5FfdstatX5FsetX5Frights);
 #if HAS_POLL && HAS_UNISTD
