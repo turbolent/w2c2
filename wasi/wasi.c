@@ -534,7 +534,7 @@ wasiFileDescriptorGet(
 ) {
     MUST (wasiFD < wasi.fds.length)
     *result = wasi.fds.fds[wasiFD];
-    return true;
+    return result->fd >= 0 || result->path != NULL;
 }
 
 static
@@ -567,8 +567,7 @@ wasiFileDescriptorClose(
         free(descriptor.path);
     }
 
-    MUST (wasiFileDescriptorSet(wasiFD, -1))
-    MUST (wasiDirectorySet(wasiFD, NULL))
+    wasi.fds.fds[wasiFD] = emptyWasiFileDescriptor;
 
     return true;
 }
