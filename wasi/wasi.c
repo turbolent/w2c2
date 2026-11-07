@@ -661,6 +661,21 @@ wasiFileDescriptorGet(
 }
 
 static
+W2C2_INLINE
+bool
+wasiFileDescriptorHasRights(
+    const WasiFileDescriptor* descriptor,
+    WasiRights required
+) {
+    WasiRights rights = descriptor->rightsBase;
+    /* Seeking also permits querying the current offset. */
+    if (rights & WASI_RIGHTS_FD_SEEK) {
+        rights |= WASI_RIGHTS_FD_TELL;
+    }
+    return (rights & required) == required;
+}
+
+static
 bool
 WARN_UNUSED_RESULT
 wasiDirectorySet(
@@ -924,7 +939,8 @@ wasiFDWrite(
     U32 ciovecsPointer,
     U32 ciovecsCount,
     U32 resultPointer,
-    off_t offset
+    off_t offset,
+    WasiRights requiredRights
 ) {
     struct iovec* iovecs = NULL;
     I64 total = 0;
@@ -948,6 +964,9 @@ wasiFDWrite(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_write: bad FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(&descriptor, requiredRights)) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     if (descriptor.fd < 0) {
@@ -1032,7 +1051,8 @@ WASI_IMPORT(U32, 8_fdX5Fwrite, (
         ciovecsPointer,
         ciovecsCount,
         resultPointer,
-        offset
+        offset,
+        WASI_RIGHTS_FD_WRITE
     );
 })
 
@@ -1098,7 +1118,8 @@ WASI_IMPORT(U32, 9_fdX5Fpwrite, (
         iovecsPointer,
         iovecsCount,
         resultPointer,
-        offset
+        offset,
+        WASI_RIGHTS_FD_WRITE | WASI_RIGHTS_FD_SEEK
     );
 })
 
@@ -1113,7 +1134,8 @@ wasiFDRead(
     U32 iovecsPointer,
     U32 iovecsCount,
     U32 resultPointer,
-    off_t offset
+    off_t offset,
+    WasiRights requiredRights
 ) {
     struct iovec* iovecs = NULL;
     I64 total = 0;
@@ -1137,6 +1159,9 @@ wasiFDRead(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_[p]read: bad FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(&descriptor, requiredRights)) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     if (descriptor.fd < 0) {
@@ -1213,7 +1238,8 @@ WASI_IMPORT(U32, 7_fdX5Fread, (
         iovecsPointer,
         iovecsCount,
         resultPointer,
-        offset
+        offset,
+        WASI_RIGHTS_FD_READ
     );
 })
 
@@ -1244,7 +1270,8 @@ WASI_IMPORT(U32, 8_fdX5Fpread, (
         iovecsPointer,
         iovecsCount,
         resultPointer,
-        offset
+        offset,
+        WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_SEEK
     );
 })
 
@@ -1440,6 +1467,13 @@ wasiFDSeek(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         WASI_TRACE(("fd_seek: bad FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        offset == 0 && nativeWhence == SEEK_CUR
+            ? WASI_RIGHTS_FD_TELL : WASI_RIGHTS_FD_SEEK
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     /* TODO: support preopen (directory) */
@@ -1672,6 +1706,12 @@ wasiFDReaddir(
     if (!wasiFileDescriptorGet(wasiDirFD, &descriptor)) {
         WASI_TRACE(("fd_readdir: bad FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_READDIR
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     if (descriptor.dir == NULL) {
@@ -2583,9 +2623,6 @@ wasiFDDatasync(
     wasmModuleInstance* instance,
     U32 wasiFD
 ) {
-#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)) || \
-    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500))
-
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     UNUSED_PARAMETER(instance);
 
@@ -2600,7 +2637,15 @@ wasiFDDatasync(
         WASI_TRACE(("fd_datasync: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_DATASYNC
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500))
     if (descriptor.fd < 0) {
         return WASI_ERRNO_INVAL;
     }
@@ -2611,8 +2656,6 @@ wasiFDDatasync(
 
     return WASI_ERRNO_SUCCESS;
 #else
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(wasiFD);
     return WASI_ERRNO_NOSYS;
 #endif
 }
@@ -2634,9 +2677,6 @@ wasiFDSync(
     wasmModuleInstance* instance,
     U32 wasiFD
 ) {
-#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
-    defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE)
-
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     UNUSED_PARAMETER(instance);
 
@@ -2651,7 +2691,15 @@ wasiFDSync(
         WASI_TRACE(("fd_sync: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_SYNC
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
+    defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE)
     if (descriptor.fd < 0) {
         return WASI_ERRNO_INVAL;
     }
@@ -2662,8 +2710,6 @@ wasiFDSync(
 
     return WASI_ERRNO_SUCCESS;
 #else
-    UNUSED_PARAMETER(instance);
-    UNUSED_PARAMETER(wasiFD);
     return WASI_ERRNO_NOSYS;
 #endif
 }
@@ -2811,6 +2857,8 @@ wasiPathOpen(
     U32 wasiFD = 0;
     char* preopenPath = NULL;
     bool success = false;
+    WasiRights requiredBase = WASI_RIGHTS_PATH_OPEN;
+    WasiRights requiredInheriting = fsRightsBase | fsRightsInheriting;
 
     bool isRead = fsRightsBase & (WASI_RIGHTS_FD_READ
                                   | WASI_RIGHTS_FD_READDIR);
@@ -2853,6 +2901,23 @@ wasiPathOpen(
     if (!wasiFileDescriptorGet(wasiDirFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_open: bad preopen FD"));
         return WASI_ERRNO_BADF;
+    }
+
+    if (oflags & WASI_OFLAGS_CREAT) {
+        requiredBase |= WASI_RIGHTS_PATH_CREATE_FILE;
+    }
+    if (oflags & WASI_OFLAGS_TRUNC) {
+        requiredBase |= WASI_RIGHTS_PATH_FILESTAT_SET_SIZE;
+    }
+    if (fdFlags & WASI_FDFLAGS_DSYNC) {
+        requiredInheriting |= WASI_RIGHTS_FD_DATASYNC;
+    }
+    if (fdFlags & (WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC)) {
+        requiredInheriting |= WASI_RIGHTS_FD_SYNC;
+    }
+    if (!wasiFileDescriptorHasRights(&preopenFileDescriptor, requiredBase)
+        || (requiredInheriting & ~preopenFileDescriptor.rightsInheriting) != 0) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     preopenPath = preopenFileDescriptor.path;
@@ -3146,6 +3211,12 @@ wasiFDFilestatGet(
         WASI_TRACE(("fd_filestat_get: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_FILESTAT_GET
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
     if (descriptor.fd >= 0) {
         if (fstat(descriptor.fd, st) != 0) {
@@ -3325,6 +3396,12 @@ wasiPathFilestatGet(
         WASI_TRACE(("path_filestat_get: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_FILESTAT_GET
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
     WASI_TRACE((
         "path_filestat_get: "
@@ -3382,10 +3459,6 @@ wasiFdFilestatSetSize(
     U32 wasiFD,
     U64 size
 ) {
-#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
-    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)) || \
-    defined(_BSD_SOURCE) || defined(_WIN32)
-
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
 
     WASI_TRACE((
@@ -3401,7 +3474,16 @@ wasiFdFilestatSetSize(
         WASI_TRACE(("fd_filestat_set_size: bad FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_FILESTAT_SET_SIZE
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)) || \
+    (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)) || \
+    defined(_BSD_SOURCE) || defined(_WIN32)
     if (descriptor.fd < 0) {
         return WASI_ERRNO_INVAL;
     }
@@ -3736,6 +3818,12 @@ wasiFdFilestatSetTimes(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_FILESTAT_SET_TIMES
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
     if (descriptor.fd >= 0) {
         return wasiSetFileTimes(
             descriptor.fd,
@@ -3880,6 +3968,12 @@ wasiPathFilestatSetTimes(
     if (!wasiFileDescriptorGet(dirFD, &descriptor) || descriptor.path == NULL) {
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_PATH_FILESTAT_SET_TIMES
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
     if (lookupFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW ||
         !wasiFstFlagsValid(fstFlags)) {
         return WASI_ERRNO_INVAL;
@@ -3983,6 +4077,15 @@ wasiPathRename(
     if (!wasiFileDescriptorGet(newDirFD, &newPreopenFileDescriptor)) {
         WASI_TRACE(("path_rename: bad new preopen fd"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &oldPreopenFileDescriptor,
+        WASI_RIGHTS_PATH_RENAME_SOURCE
+    ) || !wasiFileDescriptorHasRights(
+        &newPreopenFileDescriptor,
+        WASI_RIGHTS_PATH_RENAME_TARGET
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     WASI_TRACE((
@@ -4105,6 +4208,12 @@ wasiPathUnlinkFile(
         WASI_TRACE(("path_unlink_file: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_UNLINK_FILE
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
     WASI_TRACE((
         "path_unlink_file: "
@@ -4197,6 +4306,12 @@ wasiPathRemoveDirectory(
     if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_remove_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_REMOVE_DIRECTORY
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     WASI_TRACE((
@@ -4291,6 +4406,12 @@ wasiPathCreateDirectory(
         WASI_TRACE(("path_create_directory: bad preopen FD"));
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_CREATE_DIRECTORY
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
     WASI_TRACE((
         "path_create_directory: "
@@ -4361,6 +4482,7 @@ wasiPathSymlink(
     U32 newPathPointer,
     U32 newPathLength
 ) {
+    WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
 #if defined(_WIN32) || \
     (defined(__MWERKS__) && defined(macintosh)) || \
     defined(__wii__)
@@ -4380,7 +4502,6 @@ wasiPathSymlink(
     char nativeNewResolvedPath[PATH_MAX];
     int res = -1;
     char* preopenPath = NULL;
-    WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
 #endif
 
     WASI_TRACE((
@@ -4398,6 +4519,17 @@ wasiPathSymlink(
         newPathLength
     ));
 
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+        WASI_TRACE(("path_symlink: bad preopen FD"));
+        return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_SYMLINK
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
+
 #ifdef _WIN32
     /* TODO: */
     WASI_TRACE(("path_symlink: not supported on Win32"));
@@ -4411,11 +4543,6 @@ wasiPathSymlink(
     WASI_TRACE(("path_symlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
-
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
-        WASI_TRACE(("path_symlink: bad preopen FD"));
-        return WASI_ERRNO_BADF;
-    }
 
     if (oldPathLength >= PATH_MAX) {
         WASI_TRACE(("path_symlink: old path too long"));
@@ -4675,6 +4802,15 @@ wasiPathLink(
         !wasiFileDescriptorGet(newFD, &newDescriptor) || newDescriptor.path == NULL) {
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &oldDescriptor,
+        WASI_RIGHTS_PATH_LINK_SOURCE
+    ) || !wasiFileDescriptorHasRights(
+        &newDescriptor,
+        WASI_RIGHTS_PATH_LINK_TARGET
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
     if (lookupFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW) {
         return WASI_ERRNO_INVAL;
     }
@@ -4746,6 +4882,7 @@ wasiPathReadlink(
     U32 bufferLength,
     U32 lengthPointer
 ) {
+    WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
 #if defined(_WIN32) || \
     (defined(__MWERKS__) && defined(macintosh)) || \
     defined(__wii__)
@@ -4765,7 +4902,6 @@ wasiPathReadlink(
     char* buffer = NULL;
     long length = 0;
     char* preopenPath = NULL;
-    WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
 #endif
 
     WASI_TRACE((
@@ -4785,6 +4921,17 @@ wasiPathReadlink(
         lengthPointer
     ));
 
+    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
+        WASI_TRACE(("path_readlink: bad preopen FD"));
+        return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &preopenFileDescriptor,
+        WASI_RIGHTS_PATH_READLINK
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
+
 #ifdef _WIN32
     /* TODO: */
     WASI_TRACE(("path_readlink: not supported on Win32"));
@@ -4798,11 +4945,6 @@ wasiPathReadlink(
     WASI_TRACE(("path_readlink: not supported on Wii"));
     return WASI_ERRNO_NOSYS;
 #else
-    if (!wasiFileDescriptorGet(dirFD, &preopenFileDescriptor)) {
-        WASI_TRACE(("path_readlink: bad preopen FD"));
-        return WASI_ERRNO_BADF;
-    }
-
     WASI_TRACE((
         "path_readlink: "
         "path=%.*s",
@@ -4895,6 +5037,12 @@ wasiFdFdstatSetFlags(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_FDSTAT_SET_FLAGS
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
 
     if (flags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
                       WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
@@ -4945,6 +5093,47 @@ wasiFdFdstatSetFlags(
     return WASI_ERRNO_NOSYS;
 #endif /* HAS_FCNTL */
 }
+
+static
+U32
+wasiFdFdstatSetRights(
+    U32 wasiFD,
+    WasiRights base,
+    WasiRights inheriting
+) {
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 error = WASI_ERRNO_SUCCESS;
+
+    WASI_TRACE((
+        "fd_fdstat_set_rights(wasiFD=%u, base=%llu, inheriting=%llu)",
+        wasiFD,
+        base,
+        inheriting
+    ));
+
+    wasiFileDescriptorsLock();
+    if (!wasiFileDescriptorGetLocked(wasiFD, &descriptor)) {
+        error = WASI_ERRNO_BADF;
+    } else if ((base & ~descriptor.rightsBase) != 0
+               || (inheriting & ~descriptor.rightsInheriting) != 0) {
+        error = WASI_ERRNO_NOTCAPABLE;
+    } else {
+        wasi.fds.fds[wasiFD].rightsBase = base;
+        wasi.fds.fds[wasiFD].rightsInheriting = inheriting;
+    }
+    wasiFileDescriptorsUnlock();
+    return error;
+}
+
+WASI_IMPORT(U32, 20_fdX5FfdstatX5FsetX5Frights, (
+    wasmModuleInstance* instance,
+    U32 fd,
+    U64 fsRightsBase,
+    U64 fsRightsInheriting
+), {
+    UNUSED_PARAMETER(instance);
+    return wasiFdFdstatSetRights(fd, fsRightsBase, fsRightsInheriting);
+})
 
 WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
     wasmModuleInstance* instance,
@@ -5253,6 +5442,9 @@ wasiPollOneoff(
             case WASI_EVENT_TYPE_FD_READ:
             case WASI_EVENT_TYPE_FD_WRITE: {
                 WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+                WasiRights required = WASI_RIGHTS_POLL_FD_READWRITE
+                    | (subscription->type == WASI_EVENT_TYPE_FD_READ
+                       ? WASI_RIGHTS_FD_READ : WASI_RIGHTS_FD_WRITE);
                 U32 wasiFD = i32_load(
                     memory,
                     subscriptionPointer + wasiSubscriptionFDOffset
@@ -5261,6 +5453,9 @@ wasiPollOneoff(
                 if (!wasiFileDescriptorGet(wasiFD, &descriptor)
                     || descriptor.fd < 0) {
                     subscription->error = WASI_ERRNO_BADF;
+                    hasImmediateEvent = true;
+                } else if (!wasiFileDescriptorHasRights(&descriptor, required)) {
+                    subscription->error = WASI_ERRNO_NOTCAPABLE;
                     hasImmediateEvent = true;
                 } else {
                     pollFD->fd = descriptor.fd;
@@ -5716,6 +5911,12 @@ wasiFdAllocate(
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         return WASI_ERRNO_BADF;
     }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_ALLOCATE
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
+    }
     if (descriptor.fd < 0) {
         return WASI_ERRNO_ISDIR;
     }
@@ -5821,6 +6022,12 @@ wasiFdAdvise(
 
     if (!wasiFileDescriptorGet(wasiFD, &descriptor)) {
         return WASI_ERRNO_BADF;
+    }
+    if (!wasiFileDescriptorHasRights(
+        &descriptor,
+        WASI_RIGHTS_FD_ADVISE
+    )) {
+        return WASI_ERRNO_NOTCAPABLE;
     }
     if (descriptor.fd < 0) {
         return WASI_ERRNO_ISDIR;

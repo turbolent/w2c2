@@ -187,7 +187,6 @@ make run-tests
 
 w2c2 implements all [WASI Preview 1](https://wasi.dev/releases/wasi-p1) functions except:
 
-- `fd_fdstat_set_rights`
 - `proc_raise`
 - `sock_accept`
 - `sock_recv`
