@@ -430,6 +430,33 @@ tracePrintf(const char* fmt, ...) {
 
 static WASI wasi;
 
+#ifdef WASM_MUTEX_TYPE
+static WASM_MUTEX_TYPE wasiFileDescriptorsMutex;
+static bool wasiFileDescriptorsMutexInitialized;
+#endif
+
+static
+W2C2_INLINE
+void
+wasiFileDescriptorsLock(void) {
+#ifdef WASM_MUTEX_TYPE
+    if (wasiFileDescriptorsMutexInitialized) {
+        WASM_MUTEX_LOCK(&wasiFileDescriptorsMutex);
+    }
+#endif
+}
+
+static
+W2C2_INLINE
+void
+wasiFileDescriptorsUnlock(void) {
+#ifdef WASM_MUTEX_TYPE
+    if (wasiFileDescriptorsMutexInitialized) {
+        WASM_MUTEX_UNLOCK(&wasiFileDescriptorsMutex);
+    }
+#endif
+}
+
 #ifndef O_DSYNC
 #ifdef O_SYNC
 #define O_DSYNC O_SYNC /* POSIX */
@@ -510,12 +537,15 @@ wasiFileDescriptorAdd(
     char* path,
     U32* wasiFD
 ) {
-    MUST ((U64)wasi.fds.length <= (U64)UINT32_MAX)
-    MUST (wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path))
-    if (wasiFD != NULL) {
+    bool added;
+    wasiFileDescriptorsLock();
+    added = (U64)wasi.fds.length <= (U64)UINT32_MAX
+            && wasiFileDescriptorsAdd(&wasi.fds, nativeFD, path);
+    if (added && wasiFD != NULL) {
         *wasiFD = (U32)(wasi.fds.length - 1);
     }
-    return true;
+    wasiFileDescriptorsUnlock();
+    return added;
 }
 
 bool
@@ -524,9 +554,26 @@ wasiFileDescriptorSet(
     U32 wasiFD,
     int nativeFD
 ) {
+    bool valid;
+    wasiFileDescriptorsLock();
+    valid = wasiFD < wasi.fds.length;
+    if (valid) {
+        wasi.fds.fds[wasiFD].fd = nativeFD;
+    }
+    wasiFileDescriptorsUnlock();
+    return valid;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorGetLocked(
+    U32 wasiFD,
+    WasiFileDescriptor* result
+) {
     MUST (wasiFD < wasi.fds.length)
-    wasi.fds.fds[wasiFD].fd = nativeFD;
-    return true;
+    *result = wasi.fds.fds[wasiFD];
+    return result->fd >= 0 || result->path != NULL;
 }
 
 bool
@@ -535,9 +582,11 @@ wasiFileDescriptorGet(
     U32 wasiFD,
     WasiFileDescriptor* result
 ) {
-    MUST (wasiFD < wasi.fds.length)
-    *result = wasi.fds.fds[wasiFD];
-    return result->fd >= 0 || result->path != NULL;
+    bool valid;
+    wasiFileDescriptorsLock();
+    valid = wasiFileDescriptorGetLocked(wasiFD, result);
+    wasiFileDescriptorsUnlock();
+    return valid;
 }
 
 static
@@ -547,8 +596,38 @@ wasiDirectorySet(
     U32 wasiFD,
     DIR* nativeDir
 ) {
-    MUST (wasiFD < wasi.fds.length)
-    wasi.fds.fds[wasiFD].dir = nativeDir;
+    bool valid;
+    wasiFileDescriptorsLock();
+    valid = wasiFD < wasi.fds.length;
+    if (valid) {
+        wasi.fds.fds[wasiFD].dir = nativeDir;
+    }
+    wasiFileDescriptorsUnlock();
+    return valid;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasiFileDescriptorRelease(
+    WasiFileDescriptor* descriptor
+) {
+    if (descriptor->dir != NULL) {
+        int error = closedir(descriptor->dir);
+        descriptor->dir = NULL;
+        MUST (error == 0)
+    }
+    /* Directory streams are opened separately from the native descriptor. */
+    if (descriptor->fd >= 0) {
+        MUST (close(descriptor->fd) == 0)
+        descriptor->fd = -1;
+    }
+
+    if (descriptor->path != NULL) {
+        free(descriptor->path);
+        descriptor->path = NULL;
+    }
+
     return true;
 }
 
@@ -558,21 +637,15 @@ wasiFileDescriptorClose(
     U32 wasiFD
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
-    MUST (wasiFileDescriptorGet(wasiFD, &descriptor))
-
-    if (descriptor.dir != NULL) {
-        MUST (closedir(descriptor.dir) == 0)
-    } else if (descriptor.fd >= 0) {
-        MUST (close(descriptor.fd) == 0)
+    bool closed;
+    wasiFileDescriptorsLock();
+    closed = wasiFileDescriptorGetLocked(wasiFD, &descriptor)
+             && wasiFileDescriptorRelease(&wasi.fds.fds[wasiFD]);
+    if (closed) {
+        wasi.fds.fds[wasiFD] = emptyWasiFileDescriptor;
     }
-
-    if (descriptor.path != NULL) {
-        free(descriptor.path);
-    }
-
-    wasi.fds.fds[wasiFD] = emptyWasiFileDescriptor;
-
-    return true;
+    wasiFileDescriptorsUnlock();
+    return closed;
 }
 
 bool
@@ -583,6 +656,12 @@ wasiInit(
     char** envp
 ) {
     int envc = 0;
+#ifdef WASM_MUTEX_TYPE
+    if (!wasiFileDescriptorsMutexInitialized) {
+        MUST (WASM_MUTEX_INIT(&wasiFileDescriptorsMutex))
+        wasiFileDescriptorsMutexInitialized = true;
+    }
+#endif
     while (envp[envc] != NULL) {
         envc++;
     }
@@ -5091,17 +5170,18 @@ wasiPollOneoff(
             }
             case WASI_EVENT_TYPE_FD_READ:
             case WASI_EVENT_TYPE_FD_WRITE: {
+                WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
                 U32 wasiFD = i32_load(
                     memory,
                     subscriptionPointer + wasiSubscriptionFDOffset
                 );
 
-                if (wasiFD >= wasi.fds.length
-                    || wasi.fds.fds[wasiFD].fd < 0) {
+                if (!wasiFileDescriptorGet(wasiFD, &descriptor)
+                    || descriptor.fd < 0) {
                     subscription->error = WASI_ERRNO_BADF;
                     hasImmediateEvent = true;
                 } else {
-                    pollFD->fd = wasi.fds.fds[wasiFD].fd;
+                    pollFD->fd = descriptor.fd;
                 }
 
                 if (subscription->type == WASI_EVENT_TYPE_FD_READ) {

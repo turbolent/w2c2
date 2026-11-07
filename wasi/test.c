@@ -177,6 +177,15 @@ static void testFileDescriptorGet(void) {
     fprintf(stderr, "OK wasiFileDescriptorGet\n");
 }
 
+extern U32 i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+    wasmModuleInstance*,
+    U32,
+    U32,
+    U32,
+    U64,
+    U32
+);
+
 static void testFileDescriptorClose(void) {
     U32 wasiFD;
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
@@ -212,6 +221,78 @@ static void testFileDescriptorClose(void) {
 
     fprintf(stderr, "OK wasiFileDescriptorClose\n");
 }
+
+static void testFileDescriptorCloseDirectory(void) {
+    U32 wasiFD;
+    WasiFileDescriptor descriptor;
+#if HAS_UNISTD && !defined(_WIN32)
+    int fd = open(".", O_RDONLY);
+    CHECK_IO(fd >= 0);
+    CHECK_IO(wasiFileDescriptorAdd(fd, ".", &wasiFD));
+#else
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+#endif
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
+        NULL,
+        wasiFD,
+        128,
+        1,
+        0,
+        512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.dir != NULL);
+    CHECK_IO(wasiFileDescriptorClose(wasiFD));
+    CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+    CHECK_IO(descriptor.fd == -1 && descriptor.dir == NULL && descriptor.path == NULL);
+#if HAS_UNISTD && !defined(_WIN32)
+    CHECK_IO(fcntl(fd, F_GETFD) == -1 && errno == EBADF);
+#endif
+    fprintf(stderr, "OK wasiFileDescriptorClose directory handles\n");
+}
+
+#ifdef WASM_THREAD_TYPE
+
+static void* testFileDescriptorsThread(void* argument) {
+    WASM_MUTEX_TYPE* start = (WASM_MUTEX_TYPE*)argument;
+    unsigned int i;
+    WASM_MUTEX_LOCK(start);
+    WASM_MUTEX_UNLOCK(start);
+    for (i = 0; i < 256; i++) {
+        U32 wasiFD;
+        WasiFileDescriptor descriptor;
+        CHECK_IO(wasiFileDescriptorAdd(-1, ".", &wasiFD));
+        CHECK_IO(wasiFileDescriptorGet(wasiFD, &descriptor));
+        CHECK_IO(strcmp(descriptor.path, ".") == 0);
+        CHECK_IO(wasiFileDescriptorSet(wasiFD, -1));
+        CHECK_IO(wasiFileDescriptorClose(wasiFD));
+        CHECK_IO(!wasiFileDescriptorGet(wasiFD, &descriptor));
+    }
+    return NULL;
+}
+
+static void testFileDescriptorsConcurrent(void) {
+    WASM_MUTEX_TYPE start;
+    WASM_THREAD_TYPE threads[4];
+    size_t i;
+    CHECK_IO(WASM_MUTEX_INIT(&start));
+    WASM_MUTEX_LOCK(&start);
+    for (i = 0; i < sizeof(threads) / sizeof(threads[0]); i++) {
+        CHECK_IO(WASM_THREAD_CREATE(
+            &threads[i],
+            testFileDescriptorsThread,
+            &start
+        ));
+    }
+    WASM_MUTEX_UNLOCK(&start);
+    for (i = 0; i < sizeof(threads) / sizeof(threads[0]); i++) {
+        WASM_THREAD_JOIN(threads[i]);
+    }
+    WASM_MUTEX_FREE(&start);
+    fprintf(stderr, "OK concurrent file descriptor access\n");
+}
+
+#endif
 
 extern U32 i22_wasiX5FsnapshotX5Fpreview119_fdX5FfdstatX5FsetX5Fflags(
     wasmModuleInstance*, U32, U32
@@ -1821,10 +1902,6 @@ static void testPositionalIO(void) {
 }
 
 #ifdef PLAN9
-extern U32 i22_wasiX5FsnapshotX5Fpreview110_fdX5Freaddir(
-    wasmModuleInstance*, U32, U32, U32, U64, U32
-);
-
 static void testPlan9DirectoryCookies(void) {
     static const U64 cookies[] = {0, 1, 0, 1};
     U32 wasiFD;
@@ -2474,6 +2551,10 @@ main(int argc, char* argv[]) {
     testSchedYield();
     testFileDescriptorGet();
     testFileDescriptorClose();
+    testFileDescriptorCloseDirectory();
+#ifdef WASM_THREAD_TYPE
+    testFileDescriptorsConcurrent();
+#endif
     testFdAllocateAndAdvise(
         i22_wasiX5FsnapshotX5Fpreview111_fdX5Fallocate,
         i22_wasiX5FsnapshotX5Fpreview19_fdX5Fadvise
