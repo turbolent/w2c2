@@ -1787,6 +1787,9 @@ WASI_IMPORT(U32, 9_fdX5Fpwrite, (
     U32 resultPointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
+    if ((off_t)offset < 0 || (U64)(off_t)offset != offset) {
+        return WASI_ERRNO_OVERFLOW;
+    }
     return wasiFDWrite(
         memory,
         pwritevFallback,
@@ -1794,7 +1797,7 @@ WASI_IMPORT(U32, 9_fdX5Fpwrite, (
         iovecsPointer,
         iovecsCount,
         resultPointer,
-        offset,
+        (off_t)offset,
         WASI_RIGHTS_FD_WRITE | WASI_RIGHTS_FD_SEEK
     );
 })
@@ -1946,6 +1949,9 @@ WASI_IMPORT(U32, 8_fdX5Fpread, (
     U32 resultPointer
 ), {
     wasmMemory* memory = wasiMemory(instance);
+    if ((off_t)offset < 0 || (U64)(off_t)offset != offset) {
+        return WASI_ERRNO_OVERFLOW;
+    }
     return wasiFDRead(
         memory,
         preadvFallback,
@@ -1953,7 +1959,7 @@ WASI_IMPORT(U32, 8_fdX5Fpread, (
         iovecsPointer,
         iovecsCount,
         resultPointer,
-        offset,
+        (off_t)offset,
         WASI_RIGHTS_FD_READ | WASI_RIGHTS_FD_SEEK
     );
 })
@@ -3516,7 +3522,7 @@ wasiFdPrestatDirName(
     if (length > pathLength) {
         return WASI_ERRNO_NAMETOOLONG;
     }
-    if (!wasiMemoryRangeIsValid(memory, pathPointer, length, 1)) {
+    if (!wasiMemoryRangeIsValid(memory, pathPointer, (U32)length, 1)) {
         return WASI_ERRNO_FAULT;
     }
 

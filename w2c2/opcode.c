@@ -581,7 +581,10 @@ wasmOpcodeResultType(
                 wasmOpcodeDescription(opcode)
             );
             abort();
+#ifndef _MSC_VER
+            /* Some compilers, including Plan 9's, require a return after abort. */
             return 0;
+#endif
         }
     }
 }
@@ -789,7 +792,10 @@ wasmOpcodeParameter1Type(
                 wasmOpcodeDescription(opcode)
             );
             abort();
+#ifndef _MSC_VER
+            /* Some compilers, including Plan 9's, require a return after abort. */
             return 0;
+#endif
         }
     }
 }

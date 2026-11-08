@@ -1054,6 +1054,31 @@ static U64 testStatTime(struct stat* st, bool modification) {
     return seconds * W2C2_LL(1000000000) + (U64)nanoseconds;
 }
 
+#if HAS_FUTIMENS
+
+static void testNativeFileTimes(int fd, U64* atime, U64* mtime) {
+    struct timespec times[2];
+    struct stat st;
+    times[0].tv_sec = (time_t)(*atime / W2C2_LL(1000000000));
+    times[0].tv_nsec = (long)(*atime % W2C2_LL(1000000000));
+    times[1].tv_sec = (time_t)(*mtime / W2C2_LL(1000000000));
+    times[1].tv_nsec = (long)(*mtime % W2C2_LL(1000000000));
+    /* Measure the precision exposed by the native filesystem and stat API.
+     * QEMU 8.2's s390x stat emulation discards nanoseconds.
+     */
+    CHECK_IO(futimens(fd, times) == 0);
+    CHECK_IO(fstat(fd, &st) == 0);
+    *atime = testStatTime(&st, false);
+    *mtime = testStatTime(&st, true);
+    /* Clear the baseline
+     * so a WASI implementation that does nothing fails.
+     */
+    memset(times, 0, sizeof(times));
+    CHECK_IO(futimens(fd, times) == 0);
+}
+
+#endif
+
 static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
     FILE* file = tmpfile();
     int fd;
@@ -1063,12 +1088,20 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
     time_t before;
     U64 atime = W2C2_LL(1000000000123456789);
     U64 mtime = W2C2_LL(1000000000987654321);
+    U64 expectedAtime = atime;
+    U64 expectedMtime = mtime;
 #endif
     CHECK_IO(file != NULL);
     fd = dup(fileno(file));
     CHECK_IO(fd >= 0);
     CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
 #if HAS_FUTIMENS || HAS_FUTIMES
+#if HAS_FUTIMENS
+    testNativeFileTimes(fd, &expectedAtime, &expectedMtime);
+#else
+    expectedAtime -= expectedAtime % 1000;
+    expectedMtime -= expectedMtime % 1000;
+#endif
     CHECK_IO(setTimes(
         NULL,
         wasiFD,
@@ -1076,12 +1109,11 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
         mtime,
         WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM
     ) == WASI_ERRNO_SUCCESS);
-#if !HAS_FUTIMENS
-    atime -= atime % 1000;
-    mtime -= mtime % 1000;
-#endif
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
     CHECK_IO(setTimes(
         NULL,
         wasiFD,
@@ -1090,7 +1122,7 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
         WASI_FSTFLAGS_ATIM
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == mtime);
+    CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == expectedMtime);
     CHECK_IO(setTimes(
         NULL,
         wasiFD,
@@ -1134,7 +1166,7 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
         WASI_FSTFLAGS_ATIM | WASI_FSTFLAGS_MTIM_NOW
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime);
+    CHECK_IO(testStatTime(&st, false) == expectedAtime);
     CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
     CHECK_IO(setTimes(
         NULL,
@@ -1187,6 +1219,8 @@ static void testPathFilestatSetTimes(
 #endif
 #if HAS_UTIMENSAT || HAS_UTIMES || HAS_UTIME
     time_t before;
+    U64 expectedAtime = atime;
+    U64 expectedMtime = mtime;
 #else
     UNUSED_PARAMETER(setFD);
 #endif
@@ -1202,6 +1236,18 @@ static void testPathFilestatSetTimes(
     CHECK_IO(wasiFileDescriptorAdd(-1, directory, &dirFD));
     memcpy(testMemory.data + 128, "file", 4);
 #if HAS_UTIMENSAT || HAS_UTIMES || HAS_UTIME
+#if !HAS_UTIMENSAT
+#if HAS_UTIMES
+    expectedAtime -= expectedAtime % 1000;
+    expectedMtime -= expectedMtime % 1000;
+#else
+    expectedAtime -= expectedAtime % W2C2_LL(1000000000);
+    expectedMtime -= expectedMtime % W2C2_LL(1000000000);
+#endif
+#endif
+#if HAS_FUTIMENS
+    testNativeFileTimes(fd, &expectedAtime, &expectedMtime);
+#endif
     CHECK_IO(setPath(
         NULL,
         dirFD,
@@ -1212,17 +1258,13 @@ static void testPathFilestatSetTimes(
         mtime,
         both
     ) == WASI_ERRNO_SUCCESS);
-#if !HAS_UTIMENSAT
-#if HAS_UTIMES
-    atime -= atime % 1000;
-    mtime -= mtime % 1000;
-#else
-    atime -= atime % W2C2_LL(1000000000);
-    mtime -= mtime % W2C2_LL(1000000000);
-#endif
-#endif
+    atime = expectedAtime;
+    mtime = expectedMtime;
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
     CHECK_IO(setPath(
         NULL,
         dirFD,
@@ -1234,7 +1276,10 @@ static void testPathFilestatSetTimes(
         0
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
     before = time(NULL);
     CHECK_IO(setPath(
         NULL,
@@ -1247,7 +1292,7 @@ static void testPathFilestatSetTimes(
         WASI_FSTFLAGS_MTIM_NOW
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime);
+    CHECK_IO(testStatTime(&st, false) == expectedAtime);
     CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
     CHECK_IO(setFD(
         NULL,
@@ -1257,7 +1302,10 @@ static void testPathFilestatSetTimes(
         both
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(stat(directory, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
 
 #if HAS_LSTAT
     CHECK_IO(symlink("file", linkPath) == 0);
@@ -1273,7 +1321,10 @@ static void testPathFilestatSetTimes(
         both
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
 #if HAS_UTIMENSAT || HAS_LUTIMES
     CHECK_IO(setPath(
         NULL,
@@ -1300,7 +1351,10 @@ static void testPathFilestatSetTimes(
     ) == WASI_ERRNO_NOTSUP);
 #endif
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(testStatTime(&st, false) == atime && testStatTime(&st, true) == mtime);
+    CHECK_IO(
+        testStatTime(&st, false) == expectedAtime
+        && testStatTime(&st, true) == expectedMtime
+    );
     CHECK_IO(unlink(filePath) == 0);
 #if HAS_UTIMENSAT || HAS_LUTIMES
     CHECK_IO(setPath(
@@ -2189,11 +2243,6 @@ static void testFdStorage(
     fprintf(stderr, "OK fd_allocate and fd_advise file contents and offsets\n");
 }
 
-#undef testNativeDup
-#undef testNativeFileno
-#undef testNativeRead
-#undef testNativeWrite
-#undef testNativeSeek
 #undef testNativeStat
 #undef testNativeStatType
 
@@ -2499,7 +2548,7 @@ static void testFdSyncFlags(int syncFlag) {
 
 #endif
 
-#if HAS_UNISTD
+#if HAS_UNISTD || defined(_WIN32)
 
 extern U32 i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
     wasmModuleInstance*, U32, U32, U32, U64, U32
@@ -2509,15 +2558,17 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
 );
 
 static void testPositionalIO(void) {
+    static const U64 offsets[] = {(U64)-1, W2C2_LL(4294967296)};
     FILE* file = tmpfile();
     U32 wasiFD;
     int fd;
     char bytes[6];
+    size_t index;
     CHECK_IO(file != NULL);
-    fd = dup(fileno(file));
+    fd = testNativeDup(testNativeFileno(file));
     CHECK_IO(fd >= 0);
-    CHECK_IO(write(fd, "abcdef", 6) == 6);
-    CHECK_IO(lseek(fd, 4, SEEK_SET) == 4);
+    CHECK_IO(testNativeWrite(fd, "abcdef", 6) == 6);
+    CHECK_IO(testNativeSeek(fd, 4, SEEK_SET) == 4);
     CHECK_IO(wasiFileDescriptorAdd(fd, NULL, &wasiFD));
     i32_store(&testMemory, 0, 128);
     i32_store(&testMemory, 4, 2);
@@ -2528,20 +2579,54 @@ static void testPositionalIO(void) {
     CHECK_IO(i32_load(&testMemory, 512) == 5);
     CHECK_IO(memcmp(testMemory.data + 128, "bc", 2) == 0);
     CHECK_IO(memcmp(testMemory.data + 256, "def", 3) == 0);
-    CHECK_IO(lseek(fd, 0, SEEK_CUR) == 4);
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 4);
     memcpy(testMemory.data + 128, "12", 2);
     memcpy(testMemory.data + 256, "345", 3);
     CHECK_IO(i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(NULL, wasiFD, 0, 2, 1, 512)
         == WASI_ERRNO_SUCCESS);
     CHECK_IO(i32_load(&testMemory, 512) == 5);
-    CHECK_IO(lseek(fd, 0, SEEK_CUR) == 4);
-    CHECK_IO(lseek(fd, 0, SEEK_SET) == 0);
-    CHECK_IO(read(fd, bytes, sizeof(bytes)) == (ssize_t)sizeof(bytes));
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 4);
+    for (index = 0; index < sizeof(offsets) / sizeof(offsets[0]); index++) {
+        if (index == 1 && sizeof(off_t) >= sizeof(U64)) {
+            continue;
+        }
+        i32_store(&testMemory, 512, 0x12345678);
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview18_fdX5Fpread(
+            NULL,
+            wasiFD,
+            0,
+            2,
+            offsets[index],
+            512
+        ) == WASI_ERRNO_OVERFLOW);
+        CHECK_IO(i32_load(&testMemory, 512) == 0x12345678);
+        CHECK_IO(memcmp(testMemory.data + 128, "12", 2) == 0);
+        CHECK_IO(memcmp(testMemory.data + 256, "345", 3) == 0);
+        CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 4);
+        CHECK_IO(i22_wasiX5FsnapshotX5Fpreview19_fdX5Fpwrite(
+            NULL,
+            wasiFD,
+            0,
+            2,
+            offsets[index],
+            512
+        ) == WASI_ERRNO_OVERFLOW);
+        CHECK_IO(i32_load(&testMemory, 512) == 0x12345678);
+        CHECK_IO(testNativeSeek(fd, 0, SEEK_CUR) == 4);
+    }
+    CHECK_IO(testNativeSeek(fd, 0, SEEK_SET) == 0);
+    CHECK_IO(testNativeRead(fd, bytes, sizeof(bytes)) == (int)sizeof(bytes));
     CHECK_IO(memcmp(bytes, "a12345", sizeof(bytes)) == 0);
     CHECK_IO(wasiFileDescriptorClose(wasiFD));
     CHECK_IO(fclose(file) == 0);
     fprintf(stderr, "OK positional I/O preserves file offset\n");
 }
+
+#undef testNativeDup
+#undef testNativeFileno
+#undef testNativeRead
+#undef testNativeWrite
+#undef testNativeSeek
 
 #ifdef PLAN9
 static void testPlan9DirectoryCookies(void) {
@@ -4489,7 +4574,7 @@ main(int argc, char* argv[]) {
     testFdSyncFlags(O_SYNC);
 #endif
 
-#if HAS_UNISTD
+#if HAS_UNISTD || defined(_WIN32)
     testPositionalIO();
 #ifdef PLAN9
     testPlan9DirectoryCookies();

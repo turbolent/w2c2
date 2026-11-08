@@ -83,7 +83,7 @@ complete(
     CHECK(capture->count < 8);
     file = &capture->files[capture->count++];
     CHECK(strlen(name) < sizeof(file->name));
-    strcpy(file->name, name);
+    memcpy(file->name, name, strlen(name) + 1);
     file->kind = kind;
     file->length = length;
     file->bytes = (U8*)malloc(length + 1);
