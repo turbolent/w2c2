@@ -39,3 +39,7 @@ find_library(W2C2WASI
     PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../wasi/build
 )
 target_link_libraries(go-wasi PUBLIC ${W2C2WASI})
+
+if(WIN32)
+    target_link_libraries(go-wasi PUBLIC ws2_32)
+endif()

@@ -1664,7 +1664,7 @@ static
 void
 testCStringEscaping(void) {
     static const char* strings[] = {
-        "", "ordinary/path.c", ("\"\\\n\r\t\0017AF\177\303\251\?" "\?/end\\"), "a\0b"
+        "", "ordinary/path.c", ("\"\\\n\r\t\001" "7AF\177\303\251\?" "\?/end\\"), "a\0b"
     };
     static const char* escaped[] = {
         "", "ordinary/path.c", "\\\"\\\\\\012\\015\\011\\0017AF\\177\\303\\251\\?\\?/end\\\\", "a\\000b"

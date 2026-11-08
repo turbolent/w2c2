@@ -87,10 +87,15 @@ getPathModuleName(
     const size_t capacity,
     const char* modulePath
 ) {
-    const char* start = strrchr(modulePath, PATH_SEPARATOR);
+    const char* start = modulePath;
+    const char* cursor;
     const char* end;
     size_t length;
-    start = start == NULL ? modulePath : start + 1;
+    for (cursor = modulePath; *cursor != '\0'; cursor++) {
+        if (wasmPathIsSeparator(*cursor)) {
+            start = cursor + 1;
+        }
+    }
     end = strrchr(start, '.');
     if (end == NULL || end == start) {
         end = start + strlen(start);

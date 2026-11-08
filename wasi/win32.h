@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <errno.h>
+#include "../w2c2/w2c2_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,12 +26,51 @@ extern "C" {
 #define FILE_ATTRIBUTE_REPARSE_POINT 0x00000400
 #endif
 
+#ifndef FILE_ATTRIBUTE_SPARSE_FILE
+#define FILE_ATTRIBUTE_SPARSE_FILE 0x00000200
+#endif
+
 #ifndef IO_REPARSE_TAG_MOUNT_POINT
 #define IO_REPARSE_TAG_MOUNT_POINT 0xA0000003l
 #endif
 
+#ifndef IO_REPARSE_TAG_SYMLINK
+#define IO_REPARSE_TAG_SYMLINK 0xA000000Cl
+#endif
+
+#ifndef FILE_FLAG_OPEN_REPARSE_POINT
+#define FILE_FLAG_OPEN_REPARSE_POINT 0x00200000
+#endif
+
+#define WASI_WINDOWS_S_IFLNK 0120000
+
+struct wasiWindowsStat {
+    U64 st_dev;
+    U64 st_ino;
+    U64 st_nlink;
+    U64 st_size;
+    unsigned short st_mode;
+    I64 st_atime;
+    I64 st_mtime;
+    I64 st_ctime;
+    long accessNanoseconds;
+    long modificationNanoseconds;
+    long creationNanoseconds;
+};
+
+int wasiWindowsStat(const char* path, struct wasiWindowsStat* st);
+int wasiWindowsLstat(const char* path, struct wasiWindowsStat* st);
+int wasiWindowsFstat(int fd, struct wasiWindowsStat* st);
+int wasiWindowsOpen(const char* path, int flags, int mode);
+int wasiWindowsWrite(int fd, const void* bytes, unsigned int length);
+int wasiWindowsSymlink(const char* target, const char* path);
+long wasiWindowsReadlink(const char* path, char* buffer, size_t length);
+int wasiWindowsUnlink(const char* path);
+int wasiWindowsRmdir(const char* path);
+int wasiWindowsRename(const char* source, const char* target);
+
 struct dirent {
-    long d_ino;
+    U64 d_ino;
     unsigned short d_reclen;
     unsigned char d_type;
     unsigned short d_namlen;
@@ -39,9 +79,12 @@ struct dirent {
 
 typedef struct DIR DIR;
 
+void wasiSetErrno(unsigned long error);
+
 DIR* opendir(const char*);
 struct dirent* readdir(DIR*);
 int closedir(DIR*);
+void rewinddir(DIR*);
 
 /* File types for 'd_type' */
 #define DT_UNKNOWN  0
@@ -53,6 +96,7 @@ int closedir(DIR*);
 #define DT_LNK      10
 #define DT_SOCK     12
 #define DT_WHT      14
+#define DTTOIF(type) ((unsigned short)((type) << 12))
 
 struct DIR {
     char* dirname;

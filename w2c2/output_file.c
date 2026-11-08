@@ -185,9 +185,9 @@ fail:
 }
 
 WasmOutputProvider
-wasmFileOutputProvider(const char* directory) {
+wasmFileOutputProvider(const char* outputDirectory) {
     WasmOutputProvider provider;
-    provider.context = (void*)directory;
+    provider.context = (void*)outputDirectory;
     provider.open = fileOutputOpen;
     return provider;
 }

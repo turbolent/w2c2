@@ -14,12 +14,12 @@ endif
 rust-wasi: rustwasi.o
 	$(MAKE) -f Submake CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" OBJS="$(OBJS)"
 
-rustwasi.c: target/wasm32-wasi/debug/rust-wasi.wasm
+rustwasi.c: target/wasm32-wasip1/debug/rust-wasi.wasm
 	$(W2C2) -d $(MODE) -f 100 $^ $@
 
 
-target/wasm32-wasi/debug/rust-wasi.wasm:
-	cargo build --target wasm32-wasi
+target/wasm32-wasip1/debug/rust-wasi.wasm: src/main.rs Cargo.toml Cargo.lock
+	cargo build --locked --target wasm32-wasip1
 
 .PHONY: clean
 clean:

@@ -9,7 +9,7 @@ project(rust-wasi)
 execute_process(COMMAND
     ${CMAKE_CURRENT_SOURCE_DIR}/../../w2c2/build/w2c2${HOST_EXECUTABLE_SUFFIX}
     -f 100
-    ${CMAKE_CURRENT_SOURCE_DIR}/target/wasm32-wasi/debug/rust-wasi.wasm
+    ${CMAKE_CURRENT_SOURCE_DIR}/target/wasm32-wasip1/debug/rust-wasi.wasm
     rustwasi.c
 )
 
