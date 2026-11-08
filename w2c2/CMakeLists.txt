@@ -70,7 +70,7 @@ endif()
 
 add_executable(w2c2 ${CLI_SOURCES})
 target_link_libraries(w2c2 w2c2_lib)
-add_executable(w2c2_test ${TEST_SOURCES} file.c)
+add_executable(w2c2_test ${TEST_SOURCES} file.c compat.c)
 target_link_libraries(w2c2_test w2c2_lib)
 
 enable_testing()

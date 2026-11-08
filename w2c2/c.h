@@ -46,6 +46,12 @@ extern "C" {
  * and wasmExternTable pointers for externref.
  * Re-exports return the original imported table.
  * Freeing a table releases its storage, not the objects or instances it references.
+ *
+ * Unexpected synchronization or join errors report a thread diagnostic and abort.
+ * These fatal diagnostics go to stderr instead of the diagnostic callback.
+ * Worker lifetimes cannot be established after such an error,
+ * so returning would risk accessing freed caller-owned storage.
+ * Allocation and thread-creation failures return zero normally.
  */
 WasmBool
 WARN_UNUSED_RESULT

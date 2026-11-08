@@ -48,6 +48,8 @@ static enum FileFailure {
     fileWriteFailure, fileCloseFailure, fileReplaceFailure, fileCollision
 } failure;
 static char collisionPath[256];
+static bool omitError;
+static bool allCollisions;
 
 static int injectedOpen(const char* path, int flags, int mode) {
 #ifdef _WIN32
@@ -55,8 +57,12 @@ static int injectedOpen(const char* path, int flags, int mode) {
 #else
     CHECK((flags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL));
 #endif
+    if (allCollisions) {
+        errno = EEXIST;
+        return -1;
+    }
     if (failure == fileOpenFailure) {
-        errno = ENOSPC;
+        errno = omitError ? 0 : ENOSPC;
         return -1;
     }
     if (failure == fileCollision && collisionPath[0] == '\0') {
@@ -71,7 +77,7 @@ static int injectedOpen(const char* path, int flags, int mode) {
 
 static FILE* injectedFdopen(int descriptor, const char* mode) {
     if (failure == fileStreamFailure) {
-        errno = ENOMEM;
+        errno = omitError ? 0 : ENOMEM;
         return NULL;
     }
     return nativeFdopen(descriptor, mode);
@@ -80,7 +86,7 @@ static FILE* injectedFdopen(int descriptor, const char* mode) {
 static size_t injectedWrite(const void* bytes, size_t size, size_t count, FILE* file) {
     if (failure == fileWriteFailure) {
         const size_t written = fwrite(bytes, size, count / 2, file);
-        errno = ENOSPC;
+        errno = omitError ? 0 : ENOSPC;
         return written;
     }
     return fwrite(bytes, size, count, file);
@@ -89,7 +95,7 @@ static size_t injectedWrite(const void* bytes, size_t size, size_t count, FILE* 
 static int injectedClose(FILE* file) {
     const int result = fclose(file);
     if (failure == fileCloseFailure) {
-        errno = ENOSPC;
+        errno = omitError ? 0 : ENOSPC;
         return EOF;
     }
     return result;
@@ -115,7 +121,7 @@ static BOOL injectedMove(const char* from, const char* to, DWORD flags) {
 #else
 static int injectedRename(const char* from, const char* to) {
     if (failure == fileReplaceFailure) {
-        errno = EACCES;
+        errno = omitError ? 0 : EACCES;
         return -1;
     }
     return rename(from, to);
@@ -244,12 +250,26 @@ static void testFileFailures(void) {
         const enum FileFailure selected = (enum FileFailure)(fileOpenFailure + variant / 2);
         WasmOutputSink sink;
         int error = 0;
+        int expectedError = selected == fileStreamFailure ? ENOMEM
+            : selected == fileReplaceFailure ? EACCES : ENOSPC;
         failure = selected;
         createOriginal(exists);
         if (selected == fileOpenFailure || selected == fileStreamFailure) {
-            CHECK(!provider.open(provider.context, "result", wasmOutputData, &sink, &error));
+            CHECK(!provider.open(
+                provider.context,
+                "result",
+                wasmOutputData,
+                &sink,
+                &error
+            ));
         } else {
-            CHECK(provider.open(provider.context, "result", wasmOutputData, &sink, &error));
+            CHECK(provider.open(
+                provider.context,
+                "result",
+                wasmOutputData,
+                &sink,
+                &error
+            ));
             CHECK(sink.write(sink.context, replacement, sizeof(replacement), &error)
                 == (selected != fileWriteFailure));
             if (selected == fileWriteFailure) {
@@ -258,8 +278,14 @@ static void testFileFailures(void) {
             }
             CHECK(!sink.close(sink.context, &error));
         }
-        CHECK(error == (selected == fileStreamFailure ? ENOMEM
-            : selected == fileReplaceFailure ? EACCES : ENOSPC));
+        if (omitError
+#ifdef _WIN32
+            && selected != fileReplaceFailure
+#endif
+        ) {
+            expectedError = EIO;
+        }
+        CHECK(error == expectedError);
         checkOriginal(exists);
         checkFileCount(exists ? 1 : 0);
         if (exists) {
@@ -269,13 +295,36 @@ static void testFileFailures(void) {
     failure = fileSuccess;
 }
 
+static void testFileOpenChecks(void) {
+    WasmOutputProvider provider = injectedFileOutputProvider(directory);
+    WasmOutputSink sink;
+    int error = 0;
+    allCollisions = true;
+    CHECK(!provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &sink,
+        &error
+    ));
+    CHECK(error == EEXIST);
+    allCollisions = false;
+    checkFileCount(0);
+}
+
 static void testFileCollision(void) {
     WasmOutputProvider provider = injectedFileOutputProvider(directory);
     WasmOutputSink sink;
     int error = 0;
     failure = fileCollision;
     collisionPath[0] = '\0';
-    CHECK(provider.open(provider.context, "result", wasmOutputData, &sink, &error));
+    CHECK(provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &sink,
+        &error
+    ));
     CHECK(collisionPath[0] != '\0');
     CHECK(sink.write(sink.context, replacement, sizeof(replacement), &error));
     CHECK(sink.close(sink.context, &error));
@@ -287,13 +336,48 @@ static void testFileCollision(void) {
     failure = fileSuccess;
 }
 
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+static void testFileSymlinkReplacement(void) {
+    WasmOutputProvider provider = wasmFileOutputProvider(directory);
+    WasmOutputSink sink;
+    struct stat status;
+    int error = 0;
+    CHECK(symlink("result", destination) == 0);
+    CHECK(stat(destination, &status) != 0 && errno == ELOOP);
+    CHECK(provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &sink,
+        &error
+    ));
+    CHECK(sink.write(sink.context, replacement, sizeof(replacement), &error));
+    CHECK(sink.close(sink.context, &error));
+    checkContents(destination, wasmOutputData, replacement, sizeof(replacement));
+    checkFileCount(1);
+    CHECK(remove(destination) == 0);
+}
+#endif
+
 static void testFilePublication(void) {
     WasmOutputProvider provider = injectedFileOutputProvider(directory);
     WasmOutputSink first;
     WasmOutputSink second;
     int error = 0;
-    CHECK(provider.open(provider.context, "result", wasmOutputData, &first, &error));
-    CHECK(provider.open(provider.context, "result", wasmOutputData, &second, &error));
+    CHECK(provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &first,
+        &error
+    ));
+    CHECK(provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &second,
+        &error
+    ));
     CHECK(first.write(first.context, original, sizeof(original), &error));
     CHECK(second.write(second.context, replacement, sizeof(replacement), &error));
     CHECK(first.close(first.context, &error));
@@ -306,7 +390,13 @@ static void testFilePublication(void) {
     CHECK(remove(destination) == 0);
     failure = fileSuccess;
 
-    CHECK(provider.open(provider.context, "result", wasmOutputData, &first, &error));
+    CHECK(provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &first,
+        &error
+    ));
     CHECK(first.write(first.context, replacement, sizeof(replacement), &error));
     CHECK(makeDirectory(destination) == 0);
     CHECK(!first.close(first.context, &error));
@@ -314,12 +404,24 @@ static void testFilePublication(void) {
     checkFileCount(1);
     CHECK(removeDirectory(destination) == 0);
     provider = injectedFileOutputProvider("file-output-test/missing");
-    CHECK(!provider.open(provider.context, "result", wasmOutputData, &first, &error));
+    CHECK(!provider.open(
+        provider.context,
+        "result",
+        wasmOutputData,
+        &first,
+        &error
+    ));
     CHECK(error == ENOENT);
     checkFileCount(0);
 
     provider = injectedFileOutputProvider(directory);
-    CHECK(provider.open(provider.context, ".w2c2-00000000.tmp", wasmOutputData, &first, &error));
+    CHECK(provider.open(
+        provider.context,
+        ".w2c2-00000000.tmp",
+        wasmOutputData,
+        &first,
+        &error
+    ));
     CHECK(fopen("file-output-test/.w2c2-00000000.tmp", "rb") == NULL && errno == ENOENT);
     first.abort(first.context);
     checkFileCount(0);
@@ -332,7 +434,14 @@ void testFileOutputs(void) {
     CHECK(makeDirectory(directory) == 0);
     testFileLifecycle();
     testFileFailures();
+    omitError = true;
+    testFileFailures();
+    omitError = false;
+    testFileOpenChecks();
     testFileCollision();
+#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+    testFileSymlinkReplacement();
+#endif
     testFilePublication();
     CHECK(removeDirectory(directory) == 0);
     fprintf(stderr, "PASS testFileOutputs\n");
