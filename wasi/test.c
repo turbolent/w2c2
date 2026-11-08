@@ -1054,6 +1054,18 @@ static U64 testStatTime(struct stat* st, bool modification) {
     return seconds * W2C2_LL(1000000000) + (U64)nanoseconds;
 }
 
+static time_t testNativeCurrentFileTime(void) {
+    FILE* file = tmpfile();
+    struct stat st;
+    CHECK_IO(file != NULL);
+    CHECK_IO(fstat(fileno(file), &st) == 0);
+    CHECK_IO(fclose(file) == 0);
+    /* Use the filesystem's clock for the lower bound.
+     * It can lag time(NULL) across a second boundary.
+     */
+    return st.st_mtime;
+}
+
 #if HAS_FUTIMENS
 
 static void testNativeFileTimes(int fd, U64* atime, U64* mtime) {
@@ -1147,7 +1159,7 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
     CHECK_IO(fstat(fd, &st) == 0);
     CHECK_IO(testStatTime(&st, false) == 0 && testStatTime(&st, true) == 0);
 
-    before = time(NULL);
+    before = testNativeCurrentFileTime();
     CHECK_IO(setTimes(
         NULL,
         wasiFD,
@@ -1280,7 +1292,7 @@ static void testPathFilestatSetTimes(
         testStatTime(&st, false) == expectedAtime
         && testStatTime(&st, true) == expectedMtime
     );
-    before = time(NULL);
+    before = testNativeCurrentFileTime();
     CHECK_IO(setPath(
         NULL,
         dirFD,

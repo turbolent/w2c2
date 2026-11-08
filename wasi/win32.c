@@ -138,6 +138,12 @@ wasiWindowsOpen(const char* path, int flags, int mode) {
     if (wasiWindowsPath(path, nativePath) != 0) {
         return -1;
     }
+    /* Truncation requires native write access.
+     * WASI descriptor rights are enforced separately.
+     */
+    if (flags & _O_TRUNC) {
+        access |= GENERIC_WRITE;
+    }
     handle = CreateFileA(
         nativePath, access,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -188,6 +194,10 @@ wasiWindowsSymlink(const char* target, const char* path) {
     }
     if (pathLength != 0 && (path[pathLength - 1] == '/' || path[pathLength - 1] == '\\')) {
         errno = ENOENT;
+        return -1;
+    }
+    if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES) {
+        errno = EEXIST;
         return -1;
     }
     if (prefix + length >= sizeof(targetPath)) {

@@ -29,7 +29,7 @@ def compute_argv(test_path, args_env_root, proposals, wasi_world, wasi_version):
     command = [executable]
     if root is not None:
         command += ["--root", str(Path(root).resolve())]
-    if os.name == "nt":
+    if os.name == "nt" and Path(test_path).name == "path_rename.wasm":
         command += ["--env", "NO_RENAME_DIR_TO_EMPTY_DIR=1"]
     for key, value in environment.items():
         command += ["--env", f"{key}={value}"]

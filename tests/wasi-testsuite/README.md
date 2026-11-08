@@ -9,7 +9,7 @@ It contains 72 P1 tests: 14 C, 46 Rust, and 12 AssemblyScript tests.
 The driver translates and compiles each module before invoking the upstream runner.
 The runner checks the original fixtures, output, and exit status.
 No tests are skipped or marked as expected failures.
-On Windows, the adapter sets the upstream `NO_RENAME_DIR_TO_EMPTY_DIR` option,
+On Windows, the adapter sets the upstream `NO_RENAME_DIR_TO_EMPTY_DIR` option for `path_rename`,
 which checks that replacing an empty directory fails.
 
 The launcher passes each test's arguments and environment to WASI,

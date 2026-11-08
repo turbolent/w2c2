@@ -5484,6 +5484,7 @@ wasiNativePathLink(
     HMODULE kernel = GetModuleHandleA("kernel32.dll");
     CreateHardLinkFunction createHardLink;
     char target[PATH_MAX];
+    size_t newPathLength = strlen(newPath);
 
     /* Resolve these functions dynamically
      * so older Windows versions still load.
@@ -5497,6 +5498,10 @@ wasiNativePathLink(
     }
     if (GetFileAttributesA(newPath) != INVALID_FILE_ATTRIBUTES) {
         return WASI_ERRNO_EXIST;
+    }
+    if (newPathLength != 0
+        && (newPath[newPathLength - 1] == '/' || newPath[newPathLength - 1] == '\\')) {
+        return WASI_ERRNO_NOENT;
     }
     if (follow) {
         DWORD attributes = GetFileAttributesA(oldPath);
