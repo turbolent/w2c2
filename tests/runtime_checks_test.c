@@ -69,11 +69,23 @@ static void* resolve(WasmName module, WasmName name) {
 
 static void testScalarBounds(void) {
     wasmMemory full = {0};
+    wasmMemoryCheckRange(&full, 0, 0);
+    CHECK_TRAP(wasmMemoryCheckRange(&full, 0, 1), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryCheckRange(&full, 1, 0), trapMemoryOutOfBounds);
     full.size = (U64)UINT32_MAX + 1;
+    wasmMemoryCheckRange(&full, full.size - 8, 8);
     wasmMemoryCheckRange(&full, full.size, 0);
     CHECK_TRAP(wasmMemoryCheckRange(&full, full.size + 1, 0), trapMemoryOutOfBounds);
     CHECK_TRAP(wasmMemoryCheckRange(&full, full.size, 1), trapMemoryOutOfBounds);
     CHECK_TRAP(wasmMemoryCheckRange(&full, 1, UINT64_MAX), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryCheckRange(&full, UINT64_MAX - 3, 8), trapMemoryOutOfBounds);
+    /* Exercise the full helper range without allocating linear memory. */
+    full.size = UINT64_MAX;
+    wasmMemoryCheckRange(&full, 0, UINT64_MAX);
+    wasmMemoryCheckRange(&full, UINT64_MAX - 7, 7);
+    wasmMemoryCheckRange(&full, UINT64_MAX, 0);
+    CHECK_TRAP(wasmMemoryCheckRange(&full, UINT64_MAX - 7, 8), trapMemoryOutOfBounds);
+    CHECK_TRAP(wasmMemoryCheckRange(&full, UINT64_MAX, 1), trapMemoryOutOfBounds);
     CHECK_LOAD_BOUNDS(i32_load, 4);
     CHECK_LOAD_BOUNDS(i64_load, 8);
     CHECK_LOAD_BOUNDS(f32_load, 4);

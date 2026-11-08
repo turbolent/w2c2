@@ -1042,6 +1042,9 @@ wasmMemoryCheckRange(
     const WasmMemoryAddress address,
     const U64 count
 ) {
+    /* Comparing the end address lets the compiler simplify bounded Wasm32 accesses.
+     * Detect overflow for callers that pass arbitrary U64 ranges. */
+    const U64 end = address + count;
     U64 size;
 #ifdef WASM_MUTEX_TYPE
     wasmMemory* mutableMemory = (wasmMemory*)memory;
@@ -1055,7 +1058,7 @@ wasmMemoryCheckRange(
         WASM_MUTEX_UNLOCK(&mutableMemory->mutex);
     }
 #endif
-    if (address > size || count > size - address) {
+    if (end < address || end > size) {
         trap(trapMemoryOutOfBounds);
     }
 }
