@@ -64,6 +64,23 @@ test_runtime_checks_checked$(EXE): runtime_checks_test.c $(RUNTIME_CHECK_SOURCES
 $(RUNTIME_CHECK_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
+.PHONY: memory-cache-test gen-memory-cache
+
+memory-cache-test: run-test-memory_cache run-test-memory_cache_checked
+
+test_memory_cache$(EXE) test_memory_cache_checked$(EXE): CFLAGS += -std=c89 -Drealloc=memoryCacheRealloc
+
+MEMORY_CACHE_SOURCES = test_memory_cache.c test_memory_cache_shared.c
+
+test_memory_cache$(EXE): memory_cache_test.c $(MEMORY_CACHE_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+test_memory_cache_checked$(EXE): memory_cache_test.c $(MEMORY_CACHE_SOURCES)
+	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 $^ -o $@ $(LDFLAGS)
+
+$(MEMORY_CACHE_SOURCES): test_%.c: gen/%.wasm
+	$(W2C2) -m $< $@
+
 # Reuse the existing i386 test run for the Apple byte-order API regression.
 ifeq ($(ARCH),i386)
 run-tests: apple-byte-order-test
@@ -157,7 +174,7 @@ test_multivalue_checked$(EXE): multivalue_test.c $(MULTIVALUE_SOURCES)
 $(MULTIVALUE_SOURCES): test_%.c: gen/%.wasm
 	$(W2C2) -m $< $@
 
-run-tests: generator-test trap-harness-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-lifecycle-test runtime-checks-test run-test-multivalue run-test-multivalue_checked $(addprefix run-test-,$(SPEC_TESTS))
+run-tests: generator-test trap-harness-test atomic-offsets-test c-strings-test binary-names-test table-instances-test runtime-lifecycle-test runtime-checks-test memory-cache-test run-test-multivalue run-test-multivalue_checked $(addprefix run-test-,$(SPEC_TESTS))
 
 -include $(wildcard gen/*.mk)
 
@@ -183,7 +200,7 @@ test_%.c: gen/%.wasm gen/assert_%.c
 %_checked.o: ../futex/%.c $(wildcard ../futex/*.h) ../w2c2/w2c2_base.h
 	$(CC) $(CFLAGS) -DW2C2_RUNTIME_CHECKS=1 -c $< -o $@
 
-gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks gen-multivalue
+gen: gen-atomic-offsets gen-c-strings gen-binary-names gen-table-instances gen-runtime-checks gen-memory-cache gen-multivalue
 	$(PYTHON3) gen.py $(filter-out simd_%.wast,$(wildcard *.wast))
 
 gen-atomic-offsets:
@@ -204,6 +221,10 @@ gen-runtime-checks:
 	wat2wasm check_segments.wat -o gen/check_segments.wasm
 	wat2wasm check_empty_segments.wat -o gen/check_empty_segments.wasm
 
+gen-memory-cache:
+	wat2wasm memory_cache.wat -o gen/memory_cache.wasm
+	wat2wasm --enable-threads memory_cache_shared.wat -o gen/memory_cache_shared.wasm
+
 .PHONY: gen-multivalue
 gen-multivalue:
 	wat2wasm multivalue_owner.wat -o gen/multivalue_owner.wasm
@@ -221,6 +242,7 @@ clean:
 	-rm -f $(RUNTIME_LIFECYCLE_SOURCES:.c=.h)
 	-rm -f test_table_instances$(EXE) test_table_instances_checked$(EXE) test_table_owner.c test_table_caller.c
 	-rm -f test_runtime_checks$(EXE) test_runtime_checks_checked$(EXE) $(RUNTIME_CHECK_SOURCES)
+	-rm -f test_memory_cache$(EXE) test_memory_cache_checked$(EXE) $(MEMORY_CACHE_SOURCES)
 	-rm -f test_multivalue$(EXE) test_multivalue_checked$(EXE) $(MULTIVALUE_SOURCES)
 
 SIMD_CFLAGS ?= -O2 -Werror=conversion -Werror=float-conversion
