@@ -458,10 +458,19 @@ typedef struct WasmCControlFrame {
 ARRAY_TYPE(WasmCControlStack, WasmCControlFrame, wasmCControlStack, frames, frame)
 ARRAY_TYPE(WasmCIndices, U32, wasmCIndices, indices, index)
 
+typedef struct WasmCInsertion {
+    size_t offset;
+    U32 indent;
+} WasmCInsertion;
+
+ARRAY_TYPE(WasmCInsertions, WasmCInsertion, wasmCInsertions, insertions, insertion)
+
 typedef struct WasmCInstanceUses {
     WasmCIndices memories;
     WasmCIndices tables;
     WasmCIndices globals;
+    WasmCIndices cachedMemories;
+    WasmCInsertions insertions;
 } WasmCInstanceUses;
 
 static
@@ -479,6 +488,7 @@ wasmCIndicesInclude(WasmCIndices* indices, const U32 value) {
 
 typedef struct WasmCFunctionWriter {
     WasmOutput* output;
+    OutputBuffer* buffer;
     WasmDiagnosticContext* diagnostics;
     WasmTypeStack* typeStack;
     WasmStackDeclarations* stackDeclarations;
@@ -498,6 +508,31 @@ typedef struct WasmCFunctionWriter {
     bool* usesSIMD;
     WasmCInstanceUses* instanceUses;
 } WasmCFunctionWriter;
+
+static
+bool
+wasmCCanCacheMemory(const WasmModule* module, const U32 memoryIndex) {
+    const size_t memoryImportCount = module->memoryImports.length;
+    size_t definedMemoryIndex;
+    if (memoryIndex < memoryImportCount) {
+        return !module->memoryImports.imports[memoryIndex].shared;
+    }
+    definedMemoryIndex = memoryIndex - memoryImportCount;
+    return definedMemoryIndex < module->memories.count
+        && !module->memories.memories[definedMemoryIndex].shared;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCRecordMemoryRefresh(const WasmCFunctionWriter* writer) {
+    WasmCInsertion refresh;
+    /* Uses after a call may not have been visited yet.
+     * Insert refreshes once the complete function's cache uses are known. */
+    refresh.offset = writer->buffer->length;
+    refresh.indent = writer->indent;
+    return wasmCInsertionsAppend(&writer->instanceUses->insertions, refresh);
+}
 
 static
 bool
@@ -736,6 +771,7 @@ wasmCWriteCallExpr(
             }
             MUST (wasmCWrite(writer, ");\n"))
 
+            MUST (wasmCRecordMemoryRefresh(writer))
             wasmTypeStackDrop(writer->typeStack, parameterCount);
             MUST (wasmCWriteCallResults(writer, functionType))
             if (resultCount > 1) {
@@ -980,6 +1016,7 @@ wasmCWriteCallIndirectExpr(
         }
         MUST (wasmCWrite(writer, ");\n"))
 
+        MUST (wasmCRecordMemoryRefresh(writer))
         wasmTypeStackDrop(writer->typeStack, parameterCount + 1);
         MUST (wasmCWriteCallResults(writer, functionType))
         writer->indent--;
@@ -1306,16 +1343,25 @@ wasmCWriteLoad(
     const WasmCFunctionWriter* writer,
     const WasmMemoryArgumentInstruction instruction,
     const char* functionName,
-    WasmValueType resultType
+    WasmValueType resultType,
+    const bool cache
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+    const bool cached = cache && wasmCCanCacheMemory(writer->module, 0);
     MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
+    if (cached) MUST (wasmCWrite(writer, "_cached"))
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteFunctionMemoryUse(writer, 0))
+    if (cached) {
+        MUST (wasmCIndicesInclude(&writer->instanceUses->cachedMemories, 0))
+        MUST (wasmCWrite(writer, "Data"))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, "m0Size"))
+    }
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset))
     MUST (wasmCWrite(writer, ");\n"))
@@ -1569,7 +1615,8 @@ wasmCWriteLoadExpr(
             writer,
             instruction,
             functionName,
-            resultType
+            resultType,
+            true
         ))
     }
 
@@ -1582,15 +1629,24 @@ WARN_UNUSED_RESULT
 wasmCWriteStore(
     const WasmCFunctionWriter* writer,
     const WasmMemoryArgumentInstruction instruction,
-    const char* functionName
+    const char* functionName,
+    const bool cache
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
+    const bool cached = cache && wasmCCanCacheMemory(writer->module, 0);
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
+    if (cached) MUST (wasmCWrite(writer, "_cached"))
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteFunctionMemoryUse(writer, 0))
+    if (cached) {
+        MUST (wasmCIndicesInclude(&writer->instanceUses->cachedMemories, 0))
+        MUST (wasmCWrite(writer, "Data"))
+        MUST (wasmCWriteComma(writer))
+        MUST (wasmCWrite(writer, "m0Size"))
+    }
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
     MUST (wasmCWriteComma(writer))
@@ -1672,7 +1728,7 @@ wasmCWriteStoreExpr(
             }
         }
 
-        MUST (wasmCWriteStore(writer, instruction, functionName))
+        MUST (wasmCWriteStore(writer, instruction, functionName, true))
     }
 
     return true;
@@ -1784,6 +1840,7 @@ wasmCWriteMemoryGrowExpr(
             ))
             MUST (wasmCWrite(writer, ");\n"))
         }
+        MUST (wasmCRecordMemoryRefresh(writer))
     }
 
     return true;
@@ -3059,7 +3116,8 @@ wasmCWriteAtomicLoadExpr(
             writer,
             instruction,
             functionName,
-            resultType
+            resultType,
+            false
         ))
     }
 
@@ -3143,7 +3201,7 @@ wasmCWriteAtomicStoreExpr(
             return false;
         }
 
-        MUST (wasmCWriteStore(writer, instruction, functionName))
+        MUST (wasmCWriteStore(writer, instruction, functionName, false))
     }
 
     return true;
@@ -4591,6 +4649,35 @@ wasmCWriteFunctionSignature(
 );
 
 static
+void
+wasmCWriteMemoryCache(
+    WasmOutput* file,
+    const U32 memoryIndex,
+    const U32 indent,
+    const bool pretty,
+    const bool declaration
+) {
+    static const char* const types[] = {"U8* ", "U64 "};
+    static const char* const names[] = {"Data", "Size"};
+    static const char* const fields[] = {"->data;\n", "->size;\n"};
+    U32 field;
+    for (field = 0; field < 2; field++) {
+        U32 level;
+        if (pretty) {
+            for (level = 0; level <= indent; level++) {
+                wasmOutputString(file, indentation);
+            }
+        }
+        if (declaration) wasmOutputString(file, types[field]);
+        wasmCWriteMemoryName(file, memoryIndex);
+        wasmOutputString(file, names[field]);
+        wasmOutputString(file, pretty ? " = " : "=");
+        wasmCWriteMemoryName(file, memoryIndex);
+        wasmOutputString(file, fields[field]);
+    }
+}
+
+static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteFunctionBody(
@@ -4635,6 +4722,7 @@ wasmCWriteFunctionBody(
         WasmOutput output = wasmOutputForBuffer(buffer, diagnostics);
         WasmCFunctionWriter writer;
         writer.output = &output;
+        writer.buffer = buffer;
         writer.diagnostics = diagnostics;
         writer.typeStack = typeStack;
         writer.stackDeclarations = stackDeclarations;
@@ -4689,6 +4777,12 @@ wasmCWriteFunctionBody(
         MUST (wasmCWriteMemoryUse(file, memoryIndex, NULL, true))
         wasmOutputString(file, ";\n");
     }
+    /* Cache nonshared data and size until a call or memory.grow.
+     * Shared memories continue to use the original synchronized helpers. */
+    for (resourceUse = 0; resourceUse < instanceUses->cachedMemories.length; resourceUse++) {
+        const U32 memoryIndex = instanceUses->cachedMemories.indices[resourceUse];
+        wasmCWriteMemoryCache(file, memoryIndex, 0, pretty, true);
+    }
     /* Imported table objects remain fixed,
      * but calls and table.grow can change their entries, buffer, and size. */
     for (resourceUse = 0; resourceUse < instanceUses->tables.length; resourceUse++) {
@@ -4717,7 +4811,20 @@ wasmCWriteFunctionBody(
     }
     wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
-    wasmOutputWrite(file, buffer->data, buffer->length);
+    {
+        size_t offset = 0;
+        size_t insertionIndex;
+        for (insertionIndex = 0; insertionIndex < instanceUses->insertions.length; insertionIndex++) {
+            const WasmCInsertion insertion = instanceUses->insertions.insertions[insertionIndex];
+            wasmOutputWrite(file, buffer->data + offset, insertion.offset - offset);
+            for (resourceUse = 0; resourceUse < instanceUses->cachedMemories.length; resourceUse++) {
+                const U32 memoryIndex = instanceUses->cachedMemories.indices[resourceUse];
+                wasmCWriteMemoryCache(file, memoryIndex, insertion.indent, pretty, false);
+            }
+            offset = insertion.offset;
+        }
+        wasmOutputWrite(file, buffer->data + offset, buffer->length - offset);
+    }
     wasmOutputString(file, "}\n");
 
     return !file->failed;
@@ -4819,7 +4926,7 @@ wasmCWriteFunctionImplementations(
     WasmStackDeclarations stackDeclarations = wasmEmptyStackDeclarations;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
     WasmCControlStack controlStack = {0, 0, NULL};
-    WasmCInstanceUses instanceUses = {{0, 0, NULL}, {0, 0, NULL}, {0, 0, NULL}};
+    WasmCInstanceUses instanceUses = {{0, 0, NULL}, {0, 0, NULL}, {0, 0, NULL}, {0, 0, NULL}, {0, 0, NULL}};
     bool result = false;
 
     U32 functionIDIndex = startIDIndex;
@@ -4840,6 +4947,8 @@ wasmCWriteFunctionImplementations(
         instanceUses.memories.length = 0;
         instanceUses.tables.length = 0;
         instanceUses.globals.length = 0;
+        instanceUses.cachedMemories.length = 0;
+        instanceUses.insertions.length = 0;
 
         if (debug) {
             const WasmDebugLine* debugLine = wasmCGetDebugLine(&debugLines, function.start);
@@ -4885,6 +4994,8 @@ cleanup:
     wasmCIndicesFree(&instanceUses.memories);
     wasmCIndicesFree(&instanceUses.tables);
     wasmCIndicesFree(&instanceUses.globals);
+    wasmCIndicesFree(&instanceUses.cachedMemories);
+    wasmCInsertionsFree(&instanceUses.insertions);
     return result;
 }
 

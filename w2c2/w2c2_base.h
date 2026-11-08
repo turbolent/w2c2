@@ -1037,14 +1037,27 @@ done:
 static
 W2C2_INLINE
 void
-wasmMemoryCheckRange(
-    const wasmMemory* memory,
+wasmMemoryCheckRangeSize(
+    const U64 size,
     const WasmMemoryAddress address,
     const U64 count
 ) {
     /* Comparing the end address lets the compiler simplify bounded Wasm32 accesses.
      * Detect overflow for callers that pass arbitrary U64 ranges. */
     const U64 end = address + count;
+    if (end < address || end > size) {
+        trap(trapMemoryOutOfBounds);
+    }
+}
+
+static
+W2C2_INLINE
+void
+wasmMemoryCheckRange(
+    const wasmMemory* memory,
+    const WasmMemoryAddress address,
+    const U64 count
+) {
     U64 size;
 #ifdef WASM_MUTEX_TYPE
     wasmMemory* mutableMemory = (wasmMemory*)memory;
@@ -1058,9 +1071,7 @@ wasmMemoryCheckRange(
         WASM_MUTEX_UNLOCK(&mutableMemory->mutex);
     }
 #endif
-    if (end < address || end > size) {
-        trap(trapMemoryOutOfBounds);
-    }
+    wasmMemoryCheckRangeSize(size, address, count);
 }
 
 static
@@ -1079,6 +1090,7 @@ wasmAtomicCheckAccess(
 
 #else
 #define wasmMemoryCheckRange(memory, address, count) ((void)0)
+#define wasmMemoryCheckRangeSize(size, address, count) ((void)0)
 #define wasmAtomicCheckAccess(memory, address, size) ((void)0)
 #endif
 
@@ -1224,15 +1236,39 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #define LOAD_DATA(m, o, i, s) \
     load_data(&(m), o, i, s)
 
+/* Cached access helpers use snapshots of nonshared memory fields.
+ * The original helpers retain synchronized bounds checks for shared memory. */
+#define DEFINE_LOAD_WRAPPERS(name, t1, t3) \
+    static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
+        return name ## _unchecked(mem->data, addr); \
+    } \
+    static W2C2_INLINE t3 name ## _cached(U8* data, U64 size, WasmMemoryAddress addr) { \
+        UNUSED_PARAMETER(size); \
+        wasmMemoryCheckRangeSize(size, addr, sizeof(t1)); \
+        return name ## _unchecked(data, addr); \
+    }
+
+#define DEFINE_STORE_WRAPPERS(name, t1, t2) \
+    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
+        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
+        name ## _unchecked(mem->data, addr, value); \
+    } \
+    static W2C2_INLINE void name ## _cached(U8* data, U64 size, WasmMemoryAddress addr, t2 value) { \
+        UNUSED_PARAMETER(size); \
+        wasmMemoryCheckRangeSize(size, addr, sizeof(t1)); \
+        name ## _unchecked(data, addr, value); \
+    }
+
 /* DEFINE_LOAD */
 
 #define DEFINE_LOAD(name, t1, t2, t3)                           \
-    static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+    static W2C2_INLINE t3 name ## _unchecked(U8* data, WasmMemoryAddress addr) { \
         t1 result;                                              \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        W2C2_MEMCPY(&result, &mem->data[addr], sizeof(t1));     \
+        W2C2_MEMCPY(&result, &data[addr], sizeof(t1));     \
         return (t3)(t2)result;                                  \
-    }
+    } \
+    DEFINE_LOAD_WRAPPERS(name, t1, t3)
 
 /* DEFINE_LOAD8 */
 
@@ -1247,14 +1283,14 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_LOAD16(name, t1, t2, t3)                         \
-    static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+    static W2C2_INLINE t3 name ## _unchecked(U8* data, WasmMemoryAddress addr) { \
         t1 result;                                              \
         U16 v; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        v = readSwapU16(mem->data, addr); \
+        v = readSwapU16(data, addr); \
         W2C2_MEMCPY(&result, &v, sizeof(U16));                  \
         return (t3)(t2)result;                                  \
-    }
+    } \
+    DEFINE_LOAD_WRAPPERS(name, t1, t3)
 
 #endif
 
@@ -1267,14 +1303,14 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_LOAD32(name, t1, t2, t3)                         \
-    static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+    static W2C2_INLINE t3 name ## _unchecked(U8* data, WasmMemoryAddress addr) { \
         t1 result;                                              \
         U32 v; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        v = readSwapU32(mem->data, addr); \
+        v = readSwapU32(data, addr); \
         W2C2_MEMCPY(&result, &v, sizeof(U32));                  \
         return (t3)(t2)result;                                  \
-    }
+    } \
+    DEFINE_LOAD_WRAPPERS(name, t1, t3)
 
 #endif
 
@@ -1287,25 +1323,25 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_LOAD64(name, t1, t2, t3)                         \
-    static W2C2_INLINE t3 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+    static W2C2_INLINE t3 name ## _unchecked(U8* data, WasmMemoryAddress addr) { \
         t1 result;                                              \
         U64 v; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        v = readSwapU64(mem->data, addr); \
+        v = readSwapU64(data, addr); \
         W2C2_MEMCPY(&result, &v, sizeof(U64));                  \
         return (t3)(t2)result;                                  \
-    }
+    } \
+    DEFINE_LOAD_WRAPPERS(name, t1, t3)
 
 #endif
 
 /* DEFINE_STORE */
 
 #define DEFINE_STORE(name, t1, t2)                                          \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, t2 value) { \
         t1 wrapped = (t1)value;                                             \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
-        W2C2_MEMCPY(&mem->data[addr], &wrapped, sizeof(t1));                \
-    }
+        W2C2_MEMCPY(&data[addr], &wrapped, sizeof(t1));                \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t1, t2)
 
 /* DEFINE_STORE8 */
 
@@ -1320,13 +1356,13 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_STORE16(name, t1, t2)                                        \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, t2 value) { \
         t1 wrapped = (t1)value;                                             \
         U16 v;                                                              \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         W2C2_MEMCPY(&v, &wrapped, sizeof(U16));                             \
-        writeSwapU16(mem->data, addr, v);                                   \
-    }
+        writeSwapU16(data, addr, v);                                   \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t1, t2)
 
 #endif
 
@@ -1339,13 +1375,13 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_STORE32(name, t1, t2)                                        \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, t2 value) { \
         t1 wrapped = (t1)value;                                             \
         U32 v;                                                              \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         W2C2_MEMCPY(&v, &wrapped, sizeof(U32));                             \
-        writeSwapU32(mem->data, addr, v);                                   \
-    }
+        writeSwapU32(data, addr, v);                                   \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t1, t2)
 
 #endif
 
@@ -1358,13 +1394,13 @@ static W2C2_INLINE void writeSwapU64(void* address, WasmMemoryAddress offset, U6
 #elif WASM_ENDIAN == WASM_BIG_ENDIAN
 
 #define DEFINE_STORE64(name, t1, t2)                                        \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, t2 value) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, t2 value) { \
         t1 wrapped = (t1)value;                                             \
         U64 v;                                                              \
-        wasmMemoryCheckRange(mem, addr, sizeof(t1)); \
         W2C2_MEMCPY(&v, &wrapped, sizeof(U64));                             \
-        writeSwapU64(mem->data, addr, v);                                   \
-    }
+        writeSwapU64(data, addr, v);                                   \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t1, t2)
 
 #endif
 
