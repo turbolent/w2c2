@@ -51,6 +51,11 @@ make simd-spec-test SIMD_CFLAGS="-O2 -DSIMDE_NO_NATIVE -DSIMDE_NO_VECTOR"
 The suite covers fixed-width SIMD.
 Relaxed SIMD and `simd_memory-multi.wast` are excluded.
 
+## WASI
+
+The [official WASI P1 testsuite](wasi-testsuite/README.md) runs separately
+on native Linux, macOS, and Windows CI hosts.
+
 ## Updating tests
 
 After editing scalar WAST files, regenerate the fixtures with Python 3 and WABT 1.0.42:

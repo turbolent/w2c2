@@ -3024,7 +3024,7 @@ testPollOneoffHangup(void) {
         name,
         0,
         26,
-        WASI_ERRNO_PIPE,
+        WASI_ERRNO_SUCCESS,
         WASI_EVENT_TYPE_FD_READ,
         WASI_EVENT_RW_FLAGS_HANGUP
     );
@@ -3281,6 +3281,53 @@ extern U32 i22_wasiX5FsnapshotX5Fpreview119_fdX5FprestatX5FdirX5Fname(
     U32,
     U32
 );
+
+static void testPreopenDirectory(void) {
+    U32 directory, opened, target;
+    char name[] = "/fixture";
+    WasiFileDescriptor descriptor;
+    CHECK_IO(wasiPreopenDirectory(".", name, &directory));
+    name[1] = 'x';
+    CHECK_IO(wasiFileDescriptorGet(directory, &descriptor));
+    CHECK_IO(strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(strcmp(descriptor.preopenName, "/fixture") == 0);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview114_fdX5FprestatX5Fget(
+        NULL, directory, 512
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(i32_load(&testMemory, 516) == 8);
+    memset(testMemory.data + 512, 0xaa, 9);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview119_fdX5FprestatX5FdirX5Fname(
+        NULL, directory, 512, 7
+    ) == WASI_ERRNO_NAMETOOLONG);
+    CHECK_IO(testMemory.data[512] == 0xaa);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview119_fdX5FprestatX5FdirX5Fname(
+        NULL, directory, TEST_MEMORY_SIZE, 8
+    ) == WASI_ERRNO_FAULT);
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview119_fdX5FprestatX5FdirX5Fname(
+        NULL, directory, 512, 8
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(memcmp(testMemory.data + 512, "/fixture", 8) == 0);
+    CHECK_IO(testMemory.data[520] == 0xaa);
+
+    opened = testOpenWithRights(
+        i22_wasiX5FsnapshotX5Fpreview19_pathX5Fopen,
+        directory, ".", WASI_OFLAGS_DIRECTORY,
+        WASI_RIGHTS_DIRECTORY_BASE, WASI_RIGHTS_DIRECTORY_INHERITING
+    );
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview114_fdX5FprestatX5Fget(
+        NULL, opened, 512
+    ) == WASI_ERRNO_BADF);
+    CHECK_IO(wasiFileDescriptorClose(opened));
+    CHECK_IO(wasiFileDescriptorAdd(-1, ".", &target));
+    CHECK_IO(i22_wasiX5FsnapshotX5Fpreview111_fdX5Frenumber(
+        NULL, directory, target
+    ) == WASI_ERRNO_SUCCESS);
+    CHECK_IO(wasiFileDescriptorGet(target, &descriptor));
+    CHECK_IO(strcmp(descriptor.path, ".") == 0);
+    CHECK_IO(strcmp(descriptor.preopenName, "/fixture") == 0);
+    CHECK_IO(wasiFileDescriptorClose(target));
+    fprintf(stderr, "OK preopen host paths, guest names, and ownership\n");
+}
 
 extern U32 i22_wasiX5FsnapshotX5Fpreview121_pathX5FcreateX5Fdirectory(
     wasmModuleInstance*,
@@ -4289,7 +4336,7 @@ static void testSockets(
         nativeFD = _dup(_fileno(stream));
         CHECK_IO(nativeFD >= 0);
         CHECK_IO(wasiFileDescriptorAdd(nativeFD, NULL, &file));
-        testSocketPoll(file, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_NOTSUP);
+        testSocketPoll(file, WASI_EVENT_TYPE_FD_READ, WASI_ERRNO_SUCCESS);
         CHECK_IO(wasiFileDescriptorClose(file));
         CHECK_IO(fclose(stream) == 0);
     }
@@ -4391,6 +4438,7 @@ main(int argc, char* argv[]) {
     );
 #endif
     testFileDescriptorGet();
+    testPreopenDirectory();
     testFileDescriptorClose();
     testFileDescriptorCloseDirectory();
 #ifdef WASM_THREAD_TYPE

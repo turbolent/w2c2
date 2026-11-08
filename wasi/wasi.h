@@ -49,10 +49,12 @@ typedef struct WasiFileDescriptor {
     WasiNativeSocket socket;
     U8 socketType;
     U16 socketFlags;
+    char* preopenName;
+    U16 fileFlags;
 } WasiFileDescriptor;
 
 static const WasiFileDescriptor emptyWasiFileDescriptor = {
-    -1, NULL, NULL, 0, 0, WASI_INVALID_SOCKET, 0, 0
+    -1, NULL, NULL, 0, 0, WASI_INVALID_SOCKET, 0, 0, NULL, 0
 };
 
 typedef struct WasiFileDescriptors {
@@ -84,6 +86,15 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorAdd(
     int nativeFD,
     char* path,
+    U32* wasiFD
+);
+
+/* Expose a host directory under the given guest preopen name. */
+bool
+WARN_UNUSED_RESULT
+wasiPreopenDirectory(
+    const char* path,
+    const char* name,
     U32* wasiFD
 );
 

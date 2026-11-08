@@ -105,6 +105,8 @@ struct timespec {
 #define S_IFDIR _S_IFDIR
 #define S_IFCHR _S_IFCHR
 #define S_IFREG _S_IFREG
+#define S_IFLNK WASI_WINDOWS_S_IFLNK
+#define S_IFIFO _S_IFIFO
 
 #define O_RDONLY _O_RDONLY
 #define O_WRONLY _O_WRONLY
@@ -114,15 +116,19 @@ struct timespec {
 #define O_TRUNC  _O_TRUNC
 #define O_EXCL   _O_EXCL
 
-#define open      _open
+#define open      wasiWindowsOpen
 #define read      _read
-#define write     _write
+#define write     wasiWindowsWrite
 #define close     _close
 #define mkdir     _mkdir
-#define rmdir     _rmdir
-#define unlink    _unlink
-#define stat      _stat
-#define fstat     _fstat
+#define rmdir     wasiWindowsRmdir
+#define unlink    wasiWindowsUnlink
+#define rename    wasiWindowsRename
+#define stat      wasiWindowsStat
+#define lstat     wasiWindowsLstat
+#define fstat     wasiWindowsFstat
+#define symlink   wasiWindowsSymlink
+#define readlink  wasiWindowsReadlink
 #define lseek     _lseek
 #define isatty    _isatty
 #define ftruncate _chsize
@@ -134,6 +140,9 @@ struct timespec {
 
 #undef HAS_NONPOSIXPATH
 #define HAS_NONPOSIXPATH 1
+
+#undef HAS_LSTAT
+#define HAS_LSTAT 1
 
 #undef PATH_SEPARATOR
 #define PATH_SEPARATOR '\\'
@@ -568,25 +577,40 @@ WARN_UNUSED_RESULT
 wasiFileDescriptorsAdd(
     WasiFileDescriptors* descriptors,
     int fd,
-    char* path,
+    const char* path,
+    const char* preopenName,
     WasiRights rightsBase,
-    WasiRights rightsInheriting
+    WasiRights rightsInheriting,
+    U16 fileFlags
 ) {
     WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     descriptor.fd = fd;
+    descriptor.fileFlags = fileFlags;
     if (path != NULL) {
         size_t length = strlen(path);
         MUST (length > 0 && length < PATH_MAX)
-        path = strndup(path, length);
-        MUST (path != NULL)
+        descriptor.path = strndup(path, length);
+        MUST (descriptor.path != NULL)
     }
-    descriptor.path = path;
+    if (preopenName != NULL) {
+        size_t length = strlen(preopenName);
+        if (length == 0 || length >= PATH_MAX) {
+            free(descriptor.path);
+            return false;
+        }
+        descriptor.preopenName = strndup(preopenName, length);
+        if (descriptor.preopenName == NULL) {
+            free(descriptor.path);
+            return false;
+        }
+    }
     wasiFileDescriptorDefaultRights(&descriptor);
     descriptor.rightsBase &= rightsBase;
     descriptor.rightsInheriting &= rightsInheriting;
     if (descriptors->length == (size_t)-1
         || !wasiFileDescriptorsEnsureCapacity(descriptors, descriptors->length + 1)) {
-        free(path);
+        free(descriptor.preopenName);
+        free(descriptor.path);
         return false;
     }
     descriptors->fds[descriptors->length++] = descriptor;
@@ -598,9 +622,11 @@ bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorAddWithRights(
     int nativeFD,
-    char* path,
+    const char* path,
+    const char* preopenName,
     WasiRights rightsBase,
     WasiRights rightsInheriting,
+    U16 fileFlags,
     U32* wasiFD
 ) {
     bool added;
@@ -610,8 +636,10 @@ wasiFileDescriptorAddWithRights(
                 &wasi.fds,
                 nativeFD,
                 path,
+                preopenName,
                 rightsBase,
-                rightsInheriting
+                rightsInheriting,
+                fileFlags
             );
     if (added && wasiFD != NULL) {
         *wasiFD = (U32)(wasi.fds.length - 1);
@@ -630,8 +658,29 @@ wasiFileDescriptorAdd(
     return wasiFileDescriptorAddWithRights(
         nativeFD,
         path,
+        path,
         WASI_RIGHTS_ALL,
         WASI_RIGHTS_ALL,
+        0,
+        wasiFD
+    );
+}
+
+bool
+WARN_UNUSED_RESULT
+wasiPreopenDirectory(
+    const char* path,
+    const char* name,
+    U32* wasiFD
+) {
+    MUST (path != NULL && name != NULL)
+    return wasiFileDescriptorAddWithRights(
+        -1,
+        path,
+        name,
+        WASI_RIGHTS_DIRECTORY_BASE,
+        WASI_RIGHTS_DIRECTORY_INHERITING,
+        0,
         wasiFD
     );
 }
@@ -736,6 +785,8 @@ wasiFileDescriptorRelease(
         free(descriptor->path);
         descriptor->path = NULL;
     }
+    free(descriptor->preopenName);
+    descriptor->preopenName = NULL;
 
     return true;
 }
@@ -867,6 +918,10 @@ wasiErrno(void) {
 #ifdef ENAMETOOLONG
     case ENAMETOOLONG:
         return WASI_ERRNO_NAMETOOLONG;
+#endif
+#ifdef ENOTEMPTY
+    case ENOTEMPTY:
+        return WASI_ERRNO_NOTEMPTY;
 #endif
 #ifdef EOVERFLOW
     case EOVERFLOW:
@@ -1618,6 +1673,14 @@ wasiFDWrite(
     }
 
     /* Perform the writes */
+#ifdef _WIN32
+    if ((descriptor.fileFlags & WASI_FDFLAGS_APPEND) != 0
+        && requiredRights == WASI_RIGHTS_FD_WRITE
+        && lseek(descriptor.fd, 0, SEEK_END) == (off_t)-1) {
+        free(iovecs);
+        return wasiErrno();
+    }
+#endif
     total = writeFunc(descriptor.fd, iovecs, ciovecsCount, offset);
 
     free(iovecs);
@@ -2365,7 +2428,7 @@ wasiFDReaddir(
         }
     }
 
-#ifdef PLAN9
+#if defined(PLAN9) || defined(_WIN32)
     /* APE has no seekdir or telldir;
      * use entry counts as cookies and replay the directory. */
     rewinddir(descriptor.dir);
@@ -2380,7 +2443,9 @@ wasiFDReaddir(
         next++;
     }
 #elif !defined(_WIN32) && !defined(macintosh)
-    if (cookie != WASI_DIRCOOKIE_START) {
+    if (cookie == WASI_DIRCOOKIE_START) {
+        rewinddir(descriptor.dir);
+    } else {
         seekdir(descriptor.dir, (long)cookie);
     }
 #endif
@@ -2392,7 +2457,7 @@ wasiFDReaddir(
     );
 
     while (bufferUsed < bufferLength) {
-#ifndef PLAN9
+#if !defined(PLAN9) && !defined(_WIN32)
         long tell = 0;
 #endif
         U32 bufferRemaining = bufferLength - bufferUsed;
@@ -2411,7 +2476,7 @@ wasiFDReaddir(
             break;
         }
 
-#ifdef PLAN9
+#if defined(PLAN9) || defined(_WIN32)
         next++;
 #else
 #if !defined(_WIN32) && !defined(macintosh)
@@ -3217,6 +3282,8 @@ wasiFdFdstatGet(
             }
 
             wasiFlags = wasiFdFlagsFromNative(nativeFlags);
+#elif defined(_WIN32)
+            wasiFlags = descriptor.fileFlags;
 #endif /* HAS_FCNTL */
         }
     }
@@ -3393,7 +3460,7 @@ WASI_IMPORT(U32, 14_fdX5FprestatX5Fget, (
         return WASI_ERRNO_BADF;
     }
 
-    path = fileDescriptor.path;
+    path = fileDescriptor.preopenName;
 
     if (path == NULL) {
         WASI_TRACE(("fd_prestat_get: bad FD"));
@@ -3438,7 +3505,7 @@ wasiFdPrestatDirName(
         return WASI_ERRNO_BADF;
     }
 
-    path = fileDescriptor.path;
+    path = fileDescriptor.preopenName;
 
     if (path == NULL) {
         WASI_TRACE(("fd_prestat_dir_name: bad FD"));
@@ -3446,8 +3513,11 @@ wasiFdPrestatDirName(
     }
 
     length = strlen(path);
-    if (length >= pathLength) {
-        length = pathLength;
+    if (length > pathLength) {
+        return WASI_ERRNO_NAMETOOLONG;
+    }
+    if (!wasiMemoryRangeIsValid(memory, pathPointer, length, 1)) {
+        return WASI_ERRNO_FAULT;
     }
 
     memcpy(
@@ -3510,7 +3580,6 @@ wasiPathOpen(
                                    | WASI_RIGHTS_FD_WRITE
                                    | WASI_RIGHTS_FD_ALLOCATE
                                    | WASI_RIGHTS_FD_FILESTAT_SET_SIZE);
-    UNUSED_PARAMETER(dirFlags);
 
     WASI_TRACE((
         "path_open("
@@ -3571,6 +3640,55 @@ wasiPathOpen(
         return WASI_ERRNO_BADF;
     }
 
+    if (dirFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW
+        || oflags & ~(U32)(WASI_OFLAGS_CREAT | WASI_OFLAGS_DIRECTORY |
+                          WASI_OFLAGS_EXCL | WASI_OFLAGS_TRUNC)
+        || fdFlags & ~(U32)(WASI_FDFLAGS_APPEND | WASI_FDFLAGS_DSYNC |
+                           WASI_FDFLAGS_NONBLOCK | WASI_FDFLAGS_RSYNC |
+                           WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_INVAL;
+    }
+#ifdef _WIN32
+    if (fdFlags & (WASI_FDFLAGS_DSYNC | WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC)) {
+        return WASI_ERRNO_NOTSUP;
+    }
+#endif
+    if (!wasiMemoryRangeIsValid(memory, pathPointer, pathLength, 1)) {
+        return WASI_ERRNO_FAULT;
+    }
+    if (pathLength == 0) {
+        return WASI_ERRNO_NOENT;
+    }
+    if (memchr(path, '\0', pathLength) != NULL) {
+        return WASI_ERRNO_INVAL;
+    }
+    {
+        U32 index = 0;
+        U32 depth = 0;
+        if (path[0] == '/') {
+            return WASI_ERRNO_NOTCAPABLE;
+        }
+        while (index < pathLength) {
+            U32 start = index;
+            U32 length;
+            while (index < pathLength && path[index] != '/') {
+                index++;
+            }
+            length = index - start;
+            if (length == 2 && path[start] == '.' && path[start + 1] == '.') {
+                if (depth == 0) {
+                    return WASI_ERRNO_NOTCAPABLE;
+                }
+                depth--;
+            } else if (length != 0 && !(length == 1 && path[start] == '.')) {
+                depth++;
+            }
+            if (index < pathLength) {
+                index++;
+            }
+        }
+    }
+
     if (!resolvePath(preopenPath, path, pathLength, resolvedPath)) {
         WASI_TRACE(("path_open: path resolution failed"));
         return WASI_ERRNO_INVAL;
@@ -3584,6 +3702,11 @@ wasiPathOpen(
 
     /* Convert WASI fsRightsBase to native flags */
     nativeFlags = isWrite ? isRead ? O_RDWR : O_WRONLY : O_RDONLY;
+#ifdef O_NOFOLLOW
+    if (!(dirFlags & WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW)) {
+        nativeFlags |= O_NOFOLLOW;
+    }
+#endif
 
     /* Convert WASI oflags to native flags */
     if (oflags & WASI_OFLAGS_CREAT) {
@@ -3635,6 +3758,17 @@ wasiPathOpen(
     ));
 
     /* Open the file */
+#ifdef _WIN32
+    if (!(dirFlags & WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW)) {
+        DWORD attributes = GetFileAttributesA(nativeResolvedPath);
+        if (attributes != INVALID_FILE_ATTRIBUTES
+            && (attributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
+            return (oflags & (WASI_OFLAGS_CREAT | WASI_OFLAGS_EXCL))
+                == (WASI_OFLAGS_CREAT | WASI_OFLAGS_EXCL)
+                ? WASI_ERRNO_EXIST : WASI_ERRNO_LOOP;
+        }
+    }
+#endif
     nativeFD = open(nativeResolvedPath, nativeFlags, mode);
 
     WASI_TRACE((
@@ -3656,6 +3790,12 @@ wasiPathOpen(
         struct stat st;
         if (stat(nativeResolvedPath, &st) == 0) {
             success = S_ISDIR(st.st_mode);
+            if (success && isWrite) {
+                return WASI_ERRNO_ISDIR;
+            }
+            if (success && (oflags & WASI_OFLAGS_CREAT)) {
+                return WASI_ERRNO_EXIST;
+            }
         }
     }
 #endif
@@ -3682,11 +3822,14 @@ wasiPathOpen(
         struct stat st;
 
         if (fstat(nativeFD, &st) < 0) {
+            U32 error = wasiErrno();
             WASI_TRACE(("path_open: fstat failed: %s", strerror(errno)));
-            return wasiErrno();
+            close(nativeFD);
+            return error;
         }
 
         if (wasiFileTypeFromMode(st.st_mode) != WASI_FILE_TYPE_DIRECTORY) {
+            close(nativeFD);
             return WASI_ERRNO_NOTDIR;
         }
     }
@@ -3695,11 +3838,16 @@ wasiPathOpen(
     if (!wasiFileDescriptorAddWithRights(
         nativeFD,
         resolvedPath,
+        NULL,
         fsRightsBase,
         fsRightsInheriting,
+        (U16)fdFlags,
         &wasiFD
     )) {
         WASI_TRACE(("path_open: adding FD failed"));
+        if (nativeFD >= 0) {
+            close(nativeFD);
+        }
         return WASI_ERRNO_BADF;
     }
 
@@ -3750,7 +3898,14 @@ getStatTimes(
     struct timespec* modification,
     struct timespec* creation
 ) {
-#if defined(__APPLE__) && defined(__MACH__)
+#if defined(_WIN32)
+    access->tv_sec = st->st_atime;
+    access->tv_nsec = st->accessNanoseconds;
+    modification->tv_sec = st->st_mtime;
+    modification->tv_nsec = st->modificationNanoseconds;
+    creation->tv_sec = st->st_ctime;
+    creation->tv_nsec = st->creationNanoseconds;
+#elif defined(__APPLE__) && defined(__MACH__)
     *access = st->st_atimespec;
     *modification = st->st_mtimespec;
     *creation = st->st_ctimespec;
@@ -3967,7 +4122,7 @@ storeUnstableFilestat(
         I64 dev = st->st_dev;
         U64 ino = st->st_ino;
         U8 wasiFileType = wasiFileTypeFromMode(st->st_mode);
-        U32 nlink = st->st_nlink;
+        U32 nlink = (U32)st->st_nlink;
         U64 size = st->st_size;
         I64 accessTime = convertTimespec(access);
         I64 modificationTime = convertTimespec(modification);
@@ -4055,7 +4210,6 @@ wasiPathFilestatGet(
     int res = 0;
     char* preopenPath = NULL;
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
-    UNUSED_PARAMETER(lookupFlags);
 
     if (!wasiFileDescriptorGet(wasiFD, &preopenFileDescriptor)) {
         WASI_TRACE(("path_filestat_get: bad preopen FD"));
@@ -4099,8 +4253,16 @@ wasiPathFilestatGet(
         nativeResolvedPath
     ));
 
+    if (lookupFlags & ~(U32)WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW) {
+        return WASI_ERRNO_INVAL;
+    }
+#if HAS_LSTAT
+    res = lookupFlags & WASI_LOOKUP_FLAGS_SYMLINK_FOLLOW
+        ? stat(nativeResolvedPath, st) : lstat(nativeResolvedPath, st);
+#else
     /* TODO: use lookupFlags & wasiLookupFlagSymlinkFollow */
     res = stat(nativeResolvedPath, st);
+#endif
 
     if (res != 0) {
         WASI_TRACE(("path_filestat_get: stat failed: %s", strerror(errno)));
@@ -5148,8 +5310,7 @@ wasiPathSymlink(
     U32 newPathLength
 ) {
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
-#if defined(_WIN32) || \
-    (defined(__MWERKS__) && defined(macintosh)) || \
+#if (defined(__MWERKS__) && defined(macintosh)) || \
     defined(__wii__)
     UNUSED_PARAMETER(instance);
     UNUSED_PARAMETER(oldPathPointer);
@@ -5195,11 +5356,7 @@ wasiPathSymlink(
         return WASI_ERRNO_NOTCAPABLE;
     }
 
-#ifdef _WIN32
-    /* TODO: */
-    WASI_TRACE(("path_symlink: not supported on Win32"));
-    return WASI_ERRNO_NOSYS;
-#elif defined(__MWERKS__) && defined(macintosh)
+#if defined(__MWERKS__) && defined(macintosh)
     /* TODO: */
     WASI_TRACE(("path_symlink: not supported on Macintosh"));
     return WASI_ERRNO_NOSYS;
@@ -5212,6 +5369,12 @@ wasiPathSymlink(
     if (oldPathLength >= PATH_MAX) {
         WASI_TRACE(("path_symlink: old path too long"));
         return WASI_ERRNO_INVAL;
+    }
+    if (!wasiMemoryRangeIsValid(memory, oldPathPointer, oldPathLength, 1)) {
+        return WASI_ERRNO_FAULT;
+    }
+    if (oldPathLength != 0 && memory->data[oldPathPointer] == '/') {
+        return WASI_ERRNO_NOTCAPABLE;
     }
 
     memcpy(
@@ -5272,7 +5435,7 @@ wasiPathSymlink(
     }
 
     return WASI_ERRNO_SUCCESS;
-#endif /* _WIN32 */
+#endif /* Macintosh or Wii */
 }
 
 WASI_IMPORT(U32, 12_pathX5Fsymlink, (
@@ -5325,6 +5488,9 @@ wasiNativePathLink(
     );
     if (createHardLink == NULL) {
         return WASI_ERRNO_NOSYS;
+    }
+    if (GetFileAttributesA(newPath) != INVALID_FILE_ATTRIBUTES) {
+        return WASI_ERRNO_EXIST;
     }
     if (follow) {
         DWORD attributes = GetFileAttributesA(oldPath);
@@ -5548,8 +5714,7 @@ wasiPathReadlink(
     U32 lengthPointer
 ) {
     WasiFileDescriptor preopenFileDescriptor = emptyWasiFileDescriptor;
-#if defined(_WIN32) || \
-    (defined(__MWERKS__) && defined(macintosh)) || \
+#if (defined(__MWERKS__) && defined(macintosh)) || \
     defined(__wii__)
     UNUSED_PARAMETER(instance);
     UNUSED_PARAMETER(dirFD);
@@ -5597,11 +5762,7 @@ wasiPathReadlink(
         return WASI_ERRNO_NOTCAPABLE;
     }
 
-#ifdef _WIN32
-    /* TODO: */
-    WASI_TRACE(("path_readlink: not supported on Win32"));
-    return WASI_ERRNO_NOSYS;
-#elif defined(__MWERKS__) && defined(macintosh)
+#if defined(__MWERKS__) && defined(macintosh)
     /* TODO: */
     WASI_TRACE(("path_readlink: not supported on Macintosh"));
     return WASI_ERRNO_NOSYS;
@@ -5661,7 +5822,7 @@ wasiPathReadlink(
     i32_store(memory, lengthPointer, length);
 
     return WASI_ERRNO_SUCCESS;
-#endif /* _WIN32 */
+#endif /* Macintosh or Wii */
 }
 
 WASI_IMPORT(U32, 13_pathX5Freadlink, (
@@ -5740,7 +5901,32 @@ wasiFdFdstatSetFlags(
         return flags == 0 ? WASI_ERRNO_SUCCESS : WASI_ERRNO_NOTSUP;
     }
 
-#if HAS_FCNTL
+#ifdef _WIN32
+    {
+        U32 error = WASI_ERRNO_SUCCESS;
+        if ((flags ^ descriptor.fileFlags)
+            & (WASI_FDFLAGS_DSYNC | WASI_FDFLAGS_RSYNC | WASI_FDFLAGS_SYNC)) {
+            return WASI_ERRNO_NOTSUP;
+        }
+        wasiFileDescriptorsLock();
+        if (!wasiFileDescriptorGetLocked(wasiFD, &descriptor)) {
+            error = WASI_ERRNO_BADF;
+        } else if (!wasiFileDescriptorHasRights(
+            &descriptor, WASI_RIGHTS_FD_FDSTAT_SET_FLAGS
+        )) {
+            error = WASI_ERRNO_NOTCAPABLE;
+        } else if (descriptor.socket != WASI_INVALID_SOCKET) {
+            error = WASI_ERRNO_NOTSUP;
+        } else if (flags != 0 && GetFileType((HANDLE)_get_osfhandle(descriptor.fd))
+                   != FILE_TYPE_DISK) {
+            error = WASI_ERRNO_NOTSUP;
+        } else {
+            wasi.fds.fds[wasiFD].fileFlags = (U16)flags;
+        }
+        wasiFileDescriptorsUnlock();
+        return error;
+    }
+#elif HAS_FCNTL
     nativeFlags = fcntl(descriptor.fd, F_GETFL);
     if (nativeFlags < 0) {
         return wasiErrno();
@@ -5836,6 +6022,7 @@ WASI_IMPORT(U32, 19_fdX5FfdstatX5FsetX5Fflags, (
 
 typedef struct WasiPollFD {
     WasiNativeSocket fd;
+    HANDLE handle;
     short events;
     short revents;
 } WasiPollFD;
@@ -5863,6 +6050,41 @@ wasiPollWait(WasiPollFD* descriptors, U32 count, int timeout) {
         int type;
         int length = sizeof(type);
         descriptor->revents = 0;
+        if (descriptor->handle != NULL) {
+            DWORD handleType = GetFileType(descriptor->handle);
+            if (handleType == FILE_TYPE_UNKNOWN) {
+                descriptor->revents = WASI_POLLNVAL;
+            } else if (handleType == FILE_TYPE_DISK || descriptor->events == WASI_POLLOUT) {
+                descriptor->revents = descriptor->events;
+            } else if (handleType == FILE_TYPE_PIPE) {
+                DWORD available = 0;
+                if (PeekNamedPipe(
+                    descriptor->handle, NULL, 0, NULL, &available, NULL
+                )) {
+                    if (available != 0) {
+                        descriptor->revents = WASI_POLLIN;
+                    }
+                } else {
+                    DWORD error = GetLastError();
+                    descriptor->revents = error == ERROR_BROKEN_PIPE
+                        || error == ERROR_PIPE_NOT_CONNECTED
+                        ? WASI_POLLHUP : WASI_POLLERR;
+                }
+            } else if (handleType == FILE_TYPE_CHAR) {
+                if (WaitForSingleObject(descriptor->handle, 0) == WAIT_OBJECT_0) {
+                    descriptor->revents = WASI_POLLIN;
+                }
+            } else {
+                descriptor->revents = WASI_POLLNVAL;
+            }
+            if (descriptor->revents != 0) {
+                timeout = 0;
+            } else if (timeout < 0 || timeout > 10) {
+                /* Recheck non-socket handles while waiting for sockets or clocks. */
+                timeout = 10;
+            }
+            continue;
+        }
         if (descriptor->fd == WASI_INVALID_SOCKET) {
             continue;
         }
@@ -6230,8 +6452,7 @@ wasiPollOneoff(
                     subscription->socket = descriptor.socket != WASI_INVALID_SOCKET;
 #ifdef _WIN32
                     if (descriptor.socket == WASI_INVALID_SOCKET) {
-                        subscription->error = WASI_ERRNO_NOTSUP;
-                        hasImmediateEvent = true;
+                        pollFD->handle = (HANDLE)_get_osfhandle(descriptor.fd);
                     } else {
                         pollFD->fd = descriptor.socket;
                     }
@@ -6323,9 +6544,6 @@ wasiPollOneoff(
 
                 if ((pollFD->revents & WASI_POLLNVAL) != 0) {
                     error = WASI_ERRNO_BADF;
-                } else if ((pollFD->revents & WASI_POLLHUP) != 0
-                           && !subscription->socket) {
-                    error = WASI_ERRNO_PIPE;
                 } else if ((pollFD->revents & WASI_POLLERR) != 0
                            && !subscription->socket) {
                     error = WASI_ERRNO_IO;
@@ -6407,6 +6625,12 @@ wasiRandomGet(
         bufferLength
     ));
 
+    if (!wasiMemoryRangeIsValid(memory, bufferPointer, bufferLength, 1)) {
+        return WASI_ERRNO_FAULT;
+    }
+    if (bufferLength == 0) {
+        return WASI_ERRNO_SUCCESS;
+    }
     bufferStart = memory->data + bufferPointer;
 
 #if defined(_WIN32) && !(defined(_MSC_VER) && _MSC_VER <= 1000)
@@ -6414,10 +6638,6 @@ wasiRandomGet(
     {
         HCRYPTPROV provider;
         bool success;
-
-        if (bufferLength > 256) {
-            return WASI_ERRNO_IO;
-        }
 
         if (!CryptAcquireContext(
             &provider,
@@ -6445,21 +6665,30 @@ wasiRandomGet(
     }
 #else
 #if HAS_GETENTROPY
-    result = getentropy(
-        bufferStart,
-        bufferLength
-    );
-    if (result != 0 && result != ENOSYS) {
-        WASI_TRACE(("random_get: getentropy failed: %s", strerror(errno)));
-        return wasiErrno();
+    while (bufferLength > 0) {
+        U32 length = bufferLength > 256 ? 256 : bufferLength;
+        if (getentropy(bufferStart, length) != 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            if (errno == ENOSYS) {
+                break;
+            }
+            WASI_TRACE(("random_get: getentropy failed: %s", strerror(errno)));
+            return wasiErrno();
+        }
+        bufferStart += length;
+        bufferLength -= length;
     }
-    if (result == ENOSYS)
+    if (bufferLength == 0) {
+        return WASI_ERRNO_SUCCESS;
+    }
 #endif
     /* Try /dev/random. Might not be available */
     {
         int fd = -1;
 
-        fd = open("/dev/random", O_RDONLY);
+        fd = open("/dev/random", O_RDONLY, 0);
         if (fd >= 0) {
             result = read(
                 fd,
