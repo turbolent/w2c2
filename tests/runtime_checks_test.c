@@ -167,6 +167,31 @@ static void testMemory(void) {
     m14_runtimeX5FchecksFreeInstance(&instance);
 }
 
+void m14_runtimeX5FchecksImport3_env8_relocate(wasmModuleInstance* instance) {
+    wasmMemory* target = ((m14_runtimeX5FchecksInstance*)instance)->m0;
+    U8* data = (U8*)calloc(2 * WASM_PAGE_SIZE, 1);
+    CHECK(data != NULL);
+    /* Allocate before freeing to force a different buffer address. */
+    memcpy(data, target->data, WASM_PAGE_SIZE);
+    free(target->data);
+    target->data = data;
+    target->pages = 2;
+    target->size = 2 * WASM_PAGE_SIZE;
+}
+
+static void testMemoryGrowth(void) {
+    U32 mode;
+    for (mode = 0; mode < 4; mode++) {
+        m14_runtimeX5FchecksInstance instance;
+        memory = wasmMemoryAllocate(1, 2, false);
+        m14_runtimeX5FchecksInstantiate(&instance, resolve);
+        CHECK(m14_runtimeX5FchecksExport4_grow(&instance, mode) == 44);
+        CHECK(memory->pages == 2);
+        m14_runtimeX5FchecksFreeInstance(&instance);
+        wasmMemoryFree(memory);
+    }
+}
+
 static void testSegments(void) {
     /* Static instances retain defined values after a trap returns through longjmp. */
     static m14_checkX5FsegmentsInstance instance;
@@ -220,6 +245,7 @@ int main(void) {
     testScalarBounds();
 #endif
     wasmMemoryFree(memory);
+    testMemoryGrowth();
     fprintf(stderr, "PASS runtime checks (%s)\n", W2C2_RUNTIME_CHECKS ? "checked" : "unchecked");
     return 0;
 }

@@ -21,6 +21,7 @@ static void* tableTestRealloc(void* pointer, size_t size);
 static wasmTable sharedTable;
 static wasmExternTable sharedExternTable;
 static U32* slot;
+static U32 counter;
 static wasmExternRef* object;
 static wasmModuleInstance* expectedHostInstance;
 static jmp_buf tableTrap;
@@ -59,6 +60,9 @@ void trap(Trap trap) {
 
 static void* resolve(WasmName module, WasmName name) {
     CHECK(module.length == 3 && memcmp(module.data, "env", 3) == 0);
+    if (name.length == 7 && memcmp(name.data, "counter", 7) == 0) {
+        return &counter;
+    }
     if (name.length == 4 && memcmp(name.data, "slot", 4) == 0) {
         return slot;
     }
@@ -84,6 +88,19 @@ m11_tableX5FownerImport3_env8_external(wasmModuleInstance* instance, wasmExternR
     result.v0 = value;
     result.v1 = *((m11_tableX5FownerInstance*)instance)->g1;
     return result;
+}
+
+void m11_tableX5FownerImport3_env6_mutate(wasmModuleInstance* instance) {
+    wasmExternRef* data = (wasmExternRef*)malloc(5 * sizeof(wasmExternRef));
+    CHECK(instance == expectedHostInstance);
+    CHECK(data != NULL && sharedExternTable.size == 4);
+    /* Allocate before freeing to force the imported table buffer to move. */
+    memcpy(data, sharedExternTable.data, 4 * sizeof(wasmExternRef));
+    free(sharedExternTable.data);
+    sharedExternTable.data = data;
+    sharedExternTable.size = 5;
+    data[4] = &counter;
+    counter = 40;
 }
 
 static U32 hostWithContext(wasmModuleInstance* instance, U32 delta) {
@@ -245,6 +262,15 @@ int main(void) {
     CHECK(pair.v0 == refs[1] && pair.v1 == refs[0]);
     objects[0] = 11;
     CHECK(*(U32*)pair.v1 == 11);
+
+    {
+        struct w2c2_result_iei refreshed;
+        expectedHostInstance = &first.common;
+        counter = 7;
+        refreshed = m11_tableX5FownerExport7_refresh(&first);
+        CHECK(refreshed.v0 == 41 && counter == 41);
+        CHECK(refreshed.v1 == &counter && refreshed.v2 == 5);
+    }
 
     m12_tableX5FcallerFreeInstance(&caller);
     m11_tableX5FownerFreeInstance(&second);

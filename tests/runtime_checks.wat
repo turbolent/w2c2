@@ -1,4 +1,6 @@
 (module
+  (type $grow_type (func))
+  (import "env" "relocate" (func $relocate))
   (import "env" "memory" (memory 1 2))
   (data $active (i32.const 0) "ABC")
   (data $passive "abcd")
@@ -22,4 +24,20 @@
   (func (export "copy") (param i32 i32 i32)
     (memory.copy (local.get 0) (local.get 1) (local.get 2)))
   (func (export "fill") (param i32 i32 i32)
-    (memory.fill (local.get 0) (local.get 1) (local.get 2))))
+    (memory.fill (local.get 0) (local.get 1) (local.get 2)))
+  (table 1 funcref)
+  (elem (i32.const 0) $grow)
+  (func $grow (drop (memory.grow (i32.const 1))))
+  (func (export "grow") (param $mode i32) (result i32)
+    (i32.store (i32.const 0) (i32.const 42))
+    (if (i32.eq (local.get $mode) (i32.const 0))
+      (then (drop (memory.grow (i32.const 1))))
+      (else
+        (if (i32.eq (local.get $mode) (i32.const 1))
+          (then (call $grow))
+          (else
+            (if (i32.eq (local.get $mode) (i32.const 2))
+              (then (call_indirect (type $grow_type) (i32.const 0)))
+              (else (call $relocate)))))))
+    (i32.store (i32.const 65536) (i32.load (i32.const 0)))
+    (i32.add (i32.load (i32.const 65536)) (memory.size))))

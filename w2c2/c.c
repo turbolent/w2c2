@@ -456,6 +456,26 @@ typedef struct WasmCControlFrame {
 } WasmCControlFrame;
 
 ARRAY_TYPE(WasmCControlStack, WasmCControlFrame, wasmCControlStack, frames, frame)
+ARRAY_TYPE(WasmCIndices, U32, wasmCIndices, indices, index)
+
+typedef struct WasmCInstanceUses {
+    WasmCIndices memories;
+    WasmCIndices tables;
+    WasmCIndices globals;
+} WasmCInstanceUses;
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCIndicesInclude(WasmCIndices* indices, const U32 value) {
+    size_t index;
+    for (index = 0; index < indices->length; index++) {
+        if (indices->indices[index] == value) {
+            return true;
+        }
+    }
+    return wasmCIndicesAppend(indices, value);
+}
 
 typedef struct WasmCFunctionWriter {
     WasmOutput* output;
@@ -476,7 +496,64 @@ typedef struct WasmCFunctionWriter {
     bool multipleModules;
     WasmDebugLines* debugLines;
     bool* usesSIMD;
+    WasmCInstanceUses* instanceUses;
 } WasmCFunctionWriter;
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteFunctionMemoryUse(
+    const WasmCFunctionWriter* writer,
+    const U32 memoryIndex
+) {
+    MUST (wasmCIndicesInclude(&writer->instanceUses->memories, memoryIndex))
+    wasmCWriteMemoryName(writer->output, memoryIndex);
+    return !writer->output->failed;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteFunctionTableUse(
+    const WasmCFunctionWriter* writer,
+    const U32 tableIndex
+) {
+    if (tableIndex >= writer->module->tableImports.length) {
+        return wasmCWriteTableUse(writer->output, writer->module, tableIndex, true);
+    }
+    MUST (wasmCIndicesInclude(&writer->instanceUses->tables, tableIndex))
+    wasmCWriteTableName(writer->output, tableIndex);
+    return !writer->output->failed;
+}
+
+static
+WasmGlobalType
+wasmCGetGlobalType(const WasmModule* module, const U32 globalIndex) {
+    return globalIndex < module->globalImports.length
+        ? module->globalImports.imports[globalIndex].globalType
+        : module->globals.globals[globalIndex - module->globalImports.length].type;
+}
+
+static
+bool
+WARN_UNUSED_RESULT
+wasmCWriteFunctionGlobalUse(
+    const WasmCFunctionWriter* writer,
+    const U32 globalIndex
+) {
+    const WasmGlobalType type = wasmCGetGlobalType(writer->module, globalIndex);
+    /* Constant expressions run during initialization.
+     * Defined mutable globals already use a fixed offset from the instance. */
+    if (writer->instanceUses == NULL
+        || (type.mutable && globalIndex >= writer->module->globalImports.length)) {
+        return wasmCWriteGlobalUse(writer->output, writer->module, globalIndex, false);
+    }
+    MUST (wasmCIndicesInclude(&writer->instanceUses->globals, globalIndex))
+    if (type.mutable) wasmOutputString(writer->output, "(*");
+    wasmCWriteGlobalName(writer->output, globalIndex);
+    if (type.mutable) wasmOutputChar(writer->output, ')');
+    return !writer->output->failed;
+}
 
 static
 W2C2_INLINE
@@ -720,7 +797,7 @@ wasmCWriteTableCall(
         wasmCWriteTableType(writer->output, elementType);
         MUST (wasmCWrite(writer, operation))
         MUST (wasmCWriteChar(writer, '('))
-        MUST (wasmCWriteTableUse(writer->output, writer->module, tableIndex, true))
+        MUST (wasmCWriteFunctionTableUse(writer, tableIndex))
         MUST (wasmCWriteStackArguments(writer, parameterCount))
         MUST (wasmCWrite(writer, ");\n"))
         wasmTypeStackDrop(writer->typeStack, parameterCount);
@@ -752,7 +829,7 @@ wasmCWriteTableCopyExpr(
         MUST (wasmCWriteIndent(writer))
         wasmCWriteTableType(writer->output, elementType);
         MUST (wasmCWrite(writer, opcode == wasmMiscOpcodeTableInit ? "Init(" : "Copy("))
-        MUST (wasmCWriteTableUse(writer->output, writer->module, destination, true))
+        MUST (wasmCWriteFunctionTableUse(writer, destination))
         MUST (wasmCWriteComma(writer))
         if (opcode == wasmMiscOpcodeTableInit) {
             const WasmElementSegment segment = writer->module->elementSegments.elementSegments[source];
@@ -769,7 +846,7 @@ wasmCWriteTableCopyExpr(
             wasmOutputU32(writer->output, count);
             MUST (wasmCWriteChar(writer, ')'))
         } else {
-            MUST (wasmCWriteTableUse(writer->output, writer->module, source, true))
+            MUST (wasmCWriteFunctionTableUse(writer, source))
         }
         MUST (wasmCWriteStackArguments(writer, 3))
         MUST (wasmCWrite(writer, ");\n"))
@@ -854,7 +931,7 @@ wasmCWriteCallIndirectExpr(
         MUST (wasmCWrite(writer, "wasmTableEntry entry"))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmTableGet("))
-        MUST (wasmCWriteTableUse(writer->output, writer->module, instruction.tableIndex, true))
+        MUST (wasmCWriteFunctionTableUse(writer, instruction.tableIndex))
         MUST (wasmCWriteComma(writer))
         {
             const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
@@ -1057,7 +1134,7 @@ wasmCWriteGlobalGetExpr(
             MUST (wasmCWriteIndent(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, globalType))
             MUST (wasmCWriteAssign(writer))
-            MUST (wasmCWriteGlobalUse(writer->output, writer->module, instruction.globalIndex, false))
+            MUST (wasmCWriteFunctionGlobalUse(writer, instruction.globalIndex))
             MUST (wasmCWrite(writer, ";\n"))
         }
     }
@@ -1104,7 +1181,7 @@ wasmCWriteGlobalSetExpr(
             MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, globalType))
 
             MUST (wasmCWriteIndent(writer))
-            MUST (wasmCWriteGlobalUse(writer->output, writer->module, instruction.globalIndex, false))
+            MUST (wasmCWriteFunctionGlobalUse(writer, instruction.globalIndex))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWriteStackName(writer->output, stackIndex0, globalType))
             MUST (wasmCWrite(writer, ";\n"))
@@ -1238,7 +1315,7 @@ wasmCWriteLoad(
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+    MUST (wasmCWriteFunctionMemoryUse(writer, 0))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset))
     MUST (wasmCWrite(writer, ");\n"))
@@ -1339,7 +1416,7 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
         if (info->memoryBytes && info->laneCount) wasmOutputU32(writer->output, immediate[0]);
         MUST (wasmCWriteChar(writer, '('))
         if (info->memoryBytes) {
-            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+            MUST (wasmCWriteFunctionMemoryUse(writer, 0))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteMemoryAddress(writer, base, memarg.offset))
             if (info->argumentCount == 2) {
@@ -1513,7 +1590,7 @@ wasmCWriteStore(
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
     MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+    MUST (wasmCWriteFunctionMemoryUse(writer, 0))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
     MUST (wasmCWriteComma(writer))
@@ -1648,12 +1725,7 @@ wasmCWriteMemorySizeExpr(
             ))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, "wasmMemorySize("))
-            MUST (wasmCWriteMemoryUse(
-                writer->output,
-                instruction.memoryIndex,
-                NULL,
-                true
-            ))
+            MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex))
             MUST (wasmCWrite(writer, ");\n"))
         }
     }
@@ -1703,12 +1775,7 @@ wasmCWriteMemoryGrowExpr(
             MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, "wasmMemoryGrow("))
-            MUST (wasmCWriteMemoryUse(
-                writer->output,
-                instruction.memoryIndex,
-                NULL,
-                true
-            ))
+            MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                 writer->output,
@@ -1745,12 +1812,7 @@ wasmCWriteMemoryInitExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmMemoryInit("))
-        MUST (wasmCWriteMemoryUse(
-            writer->output,
-            instruction.memoryIndex,
-            NULL,
-            true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
             writer->output,
@@ -1834,19 +1896,9 @@ wasmCWriteMemoryCopyExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmMemoryCopy("))
-        MUST (wasmCWriteMemoryUse(
-            writer->output,
-            instruction.memoryIndex1,
-            NULL,
-            true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex1))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteMemoryUse(
-            writer->output,
-            instruction.memoryIndex2,
-            NULL,
-            true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex2))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
             writer->output,
@@ -1912,12 +1964,7 @@ wasmCWriteMemoryFillExpr(
 
         MUST (wasmCWriteIndent(writer))
         MUST (wasmCWrite(writer, "wasmMemoryFill("))
-        MUST (wasmCWriteMemoryUse(
-            writer->output,
-            instruction.memoryIndex,
-            NULL,
-            true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, instruction.memoryIndex))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
             writer->output,
@@ -2781,12 +2828,7 @@ wasmCWriteMemoryAtomicNotifyExpr(
         MUST (wasmCWriteStackName(writer->output, stackIndex1, resultType))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
-        MUST (wasmCWriteMemoryUse(
-                writer->output,
-                0,
-                NULL,
-                true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, 0))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
         MUST (wasmCWriteComma(writer))
@@ -2826,12 +2868,7 @@ wasmCWriteMemoryAtomicWaitExpr(
         MUST (wasmCWriteStackName(writer->output, stackIndex2, resultType))
         MUST (wasmCWriteAssign(writer))
         MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
-        MUST (wasmCWriteMemoryUse(
-                writer->output,
-                0,
-                NULL,
-                true
-        ))
+        MUST (wasmCWriteFunctionMemoryUse(writer, 0))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
         MUST (wasmCWriteComma(writer))
@@ -3424,7 +3461,7 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+            MUST (wasmCWriteFunctionMemoryUse(writer, 0))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
             MUST (wasmCWriteComma(writer))
@@ -3540,7 +3577,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmCWriteAssign(writer))
             MUST (wasmCWrite(writer, functionName))
             MUST (wasmCWriteChar(writer, '('))
-            MUST (wasmCWriteMemoryUse(writer->output, 0, NULL, true))
+            MUST (wasmCWriteFunctionMemoryUse(writer, 0))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
             MUST (wasmCWriteComma(writer))
@@ -4563,6 +4600,7 @@ wasmCWriteFunctionBody(
     WasmStackDeclarations* stackDeclarations,
     WasmLabelStack* labelStack,
     WasmCControlStack* controlStack,
+    WasmCInstanceUses* instanceUses,
     const WasmModule* module,
     const char* moduleName,
     const WasmFunction function,
@@ -4576,6 +4614,7 @@ wasmCWriteFunctionBody(
     Buffer code = function.code;
     bool usesSIMD = false;
     U32 localDeclaration;
+    size_t resourceUse;
     WasmLabel label = wasmEmptyLabel;
     WasmBlockSignature signature = wasmEmptyBlockSignature;
 
@@ -4613,6 +4652,7 @@ wasmCWriteFunctionBody(
         writer.multipleModules = multipleModules;
         writer.debugLines = debugLines;
         writer.usesSIMD = &usesSIMD;
+        writer.instanceUses = instanceUses;
 
         MUST (wasmLabelStackPush(writer.labelStack, 0, signature, false, &label))
         MUST (wasmCWriteCode(&writer))
@@ -4634,6 +4674,47 @@ wasmCWriteFunctionBody(
     wasmOutputString(file, "Instance* i = (");
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance*)instance;\n");
+    /* Memory objects remain at fixed addresses for the instance lifetime.
+     * Cache their pointers to avoid reloading instance fields after stores.
+     * Keep data and size in the object:
+     * memory.grow can change them directly or through a call. */
+    for (resourceUse = 0; resourceUse < instanceUses->memories.length; resourceUse++) {
+        const U32 memoryIndex = instanceUses->memories.indices[resourceUse];
+        if (pretty) {
+            wasmOutputString(file, indentation);
+        }
+        wasmOutputString(file, "wasmMemory* ");
+        wasmCWriteMemoryName(file, memoryIndex);
+        wasmOutputString(file, pretty ? " = " : "=");
+        MUST (wasmCWriteMemoryUse(file, memoryIndex, NULL, true))
+        wasmOutputString(file, ";\n");
+    }
+    /* Imported table objects remain fixed,
+     * but calls and table.grow can change their entries, buffer, and size. */
+    for (resourceUse = 0; resourceUse < instanceUses->tables.length; resourceUse++) {
+        const U32 tableIndex = instanceUses->tables.indices[resourceUse];
+        if (pretty) wasmOutputString(file, indentation);
+        wasmCWriteTableType(file, wasmModuleGetTableType(module, tableIndex));
+        wasmOutputString(file, "* ");
+        wasmCWriteTableName(file, tableIndex);
+        wasmOutputString(file, pretty ? " = " : "=");
+        MUST (wasmCWriteTableUse(file, module, tableIndex, true))
+        wasmOutputString(file, ";\n");
+    }
+    /* Immutable global values remain fixed after initialization.
+     * Cache only the pointer for mutable imports:
+     * global.set and calls must observe and update the shared storage. */
+    for (resourceUse = 0; resourceUse < instanceUses->globals.length; resourceUse++) {
+        const U32 globalIndex = instanceUses->globals.indices[resourceUse];
+        const WasmGlobalType type = wasmCGetGlobalType(module, globalIndex);
+        if (pretty) wasmOutputString(file, indentation);
+        wasmOutputString(file, valueTypeNames[type.valueType]);
+        wasmOutputString(file, type.mutable ? "* " : " ");
+        wasmCWriteGlobalName(file, globalIndex);
+        wasmOutputString(file, pretty ? " = " : "=");
+        MUST (wasmCWriteGlobalUse(file, module, globalIndex, type.mutable))
+        wasmOutputString(file, ";\n");
+    }
     wasmCWriteLocalsDeclarations(file, module, function, pretty);
     wasmCWriteStackDeclarations(file, stackDeclarations, pretty);
     wasmOutputWrite(file, buffer->data, buffer->length);
@@ -4738,6 +4819,7 @@ wasmCWriteFunctionImplementations(
     WasmStackDeclarations stackDeclarations = wasmEmptyStackDeclarations;
     WasmLabelStack labelStack = wasmEmptyLabelStack;
     WasmCControlStack controlStack = {0, 0, NULL};
+    WasmCInstanceUses instanceUses = {{0, 0, NULL}, {0, 0, NULL}, {0, 0, NULL}};
     bool result = false;
 
     U32 functionIDIndex = startIDIndex;
@@ -4755,6 +4837,9 @@ wasmCWriteFunctionImplementations(
         wasmStackDeclarationsClear(&stackDeclarations);
         wasmLabelStackClear(&labelStack);
         controlStack.length = 0;
+        instanceUses.memories.length = 0;
+        instanceUses.tables.length = 0;
+        instanceUses.globals.length = 0;
 
         if (debug) {
             const WasmDebugLine* debugLine = wasmCGetDebugLine(&debugLines, function.start);
@@ -4770,6 +4855,7 @@ wasmCWriteFunctionImplementations(
             &stackDeclarations,
             &labelStack,
             &controlStack,
+            &instanceUses,
             module,
             moduleName,
             function,
@@ -4796,6 +4882,9 @@ cleanup:
     wasmStackDeclarationsFree(&stackDeclarations);
     wasmLabelsFree(&labelStack.labels);
     wasmCControlStackFree(&controlStack);
+    wasmCIndicesFree(&instanceUses.memories);
+    wasmCIndicesFree(&instanceUses.tables);
+    wasmCIndicesFree(&instanceUses.globals);
     return result;
 }
 
