@@ -76,10 +76,18 @@ fileOutputReplace(const char* temporary, const char* path) {
 
 static
 WasmBool
-fileOutputWrite(void* context, const U8* bytes, size_t length, int* systemError) {
+fileOutputWrite(
+    void* context,
+    const U8* bytes,
+    size_t length,
+    int* systemError
+) {
     FileOutput* output = (FileOutput*)context;
-    if (output->error == 0 && fwrite(bytes, 1, length, output->file) != length) {
-        output->error = errno != 0 ? errno : EIO;
+    if (output->error == 0) {
+        errno = 0;
+        if (fwrite(bytes, 1, length, output->file) != length || ferror(output->file)) {
+            output->error = errno != 0 ? errno : EIO;
+        }
     }
     *systemError = output->error;
     return output->error == 0;
@@ -89,14 +97,19 @@ static
 WasmBool
 fileOutputClose(void* context, int* systemError) {
     FileOutput* output = (FileOutput*)context;
+    errno = 0;
     if (fclose(output->file) != 0 && output->error == 0) {
         output->error = errno != 0 ? errno : EIO;
     }
-    if (output->error == 0 && fileOutputReplace(output->temporary, output->path) != 0) {
-        output->error = errno != 0 ? errno : EIO;
+    if (output->error == 0) {
+        errno = 0;
+        if (fileOutputReplace(output->temporary, output->path) != 0) {
+            output->error = errno != 0 ? errno : EIO;
+        }
     }
     *systemError = output->error;
     if (output->error != 0) {
+        /* Preserve the write, close, or replacement error if removal also fails. */
         remove(output->temporary);
     }
     fileOutputFree(output);
@@ -107,6 +120,10 @@ static
 void
 fileOutputAbort(void* context) {
     FileOutput* output = (FileOutput*)context;
+    /*
+     * Translation has already failed.
+     * Attempt both cleanup operations, even if either fails.
+     */
     fclose(output->file);
     remove(output->temporary);
     fileOutputFree(output);
@@ -133,12 +150,18 @@ fileOutputOpen(
     }
     output->path = wasmPathJoin((const char*)context, name);
     /* A different first byte keeps the temporary distinct from the destination. */
-    output->temporary = wasmPathJoin((const char*)context,
-        name[0] == '.' ? "_w2c2-00000000.tmp" : ".w2c2-00000000.tmp");
+    output->temporary = wasmPathJoin(
+        (const char*)context,
+        name[0] == '.' ? "_w2c2-00000000.tmp" : ".w2c2-00000000.tmp"
+    );
     if (output->path == NULL || output->temporary == NULL) {
         *systemError = ENOMEM;
         goto fail;
     }
+    /*
+     * A symlink's target may be inaccessible,
+     * even when the symlink itself can be replaced.
+     */
     if (stat(output->path, &status) == 0 && S_ISDIR(status.st_mode)) {
         *systemError = EISDIR;
         goto fail;
@@ -147,18 +170,25 @@ fileOutputOpen(
     /* Exclusive creation resolves collisions between concurrent writers. */
     for (attempt = 0; attempt < 1024; attempt++, candidate++) {
         sprintf(suffix, "%08X.tmp", candidate);
+        errno = 0;
 #ifdef _WIN32
-        descriptor = outputOpen(output->temporary,
+        descriptor = outputOpen(
+            output->temporary,
             _O_WRONLY | _O_CREAT | _O_EXCL | (kind == wasmOutputData ? _O_BINARY : _O_TEXT),
-            _S_IREAD | _S_IWRITE);
+            _S_IREAD | _S_IWRITE
+        );
 #else
-        descriptor = outputOpen(output->temporary, O_WRONLY | O_CREAT | O_EXCL, 0666);
+        descriptor = outputOpen(
+            output->temporary,
+            O_WRONLY | O_CREAT | O_EXCL,
+            0666
+        );
 #endif
         if (descriptor >= 0) {
             break;
         }
         if (errno != EEXIST) {
-            *systemError = errno;
+            *systemError = errno != 0 ? errno : EIO;
             goto fail;
         }
     }
@@ -166,9 +196,11 @@ fileOutputOpen(
         *systemError = EEXIST;
         goto fail;
     }
+    errno = 0;
     output->file = outputFdopen(descriptor, kind == wasmOutputData ? "wb" : "w");
     if (output->file == NULL) {
         *systemError = errno != 0 ? errno : EIO;
+        /* Preserve the stream-open error if descriptor or file cleanup also fails. */
         outputClose(descriptor);
         remove(output->temporary);
         goto fail;

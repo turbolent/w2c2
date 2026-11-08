@@ -46,6 +46,12 @@ static const WasmCWriteModuleOptions emptyWasmCWriteModuleOptions = {
  * Failures return zero and report through options->diagnostics when available.
  * NULL options returns zero without reporting a diagnostic.
  * Earlier completed outputs remain delivered on failure.
+ *
+ * Unexpected synchronization or join errors report a thread diagnostic and abort.
+ * These fatal diagnostics go to stderr instead of the diagnostic callback.
+ * Worker lifetimes cannot be established after such an error,
+ * so returning would risk accessing freed caller-owned storage.
+ * Allocation and thread-creation failures return zero normally.
  */
 #ifdef __cplusplus
 extern "C" {

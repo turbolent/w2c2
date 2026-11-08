@@ -1066,6 +1066,20 @@ static time_t testNativeCurrentFileTime(void) {
     return st.st_mtime;
 }
 
+static time_t testNativeCurrentTime(void) {
+#ifdef CLOCK_REALTIME
+    struct timespec now;
+    /*
+     * time(NULL) can lag file timestamps across a second boundary.
+     * Use the precise realtime clock for the upper bound when available.
+     */
+    CHECK_IO(clock_gettime(CLOCK_REALTIME, &now) == 0);
+    return now.tv_sec;
+#else
+    return time(NULL);
+#endif
+}
+
 #if HAS_FUTIMENS
 
 static void testNativeFileTimes(int fd, U64* atime, U64* mtime) {
@@ -1168,7 +1182,7 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
         WASI_FSTFLAGS_ATIM_NOW
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(st.st_atime >= before && st.st_atime <= time(NULL));
+    CHECK_IO(st.st_atime >= before && st.st_atime <= testNativeCurrentTime());
     CHECK_IO(testStatTime(&st, true) == 0);
     CHECK_IO(setTimes(
         NULL,
@@ -1179,7 +1193,7 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
     CHECK_IO(testStatTime(&st, false) == expectedAtime);
-    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= testNativeCurrentTime());
     CHECK_IO(setTimes(
         NULL,
         wasiFD,
@@ -1188,8 +1202,8 @@ static void testFdFilestatSetTimes(TestFdSetTimes setTimes) {
         WASI_FSTFLAGS_ATIM_NOW | WASI_FSTFLAGS_MTIM_NOW
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
-    CHECK_IO(st.st_atime >= before && st.st_atime <= time(NULL));
-    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    CHECK_IO(st.st_atime >= before && st.st_atime <= testNativeCurrentTime());
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= testNativeCurrentTime());
     if (sizeof(time_t) < sizeof(U64)) {
         CHECK_IO(setTimes(
             NULL,
@@ -1305,7 +1319,7 @@ static void testPathFilestatSetTimes(
     ) == WASI_ERRNO_SUCCESS);
     CHECK_IO(fstat(fd, &st) == 0);
     CHECK_IO(testStatTime(&st, false) == expectedAtime);
-    CHECK_IO(st.st_mtime >= before && st.st_mtime <= time(NULL));
+    CHECK_IO(st.st_mtime >= before && st.st_mtime <= testNativeCurrentTime());
     CHECK_IO(setFD(
         NULL,
         dirFD,

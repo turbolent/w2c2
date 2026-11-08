@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 #include <limits.h>
 #if HAS_UNISTD
 #include <unistd.h>
@@ -60,7 +61,13 @@ readWasmBinary(
     WasmModuleReaderError* error = NULL;
     const Buffer buffer = readFile(path);
     if (buffer.data == NULL) {
-        fprintf(stderr, "w2c2: failed to read file %s\n", path);
+        const int errorNumber = errno;
+        fprintf(
+            stderr,
+            "w2c2: failed to read file %s: %s\n",
+            path,
+            strerror(errorNumber)
+        );
         return false;
     }
     *bufferResult = buffer;
@@ -147,8 +154,11 @@ wasmSplitStaticAndDynamicFunctions(
             referenceFunctionIndex++;
 
         } else {
-            /* comparisonResult == 0 */
-            /* Function exists in both modules, so it's a static function */
+            /*
+             * comparisonResult == 0
+             * Function exists in both modules,
+             * so it's a static function
+             */
             if (!wasmFunctionIDsAppend(staticFunctions, functionID)) {
                 return false;
             }
@@ -173,8 +183,11 @@ wasmSplitStaticAndDynamicFunctions(
 }
 
 static
-void
-cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
+bool
+cleanImplementationFiles(
+    const char* directory,
+    const WasmCOutputNames* names
+) {
     const char* name;
     char* path;
 #if HAS_GLOB || _WIN32
@@ -182,6 +195,7 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
 #endif
     char kind;
     U32 fileIndex;
+    bool result = true;
 #if HAS_GLOB
     glob_t globbuf = {0};
     size_t index;
@@ -189,53 +203,57 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     int globResult;
     OutputBuffer escapedDirectory = emptyOutputBuffer;
     if (!outputBufferInitialize(&escapedDirectory)) {
-        return;
+        goto allocationFailed;
     }
     for (index = 0; directory[index] != '\0'; index++) {
         const char c = directory[index];
         if (strchr("\\*?[]", c) != NULL) {
             if (!outputBufferAppend(&escapedDirectory, (const U8*)"\\", 1)) {
                 outputBufferFree(&escapedDirectory);
-                return;
+                goto allocationFailed;
             }
         }
         if (!outputBufferAppend(&escapedDirectory, (const U8*)&c, 1)) {
             outputBufferFree(&escapedDirectory);
-            return;
+            goto allocationFailed;
         }
     }
     pattern = wasmPathJoin((const char*)escapedDirectory.data, "*.c");
     outputBufferFree(&escapedDirectory);
     if (pattern == NULL) {
-        return;
+        goto allocationFailed;
     }
-    globResult = glob(pattern, GLOB_NOSORT, NULL, &globbuf);
+    globResult = glob(pattern, GLOB_NOSORT | GLOB_ERR, NULL, &globbuf);
     free(pattern);
     if (globResult != 0) {
         if (globResult != GLOB_NOMATCH) {
             fprintf(stderr, "w2c2: failed to glob files to clean\n");
         }
-        if (globResult == GLOB_NOSPACE || globResult == GLOB_ABORTED) {
-            globfree(&globbuf);
-        }
-        return;
+        globfree(&globbuf);
+        return globResult == GLOB_NOMATCH;
     }
     for (; pathIndex < globbuf.gl_pathc; pathIndex++) {
         name = wasmBasename(globbuf.gl_pathv[pathIndex]);
 #elif _WIN32
     WIN32_FIND_DATA findFileData;
     HANDLE hFind;
+    DWORD findError;
     pattern = wasmPathJoin(directory, "*.c");
     if (pattern == NULL) {
-        return;
+        goto allocationFailed;
     }
     hFind = FindFirstFile(pattern, &findFileData);
+    findError = hFind == INVALID_HANDLE_VALUE ? GetLastError() : ERROR_SUCCESS;
     free(pattern);
     if (hFind == INVALID_HANDLE_VALUE) {
-        if (GetLastError() != ERROR_FILE_NOT_FOUND) {
-            fprintf(stderr, "w2c2: failed to find files to clean\n");
+        if (findError != ERROR_FILE_NOT_FOUND) {
+            fprintf(
+                stderr,
+                "w2c2: failed to find files to clean (Windows error %lu)\n",
+                (unsigned long)findError
+            );
         }
-        return;
+        return findError == ERROR_FILE_NOT_FOUND;
     }
     do {
         name = findFileData.cFileName;
@@ -244,9 +262,9 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
     DIR* dir = opendir(directory);
     if (dir == NULL) {
         fprintf(stderr, "w2c2: failed to open directory to clean\n");
-        return;
+        return false;
     }
-    while ((entry = readdir(dir)) != NULL) {
+    while (errno = 0, (entry = readdir(dir)) != NULL) {
         name = entry->d_name;
 #else
 #error "Unable to find files"
@@ -258,13 +276,23 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
         }
         path = wasmPathJoin(directory, name);
         if (path == NULL) {
-            continue;
+            result = false;
+            fprintf(stderr, "w2c2: failed to allocate cleanup path\n");
+        } else {
+            fprintf(stderr, "w2c2: cleaning file: %s\n", path);
+            errno = 0;
+            if (remove(path) != 0) {
+                const int error = errno != 0 ? errno : EIO;
+                fprintf(
+                    stderr,
+                    "w2c2: failed to remove file %s: %s\n",
+                    path,
+                    strerror(error)
+                );
+                result = false;
+            }
+            free(path);
         }
-        fprintf(stderr, "w2c2: cleaning file: %s\n", path);
-        if (remove(path) != 0) {
-            fprintf(stderr, "w2c2: failed to remove file %s\n", path);
-        }
-        free(path);
     }
 #if !HAS_GLOB && _WIN32
     while (FindNextFile(hFind, &findFileData) != 0);
@@ -273,10 +301,39 @@ cleanImplementationFiles(const char* directory, const WasmCOutputNames* names) {
 #if HAS_GLOB
     globfree(&globbuf);
 #elif _WIN32
-    FindClose(hFind);
+    if (GetLastError() != ERROR_NO_MORE_FILES) {
+        fprintf(stderr, "w2c2: failed to enumerate files to clean\n");
+        result = false;
+    }
+    if (!FindClose(hFind)) {
+        fprintf(stderr, "w2c2: failed to close cleanup search\n");
+        result = false;
+    }
 #elif defined(PLAN9)
-    closedir(dir);
+    if (errno != 0) {
+        fprintf(stderr, "w2c2: failed to enumerate files to clean\n");
+        result = false;
+    }
+    if (closedir(dir) != 0) {
+        fprintf(stderr, "w2c2: failed to close cleanup directory\n");
+        result = false;
+    }
 #endif
+    return result;
+
+#if HAS_GLOB || _WIN32
+allocationFailed:
+    fprintf(stderr, "w2c2: failed to allocate cleanup path\n");
+    return false;
+#endif
+}
+
+static
+int
+finishSuccess(void) {
+    /* Diagnostic output may fail only when its buffered bytes are flushed. */
+    const int flushResult = fflush(stderr);
+    return flushResult == 0 && !ferror(stderr) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int
@@ -349,7 +406,7 @@ main(
                         "sectcreate2    All data segments are embedded into a data section using sectcreate\n"
                         "               and accessed using Mach-O getsectdata (older Mach-O LD)\n"
                     );
-                    return EXIT_SUCCESS;
+                    return finishSuccess();
                 } else {
                     fprintf(
                         stderr,
@@ -393,7 +450,7 @@ main(
                     "  -r         Reference module\n",
                     stderr
                 );
-                return 0;
+                return finishSuccess();
             }
             case '?': {
                 if (isprint(optopt)) {
@@ -415,7 +472,9 @@ main(
 #if HAS_PTHREAD
     if (threadCount < 1) {
 #ifdef _SC_NPROCESSORS_ONLN
-        threadCount = (U32) sysconf(_SC_NPROCESSORS_ONLN);
+        const long processors = sysconf(_SC_NPROCESSORS_ONLN);
+        threadCount = processors > 0 && (unsigned long)processors <= UINT32_MAX
+            ? (U32)processors : 1;
 #else
         threadCount = 1;
 #endif
@@ -561,13 +620,24 @@ main(
         if (clean) {
             WasmCOutputNames names = emptyWasmCOutputNames;
             WasmDiagnosticContext diagnostics = emptyWasmDiagnosticContext;
+            bool cleaned;
             diagnostics.diagnostics = writeOptions.diagnostics;
-            if (!wasmCOutputNamesInitialize(&names, reader.module, moduleName, writeOptions,
-                staticFunctionIDs, dynamicFunctionIDs, &diagnostics)) {
+            if (!wasmCOutputNamesInitialize(
+                &names,
+                reader.module,
+                moduleName,
+                writeOptions,
+                staticFunctionIDs,
+                dynamicFunctionIDs,
+                &diagnostics
+            )) {
                 goto cleanup;
             }
-            cleanImplementationFiles(outputDirectory, &names);
+            cleaned = cleanImplementationFiles(outputDirectory, &names);
             wasmCOutputNamesFree(&names);
+            if (!cleaned) {
+                goto cleanup;
+            }
         }
 
         if (!wasmCWriteModule(
@@ -580,7 +650,7 @@ main(
             goto cleanup;
         }
 
-        result = EXIT_SUCCESS;
+        result = finishSuccess();
 
 cleanup:
         free(outputNameStorage);

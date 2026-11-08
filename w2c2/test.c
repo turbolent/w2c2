@@ -1,3 +1,6 @@
+#include "file_test.h"
+#include "main_test.h"
+#include "thread_test.h"
 #include "leb128_test.h"
 #include "valuetype_test.h"
 #include "allocation_test.h"
@@ -23,6 +26,9 @@
 
 int
 main(void) {
+    testReadFile();
+    testCLI();
+    testThreadErrors();
     testReadU32LEB128();
     testReadI32LEB128();
     testReadI33LEB128();

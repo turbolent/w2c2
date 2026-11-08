@@ -48,12 +48,14 @@ typedef struct WasmOutputProvider {
     );
 } WasmOutputProvider;
 
-/* The directory is borrowed until translation returns. */
 /*
+ * The directory is borrowed until translation returns.
+ *
  * Each file is written to an exclusively created temporary in that directory.
  * Successful close publishes it by replacement;
  * abort and failures discard it without truncating the destination.
  * Earlier completed files remain published if a later output fails.
+ * Filesystem errors during cleanup can leave temporary files after a failure.
  */
 WasmOutputProvider
 wasmFileOutputProvider(const char* directory);

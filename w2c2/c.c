@@ -6713,6 +6713,21 @@ finish:
 
 #if HAS_PTHREAD
 
+static
+void
+wasmCThreadCheck(const int error, const char* call) {
+    if (error != 0) {
+        fprintf(stderr, "w2c2: %s failed: %s\n", call, strerror(error));
+        /*
+         * Failed synchronization leaves worker ownership unknown.
+         * Returning could free storage still in use by another thread.
+         */
+        abort();
+    }
+}
+
+#define WASM_C_THREAD_CHECK(call) wasmCThreadCheck((call), #call)
+
 typedef struct WasmCImplementationWriterTask {
     char filePrefix;
     U32 fileIndex;
@@ -6748,22 +6763,34 @@ wasmCImplementationConcurrentWriterInitialize(
     int err = pthread_mutex_init(&writer->mutex, NULL);
     writer->diagnostics = diagnostics->diagnostics;
     if (err != 0) {
-        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadMutexInitialize, err);
+        wasmDiagnosticReportThreadFailed(
+            diagnostics,
+            wasmDiagnosticThreadMutexInitialize,
+            err
+        );
         return false;
     }
 
     err = pthread_cond_init(&writer->consume, NULL);
     if (err != 0) {
-        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadConditionInitialize, err);
-        pthread_mutex_destroy(&writer->mutex);
+        wasmDiagnosticReportThreadFailed(
+            diagnostics,
+            wasmDiagnosticThreadConditionInitialize,
+            err
+        );
+        WASM_C_THREAD_CHECK(pthread_mutex_destroy(&writer->mutex));
         return false;
     }
 
     err = pthread_cond_init(&writer->produce, NULL);
     if (err != 0) {
-        wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadConditionInitialize, err);
-        pthread_cond_destroy(&writer->consume);
-        pthread_mutex_destroy(&writer->mutex);
+        wasmDiagnosticReportThreadFailed(
+            diagnostics,
+            wasmDiagnosticThreadConditionInitialize,
+            err
+        );
+        WASM_C_THREAD_CHECK(pthread_cond_destroy(&writer->consume));
+        WASM_C_THREAD_CHECK(pthread_mutex_destroy(&writer->mutex));
         return false;
     }
 
@@ -6778,9 +6805,9 @@ void
 wasmCImplementationConcurrentWriterDestroy(
     WasmCImplementationConcurrentWriter* writer
 ) {
-    pthread_mutex_destroy(&writer->mutex);
-    pthread_cond_destroy(&writer->consume);
-    pthread_cond_destroy(&writer->produce);
+    WASM_C_THREAD_CHECK(pthread_mutex_destroy(&writer->mutex));
+    WASM_C_THREAD_CHECK(pthread_cond_destroy(&writer->consume));
+    WASM_C_THREAD_CHECK(pthread_cond_destroy(&writer->produce));
 }
 
 static
@@ -6795,17 +6822,17 @@ wasmCImplementationWriterThread(
     diagnostics->diagnostics = writer->diagnostics;
 
     while (true) {
-        pthread_mutex_lock(&writer->mutex);
+        WASM_C_THREAD_CHECK(pthread_mutex_lock(&writer->mutex));
 
         while (!writer->done && writer->task == NULL) {
-            pthread_cond_wait(
+            WASM_C_THREAD_CHECK(pthread_cond_wait(
                 &writer->consume,
                 &writer->mutex
-            );
+            ));
         }
 
         if (writer->done) {
-            pthread_mutex_unlock(&writer->mutex);
+            WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer->mutex));
             break;
         }
 
@@ -6825,9 +6852,9 @@ wasmCImplementationWriterThread(
             const bool multipleModules = task->multipleModules;
 
             writer->task = NULL;
-            pthread_cond_signal(&writer->produce);
+            WASM_C_THREAD_CHECK(pthread_cond_signal(&writer->produce));
 
-            pthread_mutex_unlock(&writer->mutex);
+            WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer->mutex));
 
             {
                 const bool result = wasmCWriteImplementationFile(
@@ -6851,12 +6878,12 @@ wasmCImplementationWriterThread(
                         wasmDiagnosticReportTranslationFailed(diagnostics);
                     }
 
-                    pthread_mutex_lock(&writer->mutex);
+                    WASM_C_THREAD_CHECK(pthread_mutex_lock(&writer->mutex));
                     writer->failed = true;
                     writer->done = true;
-                    pthread_cond_broadcast(&writer->consume);
-                    pthread_cond_broadcast(&writer->produce);
-                    pthread_mutex_unlock(&writer->mutex);
+                    WASM_C_THREAD_CHECK(pthread_cond_broadcast(&writer->consume));
+                    WASM_C_THREAD_CHECK(pthread_cond_broadcast(&writer->produce));
+                    WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer->mutex));
                     break;
                 }
             }
@@ -6931,7 +6958,11 @@ wasmCWriteModuleImplementationFiles(
                 &writer
             );
             if (err) {
-                wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadCreate, err);
+                wasmDiagnosticReportThreadFailed(
+                    diagnostics,
+                    wasmDiagnosticThreadCreate,
+                    err
+                );
                 result = false;
                 goto finish;
             }
@@ -6939,17 +6970,17 @@ wasmCWriteModuleImplementationFiles(
 
         for (; fileIndex < fileCount; fileIndex++) {
             const U32 startFunctionIDIndex = fileIndex * functionsPerFile;
-            pthread_mutex_lock(&writer.mutex);
+            WASM_C_THREAD_CHECK(pthread_mutex_lock(&writer.mutex));
 
             while (!writer.failed && writer.task != NULL) {
-                pthread_cond_wait(
+                WASM_C_THREAD_CHECK(pthread_cond_wait(
                     &writer.produce,
                     &writer.mutex
-                );
+                ));
             }
 
             if (writer.failed) {
-                pthread_mutex_unlock(&writer.mutex);
+                WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer.mutex));
                 result = false;
                 break;
             }
@@ -6961,33 +6992,29 @@ wasmCWriteModuleImplementationFiles(
 
             writer.task = &task;
 
-            pthread_cond_signal(&writer.consume);
-            pthread_mutex_unlock(&writer.mutex);
+            WASM_C_THREAD_CHECK(pthread_cond_signal(&writer.consume));
+            WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer.mutex));
         }
 
 finish:
-        pthread_mutex_lock(&writer.mutex);
+        WASM_C_THREAD_CHECK(pthread_mutex_lock(&writer.mutex));
 
         while (!writer.failed && writer.task != NULL) {
-            pthread_cond_wait(
+            WASM_C_THREAD_CHECK(pthread_cond_wait(
                 &writer.produce,
                 &writer.mutex
-            );
+            ));
         }
 
         if (writer.failed) {
             result = false;
         }
         writer.done = true;
-        pthread_cond_broadcast(&writer.consume);
-        pthread_mutex_unlock(&writer.mutex);
+        WASM_C_THREAD_CHECK(pthread_cond_broadcast(&writer.consume));
+        WASM_C_THREAD_CHECK(pthread_mutex_unlock(&writer.mutex));
 
         for (jobIndex = 0; jobIndex < createdThreadCount; jobIndex++) {
-            int err = pthread_join(threads[jobIndex], NULL);
-            if (err != 0) {
-                wasmDiagnosticReportThreadFailed(diagnostics, wasmDiagnosticThreadJoin, err);
-                result = false;
-            }
+            WASM_C_THREAD_CHECK(pthread_join(threads[jobIndex], NULL));
         }
 
         if (writer.failed) {

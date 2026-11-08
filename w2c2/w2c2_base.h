@@ -1958,8 +1958,12 @@ typedef struct wasmFuncExport {
     WasmName name;
 } wasmFuncExport;
 
-/* Name lengths include embedded NUL bytes and exclude the trailing terminator. */
-/* Resolver names borrow generated storage and must not be modified. */
+/*
+ * Name lengths include embedded NUL bytes
+ * and exclude the trailing terminator.
+ * Resolver names borrow generated storage
+ * and must not be modified.
+ */
 typedef void* (*wasmImportResolver)(WasmName module, WasmName name);
 
 struct wasmModuleInstance {

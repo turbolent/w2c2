@@ -120,9 +120,13 @@ endif
 endif
 
 w2c2$(SUFFIX): main.o compat.o file.o $(LIBRARY)
-w2c2_test$(SUFFIX): $(TEST_OBJECTS) file.o $(LIBRARY)
+w2c2_test$(SUFFIX): $(TEST_OBJECTS) file.o compat.o $(LIBRARY)
 w2c2_embed$(SUFFIX): ../examples/embed/main.c $(LIBRARY)
 w2c2_embedding_test$(SUFFIX): ../tests/embedding/main.c $(LIBRARY)
+
+file_test.o: file.c
+main_test.o: main.c
+thread_test.o: c.c
 
 w2c2$(SUFFIX) w2c2_test$(SUFFIX) w2c2_embed$(SUFFIX) w2c2_embedding_test$(SUFFIX):
 	$(CC) $(CFLAGS) -I. $^ -o $@ $(LDFLAGS) $(RPATH)
