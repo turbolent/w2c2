@@ -55,33 +55,41 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
 /* memcpy-based unaligned access. Checks use the actual access width,
  * including loads which extend lanes or zero the upper half. */
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t) \
-    static W2C2_INLINE V128 name(wasmMemory* mem, WasmMemoryAddress addr) { \
+    static W2C2_INLINE V128 name ## _unchecked(U8* data, WasmMemoryAddress addr) { \
         t value; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t)); \
-        w2c2_simd_copy(&value, mem->data + addr, sizeof(t)); \
+        w2c2_simd_copy(&value, data + addr, sizeof(t)); \
         return func(&value); \
-    }
+    } \
+    DEFINE_LOAD_WRAPPERS(name, t, V128)
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane) \
-    static W2C2_INLINE V128 name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
+    static W2C2_INLINE V128 name ## _unchecked(U8* data, WasmMemoryAddress addr, V128 vec) { \
         t value; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t)); \
-        w2c2_simd_copy(&value, mem->data + addr, sizeof(t)); \
+        w2c2_simd_copy(&value, data + addr, sizeof(t)); \
         return func(&value, vec, W2C2_SIMD_LANE(t, lane)); \
+    } \
+    static W2C2_INLINE V128 name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
+        wasmMemoryCheckRange(mem, addr, sizeof(t)); \
+        return name ## _unchecked(mem->data, addr, vec); \
+    } \
+    static W2C2_INLINE V128 name ## _cached(U8* data, U64 size, WasmMemoryAddress addr, V128 vec) { \
+        UNUSED_PARAMETER(size); \
+        wasmMemoryCheckRangeSize(size, addr, sizeof(t)); \
+        return name ## _unchecked(data, addr, vec); \
     }
 #define DEFINE_SIMD_STORE(name, t) \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, V128 vec) { \
         t value; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t)); \
         simde_wasm_v128_store(&value, vec); \
-        w2c2_simd_copy(mem->data + addr, &value, sizeof(t)); \
-    }
+        w2c2_simd_copy(data + addr, &value, sizeof(t)); \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t, V128)
 #define DEFINE_SIMD_STORE_LANE(name, func, t, lane) \
-    static W2C2_INLINE void name(wasmMemory* mem, WasmMemoryAddress addr, V128 vec) { \
+    static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, V128 vec) { \
         t value; \
-        wasmMemoryCheckRange(mem, addr, sizeof(t)); \
         func(&value, vec, W2C2_SIMD_LANE(t, lane)); \
-        w2c2_simd_copy(mem->data + addr, &value, sizeof(t)); \
-    }
+        w2c2_simd_copy(data + addr, &value, sizeof(t)); \
+    } \
+    DEFINE_STORE_WRAPPERS(name, t, V128)
 
 
 #if (WASM_ENDIAN == WASM_BIG_ENDIAN)
