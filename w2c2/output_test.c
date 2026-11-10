@@ -1023,7 +1023,7 @@ testConstantExpressions(WasmModule* module, WasmFunctionIDs ids) {
     CHECK(strstr((const char*)generated->bytes, "si0=17U;") != NULL);
     CHECK(strstr((const char*)generated->bytes, "si0=(*i->g0);") != NULL);
     CHECK(strstr((const char*)generated->bytes, "23U") != NULL);
-    CHECK(strstr((const char*)generated->bytes, "si0=31U;\noffset=si0;") != NULL);
+    CHECK(strstr((const char*)generated->bytes, "si0=31U;\nwasmTableCheckRange(") != NULL);
     CHECK(capture.diagnosticCount == 0);
     checkClosed(&capture);
     captureFree(&capture);

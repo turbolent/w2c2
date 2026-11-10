@@ -68,9 +68,11 @@ def run_binary(args):
         command.extend(shlex.split(args.execute))
     command.append(os.path.abspath(args.tests[0]))
 
-    output = subprocess.run(command, check=True, stderr=subprocess.PIPE).stderr.decode('utf-8').strip()
-
+    result = subprocess.run(command, stderr=subprocess.PIPE)
+    output = result.stderr.decode('utf-8', errors='replace').strip()
     print(output)
+    if result.returncode:
+        sys.exit(result.returncode if result.returncode > 0 else 128 - result.returncode)
 
     if args.arch:
         path = args.tests[0] + '.' + args.arch + '.out'
