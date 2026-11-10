@@ -60,7 +60,7 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
         w2c2_simd_copy(&value, data + addr, sizeof(t)); \
         return func(&value); \
     } \
-    DEFINE_LOAD_WRAPPERS(name, t, V128)
+    DEFINE_LOAD_WRAPPERS(name, t, V128, WasmMemoryAddress)
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane) \
     static W2C2_INLINE V128 name ## _unchecked(U8* data, WasmMemoryAddress addr, V128 vec) { \
         t value; \
@@ -82,14 +82,14 @@ w2c2_simd_copy(void* dest, const void* source, size_t size) {
         simde_wasm_v128_store(&value, vec); \
         w2c2_simd_copy(data + addr, &value, sizeof(t)); \
     } \
-    DEFINE_STORE_WRAPPERS(name, t, V128)
+    DEFINE_STORE_WRAPPERS(name, t, V128, WasmMemoryAddress)
 #define DEFINE_SIMD_STORE_LANE(name, func, t, lane) \
     static W2C2_INLINE void name ## _unchecked(U8* data, WasmMemoryAddress addr, V128 vec) { \
         t value; \
         func(&value, vec, W2C2_SIMD_LANE(t, lane)); \
         w2c2_simd_copy(data + addr, &value, sizeof(t)); \
     } \
-    DEFINE_STORE_WRAPPERS(name, t, V128)
+    DEFINE_STORE_WRAPPERS(name, t, V128, WasmMemoryAddress)
 
 
 #if (WASM_ENDIAN == WASM_BIG_ENDIAN)

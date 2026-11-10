@@ -121,11 +121,17 @@ static void testMemory(void) {
     m14_runtimeX5FchecksInstance second;
     m14_runtimeX5FchecksInstance* child;
     wasmMemory empty = {0};
+    /* Verify the carry without dereferencing an out-of-bounds Wasm32 address. */
+    if (W2C2_RUNTIME_CHECKS || sizeof(size_t) > sizeof(WasmPtr)) {
+        CHECK((WasmScalarAddress)UINT32_MAX + 1U == (U64)UINT32_MAX + 1U);
+    }
     m14_runtimeX5FchecksInstantiate(&instance, resolve);
     m14_runtimeX5FchecksInstantiate(&second, resolve);
     CHECK(memcmp(memory->data, "ABC", 3) == 0);
     m14_runtimeX5FchecksExport5_store(&instance, 0, 0x12345678);
     CHECK(m14_runtimeX5FchecksExport4_load(&instance, 0) == 0x12345678);
+    /* The explicit i32.add wraps before the load adds its immediate offset. */
+    CHECK(m14_runtimeX5FchecksExport8_loadX5Fadd(&instance, UINT32_MAX) == 0x12345678);
     m14_runtimeX5FchecksExport12_atomicX5Fstore(&instance, 8, 0);
     CHECK(m14_runtimeX5FchecksExport3_add(&instance, 8) == 0);
     CHECK(m14_runtimeX5FchecksExport11_atomicX5Fload(&instance, 8) == 1);

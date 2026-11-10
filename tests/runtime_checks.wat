@@ -6,6 +6,8 @@
   (data $passive "abcd")
   (func (export "load") (param i32) (result i32)
     (i32.load offset=1 (local.get 0)))
+  (func (export "load_add") (param i32) (result i32)
+    (i32.load offset=1 (i32.add (local.get 0) (i32.const 1))))
   (func (export "store") (param i32 i32)
     (i32.store offset=1 (local.get 0) (local.get 1)))
   (func (export "atomic_load") (param i32) (result i32)
