@@ -97,6 +97,9 @@ The default, `0`, omits these guards and their metadata to preserve the unchecke
 Invalid operations in this mode can cause C undefined behavior.
 Compile modules and host code that share runtime objects with the same setting.
 
+For optimized C++ builds with Clang or GCC,
+use `-fno-finite-loops -DW2C2_LOOP_START=`.
+
 ### Separate Compilation
 
 w2c2 is able to compile a module into separate C files.
