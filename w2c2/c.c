@@ -1339,6 +1339,28 @@ wasmCWriteMemoryAddress(
 static
 bool
 WARN_UNUSED_RESULT
+wasmCWriteMemoryAccessStart(
+    const WasmCFunctionWriter* writer,
+    const U32 memoryIndex,
+    const bool cache
+) {
+    const bool cached = cache && wasmCCanCacheMemory(writer->module, memoryIndex);
+    if (cached) MUST (wasmCWrite(writer, "_cached"))
+    MUST (wasmCWriteChar(writer, '('))
+    MUST (wasmCWriteFunctionMemoryUse(writer, memoryIndex))
+    if (cached) {
+        MUST (wasmCIndicesInclude(&writer->instanceUses->cachedMemories, memoryIndex))
+        MUST (wasmCWrite(writer, "Data"))
+        MUST (wasmCWriteComma(writer))
+        wasmCWriteMemoryName(writer->output, memoryIndex);
+        MUST (wasmCWrite(writer, "Size"))
+    }
+    return wasmCWriteComma(writer);
+}
+
+static
+bool
+WARN_UNUSED_RESULT
 wasmCWriteLoad(
     const WasmCFunctionWriter* writer,
     const WasmMemoryArgumentInstruction instruction,
@@ -1347,22 +1369,12 @@ wasmCWriteLoad(
     const bool cache
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
-    const bool cached = cache && wasmCCanCacheMemory(writer->module, 0);
     MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
-    if (cached) MUST (wasmCWrite(writer, "_cached"))
-    MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteFunctionMemoryUse(writer, 0))
-    if (cached) {
-        MUST (wasmCIndicesInclude(&writer->instanceUses->cachedMemories, 0))
-        MUST (wasmCWrite(writer, "Data"))
-        MUST (wasmCWriteComma(writer))
-        MUST (wasmCWrite(writer, "m0Size"))
-    }
-    MUST (wasmCWriteComma(writer))
+    MUST (wasmCWriteMemoryAccessStart(writer, 0, cache))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset))
     MUST (wasmCWrite(writer, ");\n"))
 
@@ -1460,16 +1472,15 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
         }
         MUST (wasmCWrite(writer, info->function))
         if (info->memoryBytes && info->laneCount) wasmOutputU32(writer->output, immediate[0]);
-        MUST (wasmCWriteChar(writer, '('))
         if (info->memoryBytes) {
-            MUST (wasmCWriteFunctionMemoryUse(writer, 0))
-            MUST (wasmCWriteComma(writer))
+            MUST (wasmCWriteMemoryAccessStart(writer, 0, true))
             MUST (wasmCWriteMemoryAddress(writer, base, memarg.offset))
             if (info->argumentCount == 2) {
                 MUST (wasmCWriteComma(writer))
                 MUST (wasmCWriteStackName(writer->output, base + 1, wasmValueTypeV128))
             }
         } else {
+            MUST (wasmCWriteChar(writer, '('))
             replaceLane = info->laneCount != 0 && info->argumentCount == 2;
             for (argument = 0; argument < info->argumentCount; argument++) {
                 if (argument != 0) MUST (wasmCWriteComma(writer))
@@ -1634,20 +1645,10 @@ wasmCWriteStore(
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
-    const bool cached = cache && wasmCCanCacheMemory(writer->module, 0);
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
-    if (cached) MUST (wasmCWrite(writer, "_cached"))
-    MUST (wasmCWriteChar(writer, '('))
-    MUST (wasmCWriteFunctionMemoryUse(writer, 0))
-    if (cached) {
-        MUST (wasmCIndicesInclude(&writer->instanceUses->cachedMemories, 0))
-        MUST (wasmCWrite(writer, "Data"))
-        MUST (wasmCWriteComma(writer))
-        MUST (wasmCWrite(writer, "m0Size"))
-    }
-    MUST (wasmCWriteComma(writer))
+    MUST (wasmCWriteMemoryAccessStart(writer, 0, cache))
     MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStackName(

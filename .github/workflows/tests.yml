@@ -159,21 +159,25 @@ jobs:
       matrix:
         optimization: [-O2, -O3]
         compiler:
-          - { name: gcc, cc: gcc, version: *gcc_version, flags: '-fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }
-          - { name: clang, cc: clang, version: *clang_version, flags: '-ffp-model=strict' }
+          - { name: gcc, cc: gcc, cxx: g++, version: *gcc_version, flags: '-fsignaling-nans -ffp-contract=off -fexcess-precision=standard -fno-fp-int-builtin-inexact' }
+          - { name: clang, cc: clang, cxx: clang++, version: *clang_version, flags: '-ffp-model=strict' }
     env:
       CC: ${{ format('{0}-{1}', matrix.compiler.cc, matrix.compiler.version) }}
+      CXX: ${{ format('{0}-{1}', matrix.compiler.cxx, matrix.compiler.version) }}
       CFLAGS: -Werror ${{ matrix.compiler.flags }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install compilers
+      - name: Install compilers and WABT
         run: |
           sudo apt-get update
-          sudo apt-get install -y "gcc-${GCC_VERSION}" "clang-${CLANG_VERSION}"
+          sudo apt-get install -y "gcc-${GCC_VERSION}" "g++-${GCC_VERSION}" "clang-${CLANG_VERSION}" wabt
       - name: Build w2c2
         run: make -C w2c2 -j2
       - name: Run WebAssembly tests with runtime checks
         run: make -C tests -j2 run-tests OPT=${{ matrix.optimization }}
+      - name: Test C++ loop semantics
+        if: matrix.optimization == '-O3'
+        run: make -C tests loop-test
 
   linux:
     needs: changes

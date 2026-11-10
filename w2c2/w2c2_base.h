@@ -91,10 +91,12 @@ typedef WasmPtr WasmMemoryAddress;
 #endif
 
 /* Prevent infinite loops from being optimized out when compiled as C++ */
+#ifndef W2C2_LOOP_START
 #ifdef __cplusplus
 #define W2C2_LOOP_START __asm__ volatile("");
 #else
 #define W2C2_LOOP_START
+#endif
 #endif
 
 /* Allow fixed-size copies to be inlined even with -fno-builtin-memcpy.

@@ -161,6 +161,10 @@ generator-test:
 trap-harness-test:
 	CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" EXECUTE="$(EXECUTE)" $(PYTHON3) trap_test.py
 
+.PHONY: loop-test
+loop-test:
+	W2C2="$(W2C2)" CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" $(PYTHON3) loop_test.py
+
 MULTIVALUE_SOURCES = test_multivalue_owner.c test_multivalue_caller.c
 
 test_multivalue$(EXE) test_multivalue_checked$(EXE): CFLAGS += -std=c89

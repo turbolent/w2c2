@@ -30,7 +30,7 @@ def section(kind, data):
     return bytes([kind]) + leb(len(data)) + data
 
 
-def module(functions, memory=True):
+def module(functions, memory=True, shared=False):
     types = leb(len(functions))
     bodies = leb(len(functions))
     for params, result, code in functions:
@@ -40,7 +40,12 @@ def module(functions, memory=True):
         bodies += leb(len(body)) + body
     return (b'\x00asm\x01\x00\x00\x00' + section(1, types)
             + section(3, leb(len(functions)) + b''.join(leb(i) for i in range(len(functions))))
-            + (section(5, b'\x01\x00\x01') if memory else b'') + section(10, bodies))
+            + (section(5, b'\x01\x03\x01\x02' if shared else b'\x01\x00\x01') if memory else b'')
+            + section(10, bodies))
+
+
+def thread_cflags():
+    return ['-DWASM_THREADS_WIN32'] if os.name == 'nt' else ['-DWASM_THREADS_PTHREADS', '-pthread']
 
 
 class SIMDTests(unittest.TestCase):
@@ -82,13 +87,96 @@ class SIMDTests(unittest.TestCase):
             functions.append((params, None if result == '_count' else TYPES[result], code))
         self.assertEqual(len(functions), 236)
         self.assertEqual(opcodes, sorted(set(opcodes)))
-        output = self.translate(module(functions), flags=('-f', '17', '-t', '2'))
-        for source in self.path.glob('*.c'):
-            result = subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
-                '-std=c99', *SIMD_CFLAGS, *simde_cflags(), '-I' + (ROOT / 'w2c2').as_posix(),
-                '-c', source.as_posix(), '-o', source.with_suffix('.o').as_posix()], capture_output=True)
-            self.assertEqual(result.returncode, 0, result.stderr.decode())
-        self.assertTrue(output.exists())
+        for shared in (False, True):
+            output = self.translate(module(functions, shared=shared), flags=('-f', '17', '-t', '2'))
+            sources = list(self.path.glob('*.c'))
+            generated = ''.join(source.read_text() for source in sources)
+            self.assertEqual('m0Data' in generated, not shared)
+            self.assertTrue(output.exists())
+            for checks in (0, 1):
+                with self.subTest(shared=shared, checks=checks):
+                    for source in sources:
+                        result = subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+                            '-std=c99', *SIMD_CFLAGS, *simde_cflags(), *thread_cflags(),
+                            '-DW2C2_RUNTIME_CHECKS=' + str(checks), '-I' + (ROOT / 'w2c2').as_posix(),
+                            '-c', source.as_posix(), '-o', source.with_suffix('.o').as_posix()], capture_output=True)
+                        self.assertEqual(result.returncode, 0, result.stderr.decode())
+
+    def test_simd_memory_cache_refresh(self):
+        # Exercise SIMD-only memory accesses through the scalar driver's growth cases.
+        # Keep the scalar tests independent of SIMDe.
+        sources = []
+        for name in ('memory_cache', 'memory_cache_shared'):
+            wasm = self.path / (name + '.wasm')
+            source = self.path / ('test_' + name + '.c')
+            subprocess.run(['wat2wasm', '--enable-threads', str(ROOT / 'tests' / ('simd_' + name + '.wat')),
+                            '-o', str(wasm)], check=True, capture_output=True)
+            subprocess.run([str(W2C2), '-m', str(wasm), str(source)], check=True, capture_output=True)
+            self.assertEqual('m0Data' in source.read_text(), name == 'memory_cache')
+            sources.append(str(source))
+        driver = self.path / 'memory_cache_test.c'
+        driver.write_bytes((ROOT / 'tests/memory_cache_test.c').read_bytes())
+        # Load standard declarations before substituting realloc,
+        # so C++ standard-library imports keep their original names.
+        allocation = self.path / 'allocation.h'
+        allocation.write_text('#include <stdlib.h>\n'
+                              '#ifdef __cplusplus\nextern "C" {\n#endif\n'
+                              'void* memoryCacheRealloc(void*, size_t);\n'
+                              '#ifdef __cplusplus\n}\n#endif\n'
+                              '#define realloc memoryCacheRealloc\n')
+        for language in ('c', 'c++'):
+            compiler = shlex.split(os.environ.get('CC', 'cc') if language == 'c'
+                                   else os.environ.get('CXX', 'c++'))
+            standard = '-std=c99' if language == 'c' else '-std=c++11'
+            for checks in (0, 1):
+                with self.subTest(language=language, checks=checks):
+                    binary = self.path / ('cache.exe' if os.name == 'nt' else 'cache')
+                    command = compiler + ['-x', language, standard, *SIMD_CFLAGS,
+                                          *simde_cflags(), *thread_cflags(),
+                                          '-DW2C2_RUNTIME_CHECKS=' + str(checks),
+                                          '-include', str(allocation), '-I' + str(ROOT / 'w2c2'),
+                                          str(driver), *sources, '-o', str(binary)]
+                    result = subprocess.run(command, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stderr.decode())
+                    result = subprocess.run([str(binary)], capture_output=True, timeout=30)
+                    self.assertEqual(result.returncode, 0, result.stderr.decode())
+
+    def test_simd_memory_access_bounds(self):
+        functions = []
+        assertions = []
+        vector = '(v128.const i32x4 1 2 3 4)'
+        # Specify access widths independently of the translator's opcode table.
+        accesses = [('v128.load', 16), ('v128.store', 16)]
+        accesses += [('v128.load' + kind, 8)
+                     for kind in ('8x8_s', '8x8_u', '16x4_s', '16x4_u', '32x2_s', '32x2_u')]
+        accesses += [(f'v128.load{bits}_zero', bits // 8) for bits in (32, 64)]
+        for bits in (8, 16, 32, 64):
+            accesses += [(f'v128.load{bits}_splat', bits // 8),
+                         (f'v128.load{bits}_lane', bits // 8),
+                         (f'v128.store{bits}_lane', bits // 8)]
+        for index, (instruction, width) in enumerate(accesses):
+            lane = ' ' + str(16 // width - 1) if instruction.endswith('_lane') else ''
+            store = instruction.startswith('v128.store')
+            operand = ' ' + vector if store or lane else ''
+            drop = '' if store else ' drop'
+            for offset in (0, 1):
+                name = str(index) + '_' + str(offset)
+                functions.append(f'(func (export "{name}") (param i32)'
+                                 f' local.get 0{operand} {instruction} offset={offset} align=1{lane}{drop})')
+                for address in (1, 65536 - width - offset):
+                    assertions.append(f'(assert_return (invoke "{name}" (i32.const {address})))')
+                for address in (65537 - width - offset, 4294967295):
+                    assertions.append(f'(assert_trap (invoke "{name}" (i32.const {address}))'
+                                      ' "out of bounds memory access")')
+        source = self.path / 'bounds.wast'
+        args = SimpleNamespace(w2c2=W2C2, cc=os.environ.get('CC', 'cc'),
+                               cflags=shlex.join(SIMD_CFLAGS + thread_cflags()))
+        for shared in (False, True):
+            with self.subTest(shared=shared):
+                memory = '(memory 1 2 shared)' if shared else '(memory 1)'
+                source.write_text('(module ' + memory + '\n' + '\n'.join(functions) + ')\n'
+                                  + '\n'.join(assertions) + '\n')
+                self.assertEqual(run_wast(source, args), len(assertions))
 
     def test_vector_headers_support_cpp(self):
         output = self.translate(module([([TYPES['V128']], TYPES['V128'], b'\x20\x00')]))
