@@ -1316,16 +1316,24 @@ wasmCWriteConstExpr(
     return true;
 }
 
+typedef enum WasmCMemoryAccess {
+    wasmCMemoryAccessScalar,
+    wasmCMemoryAccessAtomic,
+    wasmCMemoryAccessSIMD
+} WasmCMemoryAccess;
+
 static
 bool
 WARN_UNUSED_RESULT
 wasmCWriteMemoryAddress(
     const WasmCFunctionWriter* writer,
     const U32 stackIndex,
-    const U32 offset
+    const U32 offset,
+    const WasmCMemoryAccess access
 ) {
     if (offset != 0) {
-        MUST (wasmCWrite(writer, "(WasmMemoryAddress)"))
+        MUST (wasmCWrite(writer, access == wasmCMemoryAccessScalar
+            ? "(WasmScalarAddress)" : "(WasmMemoryAddress)"))
     }
     MUST (wasmCWriteStackName(writer->output, stackIndex, wasmValueTypeI32))
     if (offset != 0) {
@@ -1342,9 +1350,9 @@ WARN_UNUSED_RESULT
 wasmCWriteMemoryAccessStart(
     const WasmCFunctionWriter* writer,
     const U32 memoryIndex,
-    const bool cache
+    const WasmCMemoryAccess access
 ) {
-    const bool cached = cache && wasmCCanCacheMemory(writer->module, memoryIndex);
+    const bool cached = access != wasmCMemoryAccessAtomic && wasmCCanCacheMemory(writer->module, memoryIndex);
     if (cached) MUST (wasmCWrite(writer, "_cached"))
     MUST (wasmCWriteChar(writer, '('))
     MUST (wasmCWriteFunctionMemoryUse(writer, memoryIndex))
@@ -1366,7 +1374,7 @@ wasmCWriteLoad(
     const WasmMemoryArgumentInstruction instruction,
     const char* functionName,
     WasmValueType resultType,
-    const bool cache
+    const WasmCMemoryAccess access
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     MUST (wasmStackDeclarationsSet(writer->stackDeclarations, stackIndex0, resultType))
@@ -1374,8 +1382,8 @@ wasmCWriteLoad(
     MUST (wasmCWriteStackName(writer->output, stackIndex0, resultType))
     MUST (wasmCWriteAssign(writer))
     MUST (wasmCWrite(writer, functionName))
-    MUST (wasmCWriteMemoryAccessStart(writer, 0, cache))
-    MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset))
+    MUST (wasmCWriteMemoryAccessStart(writer, 0, access))
+    MUST (wasmCWriteMemoryAddress(writer, stackIndex0, instruction.offset, access))
     MUST (wasmCWrite(writer, ");\n"))
 
     wasmTypeStackDrop(writer->typeStack, 1);
@@ -1473,8 +1481,8 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
         MUST (wasmCWrite(writer, info->function))
         if (info->memoryBytes && info->laneCount) wasmOutputU32(writer->output, immediate[0]);
         if (info->memoryBytes) {
-            MUST (wasmCWriteMemoryAccessStart(writer, 0, true))
-            MUST (wasmCWriteMemoryAddress(writer, base, memarg.offset))
+            MUST (wasmCWriteMemoryAccessStart(writer, 0, wasmCMemoryAccessSIMD))
+            MUST (wasmCWriteMemoryAddress(writer, base, memarg.offset, wasmCMemoryAccessSIMD))
             if (info->argumentCount == 2) {
                 MUST (wasmCWriteComma(writer))
                 MUST (wasmCWriteStackName(writer->output, base + 1, wasmValueTypeV128))
@@ -1627,7 +1635,7 @@ wasmCWriteLoadExpr(
             instruction,
             functionName,
             resultType,
-            true
+            wasmCMemoryAccessScalar
         ))
     }
 
@@ -1641,15 +1649,15 @@ wasmCWriteStore(
     const WasmCFunctionWriter* writer,
     const WasmMemoryArgumentInstruction instruction,
     const char* functionName,
-    const bool cache
+    const WasmCMemoryAccess access
 ) {
     const U32 stackIndex0 = wasmTypeStackGetTopIndex(writer->typeStack, 0);
     const U32 stackIndex1 = wasmTypeStackGetTopIndex(writer->typeStack, 1);
 
     MUST (wasmCWriteIndent(writer))
     MUST (wasmCWrite(writer, functionName))
-    MUST (wasmCWriteMemoryAccessStart(writer, 0, cache))
-    MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
+    MUST (wasmCWriteMemoryAccessStart(writer, 0, access))
+    MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset, access))
     MUST (wasmCWriteComma(writer))
     MUST (wasmCWriteStackName(
         writer->output,
@@ -1729,7 +1737,7 @@ wasmCWriteStoreExpr(
             }
         }
 
-        MUST (wasmCWriteStore(writer, instruction, functionName, true))
+        MUST (wasmCWriteStore(writer, instruction, functionName, wasmCMemoryAccessScalar))
     }
 
     return true;
@@ -2888,7 +2896,7 @@ wasmCWriteMemoryAtomicNotifyExpr(
         MUST (wasmCWrite(writer, "wasmMemoryAtomicNotify("))
         MUST (wasmCWriteFunctionMemoryUse(writer, 0))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
+        MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset, wasmCMemoryAccessAtomic))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -2928,7 +2936,7 @@ wasmCWriteMemoryAtomicWaitExpr(
         MUST (wasmCWrite(writer, "wasmMemoryAtomicWait("))
         MUST (wasmCWriteFunctionMemoryUse(writer, 0))
         MUST (wasmCWriteComma(writer))
-        MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
+        MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset, wasmCMemoryAccessAtomic))
         MUST (wasmCWriteComma(writer))
         MUST (wasmCWriteStackName(
                 writer->output,
@@ -3118,7 +3126,7 @@ wasmCWriteAtomicLoadExpr(
             instruction,
             functionName,
             resultType,
-            false
+            wasmCMemoryAccessAtomic
         ))
     }
 
@@ -3202,7 +3210,7 @@ wasmCWriteAtomicStoreExpr(
             return false;
         }
 
-        MUST (wasmCWriteStore(writer, instruction, functionName, false))
+        MUST (wasmCWriteStore(writer, instruction, functionName, wasmCMemoryAccessAtomic))
     }
 
     return true;
@@ -3522,7 +3530,7 @@ wasmCWriteAtomicRMWExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteFunctionMemoryUse(writer, 0))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset))
+            MUST (wasmCWriteMemoryAddress(writer, stackIndex1, instruction.offset, wasmCMemoryAccessAtomic))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                 writer->output,
@@ -3638,7 +3646,7 @@ wasmCWriteAtomicRMWCmpxchgExpr(
             MUST (wasmCWriteChar(writer, '('))
             MUST (wasmCWriteFunctionMemoryUse(writer, 0))
             MUST (wasmCWriteComma(writer))
-            MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset))
+            MUST (wasmCWriteMemoryAddress(writer, stackIndex2, instruction.offset, wasmCMemoryAccessAtomic))
             MUST (wasmCWriteComma(writer))
             MUST (wasmCWriteStackName(
                     writer->output,

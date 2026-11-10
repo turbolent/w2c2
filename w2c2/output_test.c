@@ -1219,7 +1219,12 @@ testFloatConstantLocales(void) {
 static
 void
 testFunctionMemoryUses(void) {
-    static U8 code[] = {0x3F, 0x00, 0x1A, 0x3F, 0x00, 0x1A, 0x0B};
+    static U8 code[] = {
+        0x3F, 0x00, 0x1A, 0x3F, 0x00, 0x1A, /* memory.size, drop, twice */
+        0x41, 0, 0x28, 2, 4, 0x1A,           /* i32.load offset=4, drop */
+        0x41, 0, 0x41, 1, 0x36, 2, 8,       /* i32.store offset=8 */
+        0x0B
+    };
     static U8 unreachable[] = {0x00, 0x3F, 0x00, 0x1A, 0x0B};
     WasmModule* module = readOutputModule();
     WasmFunctionIDs ids = outputFunctionIDs(module);
@@ -1248,6 +1253,10 @@ testFunctionMemoryUses(void) {
             CHECK(strstr(declaration + 1, "wasmMemory* m0") == NULL);
             CHECK(strstr((const char*)implementation->bytes, "wasmMemorySize(m0)") != NULL);
             CHECK(strstr((const char*)implementation->bytes, "wasmMemorySize(i->m0)") == NULL);
+            CHECK(strstr(declaration, options.pretty
+                ? "(WasmScalarAddress)si0 + 4U" : "(WasmScalarAddress)si0+4U") != NULL);
+            CHECK(strstr(declaration, options.pretty
+                ? "(WasmScalarAddress)si0 + 8U" : "(WasmScalarAddress)si0+8U") != NULL);
         }
         checkClosed(&capture);
         captureFree(&capture);
