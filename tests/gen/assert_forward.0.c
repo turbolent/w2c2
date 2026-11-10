@@ -28,4 +28,5 @@ void test() {
         0u,
         "odd(20u)"
     );
+    m9_forwardX2E0FreeInstance(&instance);
 }

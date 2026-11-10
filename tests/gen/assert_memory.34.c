@@ -48,4 +48,5 @@ void test() {
         0u,
         "load(65535u)"
     );
+    m9_memoryX2E34FreeInstance(&instance);
 }

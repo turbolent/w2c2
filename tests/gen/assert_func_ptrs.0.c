@@ -25,4 +25,5 @@ void test() {
     );
     m11_funcX5FptrsX2E0Export4_four(&instance, 83u);
     printOK("four(83u)");
+    m11_funcX5FptrsX2E0FreeInstance(&instance);
 }

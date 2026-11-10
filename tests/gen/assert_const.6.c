@@ -8,4 +8,5 @@ void test() {
     m7_constX2E6Instance instance;
     m7_constX2E6Instantiate(&instance, resolveTestImports);
     printStart("const.6.wasm");
+    m7_constX2E6FreeInstance(&instance);
 }

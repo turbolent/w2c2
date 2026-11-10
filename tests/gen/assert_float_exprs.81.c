@@ -78,4 +78,5 @@ void test() {
         4612217595876713891ull,
         "f64.xkcd_better_sqrt_5(13.0, 4.0, 3.141592653589793, 24.0)"
     );
+    m14_floatX5FexprsX2E81FreeInstance(&instance);
 }

@@ -58,4 +58,5 @@ void test() {
         4617465637949180041ull,
         "check(24u)"
     );
+    m14_floatX5FexprsX2E43FreeInstance(&instance);
 }

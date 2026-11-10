@@ -348,4 +348,5 @@ void test() {
         9218868437227405311ull,
         "f64_store(1.7976931348623157e+308)"
     );
+    m12_endiannessX2E0FreeInstance(&instance);
 }

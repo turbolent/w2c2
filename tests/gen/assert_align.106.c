@@ -238,4 +238,5 @@ void test() {
         10ull,
         "i64_align_switch(6u, 8u)"
     );
+    m9_alignX2E106FreeInstance(&instance);
 }

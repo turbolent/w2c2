@@ -168,4 +168,5 @@ void test() {
         0ull,
         "f64.i64.no_fold_trunc_u_convert_u(-0.5)"
     );
+    m14_floatX5FexprsX2E41FreeInstance(&instance);
 }

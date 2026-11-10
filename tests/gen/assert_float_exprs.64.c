@@ -18,4 +18,5 @@ void test() {
         9105671289202539655ull,
         "f64.plain_sum(0u, 256u)"
     );
+    m14_floatX5FexprsX2E64FreeInstance(&instance);
 }

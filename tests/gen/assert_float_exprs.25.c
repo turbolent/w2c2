@@ -58,4 +58,5 @@ void test() {
         2292434337532533215ull,
         "f64.no_fold_to_hypot(2.797963998630554e-202, -1.906867996862016e-155)"
     );
+    m14_floatX5FexprsX2E25FreeInstance(&instance);
 }

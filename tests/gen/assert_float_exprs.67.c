@@ -48,4 +48,5 @@ void test() {
         9223372036854775808ull,
         "f64.no_fold_add_neg_neg(0.0, 0.0)"
     );
+    m14_floatX5FexprsX2E67FreeInstance(&instance);
 }

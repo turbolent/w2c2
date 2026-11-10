@@ -23,4 +23,5 @@ void test() {
         8388608u,
         "thepast2(2.350988701644575e-38, 0.5, 1.0)"
     );
+    m14_floatX5FexprsX2E55FreeInstance(&instance);
 }

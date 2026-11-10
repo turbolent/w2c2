@@ -66,4 +66,5 @@ void test() {
         2144337921u,
         "f32.load()"
     );
+    m14_floatX5FmemoryX2E4FreeInstance(&instance);
 }

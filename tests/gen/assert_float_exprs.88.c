@@ -48,4 +48,5 @@ void test() {
         0u,
         "f64.no_trichotomy_ge(0.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
+    m14_floatX5FexprsX2E88FreeInstance(&instance);
 }

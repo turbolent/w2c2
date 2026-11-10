@@ -48,4 +48,5 @@ void test() {
         4611686018427387904ull,
         "i64.div_u_3(13835058055282163712ull)"
     );
+    m12_intX5FexprsX2E12FreeInstance(&instance);
 }

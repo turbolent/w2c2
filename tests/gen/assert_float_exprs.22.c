@@ -58,4 +58,5 @@ void test() {
         576919682754813073ull,
         "f64.no_reassociate_mul(3.849767156964772e-71, 7.0008754943224875e-239, -2.5368878252183865e+219, -6.101114518858449e-181)"
     );
+    m14_floatX5FexprsX2E22FreeInstance(&instance);
 }

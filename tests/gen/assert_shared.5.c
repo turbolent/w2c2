@@ -8,4 +8,5 @@ void test() {
     m8_sharedX2E5Instance instance;
     m8_sharedX2E5Instantiate(&instance, resolveTestImports);
     printStart("shared.5.wasm");
+    m8_sharedX2E5FreeInstance(&instance);
 }

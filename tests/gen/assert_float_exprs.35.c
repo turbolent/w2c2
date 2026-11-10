@@ -33,4 +33,5 @@ void test() {
         5076240020759642112ull,
         "no_fold_demote_promote(2.335945149795088e+31)"
     );
+    m14_floatX5FexprsX2E35FreeInstance(&instance);
 }

@@ -8,4 +8,5 @@ void test() {
     m8_constX2E86Instance instance;
     m8_constX2E86Instantiate(&instance, resolveTestImports);
     printStart("const.86.wasm");
+    m8_constX2E86FreeInstance(&instance);
 }

@@ -17,4 +17,5 @@ void test() {
     m7_storeX2E0Export15_asX2DreturnX2Dvalue(&instance);
     m7_storeX2E0Export10_asX2DifX2Dthen(&instance);
     m7_storeX2E0Export10_asX2DifX2Delse(&instance);
+    m7_storeX2E0FreeInstance(&instance);
 }

@@ -28,4 +28,5 @@ void test() {
         0ull,
         "i64.no_fold_div_u_mul(1ull)"
     );
+    m11_intX5FexprsX2E5FreeInstance(&instance);
 }

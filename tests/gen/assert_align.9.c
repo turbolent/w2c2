@@ -8,4 +8,5 @@ void test() {
     m7_alignX2E9Instance instance;
     m7_alignX2E9Instantiate(&instance, resolveTestImports);
     printStart("align.9.wasm");
+    m7_alignX2E9FreeInstance(&instance);
 }

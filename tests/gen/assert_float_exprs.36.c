@@ -73,4 +73,5 @@ void test() {
         4286578688u,
         "no_fold_promote_demote(-INFINITY)"
     );
+    m14_floatX5FexprsX2E36FreeInstance(&instance);
 }

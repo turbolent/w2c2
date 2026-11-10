@@ -13,4 +13,5 @@ void test() {
         1297301847u,
         "observed()"
     );
+    m20_memoryX5FimportX5FdataX2E2FreeInstance(&instance);
 }

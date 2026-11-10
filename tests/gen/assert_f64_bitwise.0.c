@@ -1808,4 +1808,5 @@ void test() {
         18444492273895866368ull,
         "neg(f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
+    m13_f64X5FbitwiseX2E0FreeInstance(&instance);
 }

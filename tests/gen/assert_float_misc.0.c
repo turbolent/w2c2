@@ -2358,4 +2358,5 @@ void test() {
         4841369599423283200ull,
         "f64.nearest(4503599627370495.5)"
     );
+    m12_floatX5FmiscX2E0FreeInstance(&instance);
 }

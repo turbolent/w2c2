@@ -8,4 +8,5 @@ void test() {
     m8_constX2E15Instance instance;
     m8_constX2E15Instantiate(&instance, resolveTestImports);
     printStart("const.15.wasm");
+    m8_constX2E15FreeInstance(&instance);
 }

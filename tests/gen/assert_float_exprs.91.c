@@ -38,4 +38,5 @@ void test() {
         0ull,
         "f64.contract2fma(1.2, 1.2)"
     );
+    m14_floatX5FexprsX2E91FreeInstance(&instance);
 }

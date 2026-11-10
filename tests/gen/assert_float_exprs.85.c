@@ -48,4 +48,5 @@ void test() {
         1u,
         "f64.not_ge(f64_reinterpret_i64(0x7ff8000000000000ull), 0.0)"
     );
+    m14_floatX5FexprsX2E85FreeInstance(&instance);
 }

@@ -133,4 +133,5 @@ void test() {
         5u,
         "redefinition()"
     );
+    m8_labelsX2E0FreeInstance(&instance);
 }

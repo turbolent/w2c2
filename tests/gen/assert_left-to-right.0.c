@@ -483,4 +483,5 @@ void test() {
         258u,
         "br_table()"
     );
+    m15_leftX2DtoX2DrightX2E0FreeInstance(&instance);
 }

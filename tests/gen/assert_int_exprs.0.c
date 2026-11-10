@@ -28,4 +28,5 @@ void test() {
         1u,
         "i64.no_fold_cmp_u_offset(18446744073709551615ull, 0ull)"
     );
+    m11_intX5FexprsX2E0FreeInstance(&instance);
 }

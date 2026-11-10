@@ -28,4 +28,5 @@ void test() {
         0u,
         "f64.no_fold_add_le_monotonicity(INFINITY, -INFINITY, INFINITY)"
     );
+    m14_floatX5FexprsX2E84FreeInstance(&instance);
 }

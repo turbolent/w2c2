@@ -18,4 +18,5 @@ void test() {
         18446744073709551615ull,
         "i64.no_fold_rem_s_2(18446744073709551605ull)"
     );
+    m12_intX5FexprsX2E10FreeInstance(&instance);
 }

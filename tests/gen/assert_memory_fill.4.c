@@ -10,4 +10,5 @@ void test() {
     printStart("memory_fill.4.wasm");
     m13_memoryX5FfillX2E4Export4_test(&instance);
     printOK("test()");
+    m13_memoryX5FfillX2E4FreeInstance(&instance);
 }

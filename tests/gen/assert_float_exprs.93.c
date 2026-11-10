@@ -18,4 +18,5 @@ void test() {
         4609965796441453736ull,
         "f64.golden_ratio(0.5, 1.0, 5.0)"
     );
+    m14_floatX5FexprsX2E93FreeInstance(&instance);
 }

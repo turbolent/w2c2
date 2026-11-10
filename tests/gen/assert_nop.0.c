@@ -371,4 +371,5 @@ void test() {
     m5_nopX2E0Export12_asX2DstoreX2Dmid(&instance, 0u, 2u);
     m5_nopX2E0Export13_asX2DstoreX2Dlast(&instance, 0u, 3u);
     m5_nopX2E0Export19_asX2DstoreX2Deverywhere(&instance, 0u, 4u);
+    m5_nopX2E0FreeInstance(&instance);
 }

@@ -376,4 +376,5 @@ void test() {
         9u,
         "nested-br_table-value-index(1u)"
     );
+    m7_brX5FifX2E0FreeInstance(&instance);
 }

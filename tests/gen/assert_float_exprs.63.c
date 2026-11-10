@@ -18,4 +18,5 @@ void test() {
         4082113053u,
         "f32.plain_sum(0u, 256u)"
     );
+    m14_floatX5FexprsX2E63FreeInstance(&instance);
 }

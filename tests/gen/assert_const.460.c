@@ -13,4 +13,5 @@ void test() {
         2ull,
         "f()"
     );
+    m9_constX2E460FreeInstance(&instance);
 }

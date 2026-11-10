@@ -8,4 +8,5 @@ void test() {
     m7_constX2E0Instance instance;
     m7_constX2E0Instantiate(&instance, resolveTestImports);
     printStart("const.0.wasm");
+    m7_constX2E0FreeInstance(&instance);
 }

@@ -13,4 +13,5 @@ void test() {
         1079009392ull,
         "i64.no_fold_wrap_extend_u(4538991236898928ull)"
     );
+    m11_intX5FexprsX2E2FreeInstance(&instance);
 }

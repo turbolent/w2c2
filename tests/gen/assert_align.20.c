@@ -8,4 +8,5 @@ void test() {
     m8_alignX2E20Instance instance;
     m8_alignX2E20Instantiate(&instance, resolveTestImports);
     printStart("align.20.wasm");
+    m8_alignX2E20FreeInstance(&instance);
 }

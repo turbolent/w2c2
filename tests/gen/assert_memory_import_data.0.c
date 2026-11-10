@@ -53,4 +53,5 @@ void test() {
         68u,
         "load(669u)"
     );
+    m20_memoryX5FimportX5FdataX2E0FreeInstance(&instance);
 }

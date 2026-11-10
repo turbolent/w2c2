@@ -58,4 +58,5 @@ void test() {
         2473652960990319032ull,
         "f64.no_algebraic_factoring(-1.0295699877022106e-71, -8.952274637805908e-72)"
     );
+    m14_floatX5FexprsX2E60FreeInstance(&instance);
 }

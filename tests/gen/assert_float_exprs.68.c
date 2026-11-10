@@ -48,4 +48,5 @@ void test() {
         9221120237041090560ull,
         "f64.no_fold_add_neg(-INFINITY)"
     );
+    m14_floatX5FexprsX2E68FreeInstance(&instance);
 }

@@ -18,4 +18,5 @@ void test() {
         2u,
         "callt(1u)"
     );
+    m11_funcX5FptrsX2E9FreeInstance(&instance);
 }

@@ -158,4 +158,5 @@ void test() {
         109071ull,
         "i64-hex-sep2()"
     );
+    m14_intX5FliteralsX2E0FreeInstance(&instance);
 }

@@ -18,4 +18,5 @@ void test() {
         9223372036854775808ull,
         "f64.no_fold_conditional_inc(-0.0, -1.0)"
     );
+    m14_floatX5FexprsX2E97FreeInstance(&instance);
 }

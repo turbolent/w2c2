@@ -13,4 +13,5 @@ void test() {
         1009429163u,
         "inverse(96.0)"
     );
+    m14_floatX5FexprsX2E56FreeInstance(&instance);
 }

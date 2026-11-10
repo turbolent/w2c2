@@ -58,4 +58,5 @@ void test() {
         1084507204u,
         "check(12u)"
     );
+    m14_floatX5FexprsX2E42FreeInstance(&instance);
 }

@@ -33,4 +33,5 @@ void test() {
         0u,
         "size()"
     );
+    m8_limitsX2E0FreeInstance(&instance);
 }

@@ -18,4 +18,5 @@ void test() {
         0ull,
         "f64.no_distribute_exact(-0.0)"
     );
+    m14_floatX5FexprsX2E80FreeInstance(&instance);
 }

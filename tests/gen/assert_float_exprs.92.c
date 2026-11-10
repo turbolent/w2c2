@@ -18,4 +18,5 @@ void test() {
         4695882709507797376ull,
         "f64.division_by_small_number(112000000.0, 100000.0, 0.0009)"
     );
+    m14_floatX5FexprsX2E92FreeInstance(&instance);
 }

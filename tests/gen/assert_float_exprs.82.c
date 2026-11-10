@@ -18,4 +18,5 @@ void test() {
         4611686018427387904ull,
         "f64.compute_radix(1.0, 1.0)"
     );
+    m14_floatX5FexprsX2E82FreeInstance(&instance);
 }

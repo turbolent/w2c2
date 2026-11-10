@@ -12508,4 +12508,5 @@ void test() {
         2143289344u,
         "nearest(f32_reinterpret_i32(0x7fa00000u))"
     );
+    m5_f32X2E0FreeInstance(&instance);
 }

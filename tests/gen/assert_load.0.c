@@ -161,4 +161,5 @@ void test() {
         1u,
         "as-memory.grow-size()"
     );
+    m6_loadX2E0FreeInstance(&instance);
 }

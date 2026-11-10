@@ -98,4 +98,5 @@ void test() {
         9218868437227405312ull,
         "f64.no_fold_recip_recip(INFINITY)"
     );
+    m14_floatX5FexprsX2E58FreeInstance(&instance);
 }

@@ -8,4 +8,5 @@ void test() {
     m7_startX2E6Instance instance;
     m7_startX2E6Instantiate(&instance, resolveTestImports);
     printStart("start.6.wasm");
+    m7_startX2E6FreeInstance(&instance);
 }

@@ -13,4 +13,5 @@ void test() {
         14267403619509731330ull,
         "f()"
     );
+    m9_constX2E431FreeInstance(&instance);
 }

@@ -58,4 +58,5 @@ void test() {
         4276321761661248681ull,
         "f64.no_fuse_reciprocal_sqrt(1.5159641544070443e+44)"
     );
+    m14_floatX5FexprsX2E27FreeInstance(&instance);
 }

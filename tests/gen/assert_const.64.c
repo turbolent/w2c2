@@ -8,4 +8,5 @@ void test() {
     m8_constX2E64Instance instance;
     m8_constX2E64Instantiate(&instance, resolveTestImports);
     printStart("const.64.wasm");
+    m8_constX2E64FreeInstance(&instance);
 }

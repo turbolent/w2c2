@@ -13,4 +13,5 @@ void test() {
         3407478836u,
         "llvm_pr27036(4269932491u, 14942208u)"
     );
+    m14_floatX5FexprsX2E54FreeInstance(&instance);
 }

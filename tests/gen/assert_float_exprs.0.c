@@ -33,4 +33,5 @@ void test() {
         4544162191519938727ull,
         "f64.no_contraction(-1.6080464217402378e-286, -3.82103410226833e+281, 1.0541980504151345e-16)"
     );
+    m13_floatX5FexprsX2E0FreeInstance(&instance);
 }

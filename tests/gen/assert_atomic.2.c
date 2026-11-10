@@ -8,4 +8,5 @@ void test() {
     m8_atomicX2E2Instance instance;
     m8_atomicX2E2Instantiate(&instance, resolveTestImports);
     printStart("atomic.2.wasm");
+    m8_atomicX2E2FreeInstance(&instance);
 }
