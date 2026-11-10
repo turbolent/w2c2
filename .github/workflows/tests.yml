@@ -41,6 +41,7 @@ jobs:
           filters: |
             w2c2:
               - '.github/workflows/tests.yml'
+              - 'CMakeLists.txt'
               - 'w2c2/**'
               - 'examples/embed/**'
               - 'futex/**'
@@ -68,6 +69,86 @@ jobs:
               - 'w2c2/**'
               - 'wasi/**'
               - 'tests/wasi-testsuite/**'
+
+  analysis:
+    needs: changes
+    if: needs.changes.outputs.w2c2 == 'true' || needs.changes.outputs.wasi == 'true'
+    runs-on: *ubuntu_runner
+    name: Clang Static Analyzer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clang Static Analyzer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y "clang-${CLANG_VERSION}" "clang-tools-${CLANG_VERSION}" ninja-build
+      - name: Configure analysis
+        run: >-
+          "scan-build-${CLANG_VERSION}"
+          --use-cc="clang-${CLANG_VERSION}" --use-c++="clang++-${CLANG_VERSION}"
+          cmake -G Ninja -S . -B build/analysis -DCMAKE_BUILD_TYPE=Debug
+      - name: Analyze
+        run: >-
+          "scan-build-${CLANG_VERSION}"
+          --use-cc="clang-${CLANG_VERSION}" --use-c++="clang++-${CLANG_VERSION}"
+          --status-bugs -o build/analysis/reports
+          cmake --build build/analysis --parallel 4
+      - name: Upload static analyzer reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang-static-analyzer
+          path: build/analysis/reports
+
+  sanitizers:
+    needs: changes
+    if: needs.changes.outputs.w2c2 == 'true' || needs.changes.outputs.wasi == 'true'
+    runs-on: *ubuntu_runner
+    name: "Sanitizers / ${{ matrix.sanitizer }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: ['address,undefined', thread]
+        clang_version: [*clang_version]
+    env:
+      CC: ${{ format('clang-{0}', matrix.clang_version) }}
+      CXX: ${{ format('clang++-{0}', matrix.clang_version) }}
+      CFLAGS: -fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer -ffp-model=strict
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+      TSAN_OPTIONS: halt_on_error=1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out SIMDe
+        if: matrix.sanitizer == 'address,undefined'
+        uses: actions/checkout@v4
+        with: &simde_checkout
+          repository: simd-everywhere/simde
+          ref: 65c15e6b545361f6dd89b1e3bcc76273e1344653
+          path: build/simde
+      - name: Install Clang sanitizers and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y "clang-${CLANG_VERSION}" "libclang-rt-${CLANG_VERSION}-dev" ninja-build wabt
+      - name: Configure
+        run: >-
+          cmake -G Ninja -S . -B build/sanitizers -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS"
+      - name: Build
+        run: cmake --build build/sanitizers --parallel 4
+      - name: Test native code
+        run: ctest --test-dir build/sanitizers --output-on-failure -j 4
+      - name: Test scalar WebAssembly
+        if: matrix.sanitizer == 'address,undefined'
+        run: >-
+          make -C tests -j4 run-tests
+          W2C2="$PWD/build/sanitizers/w2c2/w2c2"
+          FUTEX_LDFLAGS="$PWD/build/sanitizers/futex/libw2c2futex.a"
+      - name: Test SIMD
+        if: matrix.sanitizer == 'address,undefined'
+        env:
+          SIMDE_HEADER: ${{ github.workspace }}/build/simde/simde/wasm/simd128.h
+          SIMD_CFLAGS: -O1 -fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer
+        run: make -C tests simd-test W2C2="$PWD/build/sanitizers/w2c2/w2c2"
 
   wasi-testsuite:
     needs: changes
@@ -136,10 +217,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check out SIMDe
         uses: actions/checkout@v4
-        with:
-          repository: simd-everywhere/simde
-          ref: 65c15e6b545361f6dd89b1e3bcc76273e1344653
-          path: build/simde
+        with: *simde_checkout
       - name: Install compilers and WABT
         run: |
           sudo apt-get update
