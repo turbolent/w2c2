@@ -173,4 +173,5 @@ void test() {
         2143289344u,
         "no_fold_promote_demote(2141192192u)"
     );
+    m14_floatX5FexprsX2E89FreeInstance(&instance);
 }

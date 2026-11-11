@@ -8,4 +8,5 @@ void test() {
     m8_memoryX2E1Instance instance;
     m8_memoryX2E1Instantiate(&instance, resolveTestImports);
     printStart("memory.1.wasm");
+    m8_memoryX2E1FreeInstance(&instance);
 }

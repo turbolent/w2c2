@@ -33,4 +33,5 @@ void test() {
         3896123071u,
         "f32.no_approximate_reciprocal(-2.8443762909518046e-25)"
     );
+    m14_floatX5FexprsX2E26FreeInstance(&instance);
 }

@@ -1808,4 +1808,5 @@ void test() {
         4290772992u,
         "neg(f32_reinterpret_i32(0x7fc00000u))"
     );
+    m13_f32X5FbitwiseX2E0FreeInstance(&instance);
 }

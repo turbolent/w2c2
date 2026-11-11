@@ -20,4 +20,5 @@ void test() {
         4294967295u,
         "checkRange(32768u, 65536u, 170u)"
     );
+    m14_memoryX5FcopyX2E89FreeInstance(&instance);
 }

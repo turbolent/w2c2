@@ -78,4 +78,5 @@ void test() {
         18442240474082181120ull,
         "global_negative_inf()"
     );
+    m11_f64X5FconstX2E0FreeInstance(&instance);
 }

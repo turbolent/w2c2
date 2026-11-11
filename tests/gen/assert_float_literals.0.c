@@ -498,4 +498,5 @@ void test() {
         4806880140420149248ull,
         "f64-hex-sep5()"
     );
+    m16_floatX5FliteralsX2E0FreeInstance(&instance);
 }

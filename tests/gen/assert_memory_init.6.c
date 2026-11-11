@@ -10,4 +10,5 @@ void test() {
     printStart("memory_init.6.wasm");
     m13_memoryX5FinitX2E6Export4_test(&instance);
     printOK("test()");
+    m13_memoryX5FinitX2E6FreeInstance(&instance);
 }

@@ -18,4 +18,5 @@ void test() {
         0ull,
         "f64_sqrt_minus_2(4.0)"
     );
+    m14_floatX5FexprsX2E57FreeInstance(&instance);
 }

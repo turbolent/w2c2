@@ -18,4 +18,5 @@ void test() {
         0u,
         "f64.no_fold_eq_self(f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
+    m14_floatX5FexprsX2E12FreeInstance(&instance);
 }

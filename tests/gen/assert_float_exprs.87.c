@@ -18,4 +18,5 @@ void test() {
         4372995238176751616ull,
         "f64.epsilon()"
     );
+    m14_floatX5FexprsX2E87FreeInstance(&instance);
 }

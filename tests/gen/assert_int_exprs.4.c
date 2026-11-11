@@ -28,4 +28,5 @@ void test() {
         0ull,
         "i64.no_fold_shr_u_shl(1ull)"
     );
+    m11_intX5FexprsX2E4FreeInstance(&instance);
 }

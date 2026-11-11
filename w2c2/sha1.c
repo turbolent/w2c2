@@ -101,9 +101,6 @@ SHA1Transform(U32 state[5], const U8* buffer)
     state[2] += c;
     state[3] += d;
     state[4] += e;
-
-    /* Wipe variables */
-    a = b = c = d = e = 0;
 }
 
 /*

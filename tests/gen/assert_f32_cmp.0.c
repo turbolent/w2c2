@@ -12008,4 +12008,5 @@ void test() {
         0u,
         "ge(f32_reinterpret_i32(0x7fa00000u), f32_reinterpret_i32(0x7fa00000u))"
     );
+    m9_f32X5FcmpX2E0FreeInstance(&instance);
 }

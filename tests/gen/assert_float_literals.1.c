@@ -13,4 +13,5 @@ void test() {
         4751297606777307136ull,
         "4294967249()"
     );
+    m16_floatX5FliteralsX2E1FreeInstance(&instance);
 }

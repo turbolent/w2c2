@@ -8,4 +8,5 @@ void test() {
     m26_exportX5FimportedX5FfunctionX2E0Instance instance;
     m26_exportX5FimportedX5FfunctionX2E0Instantiate(&instance, resolveTestImports);
     printStart("export_imported_function.0.wasm");
+    m26_exportX5FimportedX5FfunctionX2E0FreeInstance(&instance);
 }

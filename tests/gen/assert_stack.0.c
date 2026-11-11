@@ -33,4 +33,5 @@ void test() {
         9u,
         "not-quite-a-tree()"
     );
+    m7_stackX2E0FreeInstance(&instance);
 }

@@ -15,4 +15,5 @@ void test() {
         4294967295u,
         "checkRange(0u, 65536u, 0u)"
     );
+    m13_memoryX5FfillX2E3FreeInstance(&instance);
 }

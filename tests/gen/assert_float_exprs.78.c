@@ -73,4 +73,5 @@ void test() {
         46548238u,
         "recoding_demote(2.3860049081905093e-40, 1221.0)"
     );
+    m14_floatX5FexprsX2E78FreeInstance(&instance);
 }

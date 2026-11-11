@@ -1332,17 +1332,14 @@ wasiSocketSetFlags(WasiNativeSocket nativeSocket, U32 flags) {
     return WASI_ERRNO_SUCCESS;
 }
 
+#if HAS_SOCKETS || defined(_WIN32)
 static
 U32
-wasiSocketAddWithRights(
+wasiSocketConfigure(
     WasiNativeSocket nativeSocket,
     U32 flags,
-    WasiRights base,
-    WasiRights inheriting,
-    U32* wasiFD
+    WasiFileDescriptor* descriptor
 ) {
-#if HAS_SOCKETS || defined(_WIN32)
-    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
     int type = 0;
 #ifdef _WIN32
     int length = sizeof(type);
@@ -1373,10 +1370,29 @@ wasiSocketAddWithRights(
         }
     }
 #endif
-    descriptor.socket = nativeSocket;
-    descriptor.socketType = type == SOCK_STREAM
+    descriptor->socket = nativeSocket;
+    descriptor->socketType = type == SOCK_STREAM
         ? WASI_FILE_TYPE_SOCKET_STREAM : WASI_FILE_TYPE_SOCKET_DGRAM;
-    descriptor.socketFlags = (U16)flags;
+    descriptor->socketFlags = (U16)flags;
+    return WASI_ERRNO_SUCCESS;
+}
+#endif
+
+static
+U32
+wasiSocketAddWithRights(
+    WasiNativeSocket nativeSocket,
+    U32 flags,
+    WasiRights base,
+    WasiRights inheriting,
+    U32* wasiFD
+) {
+#if HAS_SOCKETS || defined(_WIN32)
+    WasiFileDescriptor descriptor = emptyWasiFileDescriptor;
+    U32 error = wasiSocketConfigure(nativeSocket, flags, &descriptor);
+    if (error != WASI_ERRNO_SUCCESS) {
+        return error;
+    }
     descriptor.rightsBase = base & WASI_RIGHTS_SOCKET_BASE;
     descriptor.rightsInheriting = inheriting & WASI_RIGHTS_SOCKET_BASE;
 
@@ -3239,7 +3255,6 @@ wasiFdFdstatGet(
 
     if (descriptor.socket != WASI_INVALID_SOCKET) {
         fileType = descriptor.socketType;
-        wasiFlags = descriptor.socketFlags;
 #if HAS_SOCKETS && HAS_FCNTL && !defined(_WIN32)
         {
             int flags = fcntl(descriptor.socket, F_GETFL);
@@ -3248,6 +3263,8 @@ wasiFdFdstatGet(
             }
             wasiFlags = wasiFdFlagsFromNative(flags);
         }
+#else
+        wasiFlags = descriptor.socketFlags;
 #endif
     } else {
         /* Get fileType */

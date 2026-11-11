@@ -18,4 +18,5 @@ void test() {
         4618760256179416344ull,
         "tau(11u)"
     );
+    m14_floatX5FexprsX2E96FreeInstance(&instance);
 }

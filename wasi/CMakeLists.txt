@@ -63,6 +63,8 @@ else()
 endif()
 
 add_executable(w2c2wasi_test ${TEST_SOURCES} ${SOURCES})
+enable_testing()
+add_test(NAME wasi COMMAND w2c2wasi_test)
 
 foreach(TARGET w2c2wasi w2c2wasi_test)
     target_compile_options(${TARGET} PUBLIC

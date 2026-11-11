@@ -8,4 +8,5 @@ void test() {
     m14_memoryX5FinitX2E90Instance instance;
     m14_memoryX5FinitX2E90Instantiate(&instance, resolveTestImports);
     printStart("memory_init.90.wasm");
+    m14_memoryX5FinitX2E90FreeInstance(&instance);
 }

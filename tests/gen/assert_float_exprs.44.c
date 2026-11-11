@@ -168,4 +168,5 @@ void test() {
         1u,
         "f64.uge(2.0, f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
+    m14_floatX5FexprsX2E44FreeInstance(&instance);
 }

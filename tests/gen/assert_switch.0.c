@@ -138,4 +138,5 @@ void test() {
         1u,
         "corner()"
     );
+    m8_switchX2E0FreeInstance(&instance);
 }

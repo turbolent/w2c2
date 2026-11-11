@@ -8,4 +8,5 @@ void test() {
     m7_stackX2E1Instance instance;
     m7_stackX2E1Instantiate(&instance, resolveTestImports);
     printStart("stack.1.wasm");
+    m7_stackX2E1FreeInstance(&instance);
 }

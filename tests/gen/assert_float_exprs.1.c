@@ -58,4 +58,5 @@ void test() {
         7932313162666085329ull,
         "f64.no_fma(6723256985364377.0, 2.8545656669287946e+206, -5.593839470050757e+207)"
     );
+    m13_floatX5FexprsX2E1FreeInstance(&instance);
 }

@@ -13,4 +13,5 @@ void test() {
         0u,
         "memsize()"
     );
+    m8_memoryX2E9FreeInstance(&instance);
 }

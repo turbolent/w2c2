@@ -25,4 +25,5 @@ void test() {
         0u,
         "memory.atomic.notify(0u, 0u)"
     );
+    m8_atomicX2E1FreeInstance(&instance);
 }

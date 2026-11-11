@@ -33,4 +33,5 @@ void test() {
         627137240u,
         "f32.no_approximate_sqrt_reciprocal(2.6173729982836207e+31)"
     );
+    m14_floatX5FexprsX2E28FreeInstance(&instance);
 }

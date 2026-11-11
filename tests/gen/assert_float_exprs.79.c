@@ -18,4 +18,5 @@ void test() {
         1u,
         "f64.no_extended_precision_div(3.0, 7.0, 0.42857142857142855)"
     );
+    m14_floatX5FexprsX2E79FreeInstance(&instance);
 }

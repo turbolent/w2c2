@@ -13,4 +13,5 @@ void test() {
         0u,
         "point_four(4.0, 10.0)"
     );
+    m14_floatX5FexprsX2E95FreeInstance(&instance);
 }

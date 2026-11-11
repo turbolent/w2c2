@@ -58,4 +58,5 @@ void test() {
         13429277897969282898ull,
         "f64.no_distribute(1.5194859063177362e-183, 8.83589921438065e-175, -1.7358300194691958e+147)"
     );
+    m14_floatX5FexprsX2E18FreeInstance(&instance);
 }

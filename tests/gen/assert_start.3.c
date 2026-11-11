@@ -27,4 +27,5 @@ void test() {
         70u,
         "get()"
     );
+    m7_startX2E3FreeInstance(&instance);
 }

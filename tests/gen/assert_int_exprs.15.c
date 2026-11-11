@@ -48,4 +48,5 @@ void test() {
         0ull,
         "i64.rem_u_3(13835058055282163712ull)"
     );
+    m12_intX5FexprsX2E15FreeInstance(&instance);
 }

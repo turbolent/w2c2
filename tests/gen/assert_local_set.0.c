@@ -31,4 +31,5 @@ void test() {
         56ull,
         "write(1ull, 2.0, 3.3, 4u, 5u)"
     );
+    m11_localX5FsetX2E0FreeInstance(&instance);
 }

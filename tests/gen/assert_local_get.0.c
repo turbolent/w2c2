@@ -99,4 +99,5 @@ void test() {
         4630094481904264806ull,
         "read(1ull, 2.0, 3.3, 4u, 5u)"
     );
+    m11_localX5FgetX2E0FreeInstance(&instance);
 }

@@ -58,4 +58,5 @@ void test() {
         49968716u,
         "no_demote_mixed_mul_commuted(310965329461248.0, 1.1834791522838056e-51)"
     );
+    m14_floatX5FexprsX2E39FreeInstance(&instance);
 }

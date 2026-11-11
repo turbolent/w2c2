@@ -12008,4 +12008,5 @@ void test() {
         0u,
         "ge(f64_reinterpret_i64(0x7ff4000000000000ull), f64_reinterpret_i64(0x7ff4000000000000ull))"
     );
+    m9_f64X5FcmpX2E0FreeInstance(&instance);
 }

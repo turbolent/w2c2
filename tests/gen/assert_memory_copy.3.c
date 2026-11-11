@@ -160,4 +160,5 @@ void test() {
         0u,
         "load8_u(29u)"
     );
+    m13_memoryX5FcopyX2E3FreeInstance(&instance);
 }

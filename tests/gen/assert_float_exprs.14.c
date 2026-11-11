@@ -28,4 +28,5 @@ void test() {
         9221120237041090560ull,
         "f64.no_fold_sub_self(f64_reinterpret_i64(0x7ff8000000000000ull))"
     );
+    m14_floatX5FexprsX2E14FreeInstance(&instance);
 }

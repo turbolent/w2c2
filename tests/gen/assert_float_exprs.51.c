@@ -13,4 +13,5 @@ void test() {
         13870293918930799763ull,
         "calculate()"
     );
+    m14_floatX5FexprsX2E51FreeInstance(&instance);
 }

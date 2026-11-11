@@ -18,4 +18,5 @@ void test() {
         4503599627370496ull,
         "f64.no_flush_intermediate_subnormal(2.2250738585072014e-308, 2.220446049250313e-16, 4503599627370496.0)"
     );
+    m14_floatX5FexprsX2E77FreeInstance(&instance);
 }

@@ -247,4 +247,5 @@ void test() {
         4630094481904264806ull,
         "result(18446744073709551615ull, -2.0, -3.3, 4294967292u, 4294967291u)"
     );
+    m11_localX5FteeX2E0FreeInstance(&instance);
 }

@@ -283,4 +283,5 @@ void test() {
         40u,
         "as-memory.grow-size()"
     );
+    m8_returnX2E0FreeInstance(&instance);
 }

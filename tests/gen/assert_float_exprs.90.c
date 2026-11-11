@@ -18,4 +18,5 @@ void test() {
         4611686018427387904ull,
         "with_binary_sum_collapse(32000000.0, 1.0, -1.0, 80000000.0, 40000000.0, 1.0, -1.0, -16000000.0)"
     );
+    m14_floatX5FexprsX2E90FreeInstance(&instance);
 }

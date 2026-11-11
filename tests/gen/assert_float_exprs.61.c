@@ -29,4 +29,5 @@ void test() {
         2147483649u,
         "f32.load(44u)"
     );
+    m14_floatX5FexprsX2E61FreeInstance(&instance);
 }

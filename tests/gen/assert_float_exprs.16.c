@@ -58,4 +58,5 @@ void test() {
         6468791534604471399ull,
         "f64.no_fold_div_3(8.632400808831366e+124)"
     );
+    m14_floatX5FexprsX2E16FreeInstance(&instance);
 }

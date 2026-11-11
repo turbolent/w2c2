@@ -43,4 +43,5 @@ void test() {
         2u,
         "size()"
     );
+    m13_memoryX5FsizeX2E2FreeInstance(&instance);
 }

@@ -218,4 +218,5 @@ void test() {
         2562379247ull,
         "i64_load32_u(3771275841602506223ull)"
     );
+    m9_memoryX2E30FreeInstance(&instance);
 }

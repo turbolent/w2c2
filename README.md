@@ -196,9 +196,10 @@ Support depends on the host's available APIs.
 
 To build a debug release, pass `BUILD=debug` to `make`.
 
-To enable sanitizers, list them in the `SANITIZERS` variable passed to `make`, e.g. `make BUILD=debug SANITIZERS="base clang address thread"`.
+The `w2c2`, `wasi`, and `futex` Makefiles accept a space-separated `SANITIZERS` list. For example, `make -C w2c2 test CC=clang BUILD=debug SANITIZERS="address base"` runs ASan and UBSan. Run ThreadSanitizer in a separate build.
+
 - `base` enables the [Undefined Behavior Sanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
-- `clang` enables Clang-specific sanitizers
+- `clang` adds `-fsanitize=integer -fsanitize=implicit-conversion` when building with Clang. Include it with `SANITIZERS="address base clang"`.
 - `thread` enables the [Thread Sanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
 - `address` enables the [Address Sanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
 

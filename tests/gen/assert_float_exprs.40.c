@@ -58,4 +58,5 @@ void test() {
         2114092635u,
         "no_demote_mixed_div_commuted(1.5513188252708936e-22, 3.5774408529541256e-60)"
     );
+    m14_floatX5FexprsX2E40FreeInstance(&instance);
 }

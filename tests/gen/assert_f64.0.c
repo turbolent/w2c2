@@ -12508,4 +12508,5 @@ void test() {
         9221120237041090560ull,
         "nearest(f64_reinterpret_i64(0x7ff4000000000000ull))"
     );
+    m5_f64X2E0FreeInstance(&instance);
 }

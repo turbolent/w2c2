@@ -68,4 +68,5 @@ void test() {
         4617532346471836922ull,
         "f64.silver_means(5.0)"
     );
+    m14_floatX5FexprsX2E94FreeInstance(&instance);
 }

@@ -18,4 +18,5 @@ void test() {
         18446744073709551611ull,
         "i64.no_fold_div_s_2(18446744073709551605ull)"
     );
+    m11_intX5FexprsX2E9FreeInstance(&instance);
 }

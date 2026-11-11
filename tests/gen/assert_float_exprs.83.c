@@ -18,4 +18,5 @@ void test() {
         0ull,
         "f64.no_fold_sub1_mul_add(5.421010862427522e-20, 1.0)"
     );
+    m14_floatX5FexprsX2E83FreeInstance(&instance);
 }

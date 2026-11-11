@@ -18,4 +18,5 @@ void test() {
         13596367275031527424ull,
         "f64.incorrect_correction()"
     );
+    m14_floatX5FexprsX2E49FreeInstance(&instance);
 }

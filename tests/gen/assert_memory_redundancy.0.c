@@ -34,4 +34,5 @@ void test() {
         43u,
         "malloc_aliasing()"
     );
+    m19_memoryX5FredundancyX2E0FreeInstance(&instance);
 }

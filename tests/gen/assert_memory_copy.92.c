@@ -10,4 +10,5 @@ void test() {
     printStart("memory_copy.92.wasm");
     m14_memoryX5FcopyX2E92Export4_test(&instance);
     printOK("test()");
+    m14_memoryX5FcopyX2E92FreeInstance(&instance);
 }

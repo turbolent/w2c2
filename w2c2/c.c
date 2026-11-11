@@ -527,6 +527,10 @@ bool
 WARN_UNUSED_RESULT
 wasmCRecordMemoryRefresh(const WasmCFunctionWriter* writer) {
     WasmCInsertion refresh;
+    /* A call or grow immediately before the function end has no cache users. */
+    if (writer->code->length == 1 && writer->code->data[0] == wasmOpcodeEnd) {
+        return true;
+    }
     /* Uses after a call may not have been visited yet.
      * Insert refreshes once the complete function's cache uses are known. */
     refresh.offset = writer->buffer->length;
@@ -1419,7 +1423,7 @@ wasmCWriteSIMDExpr(const WasmCFunctionWriter* writer) {
     const WasmSIMDInstructionInfo* info = NULL;
     WasmMemoryArgumentInstruction memarg = {0, 0};
     WasmValue value;
-    U8 immediate[sizeof(value.v128)];
+    U8 immediate[sizeof(value.v128)] = {0};
     U32 argument = 0;
     U32 base = 0;
     bool replaceLane;
@@ -4070,6 +4074,13 @@ wasmCWriteCode(
 
                 switch (opcode) {
                     case wasmOpcodeDrop: {
+                        U32 slot;
+                        MUST (writer->typeStack->length > 0)
+                        slot = wasmTypeStackGetTopIndex(writer->typeStack, 0);
+                        MUST (wasmCWriteIndent(writer))
+                        MUST (wasmCWrite(writer, "(void)"))
+                        MUST (wasmCWriteStackName(writer->output, slot, writer->typeStack->valueTypes[slot]))
+                        MUST (wasmCWrite(writer, ";\n"))
                         wasmTypeStackDrop(writer->typeStack, 1);
                         break;
                     }
@@ -6076,24 +6087,14 @@ wasmCWriteInitTables(
 ) {
     const U32 elementSegmentCount = module->elementSegments.count;
     U32 index;
-    bool active = false;
     if (module->tables.count == 0 && elementSegmentCount == 0) {
         return true;
-    }
-    for (index = 0; index < elementSegmentCount; index++) {
-        active |= module->elementSegments.elementSegments[index].mode == wasmElementSegmentActive;
     }
     wasmOutputString(file, "static void ");
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "InitTables(");
     wasmCWriteModuleName(file, moduleName);
     wasmOutputString(file, "Instance* i) {\n");
-    if (active) {
-        if (pretty) {
-            wasmOutputString(file, indentation);
-        }
-        wasmOutputString(file, "U32 offset;\n");
-    }
     for (index = 0; index < module->tables.count; index++) {
         const WasmTable table = module->tables.tables[index];
         if (pretty) {
@@ -6126,21 +6127,18 @@ wasmCWriteInitTables(
             continue;
         }
         if (segment.mode == wasmElementSegmentActive) {
+            if (segment.elementCount == 0) wasmOutputString(file, "#if W2C2_RUNTIME_CHECKS\n");
             MUST (wasmCWriteConstantExprBegin(file, module, moduleName, segment.offset,
                 pretty, multipleModules, diagnostics))
-            if (pretty) {
-                wasmOutputString(file, indentation);
-            }
-            wasmOutputString(file, pretty ? "offset = " : "offset=");
-            MUST (wasmCWriteStackName(file, 0, wasmValueTypeI32))
-            wasmOutputString(file, ";\n}\n");
             if (pretty) {
                 wasmOutputString(file, indentation);
             }
             wasmCWriteTableType(file, segment.elementType);
             wasmOutputString(file, "CheckRange(");
             MUST (wasmCWriteTableUse(file, module, segment.tableIndex, true))
-            wasmOutputString(file, ",offset,");
+            wasmOutputChar(file, ',');
+            MUST (wasmCWriteStackName(file, 0, wasmValueTypeI32))
+            wasmOutputChar(file, ',');
             wasmOutputU32(file, segment.elementCount);
             wasmOutputString(file, ");\n");
         }
@@ -6153,7 +6151,9 @@ wasmCWriteInitTables(
                 wasmCWriteTableType(file, segment.elementType);
                 wasmOutputString(file, "SetRef(");
                 MUST (wasmCWriteTableUse(file, module, segment.tableIndex, true))
-                wasmOutputString(file, pretty ? ", offset + " : ",offset+");
+                wasmOutputString(file, pretty ? ", " : ",");
+                MUST (wasmCWriteStackName(file, 0, wasmValueTypeI32))
+                wasmOutputString(file, pretty ? " + " : "+");
                 wasmOutputU32(file, elementIndex);
                 wasmOutputChar(file, ',');
             } else {
@@ -6165,6 +6165,10 @@ wasmCWriteInitTables(
             }
             MUST (wasmCWriteReference(file, module, moduleName, element.opcode, element.immediate, multipleModules))
             wasmOutputString(file, segment.mode == wasmElementSegmentActive ? ");\n" : ";\n");
+        }
+        if (segment.mode == wasmElementSegmentActive) {
+            wasmOutputString(file, "}\n");
+            if (segment.elementCount == 0) wasmOutputString(file, "#endif\n");
         }
     }
     wasmOutputString(file, "}\n\n");
